@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { fetchProducts } from '@/services/catalog'
-import { deleteProduct } from '@/services/products'
+import { fetchAllProductsForAdmin, deleteProduct } from '@/services/products'
 import { fetchAllRatingsForAdmin, type AdminRatingItem } from '@/services/ratings'
 import { deleteRating } from '@/services/profile'
 import { toErrorMessage } from '@/lib/error'
@@ -17,6 +16,11 @@ const ratings = ref<AdminRatingItem[]>([])
 const loading = ref(true)
 const loadError = ref<string | null>(null)
 const deletingId = ref<string | null>(null)
+const productPage = ref(0)
+const productHasMore = ref(true)
+const ratingPage = ref(0)
+const ratingHasMore = ref(true)
+const loadingMore = ref(false)
 
 function categoryLabel(cat: string): string {
   return CATEGORY_LABELS[cat as Category] ?? cat
@@ -24,18 +28,45 @@ function categoryLabel(cat: string): string {
 
 onMounted(async () => {
   try {
-    const [p, r] = await Promise.all([
-      fetchProducts({ search: '', category: null, base: null, sort: 'newest' }),
-      fetchAllRatingsForAdmin(),
-    ])
+    const [p, r] = await Promise.all([fetchAllProductsForAdmin(), fetchAllRatingsForAdmin()])
     products.value = p
+    productHasMore.value = p.length === 50
     ratings.value = r
+    ratingHasMore.value = r.length === 50
   } catch (err) {
     loadError.value = toErrorMessage(err)
   } finally {
     loading.value = false
   }
 })
+
+async function loadMoreProducts(): Promise<void> {
+  loadingMore.value = true
+  try {
+    productPage.value++
+    const more = await fetchAllProductsForAdmin(productPage.value)
+    products.value.push(...more)
+    productHasMore.value = more.length === 50
+  } catch (err) {
+    alert(toErrorMessage(err))
+  } finally {
+    loadingMore.value = false
+  }
+}
+
+async function loadMoreRatings(): Promise<void> {
+  loadingMore.value = true
+  try {
+    ratingPage.value++
+    const more = await fetchAllRatingsForAdmin(ratingPage.value)
+    ratings.value.push(...more)
+    ratingHasMore.value = more.length === 50
+  } catch (err) {
+    alert(toErrorMessage(err))
+  } finally {
+    loadingMore.value = false
+  }
+}
 
 async function handleDeleteProduct(id: string): Promise<void> {
   if (!confirm('Produkt und alle zugehörigen Bewertungen unwiderruflich löschen?')) return
@@ -147,6 +178,15 @@ async function handleDeleteRating(id: string): Promise<void> {
             </div>
           </li>
         </ul>
+        <div v-if="productHasMore" class="mt-4 text-center">
+          <button
+            :disabled="loadingMore"
+            class="px-6 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-60 transition-colors"
+            @click="loadMoreProducts"
+          >
+            {{ loadingMore ? 'Lädt …' : 'Mehr laden' }}
+          </button>
+        </div>
       </template>
 
       <template v-else>
@@ -197,6 +237,15 @@ async function handleDeleteRating(id: string): Promise<void> {
             </div>
           </li>
         </ul>
+        <div v-if="ratingHasMore" class="mt-4 text-center">
+          <button
+            :disabled="loadingMore"
+            class="px-6 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-60 transition-colors"
+            @click="loadMoreRatings"
+          >
+            {{ loadingMore ? 'Lädt …' : 'Mehr laden' }}
+          </button>
+        </div>
       </template>
     </template>
   </div>

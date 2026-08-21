@@ -83,3 +83,18 @@ export async function deleteProduct(id: string): Promise<void> {
   const { error } = await supabase.from('product').delete().eq('id', id)
   if (error) throw error
 }
+
+const ADMIN_PAGE_SIZE = 50
+
+export async function fetchAllProductsForAdmin(page = 0): Promise<ProductListItem[]> {
+  const { data, error } = await supabase
+    .from('product')
+    .select('*, images:product_image(id, storage_path, sort_order)')
+    .order('created_at', { ascending: false })
+    .range(page * ADMIN_PAGE_SIZE, (page + 1) * ADMIN_PAGE_SIZE - 1)
+  if (error) throw error
+  return (data ?? []).map((p) => ({
+    ...p,
+    images: (p.images as ProductImage[] | null) ?? [],
+  }))
+}
