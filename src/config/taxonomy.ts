@@ -1,23 +1,4 @@
-export const CATEGORIES = [
-  'meat_alternative',
-  'cheese',
-  'milk',
-  'eggs',
-  'cold_cuts',
-  'sausage',
-  'fish_alternative',
-  'yogurt',
-  'ice_cream',
-  'spread',
-  'snack',
-  'sweets',
-  'ready_meal',
-  'original',
-] as const
-
-export type Category = (typeof CATEGORIES)[number]
-
-export const CATEGORY_LABELS: Record<Category, string> = {
+export const CATEGORY_LABELS = {
   meat_alternative: 'Fleisch-Ersatz',
   cheese: 'Käse',
   milk: 'Milch & Sahne',
@@ -32,29 +13,12 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   sweets: 'Süßwaren',
   ready_meal: 'Fertigprodukt',
   original: 'Originell',
-}
+} as const
 
-export const BASES = [
-  'soy',
-  'pea',
-  'oat',
-  'wheat',
-  'lupin',
-  'chickpea',
-  'almond',
-  'cashew',
-  'coconut',
-  'rice',
-  'hemp',
-  'tofu',
-  'seitan',
-  'mycoprotein',
-  'blend',
-] as const
+export type Category = keyof typeof CATEGORY_LABELS
+export const CATEGORIES = Object.keys(CATEGORY_LABELS) as Category[]
 
-export type Base = (typeof BASES)[number]
-
-export const BASE_LABELS: Record<Base, string> = {
+export const BASE_LABELS = {
   soy: 'Soja',
   pea: 'Erbse',
   oat: 'Hafer',
@@ -70,32 +34,12 @@ export const BASE_LABELS: Record<Base, string> = {
   seitan: 'Seitan',
   mycoprotein: 'Mykoprotein',
   blend: 'Gemisch',
-}
+} as const
 
-export const TAGS = [
-  'sustainable_packaging',
-  'lots_of_plastic',
-  'clean_ingredients',
-  'low_sugar',
-  'high_protein',
-  'gluten_free',
-  'soy_free',
-  'organic',
-  'no_palm_oil',
-  'few_ingredients',
-  'melts_well',
-  'kid_friendly',
-  'budget_friendly',
-  'expensive',
-  'easy_to_prepare',
-  'very_similar',
-  'meaty_flavor',
-  'cheesy_flavor',
-] as const
+export type Base = keyof typeof BASE_LABELS
+export const BASES = Object.keys(BASE_LABELS) as Base[]
 
-export type Tag = (typeof TAGS)[number]
-
-export const TAG_LABELS: Record<Tag, string> = {
+export const TAG_LABELS = {
   sustainable_packaging: 'Nachhaltige Verpackung',
   lots_of_plastic: 'Viel Plastik',
   clean_ingredients: 'Gute Zutaten',
@@ -114,7 +58,10 @@ export const TAG_LABELS: Record<Tag, string> = {
   very_similar: 'Sehr ähnlich zum Original',
   meaty_flavor: 'Fleischiger Geschmack',
   cheesy_flavor: 'Käsiger Geschmack',
-}
+} as const
+
+export type Tag = keyof typeof TAG_LABELS
+export const TAGS = Object.keys(TAG_LABELS) as Tag[]
 
 export const LOCATION_SUGGESTIONS = [
   'REWE',
@@ -135,14 +82,13 @@ export const LOCATION_SUGGESTIONS = [
   'Online-Shop',
 ] as const
 
-export const RATING_CRITERIA = ['taste', 'consistency', 'appearance', 'nutrition', 'value'] as const
-
-export type RatingCriterion = (typeof RATING_CRITERIA)[number]
-
-export const RATING_CRITERION_LABELS: Record<RatingCriterion, string> = {
+export const RATING_CRITERION_LABELS = {
   taste: 'Geschmack',
   consistency: 'Konsistenz',
   appearance: 'Aussehen',
   nutrition: 'Nährwerte',
   value: 'Preis-Leistung',
-}
+} as const
+
+export type RatingCriterion = keyof typeof RATING_CRITERION_LABELS
+export const RATING_CRITERIA = Object.keys(RATING_CRITERION_LABELS) as RatingCriterion[]

@@ -19,16 +19,4 @@ describe('taxonomy labels', () => {
       expect(TAG_LABELS[tag], `missing label for tag "${tag}"`).toBeTruthy()
     }
   })
-
-  it('category label count matches category count', () => {
-    expect(Object.keys(CATEGORY_LABELS)).toHaveLength(CATEGORIES.length)
-  })
-
-  it('base label count matches base count', () => {
-    expect(Object.keys(BASE_LABELS)).toHaveLength(BASES.length)
-  })
-
-  it('tag label count matches tag count', () => {
-    expect(Object.keys(TAG_LABELS)).toHaveLength(TAGS.length)
-  })
 })
