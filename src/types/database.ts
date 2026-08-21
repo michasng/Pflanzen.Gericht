@@ -16,36 +16,15 @@ export interface Profile {
   created_at: string
 }
 
-export interface Category {
-  id: number
-  slug: string
-  name: string
-}
-
-export interface Base {
-  id: number
-  slug: string
-  name: string
-}
-
-export interface Tag {
-  id: number
-  slug: string
-  name: string
-}
-
-export interface Location {
-  id: number
-  name: string
-}
-
 export interface Product {
   id: string
   name: string
   brand: string | null
   description: string | null
-  category_id: number
-  base_id: number | null
+  /** Typisierter String; Lokalisierung via src/config/taxonomy.ts */
+  category: string
+  /** Typisierter String; Lokalisierung via src/config/taxonomy.ts */
+  base: string | null
   created_by: string
   /** Computed: lower(trim(name)) für Duplikat-Erkennung */
   normalized_name: string
@@ -76,7 +55,8 @@ export interface Rating {
   nutrition: number | null
   value: number | null
   comment: string | null
-  location_id: number | null
+  /** Freitext; Frontend schlägt bekannte Ketten vor */
+  location: string | null
   price: number | null
   /** false = durch neuere Bewertung überholt; fließt nicht in Aggregate ein */
   is_current: boolean
@@ -86,7 +66,8 @@ export interface Rating {
 
 export interface RatingTag {
   rating_id: string
-  tag_id: number
+  /** Typisierter String; Lokalisierung via src/config/taxonomy.ts */
+  tag: string
 }
 
 export interface RatingImage {
@@ -102,16 +83,13 @@ export interface RatingImage {
 // ---------------------------------------------------------------------------
 
 export interface ProductWithDetails extends Product {
-  categories: Category
-  bases: Base | null
   product_images: ProductImage[]
 }
 
 export interface RatingWithDetails extends Rating {
   profiles: Pick<Profile, 'username' | 'display_name'>
-  rating_tags: Array<{ tags: Tag }>
+  rating_tags: Array<{ tag: string }>
   rating_images: RatingImage[]
-  locations: Location | null
 }
 
 // ---------------------------------------------------------------------------
@@ -125,26 +103,6 @@ export interface Database {
         Row: Profile
         Insert: Omit<Profile, 'created_at' | 'is_admin'> & { is_admin?: boolean }
         Update: Partial<Omit<Profile, 'id' | 'created_at'>>
-      }
-      categories: {
-        Row: Category
-        Insert: Omit<Category, 'id'>
-        Update: Partial<Omit<Category, 'id'>>
-      }
-      bases: {
-        Row: Base
-        Insert: Omit<Base, 'id'>
-        Update: Partial<Omit<Base, 'id'>>
-      }
-      tags: {
-        Row: Tag
-        Insert: Omit<Tag, 'id'>
-        Update: Partial<Omit<Tag, 'id'>>
-      }
-      locations: {
-        Row: Location
-        Insert: Omit<Location, 'id'>
-        Update: Partial<Omit<Location, 'id'>>
       }
       products: {
         Row: Product
