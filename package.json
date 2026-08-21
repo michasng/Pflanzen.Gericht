@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:prod": "vite --mode production",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "test:unit": "vitest",
@@ -14,8 +15,12 @@
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",
     "format": "oxfmt src/",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
     "db:push": "supabase db push",
     "db:seed": "supabase db query --linked --file supabase/seed.sql",
+    "db:types:local": "supabase gen types typescript --local > src/types/database.ts",
     "db:types": "supabase gen types typescript --linked > src/types/database.ts"
   },
   "dependencies": {

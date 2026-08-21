@@ -29,10 +29,28 @@ See [Vite Configuration Reference](https://vite.dev/config/).
 pnpm install
 ```
 
+### Environment
+
+Two git-ignored env files control which Supabase instance is used:
+
+| File                    | Mode                    | Used by                       |
+| ----------------------- | ----------------------- | ----------------------------- |
+| `.env.local`            | `development` (default) | `pnpm dev`                    |
+| `.env.production.local` | `production`            | `pnpm build`, `pnpm dev:prod` |
+
+### Local Supabase
+
+```sh
+pnpm db:start   # start local Docker stack (runs migrations + seed)
+pnpm db:stop    # stop containers
+pnpm db:reset   # re-run all migrations and seed
+```
+
 ### Compile and Hot-Reload for Development
 
 ```sh
-pnpm dev
+pnpm dev         # local Supabase (.env.local)
+pnpm dev:prod    # dev server against production DB (.env.production.local)
 ```
 
 ### Type-Check, Compile and Minify for Production
