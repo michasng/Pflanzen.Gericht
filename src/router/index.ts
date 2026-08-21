@@ -91,6 +91,15 @@ router.beforeEach(async (to) => {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
 
+  if (to.meta.requiresAdmin) {
+    const { data: profileData } = await supabase
+      .from('profile')
+      .select('is_admin')
+      .eq('id', data.session.user.id)
+      .single()
+    if (!profileData?.is_admin) return { name: 'home' }
+  }
+
   return true
 })
 
