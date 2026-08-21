@@ -52,8 +52,17 @@ export async function updateProfile(
 }
 
 export async function deleteRating(ratingId: string): Promise<void> {
+  const { data: images } = await supabase
+    .from('rating_image')
+    .select('storage_path')
+    .eq('rating_id', ratingId)
+
   const { error } = await supabase.from('rating').delete().eq('id', ratingId)
   if (error) throw error
+
+  if (images?.length) {
+    await supabase.storage.from('review-images').remove(images.map((img) => img.storage_path))
+  }
 }
 
 export async function fetchPublicProfile(userId: string): Promise<PublicProfile | null> {
