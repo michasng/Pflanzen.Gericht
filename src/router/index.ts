@@ -15,36 +15,36 @@ const router = createRouter({
         },
         {
           // Static segment matched before dynamic segment
-          path: 'produkt/neu',
+          path: 'product/new',
           name: 'product-new',
           component: () => import('@/views/ProductNewView.vue'),
           meta: { requiresAuth: true },
         },
         {
-          path: 'produkt/:id',
+          path: 'product/:id',
           name: 'product-detail',
           component: () => import('@/views/ProductDetailView.vue'),
         },
         {
-          path: 'produkt/:id/bearbeiten',
+          path: 'product/:id/edit',
           name: 'product-edit',
           component: () => import('@/views/ProductEditView.vue'),
           meta: { requiresAuth: true },
         },
         {
-          path: 'produkt/:id/bewerten',
+          path: 'product/:id/rate',
           name: 'rating-new',
           component: () => import('@/views/RatingNewView.vue'),
           meta: { requiresAuth: true },
         },
         {
-          path: 'profil',
+          path: 'profile',
           name: 'profile',
           component: () => import('@/views/ProfileView.vue'),
           meta: { requiresAuth: true },
         },
         {
-          path: 'profil/:id',
+          path: 'profile/:id',
           name: 'profile-public',
           component: () => import('@/views/ProfilePublicView.vue'),
         },
@@ -62,17 +62,17 @@ const router = createRouter({
       component: () => import('@/views/auth/LoginView.vue'),
     },
     {
-      path: '/registrieren',
+      path: '/register',
       name: 'register',
       component: () => import('@/views/auth/RegisterView.vue'),
     },
     {
-      path: '/passwort-vergessen',
+      path: '/password-forgot',
       name: 'password-forgot',
       component: () => import('@/views/auth/PasswordForgotView.vue'),
     },
     {
-      path: '/passwort-neu',
+      path: '/password-new',
       name: 'password-new',
       component: () => import('@/views/auth/PasswordNewView.vue'),
     },

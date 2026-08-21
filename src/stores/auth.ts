@@ -55,7 +55,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function resetPassword(email: string): Promise<void> {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/passwort-neu`,
+      redirectTo: `${window.location.origin}/password-new`,
     })
     if (error) throw error
   }
