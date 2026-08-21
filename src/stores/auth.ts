@@ -13,11 +13,17 @@ export const useAuthStore = defineStore('auth', () => {
   const isLoggedIn = computed(() => session.value !== null)
   const isAdmin = computed(() => profile.value?.is_admin ?? false)
 
+  async function fetchProfile(userId: string): Promise<void> {
+    const { data } = await supabase.from('profile').select('*').eq('id', userId).single()
+    profile.value = data
+  }
+
   async function init(): Promise<void> {
     loading.value = true
     try {
       const { data } = await supabase.auth.getSession()
       session.value = data.session
+      if (data.session) await fetchProfile(data.session.user.id)
 
       supabase.auth.onAuthStateChange((_event, newSession) => {
         session.value = newSession
@@ -72,6 +78,7 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     isLoggedIn,
     isAdmin,
+    fetchProfile,
     init,
     signIn,
     signUp,
