@@ -5,35 +5,35 @@ ALTER TABLE public.ratings        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rating_tags    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rating_images  ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "profiles: öffentlich lesbar"
+CREATE POLICY "profiles: publicly readable"
   ON public.profiles FOR SELECT
   USING (true);
 
-CREATE POLICY "profiles: eigenes Profil bearbeiten"
+CREATE POLICY "profiles: edit own profile"
   ON public.profiles FOR UPDATE
   USING (id = auth.uid())
   WITH CHECK (id = auth.uid());
 
-CREATE POLICY "products: öffentlich lesbar"
+CREATE POLICY "products: publicly readable"
   ON public.products FOR SELECT USING (true);
 
-CREATE POLICY "products: eingeloggt anlegen"
+CREATE POLICY "products: create when authenticated"
   ON public.products FOR INSERT
   WITH CHECK (auth.uid() = created_by);
 
-CREATE POLICY "products: eigene oder Admin bearbeiten"
+CREATE POLICY "products: edit own or admin"
   ON public.products FOR UPDATE
   USING (created_by = auth.uid() OR public.is_admin())
   WITH CHECK (created_by = auth.uid() OR public.is_admin());
 
-CREATE POLICY "products: eigene oder Admin löschen"
+CREATE POLICY "products: delete own or admin"
   ON public.products FOR DELETE
   USING (created_by = auth.uid() OR public.is_admin());
 
-CREATE POLICY "product_images: öffentlich lesbar"
+CREATE POLICY "product_images: publicly readable"
   ON public.product_images FOR SELECT USING (true);
 
-CREATE POLICY "product_images: Produkteigentümer hinzufügen"
+CREATE POLICY "product_images: product owner add"
   ON public.product_images FOR INSERT
   WITH CHECK (
     EXISTS (
@@ -43,7 +43,7 @@ CREATE POLICY "product_images: Produkteigentümer hinzufügen"
     )
   );
 
-CREATE POLICY "product_images: Produkteigentümer löschen"
+CREATE POLICY "product_images: product owner delete"
   ON public.product_images FOR DELETE
   USING (
     EXISTS (
@@ -53,26 +53,26 @@ CREATE POLICY "product_images: Produkteigentümer löschen"
     )
   );
 
-CREATE POLICY "ratings: öffentlich lesbar"
+CREATE POLICY "ratings: publicly readable"
   ON public.ratings FOR SELECT USING (true);
 
-CREATE POLICY "ratings: eingeloggt anlegen"
+CREATE POLICY "ratings: create when authenticated"
   ON public.ratings FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "ratings: eigene oder Admin bearbeiten"
+CREATE POLICY "ratings: edit own or admin"
   ON public.ratings FOR UPDATE
   USING (user_id = auth.uid() OR public.is_admin())
   WITH CHECK (user_id = auth.uid() OR public.is_admin());
 
-CREATE POLICY "ratings: eigene oder Admin löschen"
+CREATE POLICY "ratings: delete own or admin"
   ON public.ratings FOR DELETE
   USING (user_id = auth.uid() OR public.is_admin());
 
-CREATE POLICY "rating_tags: öffentlich lesbar"
+CREATE POLICY "rating_tags: publicly readable"
   ON public.rating_tags FOR SELECT USING (true);
 
-CREATE POLICY "rating_tags: Bewertungseigentümer hinzufügen"
+CREATE POLICY "rating_tags: rating owner add"
   ON public.rating_tags FOR INSERT
   WITH CHECK (
     EXISTS (
@@ -82,7 +82,7 @@ CREATE POLICY "rating_tags: Bewertungseigentümer hinzufügen"
     )
   );
 
-CREATE POLICY "rating_tags: Bewertungseigentümer löschen"
+CREATE POLICY "rating_tags: rating owner delete"
   ON public.rating_tags FOR DELETE
   USING (
     EXISTS (
@@ -92,10 +92,10 @@ CREATE POLICY "rating_tags: Bewertungseigentümer löschen"
     )
   );
 
-CREATE POLICY "rating_images: öffentlich lesbar"
+CREATE POLICY "rating_images: publicly readable"
   ON public.rating_images FOR SELECT USING (true);
 
-CREATE POLICY "rating_images: Bewertungseigentümer hinzufügen"
+CREATE POLICY "rating_images: rating owner add"
   ON public.rating_images FOR INSERT
   WITH CHECK (
     EXISTS (
@@ -105,7 +105,7 @@ CREATE POLICY "rating_images: Bewertungseigentümer hinzufügen"
     )
   );
 
-CREATE POLICY "rating_images: Bewertungseigentümer löschen"
+CREATE POLICY "rating_images: rating owner delete"
   ON public.rating_images FOR DELETE
   USING (
     EXISTS (
