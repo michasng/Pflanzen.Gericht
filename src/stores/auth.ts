@@ -27,7 +27,8 @@ export const useAuthStore = defineStore('auth', () => {
 
       supabase.auth.onAuthStateChange((_event, newSession) => {
         session.value = newSession
-        if (!newSession) profile.value = null
+        if (newSession) fetchProfile(newSession.user.id)
+        else profile.value = null
       })
     } catch (err) {
       console.warn('[Auth] Supabase nicht erreichbar:', err)
