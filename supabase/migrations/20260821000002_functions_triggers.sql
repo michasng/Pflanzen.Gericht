@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION public.set_updated_at()
+﻿CREATE OR REPLACE FUNCTION public.set_updated_at()
 RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -7,12 +7,12 @@ BEGIN
 END;
 $$;
 
-CREATE TRIGGER products_updated_at
-  BEFORE UPDATE ON public.products
+CREATE TRIGGER product_updated_at
+  BEFORE UPDATE ON public.product
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
-CREATE TRIGGER ratings_updated_at
-  BEFORE UPDATE ON public.ratings
+CREATE TRIGGER rating_updated_at
+  BEFORE UPDATE ON public.rating
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -38,12 +38,12 @@ BEGIN
   v_username := v_base;
 
   -- ensure uniqueness
-  WHILE EXISTS (SELECT 1 FROM public.profiles WHERE username = v_username) LOOP
+  WHILE EXISTS (SELECT 1 FROM public.profile WHERE username = v_username) LOOP
     v_n := v_n + 1;
     v_username := v_base || v_n::text;
   END LOOP;
 
-  INSERT INTO public.profiles (id, username, display_name)
+  INSERT INTO public.profile (id, username, display_name)
   VALUES (
     NEW.id,
     v_username,
@@ -62,7 +62,7 @@ CREATE OR REPLACE FUNCTION public.supersede_previous_rating()
 RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
-  UPDATE public.ratings
+  UPDATE public.rating
   SET    is_current = false
   WHERE  product_id = NEW.product_id
     AND  user_id    = NEW.user_id
@@ -72,8 +72,8 @@ END;
 $$;
 
 -- Must run BEFORE INSERT so the unique index (one current per user) is not violated
-CREATE TRIGGER ratings_supersede_previous
-  BEFORE INSERT ON public.ratings
+CREATE TRIGGER rating_supersede_previous
+  BEFORE INSERT ON public.rating
   FOR EACH ROW EXECUTE FUNCTION public.supersede_previous_rating();
 
 CREATE OR REPLACE FUNCTION public.update_product_aggregates()
@@ -84,21 +84,21 @@ DECLARE
 BEGIN
   v_product_id := COALESCE(NEW.product_id, OLD.product_id);
 
-  UPDATE public.products
+  UPDATE public.product
   SET
     avg_overall   = (
       SELECT round(avg(overall)::numeric, 2)
-      FROM   public.ratings
+      FROM   public.rating
       WHERE  product_id = v_product_id AND is_current = true
     ),
     ratings_count = (
       SELECT count(*)
-      FROM   public.ratings
+      FROM   public.rating
       WHERE  product_id = v_product_id AND is_current = true
     ),
     avg_price     = (
       SELECT round(avg(price)::numeric, 2)
-      FROM   public.ratings
+      FROM   public.rating
       WHERE  product_id = v_product_id AND is_current = true AND price IS NOT NULL
     )
   WHERE id = v_product_id;
@@ -107,8 +107,8 @@ BEGIN
 END;
 $$;
 
-CREATE TRIGGER ratings_update_aggregates
-  AFTER INSERT OR UPDATE OR DELETE ON public.ratings
+CREATE TRIGGER rating_update_aggregates
+  AFTER INSERT OR UPDATE OR DELETE ON public.rating
   FOR EACH ROW EXECUTE FUNCTION public.update_product_aggregates();
 
 CREATE OR REPLACE FUNCTION public.is_admin()
@@ -116,7 +116,7 @@ RETURNS boolean
 LANGUAGE sql STABLE
 SECURITY DEFINER SET search_path = public AS $$
   SELECT coalesce(
-    (SELECT is_admin FROM public.profiles WHERE id = auth.uid()),
+    (SELECT is_admin FROM public.profile WHERE id = auth.uid()),
     false
   )
 $$;

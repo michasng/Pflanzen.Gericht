@@ -72,24 +72,24 @@ export interface RatingImage {
 }
 
 export interface ProductWithDetails extends Product {
-  product_images: ProductImage[]
+  product_image: ProductImage[]
 }
 
 export interface RatingWithDetails extends Rating {
-  profiles: Pick<Profile, 'username' | 'display_name'>
-  rating_tags: Array<{ tag: string }>
-  rating_images: RatingImage[]
+  profile: Pick<Profile, 'username' | 'display_name'>
+  rating_tag: Array<{ tag: string }>
+  rating_image: RatingImage[]
 }
 
 export interface Database {
   public: {
     Tables: {
-      profiles: {
+      profile: {
         Row: Profile
         Insert: Omit<Profile, 'created_at' | 'is_admin'> & { is_admin?: boolean }
         Update: Partial<Omit<Profile, 'id' | 'created_at'>>
       }
-      products: {
+      product: {
         Row: Product
         Insert: Omit<
           Product,
@@ -103,22 +103,22 @@ export interface Database {
         >
         Update: Partial<Omit<Product, 'id' | 'normalized_name' | 'created_by' | 'created_at'>>
       }
-      product_images: {
+      product_image: {
         Row: ProductImage
         Insert: Omit<ProductImage, 'id' | 'created_at'>
         Update: Partial<Omit<ProductImage, 'id' | 'product_id' | 'created_at'>>
       }
-      ratings: {
+      rating: {
         Row: Rating
         Insert: Omit<Rating, 'id' | 'is_current' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<Rating, 'id' | 'product_id' | 'user_id' | 'is_current' | 'created_at'>>
       }
-      rating_tags: {
+      rating_tag: {
         Row: RatingTag
         Insert: RatingTag
         Update: never
       }
-      rating_images: {
+      rating_image: {
         Row: RatingImage
         Insert: Omit<RatingImage, 'id' | 'created_at'>
         Update: Partial<Omit<RatingImage, 'id' | 'rating_id' | 'created_at'>>
