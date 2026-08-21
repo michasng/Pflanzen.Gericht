@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { toErrorMessage } from '@/lib/error'
 import { useAuthStore } from '@/stores/auth'
 import {
   fetchUserRatings,
@@ -73,7 +74,7 @@ async function saveProfileData(): Promise<void> {
     await authStore.fetchProfile(authStore.user.id)
     isEditing.value = false
   } catch (err) {
-    saveError.value = err instanceof Error ? err.message : 'Speichern fehlgeschlagen.'
+    saveError.value = toErrorMessage(err)
   } finally {
     saving.value = false
   }
@@ -91,7 +92,7 @@ async function handleDeleteRating(id: string): Promise<void> {
     await deleteRating(id)
     ratings.value = ratings.value.filter((r) => r.id !== id)
   } catch (err) {
-    alert(err instanceof Error ? err.message : 'Löschen fehlgeschlagen.')
+    alert(toErrorMessage(err))
   } finally {
     deletingId.value = null
   }
@@ -107,7 +108,7 @@ onMounted(async () => {
     ratings.value = r
     products.value = p
   } catch (err) {
-    loadError.value = err instanceof Error ? err.message : 'Daten konnten nicht geladen werden.'
+    loadError.value = toErrorMessage(err)
   } finally {
     loading.value = false
   }

@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
+import { toErrorMessage } from '@/lib/error'
 import {
   fetchProducts,
   PAGE_SIZE,
@@ -42,7 +43,7 @@ export const useCatalogStore = defineStore('catalog', () => {
       hasMore.value = result.length === PAGE_SIZE
       page.value++
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Produkte konnten nicht geladen werden.'
+      error.value = toErrorMessage(err)
     } finally {
       loading.value = false
     }
