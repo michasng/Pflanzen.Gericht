@@ -1,0 +1,37 @@
+# Project Guidelines
+
+Vue 3 + Vite + TypeScript SPA. Package manager: **pnpm**.
+
+## Principles
+
+- Favor simple, readable code over cleverness; optimize for the next maintainer.
+- Make the smallest change that solves the problem. No unrelated refactors or speculative features (YAGNI).
+- Keep functions and components small and single-purpose; prefer composition over inheritance.
+- Name things by intent. Avoid abbreviations and comments that restate the code.
+- No dead code, commented-out blocks, or `TODO`s left behind.
+
+## Code Style
+
+- TypeScript strict; no `any`, no non-null `!` assertions—model types honestly.
+- Vue 3 `<script setup>` with the Composition API and typed props/emits.
+- Formatting and lint rules are enforced by oxfmt/oxlint/eslint.
+
+## Architecture
+
+- `src/` app code, `src/router/` routing. Keep view/route components thin; extract reusable logic into composables (`useX`).
+- One-way data flow: props down, events up. Avoid shared mutable module state.
+
+## Build and Test
+
+- `pnpm dev` — dev server
+- `pnpm test:unit` — Vitest unit tests
+- `pnpm type-check` — vue-tsc
+- `pnpm lint` — oxlint + eslint (autofix)
+- `pnpm build` — production build (runs type-check)
+
+Add or update unit tests (`src/**/__tests__`) for behavior changes. Run `pnpm lint` and `pnpm type-check` before finishing.
+
+## For the Agent
+
+- Keep responses and diffs minimal to conserve tokens; skip restating unchanged code.
+- Read a file before editing it; verify assumptions with tests rather than guessing.
