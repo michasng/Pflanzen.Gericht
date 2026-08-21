@@ -31,7 +31,7 @@ export async function fetchProducts(filter: CatalogFilter, page = 0): Promise<Pr
     .select('*, images:product_image(id, storage_path, sort_order)')
 
   if (filter.search.trim()) {
-    query = query.ilike('name', `%${filter.search.trim()}%`)
+    query = query.ilike('normalized_name', `%${filter.search.trim().toLowerCase()}%`)
   }
   if (filter.category) {
     query = query.eq('category', filter.category)

@@ -25,7 +25,7 @@ export async function searchSimilarProducts(
   const { data, error } = await supabase
     .from('product')
     .select('id, name, brand, category')
-    .ilike('name', `%${name.trim()}%`)
+    .ilike('normalized_name', `%${name.trim().toLowerCase()}%`)
     .limit(5)
   if (error) throw error
   return data ?? []
