@@ -70,3 +70,17 @@ pnpm test:unit
 ```sh
 pnpm lint
 ```
+
+## Granting Admin Access
+
+Open Supabase Studio (`http://localhost:54323` locally) → **SQL Editor** and run:
+
+```sql
+UPDATE profile
+SET is_admin = true
+WHERE id = (
+  SELECT id FROM auth.users WHERE email = 'your@email.com'
+);
+```
+
+Then sign out and back in so the profile is reloaded.
