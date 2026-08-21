@@ -1,10 +1,9 @@
 <script setup lang="ts">
-// Phase 4: ProductGrid, ProductFilters, catalogStore
+// TODO Phase 4: ProductGrid, ProductFilters, catalogStore
 </script>
 
 <template>
   <div>
-    <!-- Suchleiste -->
     <div class="mb-4">
       <div class="relative">
         <svg
@@ -29,7 +28,6 @@
       </div>
     </div>
 
-    <!-- Kategorie-Filter (Chips) -->
     <div class="flex gap-2 overflow-x-auto pb-2 mb-6 -mx-4 px-4 scrollbar-none">
       <button
         class="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium bg-primary-600 text-white"
@@ -68,7 +66,6 @@
       </button>
     </div>
 
-    <!-- Produktgrid-Platzhalter (Phase 4) -->
     <div class="flex flex-col items-center justify-center py-20 text-center">
       <svg
         class="w-20 h-20 text-gray-200 mb-4"

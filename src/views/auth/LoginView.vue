@@ -29,7 +29,6 @@ async function handleSubmit(): Promise<void> {
 
 <template>
   <div class="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4 py-12">
-    <!-- Logo -->
     <RouterLink
       :to="{ name: 'home' }"
       class="flex items-center gap-2 font-bold text-xl text-primary-700 mb-8"

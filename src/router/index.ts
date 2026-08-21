@@ -14,7 +14,7 @@ const router = createRouter({
           component: () => import('@/views/HomeView.vue'),
         },
         {
-          // Static segment before dynamic — matched first
+          // Static segment matched before dynamic segment
           path: 'produkt/neu',
           name: 'product-new',
           component: () => import('@/views/ProductNewView.vue'),

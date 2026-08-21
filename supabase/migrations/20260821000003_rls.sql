@@ -1,6 +1,3 @@
--- Migration 3: Row Level Security
-
--- RLS auf allen Tabellen aktivieren
 ALTER TABLE public.profiles       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product_images ENABLE ROW LEVEL SECURITY;
@@ -8,10 +5,6 @@ ALTER TABLE public.ratings        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rating_tags    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rating_images  ENABLE ROW LEVEL SECURITY;
 
--- ---------------------------------------------------------------------------
--- profiles
--- INSERT: nur via Signup-Trigger (handle_new_user, SECURITY DEFINER)
--- ---------------------------------------------------------------------------
 CREATE POLICY "profiles: öffentlich lesbar"
   ON public.profiles FOR SELECT
   USING (true);
@@ -21,9 +14,6 @@ CREATE POLICY "profiles: eigenes Profil bearbeiten"
   USING (id = auth.uid())
   WITH CHECK (id = auth.uid());
 
--- ---------------------------------------------------------------------------
--- products
--- ---------------------------------------------------------------------------
 CREATE POLICY "products: öffentlich lesbar"
   ON public.products FOR SELECT USING (true);
 
@@ -40,9 +30,6 @@ CREATE POLICY "products: eigene oder Admin löschen"
   ON public.products FOR DELETE
   USING (created_by = auth.uid() OR public.is_admin());
 
--- ---------------------------------------------------------------------------
--- product_images
--- ---------------------------------------------------------------------------
 CREATE POLICY "product_images: öffentlich lesbar"
   ON public.product_images FOR SELECT USING (true);
 
@@ -66,9 +53,6 @@ CREATE POLICY "product_images: Produkteigentümer löschen"
     )
   );
 
--- ---------------------------------------------------------------------------
--- ratings
--- ---------------------------------------------------------------------------
 CREATE POLICY "ratings: öffentlich lesbar"
   ON public.ratings FOR SELECT USING (true);
 
@@ -85,9 +69,6 @@ CREATE POLICY "ratings: eigene oder Admin löschen"
   ON public.ratings FOR DELETE
   USING (user_id = auth.uid() OR public.is_admin());
 
--- ---------------------------------------------------------------------------
--- rating_tags
--- ---------------------------------------------------------------------------
 CREATE POLICY "rating_tags: öffentlich lesbar"
   ON public.rating_tags FOR SELECT USING (true);
 
@@ -111,9 +92,6 @@ CREATE POLICY "rating_tags: Bewertungseigentümer löschen"
     )
   );
 
--- ---------------------------------------------------------------------------
--- rating_images
--- ---------------------------------------------------------------------------
 CREATE POLICY "rating_images: öffentlich lesbar"
   ON public.rating_images FOR SELECT USING (true);
 

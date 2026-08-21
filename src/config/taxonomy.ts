@@ -1,14 +1,3 @@
-// Taxonomy-Konstanten für Pflanzen.Gericht
-//
-// Alle Werte entsprechen exakt den CHECK-Constraints im Datenbankschema
-// (supabase/migrations/20260821000001_schema.sql).
-// Deutsche Bezeichnungen werden ausschließlich hier im Frontend definiert,
-// damit die App später ohne Schemaänderungen übersetzt werden kann.
-
-// ---------------------------------------------------------------------------
-// Kategorien
-// ---------------------------------------------------------------------------
-
 export const CATEGORIES = [
   'meat_alternative',
   'cheese',
@@ -44,10 +33,6 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   ready_meal: 'Fertigprodukt',
   original: 'Originell',
 }
-
-// ---------------------------------------------------------------------------
-// Basen / Hauptzutaten
-// ---------------------------------------------------------------------------
 
 export const BASES = [
   'soy',
@@ -86,10 +71,6 @@ export const BASE_LABELS: Record<Base, string> = {
   mycoprotein: 'Mykoprotein',
   blend: 'Gemisch',
 }
-
-// ---------------------------------------------------------------------------
-// Bewertungs-Tags
-// ---------------------------------------------------------------------------
 
 export const TAGS = [
   'sustainable_packaging',
@@ -135,10 +116,6 @@ export const TAG_LABELS: Record<Tag, string> = {
   cheesy_flavor: 'Käsiger Geschmack',
 }
 
-// ---------------------------------------------------------------------------
-// Fundorte (Freitext-Vorschläge für das Frontend)
-// ---------------------------------------------------------------------------
-
 export const LOCATION_SUGGESTIONS = [
   'REWE',
   'EDEKA',
@@ -157,10 +134,6 @@ export const LOCATION_SUGGESTIONS = [
   'Spar',
   'Online-Shop',
 ] as const
-
-// ---------------------------------------------------------------------------
-// Bewertungskriterien (für RatingForm und RatingSummary)
-// ---------------------------------------------------------------------------
 
 export const RATING_CRITERIA = ['taste', 'consistency', 'appearance', 'nutrition', 'value'] as const
 

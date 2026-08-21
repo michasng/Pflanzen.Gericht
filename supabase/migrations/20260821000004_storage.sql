@@ -1,8 +1,3 @@
--- Migration 4: Storage-Buckets und -Policies
-
--- ---------------------------------------------------------------------------
--- Buckets anlegen (public read, 5 MB Limit, nur Bildformate)
--- ---------------------------------------------------------------------------
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES
   (
@@ -21,12 +16,6 @@ VALUES
   )
 ON CONFLICT (id) DO NOTHING;
 
--- ---------------------------------------------------------------------------
--- Pfad-Konvention: {user_id}/{produkt_oder_rating_id}/{dateiname}
--- Nutzer können nur unter ihrem eigenen Verzeichnis hochladen/löschen.
--- ---------------------------------------------------------------------------
-
--- product-images
 CREATE POLICY "product-images: öffentlich lesbar"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'product-images');
@@ -46,7 +35,6 @@ CREATE POLICY "product-images: eigene Dateien löschen"
     AND (storage.foldername(name))[1] = auth.uid()::text
   );
 
--- review-images
 CREATE POLICY "review-images: öffentlich lesbar"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'review-images');

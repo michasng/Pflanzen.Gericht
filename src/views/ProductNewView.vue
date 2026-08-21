@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Phase 5: ProductForm + Bild-Upload + Dedupe
+// TODO Phase 5: ProductForm, image upload, deduplication
 </script>
 
 <template>

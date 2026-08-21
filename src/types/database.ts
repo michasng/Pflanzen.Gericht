@@ -1,11 +1,4 @@
-// Wird in Phase 2 durch `supabase gen types` ergänzt/ersetzt.
-// Manuelle Typdefinitionen spiegeln das geplante Datenbankschema.
-
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
-
-// ---------------------------------------------------------------------------
-// Tabellen-Zeilentypen
-// ---------------------------------------------------------------------------
 
 export interface Profile {
   id: string
@@ -21,14 +14,14 @@ export interface Product {
   name: string
   brand: string | null
   description: string | null
-  /** Typisierter String; Lokalisierung via src/config/taxonomy.ts */
+  /** Typed string; localized in src/config/taxonomy.ts */
   category: string
-  /** Typisierter String; Lokalisierung via src/config/taxonomy.ts */
+  /** Typed string; localized in src/config/taxonomy.ts */
   base: string | null
   created_by: string
-  /** Computed: lower(trim(name)) für Duplikat-Erkennung */
+  /** Computed: lower(trim(name)); used for deduplication */
   normalized_name: string
-  /** Denormalisiert, per Trigger aktualisiert */
+  /** Denormalized; kept in sync by trigger */
   avg_overall: number | null
   ratings_count: number
   avg_price: number | null
@@ -55,10 +48,10 @@ export interface Rating {
   nutrition: number | null
   value: number | null
   comment: string | null
-  /** Freitext; Frontend schlägt bekannte Ketten vor */
+  /** Free text; frontend suggests known store chains */
   location: string | null
   price: number | null
-  /** false = durch neuere Bewertung überholt; fließt nicht in Aggregate ein */
+  /** false when superseded by a newer rating from the same user; excluded from aggregates */
   is_current: boolean
   created_at: string
   updated_at: string
@@ -66,7 +59,7 @@ export interface Rating {
 
 export interface RatingTag {
   rating_id: string
-  /** Typisierter String; Lokalisierung via src/config/taxonomy.ts */
+  /** Typed string; localized in src/config/taxonomy.ts */
   tag: string
 }
 
@@ -78,10 +71,6 @@ export interface RatingImage {
   created_at: string
 }
 
-// ---------------------------------------------------------------------------
-// Erweiterte Typen mit Joins (für Frontend-Abfragen)
-// ---------------------------------------------------------------------------
-
 export interface ProductWithDetails extends Product {
   product_images: ProductImage[]
 }
@@ -91,10 +80,6 @@ export interface RatingWithDetails extends Rating {
   rating_tags: Array<{ tag: string }>
   rating_images: RatingImage[]
 }
-
-// ---------------------------------------------------------------------------
-// Supabase Database-Typ (für createClient<Database>)
-// ---------------------------------------------------------------------------
 
 export interface Database {
   public: {

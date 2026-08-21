@@ -15,7 +15,6 @@ function isActive(routeName: string): boolean {
 </script>
 
 <template>
-  <!-- Mobile: fixierte Bottom-Navigation -->
   <nav
     class="md:hidden fixed bottom-0 inset-x-0 z-40 flex h-16 bg-white border-t border-gray-200 safe-area-inset-bottom"
     aria-label="Hauptnavigation"
@@ -42,7 +41,6 @@ function isActive(routeName: string): boolean {
       Entdecken
     </RouterLink>
 
-    <!-- Zentraler Hinzufügen-Button -->
     <RouterLink
       :to="{ name: 'product-new' }"
       class="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors"
@@ -92,12 +90,10 @@ function isActive(routeName: string): boolean {
     </RouterLink>
   </nav>
 
-  <!-- Desktop: fixierte Top-Navigation -->
   <header
     class="hidden md:flex fixed top-0 inset-x-0 z-40 h-16 bg-white border-b border-gray-100 shadow-sm items-center px-6 gap-6"
     aria-label="Hauptnavigation"
   >
-    <!-- Logo -->
     <RouterLink
       :to="{ name: 'home' }"
       class="flex items-center gap-2 font-bold text-lg text-primary-700 shrink-0 mr-4"
@@ -115,7 +111,6 @@ function isActive(routeName: string): boolean {
       Pflanzen.Gericht
     </RouterLink>
 
-    <!-- Nav-Links -->
     <nav class="flex items-center gap-1 text-sm font-medium flex-1">
       <RouterLink
         :to="{ name: 'home' }"
@@ -130,7 +125,6 @@ function isActive(routeName: string): boolean {
       </RouterLink>
     </nav>
 
-    <!-- Rechte Seite: Aktionen -->
     <div class="flex items-center gap-2 shrink-0">
       <RouterLink
         :to="{ name: 'product-new' }"

@@ -1,8 +1,3 @@
--- Migration 2: Funktionen und Trigger
-
--- ---------------------------------------------------------------------------
--- 1. updated_at automatisch setzen (wiederverwendbar)
--- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.set_updated_at()
 RETURNS trigger
 LANGUAGE plpgsql AS $$
@@ -20,9 +15,6 @@ CREATE TRIGGER ratings_updated_at
   BEFORE UPDATE ON public.ratings
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
--- ---------------------------------------------------------------------------
--- 2. Profil bei Signup automatisch anlegen
--- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -32,12 +24,12 @@ DECLARE
   v_username text;
   v_n integer := 0;
 BEGIN
-  -- Basis: aus Metadaten oder E-Mail-Prefix ableiten
+  -- derive base username from metadata or email prefix
   v_base := coalesce(
     nullif(trim(NEW.raw_user_meta_data->>'username'), ''),
     split_part(NEW.email, '@', 1)
   );
-  -- Auf erlaubte Zeichen reduzieren und kürzen
+  -- strip disallowed characters and truncate
   v_base := left(regexp_replace(lower(v_base), '[^a-z0-9_]', '', 'g'), 25);
   IF length(v_base) < 3 THEN
     v_base := 'nutzer';
@@ -45,7 +37,7 @@ BEGIN
 
   v_username := v_base;
 
-  -- Einzigartigkeit sicherstellen
+  -- ensure uniqueness
   WHILE EXISTS (SELECT 1 FROM public.profiles WHERE username = v_username) LOOP
     v_n := v_n + 1;
     v_username := v_base || v_n::text;
@@ -66,9 +58,6 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- ---------------------------------------------------------------------------
--- 3. Vorherige Bewertung vor Insert als überholt markieren
--- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.supersede_previous_rating()
 RETURNS trigger
 LANGUAGE plpgsql AS $$
@@ -82,14 +71,11 @@ BEGIN
 END;
 $$;
 
--- Läuft VOR dem Insert, damit der Unique-Index (one current per user) nicht verletzt wird
+-- Must run BEFORE INSERT so the unique index (one current per user) is not violated
 CREATE TRIGGER ratings_supersede_previous
   BEFORE INSERT ON public.ratings
   FOR EACH ROW EXECUTE FUNCTION public.supersede_previous_rating();
 
--- ---------------------------------------------------------------------------
--- 4. Produktaggregate nach Bewertungsänderung aktualisieren
--- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.update_product_aggregates()
 RETURNS trigger
 LANGUAGE plpgsql AS $$
@@ -117,7 +103,7 @@ BEGIN
     )
   WHERE id = v_product_id;
 
-  RETURN NULL; -- AFTER-Trigger, Rückgabe irrelevant
+  RETURN NULL; -- AFTER trigger; return value is irrelevant
 END;
 $$;
 
@@ -125,9 +111,6 @@ CREATE TRIGGER ratings_update_aggregates
   AFTER INSERT OR UPDATE OR DELETE ON public.ratings
   FOR EACH ROW EXECUTE FUNCTION public.update_product_aggregates();
 
--- ---------------------------------------------------------------------------
--- 5. Admin-Hilfsfunktion für RLS-Policies
--- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS boolean
 LANGUAGE sql STABLE
