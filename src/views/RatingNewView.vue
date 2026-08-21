@@ -52,7 +52,8 @@ onMounted(async () => {
 })
 
 async function handleSubmit(): Promise<void> {
-  if (!product.value || !authStore.user || overall.value === null) return
+  const user = authStore.user
+  if (!product.value || !user || overall.value === null) return
   submitting.value = true
   submitError.value = null
   try {
@@ -60,7 +61,7 @@ async function handleSubmit(): Promise<void> {
     const priceNum = rawPrice ? parseFloat(rawPrice.replace(',', '.')) : null
     const rating = await createRating(
       product.value.id,
-      authStore.user.id,
+      user.id,
       {
         overall: overall.value,
         taste: taste.value,
@@ -75,7 +76,7 @@ async function handleSubmit(): Promise<void> {
       selectedTags.value,
     )
     await Promise.all(
-      pendingFiles.value.map((file, i) => uploadRatingImage(rating.id, authStore.user.id, file, i)),
+      pendingFiles.value.map((file, i) => uploadRatingImage(rating.id, user.id, file, i)),
     )
     await router.push({ name: 'product-detail', params: { id: product.value.id } })
   } catch (err) {

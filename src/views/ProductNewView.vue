@@ -15,15 +15,14 @@ const error = ref<string | null>(null)
 const pendingFiles = ref<File[]>([])
 
 async function handleSubmit(values: ProductFormValues): Promise<void> {
-  if (!authStore.user) return
+  const user = authStore.user
+  if (!user) return
   submitting.value = true
   error.value = null
   try {
-    const product = await createProduct(values, authStore.user.id)
+    const product = await createProduct(values, user.id)
     await Promise.all(
-      pendingFiles.value.map((file, i) =>
-        uploadProductImage(product.id, authStore.user.id, file, i),
-      ),
+      pendingFiles.value.map((file, i) => uploadProductImage(product.id, user.id, file, i)),
     )
     await router.push({ name: 'product-detail', params: { id: product.id } })
   } catch (err) {
