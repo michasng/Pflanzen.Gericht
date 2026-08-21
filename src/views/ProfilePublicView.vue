@@ -13,6 +13,7 @@ import StarDisplay from '@/components/StarDisplay.vue'
 import { CATEGORY_LABELS, TAG_LABELS } from '@/config/taxonomy'
 import type { Category, Tag } from '@/config/taxonomy'
 import { toErrorMessage } from '@/lib/error'
+import { formatDate } from '@/lib/date'
 
 const route = useRoute()
 
@@ -23,14 +24,6 @@ const loading = ref(true)
 const notFound = ref(false)
 const error = ref<string | null>(null)
 const activeTab = ref<'ratings' | 'products'>('ratings')
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('de-DE', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
 
 function categoryLabel(cat: string): string {
   return CATEGORY_LABELS[cat as Category] ?? cat

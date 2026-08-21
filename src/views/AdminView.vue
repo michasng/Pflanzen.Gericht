@@ -9,6 +9,7 @@ import { CATEGORY_LABELS } from '@/config/taxonomy'
 import type { Category } from '@/config/taxonomy'
 import type { ProductListItem } from '@/services/catalog'
 import StarDisplay from '@/components/StarDisplay.vue'
+import { formatDate } from '@/lib/date'
 
 const activeTab = ref<'products' | 'ratings'>('products')
 const products = ref<ProductListItem[]>([])
@@ -16,14 +17,6 @@ const ratings = ref<AdminRatingItem[]>([])
 const loading = ref(true)
 const loadError = ref<string | null>(null)
 const deletingId = ref<string | null>(null)
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('de-DE', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
 
 function categoryLabel(cat: string): string {
   return CATEGORY_LABELS[cat as Category] ?? cat

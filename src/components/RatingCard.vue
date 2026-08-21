@@ -4,6 +4,7 @@ import StarDisplay from '@/components/StarDisplay.vue'
 import { TAG_LABELS } from '@/config/taxonomy'
 import type { Tag } from '@/config/taxonomy'
 import type { RatingWithDetails } from '@/services/catalog'
+import { formatDate } from '@/lib/date'
 
 const props = defineProps<{ rating: RatingWithDetails }>()
 
@@ -21,14 +22,6 @@ const filledCriteria = computed(() => {
   ].filter((e): e is [string, number] => e[1] !== null)
   return entries
 })
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('de-DE', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
 
 function tagLabel(tag: string): string {
   return TAG_LABELS[tag as Tag] ?? tag

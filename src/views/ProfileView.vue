@@ -14,6 +14,7 @@ import type { Product } from '@/types'
 import StarDisplay from '@/components/StarDisplay.vue'
 import { CATEGORY_LABELS, TAG_LABELS } from '@/config/taxonomy'
 import type { Category, Tag } from '@/config/taxonomy'
+import { formatDate } from '@/lib/date'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -34,14 +35,6 @@ const deletingId = ref<string | null>(null)
 
 const currentRatingsCount = computed(() => ratings.value.filter((r) => r.is_current).length)
 const initials = computed(() => authStore.profile?.username?.charAt(0).toUpperCase() ?? '?')
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('de-DE', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
 
 function categoryLabel(cat: string): string {
   return CATEGORY_LABELS[cat as Category] ?? cat
