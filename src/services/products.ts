@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { Product, ProductInsert, ProductUpdate, ProductImage } from '@/types'
+import type { ProductListItem } from '@/services/catalog'
 
 export async function fetchProduct(id: string): Promise<Product | null> {
   const { data, error } = await supabase.from('product').select('*').eq('id', id).single()
