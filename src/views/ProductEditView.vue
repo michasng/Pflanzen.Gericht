@@ -58,9 +58,11 @@ async function handleSubmit(values: ProductFormValues): Promise<void> {
       await deleteProductImage(img.id, img.storage_path)
     }
     const nextSortOrder = existingImages.value.length
-    for (const [i, file] of pendingFiles.value.entries()) {
-      await uploadProductImage(product.value.id, authStore.user.id, file, nextSortOrder + i)
-    }
+    await Promise.all(
+      pendingFiles.value.map((file, i) =>
+        uploadProductImage(product.value!.id, authStore.user!.id, file, nextSortOrder + i),
+      ),
+    )
     await router.push({ name: 'product-detail', params: { id: product.value.id } })
   } catch (err) {
     submitError.value = toErrorMessage(err)

@@ -20,9 +20,11 @@ async function handleSubmit(values: ProductFormValues): Promise<void> {
   error.value = null
   try {
     const product = await createProduct(values, authStore.user.id)
-    for (const [i, file] of pendingFiles.value.entries()) {
-      await uploadProductImage(product.id, authStore.user.id, file, i)
-    }
+    await Promise.all(
+      pendingFiles.value.map((file, i) =>
+        uploadProductImage(product.id, authStore.user.id, file, i),
+      ),
+    )
     await router.push({ name: 'product-detail', params: { id: product.id } })
   } catch (err) {
     error.value = toErrorMessage(err)

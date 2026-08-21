@@ -74,9 +74,9 @@ async function handleSubmit(): Promise<void> {
       },
       selectedTags.value,
     )
-    for (const [i, file] of pendingFiles.value.entries()) {
-      await uploadRatingImage(rating.id, authStore.user.id, file, i)
-    }
+    await Promise.all(
+      pendingFiles.value.map((file, i) => uploadRatingImage(rating.id, authStore.user.id, file, i)),
+    )
     await router.push({ name: 'product-detail', params: { id: product.value.id } })
   } catch (err) {
     submitError.value = toErrorMessage(err)
