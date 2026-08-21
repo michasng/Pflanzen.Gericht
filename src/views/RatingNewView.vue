@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { fetchProduct } from '@/services/products'
@@ -20,11 +20,20 @@ const loading = ref(true)
 const loadError = ref<string | null>(null)
 
 const overall = ref<number | null>(null)
-const taste = ref<number | null>(null)
-const consistency = ref<number | null>(null)
-const appearance = ref<number | null>(null)
-const nutrition = ref<number | null>(null)
-const valueScore = ref<number | null>(null)
+const criteria = reactive<Record<string, number | null>>({
+  taste: null,
+  consistency: null,
+  appearance: null,
+  nutrition: null,
+  value: null,
+})
+const CRITERIA_LABELS: Record<string, string> = {
+  taste: 'Geschmack',
+  consistency: 'Konsistenz',
+  appearance: 'Aussehen',
+  nutrition: 'Nährwerte',
+  value: 'Preis-Leistung',
+}
 const selectedTags = ref<string[]>([])
 const comment = ref('')
 const location = ref('')
@@ -64,11 +73,11 @@ async function handleSubmit(): Promise<void> {
       user.id,
       {
         overall: overall.value,
-        taste: taste.value,
-        consistency: consistency.value,
-        appearance: appearance.value,
-        nutrition: nutrition.value,
-        value: valueScore.value,
+        taste: criteria.taste,
+        consistency: criteria.consistency,
+        appearance: criteria.appearance,
+        nutrition: criteria.nutrition,
+        value: criteria.value,
         comment: comment.value.trim() || null,
         location: location.value.trim() || null,
         price: priceNum !== null && !isNaN(priceNum) ? priceNum : null,
@@ -116,41 +125,11 @@ async function handleSubmit(): Promise<void> {
             Detailbewertungen
             <span class="text-xs text-gray-400 font-normal">(optional)</span>
           </p>
-          <div
-            v-for="[label, field] in [
-              ['Geschmack', 'taste'],
-              ['Konsistenz', 'consistency'],
-              ['Aussehen', 'appearance'],
-              ['Nährwerte', 'nutrition'],
-              ['Preis-Leistung', 'value'],
-            ] as [string, string][]"
-            :key="field"
-            class="flex items-center gap-4"
-          >
-            <span class="text-sm text-gray-600 w-32 shrink-0">{{ label }}</span>
+          <div v-for="(_, key) in criteria" :key="key" class="flex items-center gap-4">
+            <span class="text-sm text-gray-600 w-32 shrink-0">{{ CRITERIA_LABELS[key] }}</span>
             <StarRatingInput
-              :model-value="
-                field === 'taste'
-                  ? taste
-                  : field === 'consistency'
-                    ? consistency
-                    : field === 'appearance'
-                      ? appearance
-                      : field === 'nutrition'
-                        ? nutrition
-                        : valueScore
-              "
-              @update:model-value="
-                field === 'taste'
-                  ? (taste = $event)
-                  : field === 'consistency'
-                    ? (consistency = $event)
-                    : field === 'appearance'
-                      ? (appearance = $event)
-                      : field === 'nutrition'
-                        ? (nutrition = $event)
-                        : (valueScore = $event)
-              "
+              :model-value="criteria[key]"
+              @update:model-value="criteria[key] = $event"
             />
           </div>
         </div>
