@@ -39,7 +39,12 @@ function tagLabel(tag: string): string {
   <div class="bg-white rounded-xl border border-gray-100 p-4">
     <div class="flex items-start justify-between gap-2 mb-3">
       <div>
-        <span class="font-semibold text-sm text-gray-900">{{ displayName }}</span>
+        <RouterLink
+          :to="{ name: 'profile-public', params: { id: rating.user_id } }"
+          class="font-semibold text-sm text-gray-900 hover:text-primary-600 transition-colors"
+        >
+          {{ displayName }}
+        </RouterLink>
         <span class="text-xs text-gray-400 ml-2">{{ formatDate(rating.created_at) }}</span>
       </div>
       <span

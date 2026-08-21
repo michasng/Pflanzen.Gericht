@@ -78,3 +78,8 @@ export async function deleteProductImage(id: string, storagePath: string): Promi
   const { error } = await supabase.from('product_image').delete().eq('id', id)
   if (error) throw error
 }
+
+export async function deleteProduct(id: string): Promise<void> {
+  const { error } = await supabase.from('product').delete().eq('id', id)
+  if (error) throw error
+}

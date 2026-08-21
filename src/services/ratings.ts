@@ -1,6 +1,13 @@
 import { supabase } from '@/lib/supabase'
 import type { Rating, RatingInsert, RatingImage } from '@/types'
 
+const ADMIN_PAGE_SIZE = 50
+
+export type AdminRatingItem = Rating & {
+  profile: { username: string }
+  product: { id: string; name: string }
+}
+
 export type RatingFields = Pick<
   RatingInsert,
   | 'overall'
@@ -56,4 +63,18 @@ export async function uploadRatingImage(
     .single()
   if (error) throw error
   return data
+}
+
+export async function fetchAllRatingsForAdmin(page = 0): Promise<AdminRatingItem[]> {
+  const { data, error } = await supabase
+    .from('rating')
+    .select('*, profile:user_id(username), product:product_id(id, name)')
+    .order('created_at', { ascending: false })
+    .range(page * ADMIN_PAGE_SIZE, (page + 1) * ADMIN_PAGE_SIZE - 1)
+  if (error) throw error
+  return (data ?? []).map((r) => ({
+    ...r,
+    profile: r.profile as { username: string },
+    product: r.product as { id: string; name: string },
+  }))
 }

@@ -115,6 +115,18 @@ function isActive(routeName: string): boolean {
       >
         Entdecken
       </RouterLink>
+      <RouterLink
+        v-if="authStore.isAdmin"
+        :to="{ name: 'admin' }"
+        class="px-3 py-1.5 rounded-lg transition-colors"
+        :class="
+          isActive('admin')
+            ? 'bg-primary-50 text-primary-700'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+        "
+      >
+        Admin
+      </RouterLink>
     </nav>
 
     <div class="flex items-center gap-2 shrink-0">
