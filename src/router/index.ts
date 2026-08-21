@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { supabase } from '@/lib/supabase'
+import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -83,21 +83,15 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach(async (to) => {
+router.beforeEach((to) => {
   if (!to.meta.requiresAuth) return true
 
-  const { data } = await supabase.auth.getSession()
-  if (!data.session) {
+  const authStore = useAuthStore()
+  if (!authStore.isLoggedIn) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
-
-  if (to.meta.requiresAdmin) {
-    const { data: profileData } = await supabase
-      .from('profile')
-      .select('is_admin')
-      .eq('id', data.session.user.id)
-      .single()
-    if (!profileData?.is_admin) return { name: 'home' }
+  if (to.meta.requiresAdmin && !authStore.isAdmin) {
+    return { name: 'home' }
   }
 
   return true
