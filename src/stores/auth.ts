@@ -8,6 +8,7 @@ export const useAuthStore = defineStore('auth', () => {
   const session = ref<Session | null>(null)
   const profile = ref<Profile | null>(null)
   const loading = ref(true)
+  let subscription: { unsubscribe(): void } | null = null
 
   const user = computed(() => session.value?.user ?? null)
   const isLoggedIn = computed(() => session.value !== null)
@@ -25,11 +26,12 @@ export const useAuthStore = defineStore('auth', () => {
       session.value = data.session
       if (data.session) await fetchProfile(data.session.user.id)
 
-      supabase.auth.onAuthStateChange((_event, newSession) => {
+      const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
         session.value = newSession
         if (newSession) fetchProfile(newSession.user.id)
         else profile.value = null
       })
+      subscription = listener.subscription
     } catch (err) {
       console.warn('[Auth] Supabase nicht erreichbar:', err)
     } finally {
@@ -72,6 +74,11 @@ export const useAuthStore = defineStore('auth', () => {
     if (error) throw error
   }
 
+  function cleanup(): void {
+    subscription?.unsubscribe()
+    subscription = null
+  }
+
   return {
     session,
     profile,
@@ -81,6 +88,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAdmin,
     fetchProfile,
     init,
+    cleanup,
     signIn,
     signUp,
     signOut,
