@@ -1,128 +1,415 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
-export interface Profile {
-  id: string
-  username: string
-  display_name: string | null
-  bio: string | null
-  is_admin: boolean
-  created_at: string
-}
-
-export interface Product {
-  id: string
-  name: string
-  brand: string | null
-  description: string | null
-  /** Typed string; localized in src/config/taxonomy.ts */
-  category: string
-  /** Typed string; localized in src/config/taxonomy.ts */
-  base: string | null
-  created_by: string
-  /** Computed: lower(trim(name)); used for deduplication */
-  normalized_name: string
-  /** Denormalized; kept in sync by trigger */
-  avg_overall: number | null
-  ratings_count: number
-  avg_price: number | null
-  created_at: string
-  updated_at: string
-}
-
-export interface ProductImage {
-  id: string
-  product_id: string
-  storage_path: string
-  sort_order: number
-  created_at: string
-}
-
-export interface Rating {
-  id: string
-  product_id: string
-  user_id: string
-  overall: number
-  taste: number | null
-  consistency: number | null
-  appearance: number | null
-  nutrition: number | null
-  value: number | null
-  comment: string | null
-  /** Free text; frontend suggests known store chains */
-  location: string | null
-  price: number | null
-  /** false when superseded by a newer rating from the same user; excluded from aggregates */
-  is_current: boolean
-  created_at: string
-  updated_at: string
-}
-
-export interface RatingTag {
-  rating_id: string
-  /** Typed string; localized in src/config/taxonomy.ts */
-  tag: string
-}
-
-export interface RatingImage {
-  id: string
-  rating_id: string
-  storage_path: string
-  sort_order: number
-  created_at: string
-}
-
-export interface ProductWithDetails extends Product {
-  product_image: ProductImage[]
-}
-
-export interface RatingWithDetails extends Rating {
-  profile: Pick<Profile, 'username' | 'display_name'>
-  rating_tag: Array<{ tag: string }>
-  rating_image: RatingImage[]
-}
-
-export interface Database {
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: '14.15'
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
-      profile: {
-        Row: Profile
-        Insert: Omit<Profile, 'created_at' | 'is_admin'> & { is_admin?: boolean }
-        Update: Partial<Omit<Profile, 'id' | 'created_at'>>
-      }
       product: {
-        Row: Product
-        Insert: Omit<
-          Product,
-          | 'id'
-          | 'normalized_name'
-          | 'avg_overall'
-          | 'ratings_count'
-          | 'avg_price'
-          | 'created_at'
-          | 'updated_at'
-        >
-        Update: Partial<Omit<Product, 'id' | 'normalized_name' | 'created_by' | 'created_at'>>
+        Row: {
+          avg_overall: number | null
+          avg_price: number | null
+          base: string | null
+          brand: string | null
+          category: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          normalized_name: string | null
+          ratings_count: number
+          updated_at: string
+        }
+        Insert: {
+          avg_overall?: number | null
+          avg_price?: number | null
+          base?: string | null
+          brand?: string | null
+          category: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          normalized_name?: string | null
+          ratings_count?: number
+          updated_at?: string
+        }
+        Update: {
+          avg_overall?: number | null
+          avg_price?: number | null
+          base?: string | null
+          brand?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          normalized_name?: string | null
+          ratings_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'product_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'profile'
+            referencedColumns: ['id']
+          },
+        ]
       }
       product_image: {
-        Row: ProductImage
-        Insert: Omit<ProductImage, 'id' | 'created_at'>
-        Update: Partial<Omit<ProductImage, 'id' | 'product_id' | 'created_at'>>
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          sort_order: number
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          sort_order?: number
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          sort_order?: number
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'product_image_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'product'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      profile: {
+        Row: {
+          bio: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          is_admin: boolean
+          username: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          is_admin?: boolean
+          username: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          is_admin?: boolean
+          username?: string
+        }
+        Relationships: []
       }
       rating: {
-        Row: Rating
-        Insert: Omit<Rating, 'id' | 'is_current' | 'created_at' | 'updated_at'>
-        Update: Partial<Omit<Rating, 'id' | 'product_id' | 'user_id' | 'is_current' | 'created_at'>>
-      }
-      rating_tag: {
-        Row: RatingTag
-        Insert: RatingTag
-        Update: never
+        Row: {
+          appearance: number | null
+          comment: string | null
+          consistency: number | null
+          created_at: string
+          id: string
+          is_current: boolean
+          location: string | null
+          nutrition: number | null
+          overall: number
+          price: number | null
+          product_id: string
+          taste: number | null
+          updated_at: string
+          user_id: string
+          value: number | null
+        }
+        Insert: {
+          appearance?: number | null
+          comment?: string | null
+          consistency?: number | null
+          created_at?: string
+          id?: string
+          is_current?: boolean
+          location?: string | null
+          nutrition?: number | null
+          overall: number
+          price?: number | null
+          product_id: string
+          taste?: number | null
+          updated_at?: string
+          user_id: string
+          value?: number | null
+        }
+        Update: {
+          appearance?: number | null
+          comment?: string | null
+          consistency?: number | null
+          created_at?: string
+          id?: string
+          is_current?: boolean
+          location?: string | null
+          nutrition?: number | null
+          overall?: number
+          price?: number | null
+          product_id?: string
+          taste?: number | null
+          updated_at?: string
+          user_id?: string
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'rating_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'product'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'rating_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profile'
+            referencedColumns: ['id']
+          },
+        ]
       }
       rating_image: {
-        Row: RatingImage
-        Insert: Omit<RatingImage, 'id' | 'created_at'>
-        Update: Partial<Omit<RatingImage, 'id' | 'rating_id' | 'created_at'>>
+        Row: {
+          created_at: string
+          id: string
+          rating_id: string
+          sort_order: number
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          rating_id: string
+          sort_order?: number
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          rating_id?: string
+          sort_order?: number
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'rating_image_rating_id_fkey'
+            columns: ['rating_id']
+            isOneToOne: false
+            referencedRelation: 'rating'
+            referencedColumns: ['id']
+          },
+        ]
       }
+      rating_tag: {
+        Row: {
+          rating_id: string
+          tag: string
+        }
+        Insert: {
+          rating_id: string
+          tag: string
+        }
+        Update: {
+          rating_id?: string
+          tag?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'rating_tag_rating_id_fkey'
+            columns: ['rating_id']
+            isOneToOne: false
+            referencedRelation: 'rating'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      is_admin: { Args: never; Returns: boolean }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { '': string }; Returns: string[] }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }
+
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema['Enums']
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    : never) = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema['CompositeTypes']
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    : never) = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
+  public: {
+    Enums: {},
+  },
+} as const

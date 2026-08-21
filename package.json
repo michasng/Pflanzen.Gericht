@@ -13,7 +13,10 @@
     "lint": "run-s \"lint:*\"",
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",
-    "format": "oxfmt src/"
+    "format": "oxfmt src/",
+    "db:push": "supabase db push",
+    "db:seed": "supabase db query --linked --file supabase/seed.sql",
+    "db:types": "supabase gen types typescript --linked > src/types/database.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",
