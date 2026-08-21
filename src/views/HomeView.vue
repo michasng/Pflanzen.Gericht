@@ -1,5 +1,6 @@
 <script setup lang="ts">
 // TODO Phase 4: ProductGrid, ProductFilters, catalogStore
+import AppLogo from '@/components/AppLogo.vue'
 </script>
 
 <template>
@@ -67,16 +68,7 @@
     </div>
 
     <div class="flex flex-col items-center justify-center py-20 text-center">
-      <svg
-        class="w-20 h-20 text-gray-200 mb-4"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        aria-hidden="true"
-      >
-        <path
-          d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 008 20c6 0 7-8 7-8 3 3 3 8 2 11h2c1-6-1-11-2-15z"
-        />
-      </svg>
+      <AppLogo class="w-20 h-20 text-gray-200 mb-4" />
       <p class="text-gray-600 font-semibold text-lg mb-1">Noch keine Produkte vorhanden</p>
       <p class="text-gray-400 text-sm mb-6">Sei der Erste und füge ein veganes Produkt hinzu!</p>
       <RouterLink

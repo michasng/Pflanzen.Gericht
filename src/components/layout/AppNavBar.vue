@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import AppLogo from '@/components/AppLogo.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
@@ -98,16 +99,7 @@ function isActive(routeName: string): boolean {
       :to="{ name: 'home' }"
       class="flex items-center gap-2 font-bold text-lg text-primary-700 shrink-0 mr-4"
     >
-      <svg
-        class="w-7 h-7 text-primary-600"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        aria-hidden="true"
-      >
-        <path
-          d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 008 20c6 0 7-8 7-8 3 3 3 8 2 11h2c1-6-1-11-2-15z"
-        />
-      </svg>
+      <AppLogo class="w-7 h-7 text-primary-600" />
       Pflanzen.Gericht
     </RouterLink>
 
