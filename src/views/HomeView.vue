@@ -1,92 +1,194 @@
 <script setup lang="ts">
-// TODO Phase 4: ProductGrid, ProductFilters, catalogStore
+import { ref, watch, onMounted } from 'vue'
+import { useCatalogStore } from '@/stores/catalog'
+import ProductCard from '@/components/ProductCard.vue'
 import AppLogo from '@/components/AppLogo.vue'
+import { CATEGORIES, CATEGORY_LABELS, BASES, BASE_LABELS } from '@/config/taxonomy'
+import type { Category, Base } from '@/config/taxonomy'
+import type { SortOption } from '@/services/catalog'
+
+const catalogStore = useCatalogStore()
+
+const searchInput = ref(catalogStore.search)
+let searchTimer: ReturnType<typeof setTimeout> | undefined
+
+watch(searchInput, (value) => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    catalogStore.setSearch(value)
+    catalogStore.load(true)
+  }, 300)
+})
+
+function selectCategory(cat: string | null): void {
+  catalogStore.setCategory(cat)
+  catalogStore.load(true)
+}
+
+function selectBase(event: Event): void {
+  const value = (event.target as HTMLSelectElement).value
+  catalogStore.setBase(value || null)
+  catalogStore.load(true)
+}
+
+function selectSort(event: Event): void {
+  const value = (event.target as HTMLSelectElement).value as SortOption
+  catalogStore.setSort(value)
+  catalogStore.load(true)
+}
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: 'newest', label: 'Neueste' },
+  { value: 'top_rated', label: 'Beste Bewertung' },
+  { value: 'most_rated', label: 'Meiste Bewertungen' },
+  { value: 'price_asc', label: 'Günstigste' },
+  { value: 'price_desc', label: 'Teuerste' },
+]
+
+onMounted(() => {
+  catalogStore.load(true)
+})
 </script>
 
 <template>
   <div>
-    <div class="mb-4">
-      <div class="relative">
-        <svg
-          class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-          />
-        </svg>
-        <input
-          type="search"
-          placeholder="Vegane Produkte suchen …"
-          class="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+    <div class="mb-4 relative">
+      <svg
+        class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
         />
-      </div>
+      </svg>
+      <input
+        v-model="searchInput"
+        type="search"
+        placeholder="Vegane Produkte suchen …"
+        class="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+      />
     </div>
 
-    <div class="flex gap-2 overflow-x-auto pb-2 mb-6 -mx-4 px-4 scrollbar-none">
+    <div class="flex gap-2 overflow-x-auto pb-2 mb-3 -mx-4 px-4 scrollbar-none">
       <button
-        class="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium bg-primary-600 text-white"
+        class="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+        :class="
+          catalogStore.category === null
+            ? 'bg-primary-600 text-white'
+            : 'bg-white border border-gray-200 text-gray-600 hover:border-primary-300'
+        "
+        @click="selectCategory(null)"
       >
         Alle
       </button>
       <button
-        class="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium bg-white border border-gray-200 text-gray-600 hover:border-primary-300"
+        v-for="cat in CATEGORIES"
+        :key="cat"
+        class="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+        :class="
+          catalogStore.category === cat
+            ? 'bg-primary-600 text-white'
+            : 'bg-white border border-gray-200 text-gray-600 hover:border-primary-300'
+        "
+        @click="selectCategory(cat)"
       >
-        Fleisch-Ersatz
-      </button>
-      <button
-        class="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium bg-white border border-gray-200 text-gray-600 hover:border-primary-300"
-      >
-        Käse
-      </button>
-      <button
-        class="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium bg-white border border-gray-200 text-gray-600 hover:border-primary-300"
-      >
-        Milch
-      </button>
-      <button
-        class="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium bg-white border border-gray-200 text-gray-600 hover:border-primary-300"
-      >
-        Eier
-      </button>
-      <button
-        class="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium bg-white border border-gray-200 text-gray-600 hover:border-primary-300"
-      >
-        Originell
-      </button>
-      <button
-        class="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium bg-white border border-gray-200 text-gray-600 hover:border-primary-300"
-      >
-        Fertigprodukt
+        {{ CATEGORY_LABELS[cat as Category] }}
       </button>
     </div>
 
-    <div class="flex flex-col items-center justify-center py-20 text-center">
-      <AppLogo class="w-20 h-20 text-gray-200 mb-4" />
-      <p class="text-gray-600 font-semibold text-lg mb-1">Noch keine Produkte vorhanden</p>
-      <p class="text-gray-400 text-sm mb-6">Sei der Erste und füge ein veganes Produkt hinzu!</p>
-      <RouterLink
-        :to="{ name: 'product-new' }"
-        class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors"
+    <div class="flex gap-2 mb-5">
+      <select
+        class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        :value="catalogStore.base ?? ''"
+        @change="selectBase"
       >
-        <svg
-          class="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
-        Produkt hinzufügen
-      </RouterLink>
+        <option value="">Alle Basen</option>
+        <option v-for="base in BASES" :key="base" :value="base">
+          {{ BASE_LABELS[base as Base] }}
+        </option>
+      </select>
+
+      <select
+        class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        :value="catalogStore.sort"
+        @change="selectSort"
+      >
+        <option v-for="opt in SORT_OPTIONS" :key="opt.value" :value="opt.value">
+          {{ opt.label }}
+        </option>
+      </select>
     </div>
+
+    <div
+      v-if="catalogStore.error"
+      role="alert"
+      class="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-4"
+    >
+      {{ catalogStore.error }}
+    </div>
+
+    <div
+      v-if="catalogStore.loading && catalogStore.products.length === 0"
+      class="py-20 text-center text-gray-400 text-sm"
+    >
+      Wird geladen …
+    </div>
+
+    <template v-else-if="catalogStore.products.length === 0 && !catalogStore.loading">
+      <div class="flex flex-col items-center justify-center py-20 text-center">
+        <AppLogo class="w-20 h-20 text-gray-200 mb-4" />
+        <p class="text-gray-600 font-semibold text-lg mb-1">Keine Produkte gefunden</p>
+        <p class="text-gray-400 text-sm mb-6">
+          {{
+            catalogStore.search || catalogStore.category || catalogStore.base
+              ? 'Versuche einen anderen Filter.'
+              : 'Sei der Erste und füge ein veganes Produkt hinzu!'
+          }}
+        </p>
+        <RouterLink
+          v-if="!catalogStore.search && !catalogStore.category && !catalogStore.base"
+          :to="{ name: 'product-new' }"
+          class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          Produkt hinzufügen
+        </RouterLink>
+      </div>
+    </template>
+
+    <template v-else>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        <ProductCard
+          v-for="product in catalogStore.products"
+          :key="product.id"
+          :product="product"
+        />
+      </div>
+
+      <div v-if="catalogStore.hasMore" class="mt-6 text-center">
+        <button
+          :disabled="catalogStore.loading"
+          class="px-8 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-60 transition-colors"
+          @click="catalogStore.load()"
+        >
+          {{ catalogStore.loading ? 'Lädt …' : 'Mehr laden' }}
+        </button>
+      </div>
+    </template>
   </div>
 </template>
