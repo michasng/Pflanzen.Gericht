@@ -13,6 +13,7 @@ const password = ref('')
 const passwordConfirm = ref('')
 const error = ref<string | null>(null)
 const loading = ref(false)
+const needsConfirmation = ref(false)
 
 async function handleSubmit(): Promise<void> {
   error.value = null
@@ -28,8 +29,12 @@ async function handleSubmit(): Promise<void> {
 
   loading.value = true
   try {
-    await authStore.signUp(email.value, password.value, username.value)
-    await router.push({ name: 'home' })
+    const data = await authStore.signUp(email.value, password.value, username.value)
+    if (data.session) {
+      await router.push({ name: 'home' })
+    } else {
+      needsConfirmation.value = true
+    }
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Registrierung fehlgeschlagen.'
   } finally {
@@ -49,95 +54,134 @@ async function handleSubmit(): Promise<void> {
     </RouterLink>
 
     <div class="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-      <h1 class="text-xl font-bold text-gray-900 mb-6">Registrieren</h1>
-
-      <form class="flex flex-col gap-4" @submit.prevent="handleSubmit">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5" for="username">
-            Nutzername
-          </label>
-          <input
-            id="username"
-            v-model="username"
-            type="text"
-            autocomplete="username"
-            required
-            minlength="3"
-            maxlength="30"
-            placeholder="z. B. gruene_gabel"
-            class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-          />
+      <template v-if="needsConfirmation">
+        <div class="text-center py-4">
+          <div
+            class="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4"
+          >
+            <svg
+              class="w-6 h-6 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+          <h1 class="text-xl font-bold text-gray-900 mb-2">Fast geschafft!</h1>
+          <p class="text-sm text-gray-500 mb-6">
+            Wir haben dir eine Bestätigungs-E-Mail an
+            <strong class="text-gray-700">{{ email }}</strong> gesendet. Bitte klicke den Link in
+            der E-Mail, um dein Konto zu aktivieren.
+          </p>
+          <RouterLink
+            :to="{ name: 'login' }"
+            class="inline-block w-full py-2.5 px-4 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 transition-colors"
+          >
+            Zur Anmeldung
+          </RouterLink>
         </div>
+      </template>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5" for="email"> E-Mail </label>
-          <input
-            id="email"
-            v-model="email"
-            type="email"
-            autocomplete="email"
-            required
-            placeholder="du@beispiel.de"
-            class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-          />
-        </div>
+      <template v-else>
+        <h1 class="text-xl font-bold text-gray-900 mb-6">Registrieren</h1>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5" for="password">
-            Passwort
-          </label>
-          <input
-            id="password"
-            v-model="password"
-            type="password"
-            autocomplete="new-password"
-            required
-            minlength="8"
-            class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-          />
-        </div>
+        <form class="flex flex-col gap-4" @submit.prevent="handleSubmit">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5" for="username">
+              Nutzername
+            </label>
+            <input
+              id="username"
+              v-model="username"
+              type="text"
+              autocomplete="username"
+              required
+              minlength="3"
+              maxlength="30"
+              placeholder="z. B. gruene_gabel"
+              class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5" for="password-confirm">
-            Passwort bestätigen
-          </label>
-          <input
-            id="password-confirm"
-            v-model="passwordConfirm"
-            type="password"
-            autocomplete="new-password"
-            required
-            minlength="8"
-            class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-          />
-        </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5" for="email">
+              E-Mail
+            </label>
+            <input
+              id="email"
+              v-model="email"
+              type="email"
+              autocomplete="email"
+              required
+              placeholder="du@beispiel.de"
+              class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
 
-        <div
-          v-if="error"
-          role="alert"
-          class="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"
-        >
-          {{ error }}
-        </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5" for="password">
+              Passwort
+            </label>
+            <input
+              id="password"
+              v-model="password"
+              type="password"
+              autocomplete="new-password"
+              required
+              minlength="8"
+              class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
 
-        <button
-          type="submit"
-          :disabled="loading"
-          class="w-full py-2.5 px-4 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 disabled:opacity-60 transition-colors"
-        >
-          {{ loading ? 'Wird registriert …' : 'Konto erstellen' }}
-        </button>
-      </form>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5" for="password-confirm">
+              Passwort bestätigen
+            </label>
+            <input
+              id="password-confirm"
+              v-model="passwordConfirm"
+              type="password"
+              autocomplete="new-password"
+              required
+              minlength="8"
+              class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
 
-      <p class="mt-5 text-sm text-center text-gray-500">
-        Bereits ein Konto?
-        <RouterLink
-          :to="{ name: 'login' }"
-          class="text-primary-600 font-medium hover:text-primary-700"
-        >
-          Anmelden
-        </RouterLink>
-      </p>
+          <div
+            v-if="error"
+            role="alert"
+            class="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"
+          >
+            {{ error }}
+          </div>
+
+          <button
+            type="submit"
+            :disabled="loading"
+            class="w-full py-2.5 px-4 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 disabled:opacity-60 transition-colors"
+          >
+            {{ loading ? 'Wird registriert …' : 'Konto erstellen' }}
+          </button>
+        </form>
+
+        <p class="mt-5 text-sm text-center text-gray-500">
+          Bereits ein Konto?
+          <RouterLink
+            :to="{ name: 'login' }"
+            class="text-primary-600 font-medium hover:text-primary-700"
+          >
+            Anmelden
+          </RouterLink>
+        </p>
+      </template>
     </div>
   </div>
 </template>
