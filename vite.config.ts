@@ -6,6 +6,7 @@ import vueDevTools from "vite-plugin-vue-devtools";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
+  base: process.env.GITHUB_PAGES ? '/Pflanzen.Gericht/' : '/',
   plugins: [tailwindcss(), vue(), vueDevTools()],
   resolve: {
     alias: {
