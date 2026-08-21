@@ -74,9 +74,9 @@ export async function uploadProductImage(
 }
 
 export async function deleteProductImage(id: string, storagePath: string): Promise<void> {
-  await supabase.storage.from('product-images').remove([storagePath])
   const { error } = await supabase.from('product_image').delete().eq('id', id)
   if (error) throw error
+  await supabase.storage.from('product-images').remove([storagePath])
 }
 
 export async function deleteProduct(id: string): Promise<void> {
