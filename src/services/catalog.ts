@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { Product, ProductImage, Rating, RatingImage } from '@/types'
+import { fetchPriceReports, type PriceReportWithProfile } from '@/services/prices'
 
 export type SortOption = 'newest' | 'top_rated' | 'most_rated' | 'price_asc' | 'price_desc'
 
@@ -8,6 +9,9 @@ export interface CatalogFilter {
   category: string | null
   base: string | null
   sort: SortOption
+  store: string | null
+  minPriceCents: number | null
+  maxPriceCents: number | null
 }
 
 export type ProductListItem = Product & { images: ProductImage[] }
@@ -21,6 +25,7 @@ export type RatingWithDetails = Rating & {
 export type ProductDetail = Product & {
   images: ProductImage[]
   ratings: RatingWithDetails[]
+  priceReports: PriceReportWithProfile[]
 }
 
 export const PAGE_SIZE = 20
@@ -38,6 +43,21 @@ export async function fetchProducts(filter: CatalogFilter, page = 0): Promise<Pr
   }
   if (filter.base) {
     query = query.eq('base', filter.base)
+  }
+  if (filter.store) {
+    const { data: storeRows } = await supabase
+      .from('price_report')
+      .select('product_id')
+      .eq('store', filter.store)
+    const ids = [...new Set((storeRows ?? []).map((r) => r.product_id))]
+    if (ids.length === 0) return []
+    query = query.in('id', ids)
+  }
+  if (filter.minPriceCents != null) {
+    query = query.gte('min_price_euro_cents', filter.minPriceCents)
+  }
+  if (filter.maxPriceCents != null) {
+    query = query.lte('min_price_euro_cents', filter.maxPriceCents)
   }
 
   switch (filter.sort) {
@@ -67,21 +87,23 @@ export async function fetchProducts(filter: CatalogFilter, page = 0): Promise<Pr
 }
 
 export async function fetchProductDetail(id: string): Promise<ProductDetail | null> {
-  const [{ data: p, error: pErr }, { data: rawRatings, error: rErr }] = await Promise.all([
-    supabase
-      .from('product')
-      .select('*, images:product_image(id, storage_path, sort_order)')
-      .eq('id', id)
-      .single(),
-    supabase
-      .from('rating')
-      .select(
-        '*, profile:user_id(username, display_name), tags:rating_tag(tag), images:rating_image(id, storage_path, sort_order)',
-      )
-      .eq('product_id', id)
-      .order('is_current', { ascending: false })
-      .order('created_at', { ascending: false }),
-  ])
+  const [{ data: p, error: pErr }, { data: rawRatings, error: rErr }, priceReports] =
+    await Promise.all([
+      supabase
+        .from('product')
+        .select('*, images:product_image(id, storage_path, sort_order)')
+        .eq('id', id)
+        .single(),
+      supabase
+        .from('rating')
+        .select(
+          '*, profile:user_id(username, display_name), tags:rating_tag(tag), images:rating_image(id, storage_path, sort_order)',
+        )
+        .eq('product_id', id)
+        .order('is_current', { ascending: false })
+        .order('created_at', { ascending: false }),
+      fetchPriceReports(id),
+    ])
 
   if (pErr?.code === 'PGRST116') return null
   if (pErr) throw pErr
@@ -97,6 +119,7 @@ export async function fetchProductDetail(id: string): Promise<ProductDetail | nu
       tags: ((r.tags ?? []) as { tag: string }[]).map((t) => t.tag),
       images: (r.images as RatingImage[] | null) ?? [],
     })),
+    priceReports,
   }
 }
 

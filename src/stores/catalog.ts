@@ -20,12 +20,18 @@ export const useCatalogStore = defineStore('catalog', () => {
   const category = ref<string | null>(null)
   const base = ref<string | null>(null)
   const sort = ref<SortOption>('newest')
+  const store = ref<string | null>(null)
+  const minPriceCents = ref<number | null>(null)
+  const maxPriceCents = ref<number | null>(null)
 
   const filter = computed<CatalogFilter>(() => ({
     search: search.value,
     category: category.value,
     base: base.value,
     sort: sort.value,
+    store: store.value,
+    minPriceCents: minPriceCents.value,
+    maxPriceCents: maxPriceCents.value,
   }))
 
   async function load(reset = false): Promise<void> {
@@ -65,6 +71,18 @@ export const useCatalogStore = defineStore('catalog', () => {
     sort.value = value
   }
 
+  function setStore(value: string | null): void {
+    store.value = value
+  }
+
+  function setMinPriceCents(value: number | null): void {
+    minPriceCents.value = value
+  }
+
+  function setMaxPriceCents(value: number | null): void {
+    maxPriceCents.value = value
+  }
+
   return {
     products,
     loading,
@@ -74,10 +92,16 @@ export const useCatalogStore = defineStore('catalog', () => {
     category,
     base,
     sort,
+    store,
+    minPriceCents,
+    maxPriceCents,
     load,
     setSearch,
     setCategory,
     setBase,
     setSort,
+    setStore,
+    setMinPriceCents,
+    setMaxPriceCents,
   }
 })
