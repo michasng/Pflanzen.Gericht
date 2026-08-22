@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import StarDisplay from '@/components/StarDisplay.vue'
-import { tagToLabel } from '@/config/taxonomy'
+import TagList from '@/components/TagList.vue'
 import type { RatingWithDetails } from '@/services/catalog'
 import { formatDate } from '@/lib/date'
 
@@ -58,15 +58,7 @@ const filledCriteria = computed(() => {
       </div>
     </div>
 
-    <div v-if="rating.tags.length" class="flex flex-wrap gap-1 mb-3">
-      <span
-        v-for="tag in rating.tags"
-        :key="tag"
-        class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5"
-      >
-        {{ tagToLabel(tag) }}
-      </span>
-    </div>
+    <TagList :tags="rating.tags" class="mb-3" />
 
     <p v-if="rating.comment" class="text-sm text-gray-600 mb-3">{{ rating.comment }}</p>
 

@@ -14,7 +14,8 @@ import { deleteProduct } from '@/services/products'
 import type { Product } from '@/types'
 import StarDisplay from '@/components/StarDisplay.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
-import { categoryToLabel, tagToLabel } from '@/config/taxonomy'
+import TagList from '@/components/TagList.vue'
+import { categoryToLabel } from '@/config/taxonomy'
 import { formatDate } from '@/lib/date'
 
 const router = useRouter()
@@ -270,15 +271,7 @@ onMounted(async () => {
             <span class="text-xs text-gray-400">{{ formatDate(rating.created_at) }}</span>
           </div>
 
-          <div v-if="rating.tags.length" class="flex flex-wrap gap-1 mb-2">
-            <span
-              v-for="tag in rating.tags"
-              :key="tag"
-              class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5"
-            >
-              {{ tagToLabel(tag) }}
-            </span>
-          </div>
+          <TagList :tags="rating.tags" class="mb-2" />
 
           <p v-if="rating.comment" class="text-sm text-gray-600 mb-2 line-clamp-2">
             {{ rating.comment }}
