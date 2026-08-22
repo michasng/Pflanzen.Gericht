@@ -1,4 +1,4 @@
-﻿ALTER TABLE public.profile       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profile       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product_image ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rating        ENABLE ROW LEVEL SECURITY;
@@ -10,7 +10,7 @@ CREATE POLICY "profiles: publicly readable"
   ON public.profile FOR SELECT
   USING (true);
 
-CREATE POLICY "profiles: edit own profile"
+CREATE POLICY "profiles: edit own"
   ON public.profile FOR UPDATE
   USING (id = auth.uid())
   WITH CHECK (id = auth.uid());
@@ -131,3 +131,34 @@ CREATE POLICY "price_reports: edit own or admin"
 CREATE POLICY "price_reports: delete own or admin"
   ON public.price_report FOR DELETE
   USING (user_id = auth.uid() OR public.is_admin());
+
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+
+GRANT SELECT ON
+  public.profile,
+  public.product,
+  public.product_image,
+  public.rating,
+  public.rating_tag,
+  public.rating_image,
+  public.price_report
+TO anon, authenticated;
+
+GRANT UPDATE ON public.profile TO authenticated;
+
+GRANT INSERT, UPDATE, DELETE ON
+  public.product,
+  public.product_image
+TO authenticated;
+
+GRANT INSERT, UPDATE, DELETE ON
+  public.rating,
+  public.rating_image
+TO authenticated;
+
+-- rating_tag rows are inserted/deleted with their parent rating, never updated
+GRANT INSERT, DELETE ON public.rating_tag TO authenticated;
+
+GRANT INSERT, UPDATE, DELETE ON public.price_report TO authenticated;
+
+GRANT EXECUTE ON FUNCTION public.search_products TO anon, authenticated;
