@@ -9,6 +9,8 @@
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "test:unit": "vitest",
+    "test:unit:run": "vitest run",
+    "verify": "run-s build lint format test:unit:run",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
     "lint": "run-s \"lint:*\"",
@@ -59,7 +61,7 @@
     "vue-tsc": "^3.3.10"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm build && pnpm lint && pnpm format && git diff --exit-code && pnpm test:unit --run"
+    "pre-commit": "pnpm verify && git diff --exit-code"
   },
   "engines": {
     "node": "^22.18.0 || >=24.12.0"
