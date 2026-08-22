@@ -326,7 +326,10 @@ function clearPrice(): void {
     </template>
 
     <template v-else>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div
+        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 transition-opacity duration-150"
+        :class="{ 'opacity-50 pointer-events-none': catalogStore.loading }"
+      >
         <ProductCard
           v-for="product in catalogStore.products"
           :key="product.id"

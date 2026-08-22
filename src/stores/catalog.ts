@@ -46,7 +46,6 @@ export const useCatalogStore = defineStore('catalog', () => {
     if (reset) {
       page.value = 0
       hasMore.value = true
-      products.value = []
     }
     loading.value = true
     error.value = null
