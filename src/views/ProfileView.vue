@@ -83,7 +83,7 @@ async function handleDeleteRating(id: string): Promise<void> {
   deletingId.value = id
   try {
     await deleteRating(id)
-    ratings.value = ratings.value.filter((r) => r.id !== id)
+    ratings.value = await fetchUserRatings(authStore.user!.id)
   } catch (err) {
     alert(toErrorMessage(err))
   } finally {
