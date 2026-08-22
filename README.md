@@ -41,9 +41,9 @@ Two git-ignored env files control which Supabase instance is used:
 ### Local Supabase
 
 ```sh
-pnpm db:start   # start local Docker stack (runs migrations + seed)
-pnpm db:stop    # stop containers
-pnpm db:reset   # re-run all migrations and seed
+pnpm db:start:local   # start containers (and initialize database)
+pnpm db:stop:local    # stop containers
+pnpm db:reset:local   # reset and re-initialize database
 ```
 
 ### Compile and Hot-Reload for Development
