@@ -28,7 +28,10 @@ const submitting = ref(false)
 const submitError = ref<string | null>(null)
 const { pendingFiles, existingImages, handleDeleteImage, commitImageChanges } =
   useImageUpload<ProductImage>(
-    (file, sortOrder) => uploadProductImage(product.value!.id, authStore.user!.id, file, sortOrder),
+    (file, sortOrder) => {
+      if (!product.value || !authStore.user) return Promise.resolve()
+      return uploadProductImage(product.value.id, authStore.user.id, file, sortOrder)
+    },
     (img) => deleteProductImage(img.id, img.storage_path),
   )
 

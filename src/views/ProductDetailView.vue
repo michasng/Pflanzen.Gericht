@@ -57,12 +57,13 @@ const showPriceForm = ref(false)
 const priceFormError = ref<string | null>(null)
 
 const submitPriceReport = async (values: PriceReportFormValues): Promise<void> => {
-  if (!product.value || !authStore.user) return
+  const user = authStore.user
+  if (!product.value || !user) return
   priceFormError.value = null
   try {
     const updated = await upsertPriceReport(
       product.value.id,
-      authStore.user.id,
+      user.id,
       values.store,
       values.cityName,
       values.priceEuroCents,
@@ -70,10 +71,7 @@ const submitPriceReport = async (values: PriceReportFormValues): Promise<void> =
       values.observedAt,
     )
     const existing = product.value.priceReports.findIndex(
-      (r) =>
-        r.user_id === authStore.user!.id &&
-        r.store === values.store &&
-        r.city_name === values.cityName,
+      (r) => r.user_id === user.id && r.store === values.store && r.city_name === values.cityName,
     )
     if (existing >= 0) product.value.priceReports.splice(existing, 1, updated)
     else product.value.priceReports.unshift(updated)

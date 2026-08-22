@@ -31,7 +31,10 @@ const submitting = ref(false)
 const submitError = ref<string | null>(null)
 const { pendingFiles, existingImages, handleDeleteImage, commitImageChanges } =
   useImageUpload<RatingImage>(
-    (file, sortOrder) => uploadRatingImage(rating.value!.id, authStore.user!.id, file, sortOrder),
+    (file, sortOrder) => {
+      if (!rating.value || !authStore.user) return Promise.resolve()
+      return uploadRatingImage(rating.value.id, authStore.user.id, file, sortOrder)
+    },
     (img) => deleteRatingImage(img.id, img.storage_path),
   )
 

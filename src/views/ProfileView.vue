@@ -90,10 +90,12 @@ const handleDeleteProduct = async (id: string): Promise<void> => {
 
 const handleDeleteRating = async (id: string): Promise<void> => {
   if (!confirm('Bewertung wirklich löschen?')) return
+  const user = authStore.user
+  if (!user) return
   deletingId.value = id
   try {
     await deleteRating(id)
-    ratings.value = await fetchUserRatings(authStore.user!.id)
+    ratings.value = await fetchUserRatings(user.id)
   } catch (err) {
     alert(toErrorMessage(err))
   } finally {
