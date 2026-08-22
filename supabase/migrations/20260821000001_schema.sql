@@ -1,5 +1,5 @@
-﻿-- Categories, bases, tags and locations are typed text strings (snake_case) with CHECK constraints;
--- localization is handled exclusively in the frontend.
+﻿-- Categories, bases and tags are snake_case English
+-- Validation and localization is handled by the frontend
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm;CREATE TABLE public.profile (
   id           uuid    PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -16,17 +16,8 @@ CREATE TABLE public.product (
   name            text       NOT NULL CHECK (length(trim(name)) >= 2),
   brand           text,
   description     text,
-  category        text       NOT NULL
-                             CONSTRAINT product_category_check CHECK (category IN (
-                               'meat_alternative','cheese','milk','eggs','cold_cuts','sausage',
-                               'fish_alternative','yogurt','ice_cream','spread','snack','sweets',
-                               'ready_meal','original'
-                             )),
-  base            text
-                             CONSTRAINT product_base_check CHECK (base IN (
-                               'soy','pea','oat','wheat','lupin','chickpea','almond','cashew',
-                               'coconut','rice','hemp','tofu','seitan','mycoprotein','blend'
-                             )),
+  category        text       NOT NULL,
+  base            text,
   created_by      uuid       NOT NULL REFERENCES public.profile(id),
   normalized_name text       GENERATED ALWAYS AS (lower(trim(name))) STORED,
   -- Denormalized aggregate values; kept in sync by trigger
@@ -68,13 +59,7 @@ COMMENT ON COLUMN public.rating.is_current IS 'false when superseded by a newer 
 
 CREATE TABLE public.rating_tag (
   rating_id uuid NOT NULL REFERENCES public.rating(id) ON DELETE CASCADE,
-  tag       text NOT NULL
-                 CONSTRAINT rating_tag_tag_check CHECK (tag IN (
-                   'sustainable_packaging','lots_of_plastic','clean_ingredients','low_sugar',
-                   'high_protein','gluten_free','soy_free','organic','no_palm_oil',
-                   'few_ingredients','melts_well','kid_friendly','budget_friendly','expensive',
-                   'easy_to_prepare','very_similar','meaty_flavor','cheesy_flavor'
-                 )),
+  tag       text NOT NULL,
   PRIMARY KEY (rating_id, tag)
 );
 
