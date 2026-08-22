@@ -7,8 +7,6 @@ export interface RatingFormValues {
   nutrition: number | null
   value: number | null
   comment: string | null
-  location: string | null
-  price: number | null
   tags: string[]
 }
 </script>
@@ -17,7 +15,7 @@ export interface RatingFormValues {
 import { ref, reactive } from 'vue'
 import StarRatingInput from '@/components/StarRatingInput.vue'
 import ImageUpload from '@/components/ImageUpload.vue'
-import { TAGS, TAG_LABELS, LOCATION_SUGGESTIONS } from '@/config/taxonomy'
+import { TAGS, TAG_LABELS } from '@/config/taxonomy'
 import type { Tag } from '@/config/taxonomy'
 import type { RatingImage } from '@/types'
 import { getImageUrl } from '@/services/catalog'
@@ -59,10 +57,6 @@ const criteria = reactive<Record<CriteriaKey, number | null>>({
 
 const selectedTags = ref<string[]>(props.initial?.tags ? [...props.initial.tags] : [])
 const comment = ref(props.initial?.comment ?? '')
-const location = ref(props.initial?.location ?? '')
-const priceText = ref(
-  props.initial?.price != null ? String(props.initial.price).replace('.', ',') : '',
-)
 
 function toggleTag(tag: string): void {
   const idx = selectedTags.value.indexOf(tag)
@@ -72,8 +66,6 @@ function toggleTag(tag: string): void {
 
 function handleSubmit(): void {
   if (overall.value === null) return
-  const rawPrice = priceText.value.trim()
-  const parsedPrice = rawPrice ? parseFloat(rawPrice.replace(',', '.')) : null
   emit('submit', {
     overall: overall.value,
     taste: criteria.taste,
@@ -82,8 +74,6 @@ function handleSubmit(): void {
     nutrition: criteria.nutrition,
     value: criteria.value,
     comment: comment.value.trim() || null,
-    location: location.value.trim() || null,
-    price: parsedPrice !== null && !isNaN(parsedPrice) ? parsedPrice : null,
     tags: [...selectedTags.value],
   })
 }
@@ -147,42 +137,6 @@ function handleSubmit(): void {
         maxlength="1000"
         placeholder="Deine Erfahrungen mit dem Produkt …"
         class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
-      />
-    </div>
-
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1.5" for="rf-location">
-        Fundort
-        <span class="text-xs text-gray-400 font-normal">(optional)</span>
-      </label>
-      <input
-        id="rf-location"
-        v-model="location"
-        type="text"
-        list="rf-location-suggestions"
-        maxlength="80"
-        placeholder="z. B. REWE, EDEKA …"
-        class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-      />
-      <datalist id="rf-location-suggestions">
-        <option v-for="loc in LOCATION_SUGGESTIONS" :key="loc" :value="loc" />
-      </datalist>
-    </div>
-
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1.5" for="rf-price">
-        Preis (€)
-        <span class="text-xs text-gray-400 font-normal">(optional)</span>
-      </label>
-      <input
-        id="rf-price"
-        v-model="priceText"
-        type="text"
-        inputmode="decimal"
-        pattern="[0-9]+([.,][0-9]{1,2})?"
-        maxlength="8"
-        placeholder="z. B. 2,99"
-        class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
       />
     </div>
 

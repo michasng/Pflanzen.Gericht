@@ -65,7 +65,7 @@ export const TAG_LABELS = {
 export type Tag = keyof typeof TAG_LABELS
 export const TAGS = Object.keys(TAG_LABELS) as Tag[]
 
-export const LOCATION_SUGGESTIONS = [
+export const STORE_SUGGESTIONS = [
   'REWE',
   'EDEKA',
   'Lidl',

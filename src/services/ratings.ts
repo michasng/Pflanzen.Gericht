@@ -10,15 +10,7 @@ export type AdminRatingItem = Rating & {
 
 export type RatingFields = Pick<
   RatingInsert,
-  | 'overall'
-  | 'taste'
-  | 'consistency'
-  | 'appearance'
-  | 'nutrition'
-  | 'value'
-  | 'comment'
-  | 'location'
-  | 'price'
+  'overall' | 'taste' | 'consistency' | 'appearance' | 'nutrition' | 'value' | 'comment'
 >
 
 export async function createRating(

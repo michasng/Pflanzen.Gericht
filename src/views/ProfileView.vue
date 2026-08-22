@@ -288,16 +288,6 @@ onMounted(async () => {
             {{ rating.comment }}
           </p>
 
-          <div
-            v-if="rating.location || rating.price !== null"
-            class="flex gap-3 text-xs text-gray-400 mb-3"
-          >
-            <span v-if="rating.location">{{ rating.location }}</span>
-            <span v-if="rating.price !== null">
-              {{ rating.price.toFixed(2).replace('.', ',') }} €
-            </span>
-          </div>
-
           <div class="flex gap-3 pt-2 border-t border-gray-50">
             <RouterLink
               v-if="rating.is_current"

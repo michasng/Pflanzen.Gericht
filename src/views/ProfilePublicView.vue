@@ -169,16 +169,6 @@ onMounted(async () => {
             <p v-if="rating.comment" class="text-sm text-gray-600 mb-2 line-clamp-2">
               {{ rating.comment }}
             </p>
-
-            <div
-              v-if="rating.location || rating.price !== null"
-              class="flex gap-3 text-xs text-gray-400"
-            >
-              <span v-if="rating.location">{{ rating.location }}</span>
-              <span v-if="rating.price !== null">
-                {{ rating.price.toFixed(2).replace('.', ',') }} €
-              </span>
-            </div>
           </li>
         </ul>
       </template>

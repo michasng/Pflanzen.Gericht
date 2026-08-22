@@ -120,8 +120,6 @@ function handleDeleteImage(img: RatingImage): void {
           nutrition: rating.nutrition,
           value: rating.value,
           comment: rating.comment,
-          location: rating.location,
-          price: rating.price,
           tags: rating.tags,
         }"
         :existing-images="existingImages"

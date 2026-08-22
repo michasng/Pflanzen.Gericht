@@ -156,10 +156,8 @@ export type Database = {
           created_at: string
           id: string
           is_current: boolean
-          location: string | null
           nutrition: number | null
           overall: number
-          price: number | null
           product_id: string
           taste: number | null
           updated_at: string
@@ -173,10 +171,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_current?: boolean
-          location?: string | null
           nutrition?: number | null
           overall: number
-          price?: number | null
           product_id: string
           taste?: number | null
           updated_at?: string
@@ -190,10 +186,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_current?: boolean
-          location?: string | null
           nutrition?: number | null
           overall?: number
-          price?: number | null
           product_id?: string
           taste?: number | null
           updated_at?: string

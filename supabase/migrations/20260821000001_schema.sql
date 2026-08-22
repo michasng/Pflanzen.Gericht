@@ -48,9 +48,6 @@ CREATE TABLE public.rating (
   nutrition   smallint   CHECK (nutrition   BETWEEN 1 AND 5),
   value       smallint   CHECK (value       BETWEEN 1 AND 5),
   comment     text,
-  -- Free text; frontend suggests known store chains
-  location    text,
-  price       numeric(8, 2) CHECK (price >= 0),
   is_current  boolean    NOT NULL DEFAULT true,
   created_at  timestamptz NOT NULL DEFAULT now(),
   updated_at  timestamptz NOT NULL DEFAULT now()

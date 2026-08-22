@@ -96,11 +96,7 @@ BEGIN
       FROM   public.rating
       WHERE  product_id = v_product_id AND is_current = true
     ),
-    avg_price     = (
-      SELECT round(avg(price)::numeric, 2)
-      FROM   public.rating
-      WHERE  product_id = v_product_id AND is_current = true AND price IS NOT NULL
-    )
+    avg_price     = NULL
   WHERE id = v_product_id;
 
   RETURN NULL; -- AFTER trigger; return value is irrelevant

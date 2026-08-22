@@ -75,11 +75,6 @@ function tagLabel(tag: string): string {
 
     <p v-if="rating.comment" class="text-sm text-gray-600 mb-3">{{ rating.comment }}</p>
 
-    <div v-if="rating.location || rating.price !== null" class="flex gap-3 text-xs text-gray-400">
-      <span v-if="rating.location">{{ rating.location }}</span>
-      <span v-if="rating.price !== null">{{ rating.price.toFixed(2).replace('.', ',') }} €</span>
-    </div>
-
     <div v-if="editable" class="mt-3 pt-2 border-t border-gray-50">
       <RouterLink
         :to="{ name: 'rating-edit', params: { ratingId: rating.id } }"
