@@ -6,6 +6,7 @@ import { fetchProductDetail, getImageUrl, type ProductDetail } from '@/services/
 import { upsertPriceReport, deletePriceReport } from '@/services/prices'
 import { deleteProduct } from '@/services/products'
 import { formatEuroCents } from '@/lib/price'
+import { toErrorMessage } from '@/lib/error'
 import StarDisplay from '@/components/StarDisplay.vue'
 import RatingCard from '@/components/RatingCard.vue'
 import PriceReportForm, { type PriceReportFormValues } from '@/components/PriceReportForm.vue'
@@ -101,8 +102,8 @@ const removePriceReport = async (id: string): Promise<void> => {
     await deletePriceReport(id)
     const idx = product.value.priceReports.findIndex((r) => r.id === id)
     if (idx >= 0) product.value.priceReports.splice(idx, 1)
-  } catch {
-    // non-critical; user can retry
+  } catch (err) {
+    priceFormError.value = toErrorMessage(err)
   }
 }
 
