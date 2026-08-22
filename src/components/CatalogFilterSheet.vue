@@ -224,7 +224,7 @@ function reset(): void {
               v-model="draftBase"
               class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
-              <option :value="null">Alle Basen</option>
+              <option :value="null">Alle</option>
               <option v-for="base in BASES" :key="base" :value="base">
                 {{ BASE_LABELS[base as Base] }}
               </option>
