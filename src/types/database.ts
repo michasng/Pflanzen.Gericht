@@ -96,6 +96,7 @@ export type Database = {
           name: string
           normalized_name: string | null
           ratings_count: number
+          tags: string[]
           updated_at: string
         }
         Insert: {
@@ -111,6 +112,7 @@ export type Database = {
           name: string
           normalized_name?: string | null
           ratings_count?: number
+          tags?: string[]
           updated_at?: string
         }
         Update: {
@@ -126,6 +128,7 @@ export type Database = {
           name?: string
           normalized_name?: string | null
           ratings_count?: number
+          tags?: string[]
           updated_at?: string
         }
         Relationships: [
@@ -321,6 +324,43 @@ export type Database = {
     }
     Functions: {
       is_admin: { Args: never; Returns: boolean }
+      recompute_product_tags: {
+        Args: { p_product_id: string }
+        Returns: undefined
+      }
+      search_products: {
+        Args: {
+          p_base?: string
+          p_category?: string
+          p_city?: string
+          p_limit?: number
+          p_max_price?: number
+          p_min_price?: number
+          p_min_rating?: number
+          p_offset?: number
+          p_search?: string
+          p_sort?: string
+          p_store?: string
+          p_tags?: string[]
+        }
+        Returns: {
+          avg_overall: number
+          base: string
+          brand: string
+          category: string
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          min_price_euro_cents: number
+          name: string
+          normalized_name: string
+          ratings_count: number
+          tags: string[]
+          total_count: number
+          updated_at: string
+        }[]
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { '': string }; Returns: string[] }
     }
