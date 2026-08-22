@@ -3,8 +3,11 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { fetchProductDetail, getImageUrl, type ProductDetail } from '@/services/catalog'
+import { upsertPriceReport, deletePriceReport } from '@/services/prices'
+import { formatEuroCents } from '@/lib/price'
 import StarDisplay from '@/components/StarDisplay.vue'
 import RatingCard from '@/components/RatingCard.vue'
+import PriceReportForm, { type PriceReportFormValues } from '@/components/PriceReportForm.vue'
 import AppLogo from '@/components/AppLogo.vue'
 import { CATEGORY_LABELS, BASE_LABELS } from '@/config/taxonomy'
 import type { Category, Base } from '@/config/taxonomy'
@@ -53,6 +56,48 @@ function categoryLabel(cat: string): string {
 
 function baseLabel(base: string): string {
   return BASE_LABELS[base as Base] ?? base
+}
+
+const priceReports = computed(() => product.value?.priceReports ?? [])
+const showPriceForm = ref(false)
+const priceFormError = ref<string | null>(null)
+
+async function submitPriceReport(values: PriceReportFormValues): Promise<void> {
+  if (!product.value || !authStore.user) return
+  priceFormError.value = null
+  try {
+    const updated = await upsertPriceReport(
+      product.value.id,
+      authStore.user.id,
+      values.store,
+      values.cityName,
+      values.priceEuroCents,
+      values.salePriceEuroCents,
+      values.observedAt,
+    )
+    const existing = product.value.priceReports.findIndex(
+      (r) =>
+        r.user_id === authStore.user!.id &&
+        r.store === values.store &&
+        r.city_name === values.cityName,
+    )
+    if (existing >= 0) product.value.priceReports.splice(existing, 1, updated)
+    else product.value.priceReports.unshift(updated)
+    showPriceForm.value = false
+  } catch (err) {
+    priceFormError.value = err instanceof Error ? err.message : 'Fehler beim Speichern.'
+  }
+}
+
+async function removePriceReport(id: string): Promise<void> {
+  if (!product.value) return
+  try {
+    await deletePriceReport(id)
+    const idx = product.value.priceReports.findIndex((r) => r.id === id)
+    if (idx >= 0) product.value.priceReports.splice(idx, 1)
+  } catch {
+    // non-critical; user can retry
+  }
 }
 
 onMounted(async () => {
@@ -170,6 +215,82 @@ onMounted(async () => {
             </div>
           </div>
         </template>
+      </div>
+
+      <div class="mb-4 bg-white rounded-2xl border border-gray-100 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-base font-bold text-gray-900">
+            Preise
+            <span v-if="priceReports.length" class="text-sm font-normal text-gray-400">
+              ({{ priceReports.length }})
+            </span>
+          </h2>
+          <button
+            v-if="authStore.isLoggedIn && !showPriceForm"
+            type="button"
+            class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
+            @click="showPriceForm = true"
+          >
+            + Preis eintragen
+          </button>
+        </div>
+
+        <PriceReportForm v-if="showPriceForm" @submit="submitPriceReport" />
+        <p v-if="priceFormError" role="alert" class="mt-2 text-xs text-red-600">
+          {{ priceFormError }}
+        </p>
+
+        <p
+          v-if="!priceReports.length && !showPriceForm"
+          class="text-sm text-gray-400 text-center py-2"
+        >
+          Noch keine Preise eingetragen.
+          <template v-if="!authStore.isLoggedIn">
+            <RouterLink
+              :to="{ name: 'login', query: { redirect: $route.fullPath } }"
+              class="text-primary-600 hover:underline"
+            >
+              Anmelden
+            </RouterLink>
+            zum Eintragen.
+          </template>
+        </p>
+
+        <ul v-if="priceReports.length" class="divide-y divide-gray-50 mt-1">
+          <li
+            v-for="report in priceReports"
+            :key="report.id"
+            class="flex items-center justify-between py-2 text-sm"
+          >
+            <div>
+              <span class="font-medium text-gray-800">{{ report.store }}</span>
+              <span v-if="report.city_name" class="text-gray-400 ml-1 text-xs">
+                · {{ report.city_name }}
+              </span>
+              <span class="ml-2 font-semibold text-gray-900">
+                {{ formatEuroCents(report.effective_price_euro_cents ?? report.price_euro_cents) }}
+              </span>
+              <span
+                v-if="report.sale_price_euro_cents != null"
+                class="ml-1 line-through text-gray-400 text-xs"
+              >
+                {{ formatEuroCents(report.price_euro_cents) }}
+              </span>
+            </div>
+            <div class="flex items-center gap-3 text-xs text-gray-400">
+              <span>{{ report.observed_at }}</span>
+              <button
+                v-if="authStore.isLoggedIn && report.user_id === authStore.user?.id"
+                type="button"
+                class="text-red-400 hover:text-red-600 transition-colors"
+                aria-label="Eintrag löschen"
+                @click="removePriceReport(report.id)"
+              >
+                ✕
+              </button>
+            </div>
+          </li>
+        </ul>
       </div>
 
       <div class="mb-6">

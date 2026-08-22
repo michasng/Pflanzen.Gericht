@@ -27,7 +27,7 @@ export async function upsertPriceReport(
   priceEuroCents: number,
   salePriceEuroCents: number | null,
   observedAt: string,
-): Promise<PriceReport> {
+): Promise<PriceReportWithProfile> {
   const { data, error } = await supabase
     .from('price_report')
     .upsert(
@@ -42,10 +42,13 @@ export async function upsertPriceReport(
       },
       { onConflict: 'product_id,user_id,store,city_name' },
     )
-    .select()
+    .select('*, profile:user_id(username, display_name)')
     .single()
   if (error) throw error
-  return data
+  return {
+    ...data,
+    profile: data.profile as { username: string; display_name: string | null },
+  }
 }
 
 export async function deletePriceReport(id: string): Promise<void> {
