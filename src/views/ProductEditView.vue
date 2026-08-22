@@ -12,6 +12,7 @@ import {
   deleteProductImage,
 } from '@/services/products'
 import { toErrorMessage } from '@/lib/error'
+import { useImageUpload } from '@/composables/useImageUpload'
 import type { Product, ProductImage } from '@/types'
 import type { ProductFormValues } from '@/components/ProductForm.vue'
 
@@ -20,13 +21,15 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const product = ref<Product | null>(null)
-const existingImages = ref<ProductImage[]>([])
 const loading = ref(true)
 const loadError = ref<string | null>(null)
 const submitting = ref(false)
 const submitError = ref<string | null>(null)
-const pendingFiles = ref<File[]>([])
-const imagesToDelete = ref<ProductImage[]>([])
+const { pendingFiles, existingImages, handleDeleteImage, commitImageChanges } =
+  useImageUpload<ProductImage>(
+    (file, sortOrder) => uploadProductImage(product.value!.id, authStore.user!.id, file, sortOrder),
+    (img) => deleteProductImage(img.id, img.storage_path),
+  )
 
 onMounted(async () => {
   const id = route.params.id as string
@@ -55,25 +58,12 @@ async function handleSubmit(values: ProductFormValues): Promise<void> {
   submitError.value = null
   try {
     await updateProduct(product.value.id, values)
-    for (const img of imagesToDelete.value) {
-      await deleteProductImage(img.id, img.storage_path)
-    }
-    const nextSortOrder = existingImages.value.length
-    await Promise.all(
-      pendingFiles.value.map((file, i) =>
-        uploadProductImage(product.value!.id, authStore.user!.id, file, nextSortOrder + i),
-      ),
-    )
+    await commitImageChanges()
     await router.push({ name: 'product-detail', params: { id: product.value.id } })
   } catch (err) {
     submitError.value = toErrorMessage(err)
     submitting.value = false
   }
-}
-
-function handleDeleteImage(img: ProductImage): void {
-  imagesToDelete.value.push(img)
-  existingImages.value = existingImages.value.filter((i) => i.id !== img.id)
 }
 </script>
 

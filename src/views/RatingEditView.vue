@@ -10,6 +10,7 @@ import {
   deleteRatingImage,
 } from '@/services/ratings'
 import { toErrorMessage } from '@/lib/error'
+import { useImageUpload } from '@/composables/useImageUpload'
 import RatingForm from '@/components/RatingForm.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import type { RatingFormValues } from '@/components/RatingForm.vue'
@@ -23,13 +24,15 @@ type RatingWithMeta = Rating & { tags: string[]; images: RatingImage[] }
 
 const rating = ref<RatingWithMeta | null>(null)
 const product = ref<Product | null>(null)
-const existingImages = ref<RatingImage[]>([])
 const loading = ref(true)
 const loadError = ref<string | null>(null)
 const submitting = ref(false)
 const submitError = ref<string | null>(null)
-const pendingFiles = ref<File[]>([])
-const imagesToDelete = ref<RatingImage[]>([])
+const { pendingFiles, existingImages, handleDeleteImage, commitImageChanges } =
+  useImageUpload<RatingImage>(
+    (file, sortOrder) => uploadRatingImage(rating.value!.id, authStore.user!.id, file, sortOrder),
+    (img) => deleteRatingImage(img.id, img.storage_path),
+  )
 
 onMounted(async () => {
   const ratingId = route.params.ratingId as string
@@ -65,25 +68,12 @@ async function handleSubmit(values: RatingFormValues): Promise<void> {
   try {
     const { tags, ...fields } = values
     await updateRating(rating.value.id, fields, tags)
-    for (const img of imagesToDelete.value) {
-      await deleteRatingImage(img.id, img.storage_path)
-    }
-    const nextSortOrder = existingImages.value.length
-    await Promise.all(
-      pendingFiles.value.map((file, i) =>
-        uploadRatingImage(rating.value!.id, authStore.user!.id, file, nextSortOrder + i),
-      ),
-    )
+    await commitImageChanges()
     await router.push({ name: 'product-detail', params: { id: rating.value.product_id } })
   } catch (err) {
     submitError.value = toErrorMessage(err)
     submitting.value = false
   }
-}
-
-function handleDeleteImage(img: RatingImage): void {
-  imagesToDelete.value.push(img)
-  existingImages.value = existingImages.value.filter((i) => i.id !== img.id)
 }
 </script>
 
