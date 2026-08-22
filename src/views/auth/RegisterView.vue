@@ -43,18 +43,18 @@ watch(username, (val) => {
   }, 350)
 })
 
-function onUsernameInput(): void {
+const onUsernameInput = (): void => {
   usernameEdited.value = true
 }
 
-function usernameError(): string | null {
+const usernameError = (): string | null => {
   if (!username.value) return null
   if (!USERNAME_RE.test(username.value)) return 'Nur Kleinbuchstaben, Ziffern und _ (3–30 Zeichen).'
   if (usernameAvailable.value === false) return 'Dieser Nutzername ist bereits vergeben.'
   return null
 }
 
-async function handleSubmit(): Promise<void> {
+const handleSubmit = async (): Promise<void> => {
   error.value = null
 
   if (!USERNAME_RE.test(username.value)) {

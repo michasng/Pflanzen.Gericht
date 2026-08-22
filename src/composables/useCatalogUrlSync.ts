@@ -5,27 +5,25 @@ import type { SortOption } from '@/services/catalog'
 
 const VALID_SORTS: SortOption[] = ['newest', 'top_rated', 'most_rated', 'price_asc', 'price_desc']
 
-function asString(v: unknown): string | null {
-  return typeof v === 'string' && v ? v : null
-}
+const asString = (v: unknown): string | null => (typeof v === 'string' && v ? v : null)
 
-function asNumber(v: unknown): number | null {
+const asNumber = (v: unknown): number | null => {
   const n = Number(v)
   return typeof v === 'string' && v && Number.isFinite(n) ? n : null
 }
 
-function asStringArray(v: unknown): string[] {
+const asStringArray = (v: unknown): string[] => {
   if (Array.isArray(v)) return v.filter((x): x is string => typeof x === 'string')
   if (typeof v === 'string' && v) return [v]
   return []
 }
 
-export function useCatalogUrlSync(): void {
+export const useCatalogUrlSync = (): void => {
   const route = useRoute()
   const router = useRouter()
   const store = useCatalogStore()
 
-  function hydrateFromQuery(): void {
+  const hydrateFromQuery = (): void => {
     const q = route.query
     store.setSearch(asString(q.q) ?? '')
     store.setCategory(asString(q.category))

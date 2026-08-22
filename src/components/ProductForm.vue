@@ -53,7 +53,7 @@ watch(name, (val) => {
   }, 500)
 })
 
-function handleSubmit(): void {
+const handleSubmit = (): void => {
   emit('submit', {
     name: name.value.trim(),
     category: category.value,

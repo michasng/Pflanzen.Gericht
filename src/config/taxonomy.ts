@@ -16,9 +16,8 @@ export const CATEGORY_LABELS = {
 } as const
 export type Category = keyof typeof CATEGORY_LABELS
 export const CATEGORIES = Object.keys(CATEGORY_LABELS) as Category[]
-export function categoryToLabel(category: string): string {
-  return CATEGORY_LABELS[category as Category] ?? category
-}
+export const categoryToLabel = (category: string): string =>
+  CATEGORY_LABELS[category as Category] ?? category
 
 export const BASE_LABELS = {
   soy: 'Soja',
@@ -37,9 +36,7 @@ export const BASE_LABELS = {
 } as const
 export type Base = keyof typeof BASE_LABELS
 export const BASES = Object.keys(BASE_LABELS) as Base[]
-export function baseToLabel(base: string): string {
-  return BASE_LABELS[base as Base] ?? base
-}
+export const baseToLabel = (base: string): string => BASE_LABELS[base as Base] ?? base
 
 export const TAG_GROUPS = [
   {
@@ -76,9 +73,7 @@ export const TAG_LABELS = Object.fromEntries(
   TAG_GROUPS.flatMap((g) => Object.entries(g.tags)),
 ) as Record<Tag, string>
 export const TAGS = Object.keys(TAG_LABELS) as Tag[]
-export function tagToLabel(tag: string): string {
-  return TAG_LABELS[tag as Tag] ?? tag
-}
+export const tagToLabel = (tag: string): string => TAG_LABELS[tag as Tag] ?? tag
 
 export const RATING_CRITERION_LABELS = {
   taste: 'Geschmack',

@@ -41,7 +41,7 @@ export const useCatalogStore = defineStore('catalog', () => {
     tags: tags.value,
   }))
 
-  async function load(reset = false): Promise<void> {
+  const load = async (reset = false): Promise<void> => {
     if (loading.value) return
     if (reset) {
       page.value = 0
@@ -62,43 +62,43 @@ export const useCatalogStore = defineStore('catalog', () => {
     }
   }
 
-  function setSearch(value: string): void {
+  const setSearch = (value: string): void => {
     search.value = value
   }
 
-  function setCategory(value: string | null): void {
+  const setCategory = (value: string | null): void => {
     category.value = value
   }
 
-  function setBase(value: string | null): void {
+  const setBase = (value: string | null): void => {
     base.value = value
   }
 
-  function setSort(value: SortOption): void {
+  const setSort = (value: SortOption): void => {
     sort.value = value
   }
 
-  function setStore(value: string | null): void {
+  const setStore = (value: string | null): void => {
     store.value = value
   }
 
-  function setCity(value: string | null): void {
+  const setCity = (value: string | null): void => {
     city.value = value
   }
 
-  function setMinPriceCents(value: number | null): void {
+  const setMinPriceCents = (value: number | null): void => {
     minPriceCents.value = value
   }
 
-  function setMaxPriceCents(value: number | null): void {
+  const setMaxPriceCents = (value: number | null): void => {
     maxPriceCents.value = value
   }
 
-  function setMinRating(value: number | null): void {
+  const setMinRating = (value: number | null): void => {
     minRating.value = value
   }
 
-  function setTags(value: string[]): void {
+  const setTags = (value: string[]): void => {
     tags.value = value
   }
 
@@ -115,7 +115,7 @@ export const useCatalogStore = defineStore('catalog', () => {
     return n
   })
 
-  function resetFilters(): void {
+  const resetFilters = (): void => {
     base.value = null
     store.value = null
     city.value = null

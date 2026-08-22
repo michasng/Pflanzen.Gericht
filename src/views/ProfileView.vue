@@ -40,18 +40,18 @@ const deletingProductId = ref<string | null>(null)
 const currentRatingsCount = computed(() => ratings.value.filter((r) => r.is_current).length)
 const initials = computed(() => authStore.profile?.username?.charAt(0).toUpperCase() ?? '?')
 
-function startEdit(): void {
+const startEdit = (): void => {
   displayName.value = authStore.profile?.display_name ?? ''
   bio.value = authStore.profile?.bio ?? ''
   isEditing.value = true
   saveError.value = null
 }
 
-function cancelEdit(): void {
+const cancelEdit = (): void => {
   isEditing.value = false
 }
 
-async function saveProfileData(): Promise<void> {
+const saveProfileData = async (): Promise<void> => {
   if (!authStore.user) return
   saving.value = true
   saveError.value = null
@@ -69,12 +69,12 @@ async function saveProfileData(): Promise<void> {
   }
 }
 
-async function handleSignOut(): Promise<void> {
+const handleSignOut = async (): Promise<void> => {
   await authStore.signOut()
   await router.push({ name: 'home' })
 }
 
-async function handleDeleteProduct(id: string): Promise<void> {
+const handleDeleteProduct = async (id: string): Promise<void> => {
   if (!confirm('Produkt wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.'))
     return
   deletingProductId.value = id
@@ -88,7 +88,7 @@ async function handleDeleteProduct(id: string): Promise<void> {
   }
 }
 
-async function handleDeleteRating(id: string): Promise<void> {
+const handleDeleteRating = async (id: string): Promise<void> => {
   if (!confirm('Bewertung wirklich löschen?')) return
   deletingId.value = id
   try {

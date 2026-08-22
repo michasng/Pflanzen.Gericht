@@ -13,12 +13,12 @@ export type RatingFields = Pick<
   'overall' | 'taste' | 'consistency' | 'appearance' | 'nutrition' | 'value' | 'comment'
 >
 
-export async function createRating(
+export const createRating = async (
   productId: string,
   userId: string,
   fields: RatingFields,
   tags: string[],
-): Promise<Rating> {
+): Promise<Rating> => {
   const { data, error } = await supabase
     .from('rating')
     .insert({ ...fields, product_id: productId, user_id: userId })
@@ -36,12 +36,12 @@ export async function createRating(
   return data
 }
 
-export async function uploadRatingImage(
+export const uploadRatingImage = async (
   ratingId: string,
   userId: string,
   file: File,
   sortOrder: number,
-): Promise<RatingImage> {
+): Promise<RatingImage> => {
   const path = `${userId}/${ratingId}/${crypto.randomUUID()}.webp`
   const { error: uploadError } = await supabase.storage
     .from('review-images')
@@ -57,9 +57,9 @@ export async function uploadRatingImage(
   return data
 }
 
-export async function fetchRatingForEdit(
+export const fetchRatingForEdit = async (
   ratingId: string,
-): Promise<(Rating & { tags: string[]; images: RatingImage[] }) | null> {
+): Promise<(Rating & { tags: string[]; images: RatingImage[] }) | null> => {
   const { data, error } = await supabase
     .from('rating')
     .select('*, tags:rating_tag(tag), images:rating_image(id, storage_path, sort_order)')
@@ -74,11 +74,11 @@ export async function fetchRatingForEdit(
   }
 }
 
-export async function updateRating(
+export const updateRating = async (
   ratingId: string,
   fields: RatingFields,
   tags: string[],
-): Promise<void> {
+): Promise<void> => {
   const { error } = await supabase.from('rating').update(fields).eq('id', ratingId)
   if (error) throw error
 
@@ -93,13 +93,13 @@ export async function updateRating(
   }
 }
 
-export async function deleteRatingImage(id: string, storagePath: string): Promise<void> {
+export const deleteRatingImage = async (id: string, storagePath: string): Promise<void> => {
   const { error } = await supabase.from('rating_image').delete().eq('id', id)
   if (error) throw error
   await supabase.storage.from('review-images').remove([storagePath])
 }
 
-export async function fetchAllRatingsForAdmin(page = 0): Promise<AdminRatingItem[]> {
+export const fetchAllRatingsForAdmin = async (page = 0): Promise<AdminRatingItem[]> => {
   const { data, error } = await supabase
     .from('rating')
     .select('*, profile:user_id(username), product:product_id(id, name)')

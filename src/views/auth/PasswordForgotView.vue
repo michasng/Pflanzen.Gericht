@@ -10,7 +10,7 @@ const submitted = ref(false)
 const error = ref<string | null>(null)
 const loading = ref(false)
 
-async function handleSubmit(): Promise<void> {
+const handleSubmit = async (): Promise<void> => {
   error.value = null
   loading.value = true
   try {

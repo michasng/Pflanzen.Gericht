@@ -31,7 +31,7 @@ const draftMaxPriceInput = ref(
 
 const cities = ref<string[]>([])
 
-async function loadCities(store: string | null): Promise<void> {
+const loadCities = async (store: string | null): Promise<void> => {
   if (!store) {
     cities.value = []
     return
@@ -73,7 +73,7 @@ watch(
   },
 )
 
-function toggleTag(tag: string): void {
+const toggleTag = (tag: string): void => {
   const idx = draftTags.value.indexOf(tag)
   if (idx === -1) draftTags.value = [...draftTags.value, tag]
   else draftTags.value = draftTags.value.filter((t) => t !== tag)
@@ -97,7 +97,7 @@ const hasChanges = computed(
         : ''),
 )
 
-function apply(): void {
+const apply = (): void => {
   catalogStore.setMinRating(draftMinRating.value)
   catalogStore.setBase(draftBase.value)
   catalogStore.setStore(draftStore.value)
@@ -109,7 +109,7 @@ function apply(): void {
   emit('close')
 }
 
-function reset(): void {
+const reset = (): void => {
   draftMinRating.value = null
   draftBase.value = null
   draftStore.value = null

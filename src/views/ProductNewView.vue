@@ -15,7 +15,7 @@ const submitting = ref(false)
 const error = ref<string | null>(null)
 const pendingFiles = ref<File[]>([])
 
-async function handleSubmit(values: ProductFormValues): Promise<void> {
+const handleSubmit = async (values: ProductFormValues): Promise<void> => {
   const user = authStore.user
   if (!user) return
   submitting.value = true

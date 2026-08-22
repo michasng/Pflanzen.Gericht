@@ -23,7 +23,7 @@ const observedAt = ref(new Date().toISOString().slice(0, 10))
 
 const error = ref<string | null>(null)
 
-function handleSubmit(): void {
+const handleSubmit = (): void => {
   const priceEuroCents = parseEurosToCents(priceText.value)
   if (!store.value.trim() || priceEuroCents === null) {
     error.value = 'Bitte Geschäft und gültigen Preis angeben.'

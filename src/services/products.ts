@@ -2,14 +2,14 @@ import { supabase } from '@/lib/supabase'
 import type { Product, ProductInsert, ProductUpdate, ProductImage } from '@/types'
 import type { ProductListItem } from '@/services/catalog'
 
-export async function fetchProduct(id: string): Promise<Product | null> {
+export const fetchProduct = async (id: string): Promise<Product | null> => {
   const { data, error } = await supabase.from('product').select('*').eq('id', id).single()
   if (error?.code === 'PGRST116') return null
   if (error) throw error
   return data
 }
 
-export async function fetchProductImages(productId: string): Promise<ProductImage[]> {
+export const fetchProductImages = async (productId: string): Promise<ProductImage[]> => {
   const { data, error } = await supabase
     .from('product_image')
     .select('*')
@@ -19,9 +19,9 @@ export async function fetchProductImages(productId: string): Promise<ProductImag
   return data ?? []
 }
 
-export async function searchSimilarProducts(
+export const searchSimilarProducts = async (
   name: string,
-): Promise<Pick<Product, 'id' | 'name' | 'brand' | 'category'>[]> {
+): Promise<Pick<Product, 'id' | 'name' | 'brand' | 'category'>[]> => {
   if (!name.trim()) return []
   const { data, error } = await supabase
     .from('product')
@@ -32,10 +32,10 @@ export async function searchSimilarProducts(
   return data ?? []
 }
 
-export async function createProduct(
+export const createProduct = async (
   fields: Pick<ProductInsert, 'name' | 'category' | 'base' | 'brand' | 'description'>,
   userId: string,
-): Promise<Product> {
+): Promise<Product> => {
   const { data, error } = await supabase
     .from('product')
     .insert({ ...fields, created_by: userId })
@@ -45,20 +45,20 @@ export async function createProduct(
   return data
 }
 
-export async function updateProduct(
+export const updateProduct = async (
   id: string,
   updates: Pick<ProductUpdate, 'name' | 'category' | 'base' | 'brand' | 'description'>,
-): Promise<void> {
+): Promise<void> => {
   const { error } = await supabase.from('product').update(updates).eq('id', id)
   if (error) throw error
 }
 
-export async function uploadProductImage(
+export const uploadProductImage = async (
   productId: string,
   userId: string,
   file: File,
   sortOrder: number,
-): Promise<ProductImage> {
+): Promise<ProductImage> => {
   const path = `${userId}/${productId}/${crypto.randomUUID()}.webp`
   const { error: uploadError } = await supabase.storage
     .from('product-images')
@@ -74,20 +74,20 @@ export async function uploadProductImage(
   return data
 }
 
-export async function deleteProductImage(id: string, storagePath: string): Promise<void> {
+export const deleteProductImage = async (id: string, storagePath: string): Promise<void> => {
   const { error } = await supabase.from('product_image').delete().eq('id', id)
   if (error) throw error
   await supabase.storage.from('product-images').remove([storagePath])
 }
 
-export async function deleteProduct(id: string): Promise<void> {
+export const deleteProduct = async (id: string): Promise<void> => {
   const { error } = await supabase.from('product').delete().eq('id', id)
   if (error) throw error
 }
 
 const ADMIN_PAGE_SIZE = 50
 
-export async function fetchAllProductsForAdmin(page = 0): Promise<ProductListItem[]> {
+export const fetchAllProductsForAdmin = async (page = 0): Promise<ProductListItem[]> => {
   const { data, error } = await supabase
     .from('product')
     .select('*, images:product_image(id, storage_path, sort_order)')

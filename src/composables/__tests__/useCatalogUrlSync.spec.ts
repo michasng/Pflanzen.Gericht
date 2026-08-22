@@ -5,16 +5,13 @@ import { useCatalogStore } from '@/stores/catalog'
 // Tests the query-param → store mapping defined in useCatalogUrlSync.
 // The composable is exercised indirectly through the store setters it calls.
 
-function parseRawQuery(q: Record<string, string>) {
-  // mirror the hydration logic from the composable
-  function asString(v: unknown): string | null {
-    return typeof v === 'string' && v ? v : null
-  }
-  function asNumber(v: unknown): number | null {
+const parseRawQuery = (q: Record<string, string>) => {
+  const asString = (v: unknown): string | null => (typeof v === 'string' && v ? v : null)
+  const asNumber = (v: unknown): number | null => {
     const n = Number(v)
     return typeof v === 'string' && v && Number.isFinite(n) ? n : null
   }
-  function asStringArray(v: unknown): string[] {
+  const asStringArray = (v: unknown): string[] => {
     if (Array.isArray(v)) return v.filter((x): x is string => typeof x === 'string')
     if (typeof v === 'string' && v) return [v]
     return []

@@ -5,7 +5,7 @@ export type PriceReportWithProfile = PriceReport & {
   profile: { username: string; display_name: string | null }
 }
 
-export async function fetchPriceReports(productId: string): Promise<PriceReportWithProfile[]> {
+export const fetchPriceReports = async (productId: string): Promise<PriceReportWithProfile[]> => {
   const { data, error } = await supabase
     .from('price_report')
     .select('*, profile:user_id(username, display_name)')
@@ -19,7 +19,7 @@ export async function fetchPriceReports(productId: string): Promise<PriceReportW
   }))
 }
 
-export async function upsertPriceReport(
+export const upsertPriceReport = async (
   productId: string,
   userId: string,
   store: string,
@@ -27,7 +27,7 @@ export async function upsertPriceReport(
   priceEuroCents: number,
   salePriceEuroCents: number | null,
   observedAt: string,
-): Promise<PriceReportWithProfile> {
+): Promise<PriceReportWithProfile> => {
   const { data, error } = await supabase
     .from('price_report')
     .upsert(
@@ -51,7 +51,7 @@ export async function upsertPriceReport(
   }
 }
 
-export async function deletePriceReport(id: string): Promise<void> {
+export const deletePriceReport = async (id: string): Promise<void> => {
   const { error } = await supabase.from('price_report').delete().eq('id', id)
   if (error) throw error
 }

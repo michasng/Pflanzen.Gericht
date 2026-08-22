@@ -1,7 +1,6 @@
-export function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('de-DE', {
+export const formatDate = (dateStr: string): string =>
+  new Date(dateStr).toLocaleDateString('de-DE', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
   })
-}

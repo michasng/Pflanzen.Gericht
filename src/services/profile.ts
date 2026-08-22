@@ -14,10 +14,10 @@ export type RatingWithMeta = Rating & {
   tags: string[]
 }
 
-export async function fetchUserRatings(
+export const fetchUserRatings = async (
   userId: string,
   onlyCurrent = false,
-): Promise<RatingWithMeta[]> {
+): Promise<RatingWithMeta[]> => {
   let query = supabase
     .from('rating')
     .select('*, product:product_id(id, name, category), tags:rating_tag(tag)')
@@ -33,7 +33,7 @@ export async function fetchUserRatings(
   }))
 }
 
-export async function fetchUserProducts(userId: string): Promise<Product[]> {
+export const fetchUserProducts = async (userId: string): Promise<Product[]> => {
   const { data, error } = await supabase
     .from('product')
     .select('*')
@@ -43,15 +43,15 @@ export async function fetchUserProducts(userId: string): Promise<Product[]> {
   return data ?? []
 }
 
-export async function updateProfile(
+export const updateProfile = async (
   userId: string,
   updates: { display_name?: string | null; bio?: string | null },
-): Promise<void> {
+): Promise<void> => {
   const { error } = await supabase.from('profile').update(updates).eq('id', userId)
   if (error) throw error
 }
 
-export async function deleteRating(ratingId: string): Promise<void> {
+export const deleteRating = async (ratingId: string): Promise<void> => {
   const { data: images } = await supabase
     .from('rating_image')
     .select('storage_path')
@@ -65,7 +65,7 @@ export async function deleteRating(ratingId: string): Promise<void> {
   }
 }
 
-export async function isUsernameAvailable(username: string): Promise<boolean> {
+export const isUsernameAvailable = async (username: string): Promise<boolean> => {
   const { data } = await supabase
     .from('profile')
     .select('id')
@@ -74,7 +74,7 @@ export async function isUsernameAvailable(username: string): Promise<boolean> {
   return data === null
 }
 
-export async function fetchPublicProfile(userId: string): Promise<PublicProfile | null> {
+export const fetchPublicProfile = async (userId: string): Promise<PublicProfile | null> => {
   const { data, error } = await supabase
     .from('profile')
     .select('id, username, display_name, bio, created_at')

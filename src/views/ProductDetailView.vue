@@ -33,7 +33,7 @@ const currentRatings = computed(() => product.value?.ratings.filter((r) => r.is_
 
 type RatingKey = 'taste' | 'consistency' | 'appearance' | 'nutrition' | 'value'
 
-function avgCriteria(key: RatingKey): number | null {
+const avgCriteria = (key: RatingKey): number | null => {
   const vals = currentRatings.value.map((r) => r[key]).filter((v): v is number => v !== null)
   return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null
 }
@@ -56,7 +56,7 @@ const priceReports = computed(() => product.value?.priceReports ?? [])
 const showPriceForm = ref(false)
 const priceFormError = ref<string | null>(null)
 
-async function submitPriceReport(values: PriceReportFormValues): Promise<void> {
+const submitPriceReport = async (values: PriceReportFormValues): Promise<void> => {
   if (!product.value || !authStore.user) return
   priceFormError.value = null
   try {
@@ -83,7 +83,7 @@ async function submitPriceReport(values: PriceReportFormValues): Promise<void> {
   }
 }
 
-async function handleDeleteProduct(): Promise<void> {
+const handleDeleteProduct = async (): Promise<void> => {
   if (
     !product.value ||
     !confirm('Produkt wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')
@@ -97,7 +97,7 @@ async function handleDeleteProduct(): Promise<void> {
   }
 }
 
-async function removePriceReport(id: string): Promise<void> {
+const removePriceReport = async (id: string): Promise<void> => {
   if (!product.value) return
   try {
     await deletePriceReport(id)

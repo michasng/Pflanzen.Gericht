@@ -12,7 +12,7 @@ const passwordConfirm = ref('')
 const error = ref<string | null>(null)
 const loading = ref(false)
 
-async function handleSubmit(): Promise<void> {
+const handleSubmit = async (): Promise<void> => {
   error.value = null
 
   if (password.value !== passwordConfirm.value) {

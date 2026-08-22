@@ -38,7 +38,7 @@ export type ProductDetail = Product & {
 
 export const PAGE_SIZE = 20
 
-export async function fetchProducts(filter: CatalogFilter, page = 0): Promise<ProductPage> {
+export const fetchProducts = async (filter: CatalogFilter, page = 0): Promise<ProductPage> => {
   const { data, error } = await supabase.rpc('search_products', {
     p_search: filter.search || undefined,
     p_category: filter.category ?? undefined,
@@ -93,7 +93,7 @@ export async function fetchProducts(filter: CatalogFilter, page = 0): Promise<Pr
   }
 }
 
-export async function fetchProductDetail(id: string): Promise<ProductDetail | null> {
+export const fetchProductDetail = async (id: string): Promise<ProductDetail | null> => {
   const [{ data: p, error: pErr }, { data: rawRatings, error: rErr }, priceReports] =
     await Promise.all([
       supabase
@@ -130,7 +130,7 @@ export async function fetchProductDetail(id: string): Promise<ProductDetail | nu
   }
 }
 
-export function getImageUrl(bucket: string, path: string): string {
+export const getImageUrl = (bucket: string, path: string): string => {
   const { data } = supabase.storage.from(bucket).getPublicUrl(path)
   return data.publicUrl
 }

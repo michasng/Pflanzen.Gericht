@@ -53,7 +53,7 @@ onMounted(async () => {
   }
 })
 
-async function handleSubmit(values: ProductFormValues): Promise<void> {
+const handleSubmit = async (values: ProductFormValues): Promise<void> => {
   if (!product.value || !authStore.user) return
   submitting.value = true
   submitError.value = null

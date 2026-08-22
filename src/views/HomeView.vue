@@ -23,12 +23,12 @@ watch(searchInput, (value) => {
   }, 300)
 })
 
-function selectCategory(cat: string | null): void {
+const selectCategory = (cat: string | null): void => {
   catalogStore.setCategory(cat)
   catalogStore.load(true)
 }
 
-function selectSort(event: Event): void {
+const selectSort = (event: Event): void => {
   const value = (event.target as HTMLSelectElement).value as SortOption
   catalogStore.setSort(value)
   catalogStore.load(true)
@@ -44,28 +44,28 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
 
 const filterSheetOpen = ref(false)
 
-function removeTag(tag: string): void {
+const removeTag = (tag: string): void => {
   catalogStore.setTags(catalogStore.tags.filter((t) => t !== tag))
   catalogStore.load(true)
 }
 
-function clearMinRating(): void {
+const clearMinRating = (): void => {
   catalogStore.setMinRating(null)
   catalogStore.load(true)
 }
 
-function clearBase(): void {
+const clearBase = (): void => {
   catalogStore.setBase(null)
   catalogStore.load(true)
 }
 
-function clearStore(): void {
+const clearStore = (): void => {
   catalogStore.setStore(null)
   catalogStore.setCity(null)
   catalogStore.load(true)
 }
 
-function clearPrice(): void {
+const clearPrice = (): void => {
   catalogStore.setMinPriceCents(null)
   catalogStore.setMaxPriceCents(null)
   catalogStore.load(true)

@@ -37,7 +37,7 @@ onMounted(async () => {
   }
 })
 
-async function loadMoreProducts(): Promise<void> {
+const loadMoreProducts = async (): Promise<void> => {
   loadingMore.value = true
   try {
     productPage.value++
@@ -51,7 +51,7 @@ async function loadMoreProducts(): Promise<void> {
   }
 }
 
-async function loadMoreRatings(): Promise<void> {
+const loadMoreRatings = async (): Promise<void> => {
   loadingMore.value = true
   try {
     ratingPage.value++
@@ -65,7 +65,7 @@ async function loadMoreRatings(): Promise<void> {
   }
 }
 
-async function handleDeleteProduct(id: string): Promise<void> {
+const handleDeleteProduct = async (id: string): Promise<void> => {
   if (!confirm('Produkt und alle zugehörigen Bewertungen unwiderruflich löschen?')) return
   deletingId.value = id
   try {
@@ -78,7 +78,7 @@ async function handleDeleteProduct(id: string): Promise<void> {
   }
 }
 
-async function handleDeleteRating(id: string): Promise<void> {
+const handleDeleteRating = async (id: string): Promise<void> => {
   if (!confirm('Bewertung unwiderruflich löschen?')) return
   deletingId.value = id
   try {

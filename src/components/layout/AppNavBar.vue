@@ -19,9 +19,7 @@ watch(
   },
 )
 
-function isActive(routeName: string): boolean {
-  return route.name === routeName
-}
+const isActive = (routeName: string): boolean => route.name === routeName
 </script>
 
 <template>

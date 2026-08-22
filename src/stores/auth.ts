@@ -14,12 +14,12 @@ export const useAuthStore = defineStore('auth', () => {
   const isLoggedIn = computed(() => session.value !== null)
   const isAdmin = computed(() => profile.value?.is_admin ?? false)
 
-  async function fetchProfile(userId: string): Promise<void> {
+  const fetchProfile = async (userId: string): Promise<void> => {
     const { data } = await supabase.from('profile').select('*').eq('id', userId).single()
     profile.value = data
   }
 
-  async function init(): Promise<void> {
+  const init = async (): Promise<void> => {
     loading.value = true
     try {
       const { data } = await supabase.auth.getSession()
@@ -39,14 +39,14 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function signIn(email: string, password: string) {
+  const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
     session.value = data.session
     return data
   }
 
-  async function signUp(email: string, password: string, username: string, displayName: string) {
+  const signUp = async (email: string, password: string, username: string, displayName: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -59,25 +59,25 @@ export const useAuthStore = defineStore('auth', () => {
     return data
   }
 
-  async function signOut(): Promise<void> {
+  const signOut = async (): Promise<void> => {
     await supabase.auth.signOut()
     session.value = null
     profile.value = null
   }
 
-  async function resetPassword(email: string): Promise<void> {
+  const resetPassword = async (email: string): Promise<void> => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/password-new`,
     })
     if (error) throw error
   }
 
-  async function updatePassword(newPassword: string): Promise<void> {
+  const updatePassword = async (newPassword: string): Promise<void> => {
     const { error } = await supabase.auth.updateUser({ password: newPassword })
     if (error) throw error
   }
 
-  function cleanup(): void {
+  const cleanup = (): void => {
     subscription?.unsubscribe()
     subscription = null
   }

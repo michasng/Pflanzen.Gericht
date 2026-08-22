@@ -58,13 +58,13 @@ const criteria = reactive<Record<CriteriaKey, number | null>>({
 const selectedTags = ref<string[]>(props.initial?.tags ? [...props.initial.tags] : [])
 const comment = ref(props.initial?.comment ?? '')
 
-function toggleTag(tag: string): void {
+const toggleTag = (tag: string): void => {
   const idx = selectedTags.value.indexOf(tag)
   if (idx >= 0) selectedTags.value.splice(idx, 1)
   else selectedTags.value.push(tag)
 }
 
-function handleSubmit(): void {
+const handleSubmit = (): void => {
   if (overall.value === null) return
   emit('submit', {
     overall: overall.value,

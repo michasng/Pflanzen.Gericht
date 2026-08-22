@@ -11,7 +11,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: number | null] }>()
 const hover = ref<number | null>(null)
 const displayed = computed(() => hover.value ?? props.modelValue)
 
-function select(i: number): void {
+const select = (i: number): void => {
   if (!props.required && props.modelValue === i) {
     emit('update:modelValue', null)
   } else {

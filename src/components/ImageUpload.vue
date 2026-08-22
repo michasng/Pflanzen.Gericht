@@ -17,7 +17,7 @@ const processing = ref(false)
 const error = ref<string | null>(null)
 const dragOver = ref(false)
 
-function compressImage(file: File): Promise<File> {
+const compressImage = (file: File): Promise<File> => {
   return new Promise((resolve, reject) => {
     const img = new Image()
     const objectUrl = URL.createObjectURL(file)
@@ -56,7 +56,7 @@ function compressImage(file: File): Promise<File> {
   })
 }
 
-async function addFiles(fileList: FileList | null): Promise<void> {
+const addFiles = async (fileList: FileList | null): Promise<void> => {
   if (!fileList || processing.value) return
   error.value = null
   const slots = MAX_FILES - previews.value.length
@@ -83,7 +83,7 @@ async function addFiles(fileList: FileList | null): Promise<void> {
   )
 }
 
-function remove(index: number): void {
+const remove = (index: number): void => {
   const preview = previews.value[index]
   if (preview) URL.revokeObjectURL(preview.url)
   previews.value.splice(index, 1)
@@ -93,13 +93,13 @@ function remove(index: number): void {
   )
 }
 
-function onInput(event: Event): void {
+const onInput = (event: Event): void => {
   const input = event.target as HTMLInputElement
   void addFiles(input.files)
   input.value = ''
 }
 
-function onDrop(event: DragEvent): void {
+const onDrop = (event: DragEvent): void => {
   dragOver.value = false
   void addFiles(event.dataTransfer?.files ?? null)
 }
