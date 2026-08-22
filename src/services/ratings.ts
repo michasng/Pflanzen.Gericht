@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import type { Rating, RatingInsert, RatingImage } from '@/types'
 
-const ADMIN_PAGE_SIZE = 50
+export const ADMIN_PAGE_SIZE = 50
 
 export type AdminRatingItem = Rating & {
   profile: { username: string }

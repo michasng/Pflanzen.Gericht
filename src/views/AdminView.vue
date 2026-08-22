@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { fetchAllProductsForAdmin, deleteProduct } from '@/services/products'
-import { fetchAllRatingsForAdmin, type AdminRatingItem } from '@/services/ratings'
+import {
+  fetchAllProductsForAdmin,
+  deleteProduct,
+  ADMIN_PAGE_SIZE as PRODUCT_PAGE_SIZE,
+} from '@/services/products'
+import {
+  fetchAllRatingsForAdmin,
+  type AdminRatingItem,
+  ADMIN_PAGE_SIZE as RATING_PAGE_SIZE,
+} from '@/services/ratings'
 import { deleteRating } from '@/services/profile'
 import { toErrorMessage } from '@/lib/error'
 import { categoryToLabel } from '@/config/taxonomy'
@@ -27,9 +35,9 @@ onMounted(async () => {
   try {
     const [p, r] = await Promise.all([fetchAllProductsForAdmin(), fetchAllRatingsForAdmin()])
     products.value = p
-    productHasMore.value = p.length === 50
+    productHasMore.value = p.length === PRODUCT_PAGE_SIZE
     ratings.value = r
-    ratingHasMore.value = r.length === 50
+    ratingHasMore.value = r.length === RATING_PAGE_SIZE
   } catch (err) {
     loadError.value = toErrorMessage(err)
   } finally {
@@ -43,7 +51,7 @@ const loadMoreProducts = async (): Promise<void> => {
     productPage.value++
     const more = await fetchAllProductsForAdmin(productPage.value)
     products.value.push(...more)
-    productHasMore.value = more.length === 50
+    productHasMore.value = more.length === PRODUCT_PAGE_SIZE
   } catch (err) {
     alert(toErrorMessage(err))
   } finally {
@@ -57,7 +65,7 @@ const loadMoreRatings = async (): Promise<void> => {
     ratingPage.value++
     const more = await fetchAllRatingsForAdmin(ratingPage.value)
     ratings.value.push(...more)
-    ratingHasMore.value = more.length === 50
+    ratingHasMore.value = more.length === RATING_PAGE_SIZE
   } catch (err) {
     alert(toErrorMessage(err))
   } finally {

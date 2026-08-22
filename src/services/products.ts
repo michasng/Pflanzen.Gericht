@@ -85,7 +85,7 @@ export const deleteProduct = async (id: string): Promise<void> => {
   if (error) throw error
 }
 
-const ADMIN_PAGE_SIZE = 50
+export const ADMIN_PAGE_SIZE = 50
 
 export const fetchAllProductsForAdmin = async (page = 0): Promise<ProductListItem[]> => {
   const { data, error } = await supabase
