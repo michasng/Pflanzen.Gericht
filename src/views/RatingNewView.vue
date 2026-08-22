@@ -6,6 +6,7 @@ import { fetchProduct } from '@/services/products'
 import { createRating, uploadRatingImage } from '@/services/ratings'
 import { toErrorMessage } from '@/lib/error'
 import RatingForm from '@/components/RatingForm.vue'
+import AlertMessage from '@/components/AlertMessage.vue'
 import type { RatingFormValues } from '@/components/RatingForm.vue'
 import type { Product } from '@/types'
 
@@ -53,13 +54,7 @@ async function handleSubmit(values: RatingFormValues): Promise<void> {
 <template>
   <div class="max-w-lg mx-auto">
     <div v-if="loading" class="py-12 text-center text-gray-400 text-sm">Wird geladen …</div>
-    <div
-      v-else-if="loadError"
-      role="alert"
-      class="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"
-    >
-      {{ loadError }}
-    </div>
+    <AlertMessage v-else-if="loadError" :message="loadError" />
     <template v-else-if="product">
       <div class="mb-6">
         <p class="text-sm text-gray-500 mb-1">Bewertung für</p>
@@ -67,13 +62,7 @@ async function handleSubmit(values: RatingFormValues): Promise<void> {
         <p v-if="product.brand" class="text-sm text-gray-500 mt-0.5">{{ product.brand }}</p>
       </div>
 
-      <div
-        v-if="submitError"
-        role="alert"
-        class="mb-4 text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"
-      >
-        {{ submitError }}
-      </div>
+      <AlertMessage :message="submitError" class="mb-4" />
 
       <RatingForm
         :submitting="submitting"

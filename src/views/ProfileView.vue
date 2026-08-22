@@ -13,6 +13,7 @@ import {
 import { deleteProduct } from '@/services/products'
 import type { Product } from '@/types'
 import StarDisplay from '@/components/StarDisplay.vue'
+import AlertMessage from '@/components/AlertMessage.vue'
 import { categoryToLabel, tagToLabel } from '@/config/taxonomy'
 import { formatDate } from '@/lib/date'
 
@@ -164,13 +165,7 @@ onMounted(async () => {
           class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
         />
       </div>
-      <div
-        v-if="saveError"
-        role="alert"
-        class="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"
-      >
-        {{ saveError }}
-      </div>
+      <AlertMessage :message="saveError" />
       <div class="flex gap-2">
         <button
           type="submit"
@@ -241,13 +236,7 @@ onMounted(async () => {
     </div>
 
     <div v-if="loading" class="py-12 text-center text-gray-400 text-sm">Wird geladen …</div>
-    <div
-      v-else-if="loadError"
-      role="alert"
-      class="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"
-    >
-      {{ loadError }}
-    </div>
+    <AlertMessage v-else-if="loadError" :message="loadError" />
 
     <template v-else-if="activeTab === 'ratings'">
       <p v-if="ratings.length === 0" class="py-12 text-center text-gray-400 text-sm">

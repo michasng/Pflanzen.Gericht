@@ -7,6 +7,7 @@ import { toErrorMessage } from '@/lib/error'
 import { categoryToLabel } from '@/config/taxonomy'
 import type { ProductListItem } from '@/services/catalog'
 import StarDisplay from '@/components/StarDisplay.vue'
+import AlertMessage from '@/components/AlertMessage.vue'
 import { formatDate } from '@/lib/date'
 
 const activeTab = ref<'products' | 'ratings'>('products')
@@ -95,13 +96,7 @@ async function handleDeleteRating(id: string): Promise<void> {
     <h1 class="text-xl font-bold text-gray-900 mb-4">Administration</h1>
 
     <div v-if="loading" class="py-12 text-center text-gray-400 text-sm">Wird geladen …</div>
-    <div
-      v-else-if="loadError"
-      role="alert"
-      class="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"
-    >
-      {{ loadError }}
-    </div>
+    <AlertMessage v-else-if="loadError" :message="loadError" />
 
     <template v-else>
       <div class="flex border-b border-gray-200 mb-4">

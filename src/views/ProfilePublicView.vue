@@ -10,6 +10,7 @@ import {
 } from '@/services/profile'
 import type { Product } from '@/types'
 import StarDisplay from '@/components/StarDisplay.vue'
+import AlertMessage from '@/components/AlertMessage.vue'
 import { categoryToLabel, tagToLabel } from '@/config/taxonomy'
 import { toErrorMessage } from '@/lib/error'
 import { formatDate } from '@/lib/date'
@@ -58,13 +59,7 @@ onMounted(async () => {
       </RouterLink>
     </div>
 
-    <div
-      v-else-if="error"
-      role="alert"
-      class="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"
-    >
-      {{ error }}
-    </div>
+    <AlertMessage v-else-if="error" :message="error" />
 
     <template v-else-if="profile">
       <div class="flex items-center gap-4 pt-2">

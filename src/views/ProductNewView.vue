@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import ProductForm from '@/components/ProductForm.vue'
+import AlertMessage from '@/components/AlertMessage.vue'
 import { createProduct, uploadProductImage } from '@/services/products'
 import { toErrorMessage } from '@/lib/error'
 import type { ProductFormValues } from '@/components/ProductForm.vue'
@@ -36,13 +37,7 @@ async function handleSubmit(values: ProductFormValues): Promise<void> {
   <div class="max-w-lg mx-auto">
     <h1 class="text-xl font-bold text-gray-900 mb-6">Produkt hinzufügen</h1>
 
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"
-    >
-      {{ error }}
-    </div>
+    <AlertMessage :message="error" class="mb-4" />
 
     <ProductForm
       :submitting="submitting"

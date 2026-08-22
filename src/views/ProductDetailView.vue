@@ -10,6 +10,7 @@ import StarDisplay from '@/components/StarDisplay.vue'
 import RatingCard from '@/components/RatingCard.vue'
 import PriceReportForm, { type PriceReportFormValues } from '@/components/PriceReportForm.vue'
 import AppLogo from '@/components/AppLogo.vue'
+import AlertMessage from '@/components/AlertMessage.vue'
 import { categoryToLabel, baseToLabel } from '@/config/taxonomy'
 
 const route = useRoute()
@@ -132,13 +133,7 @@ onMounted(async () => {
       </RouterLink>
     </div>
 
-    <div
-      v-else-if="error"
-      role="alert"
-      class="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"
-    >
-      {{ error }}
-    </div>
+    <AlertMessage v-else-if="error" :message="error" />
 
     <template v-else-if="product">
       <div class="-mx-4 mb-4">

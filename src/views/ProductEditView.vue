@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import ProductForm from '@/components/ProductForm.vue'
+import AlertMessage from '@/components/AlertMessage.vue'
 import {
   fetchProduct,
   fetchProductImages,
@@ -81,21 +82,9 @@ function handleDeleteImage(img: ProductImage): void {
     <h1 class="text-xl font-bold text-gray-900 mb-6">Produkt bearbeiten</h1>
 
     <div v-if="loading" class="py-12 text-center text-gray-400 text-sm">Wird geladen …</div>
-    <div
-      v-else-if="loadError"
-      role="alert"
-      class="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"
-    >
-      {{ loadError }}
-    </div>
+    <AlertMessage v-else-if="loadError" :message="loadError" />
     <template v-else-if="product">
-      <div
-        v-if="submitError"
-        role="alert"
-        class="mb-4 text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"
-      >
-        {{ submitError }}
-      </div>
+      <AlertMessage :message="submitError" class="mb-4" />
       <ProductForm
         :initial="{
           name: product.name,
