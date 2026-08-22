@@ -10,6 +10,7 @@ import {
   deleteRating,
   type RatingWithMeta,
 } from '@/services/profile'
+import { deleteProduct } from '@/services/products'
 import type { Product } from '@/types'
 import StarDisplay from '@/components/StarDisplay.vue'
 import { CATEGORY_LABELS, TAG_LABELS } from '@/config/taxonomy'
@@ -32,6 +33,7 @@ const saving = ref(false)
 const saveError = ref<string | null>(null)
 
 const deletingId = ref<string | null>(null)
+const deletingProductId = ref<string | null>(null)
 
 const currentRatingsCount = computed(() => ratings.value.filter((r) => r.is_current).length)
 const initials = computed(() => authStore.profile?.username?.charAt(0).toUpperCase() ?? '?')
@@ -76,6 +78,20 @@ async function saveProfileData(): Promise<void> {
 async function handleSignOut(): Promise<void> {
   await authStore.signOut()
   await router.push({ name: 'home' })
+}
+
+async function handleDeleteProduct(id: string): Promise<void> {
+  if (!confirm('Produkt wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.'))
+    return
+  deletingProductId.value = id
+  try {
+    await deleteProduct(id)
+    products.value = products.value.filter((p) => p.id !== id)
+  } catch (err) {
+    alert(toErrorMessage(err))
+  } finally {
+    deletingProductId.value = null
+  }
 }
 
 async function handleDeleteRating(id: string): Promise<void> {
@@ -342,6 +358,13 @@ onMounted(async () => {
             >
               Bearbeiten
             </RouterLink>
+            <button
+              class="text-xs text-red-500 font-medium hover:text-red-600 transition-colors disabled:opacity-50"
+              :disabled="deletingProductId === product.id"
+              @click="handleDeleteProduct(product.id)"
+            >
+              {{ deletingProductId === product.id ? 'Löscht …' : 'Löschen' }}
+            </button>
           </div>
         </li>
       </ul>

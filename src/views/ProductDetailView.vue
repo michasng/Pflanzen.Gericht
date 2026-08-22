@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { fetchProductDetail, getImageUrl, type ProductDetail } from '@/services/catalog'
 import { upsertPriceReport, deletePriceReport } from '@/services/prices'
+import { deleteProduct } from '@/services/products'
 import { formatEuroCents } from '@/lib/price'
 import StarDisplay from '@/components/StarDisplay.vue'
 import RatingCard from '@/components/RatingCard.vue'
@@ -13,6 +14,7 @@ import { CATEGORY_LABELS, BASE_LABELS } from '@/config/taxonomy'
 import type { Category, Base } from '@/config/taxonomy'
 
 const route = useRoute()
+const router = useRouter()
 const authStore = useAuthStore()
 
 const product = ref<ProductDetail | null>(null)
@@ -86,6 +88,20 @@ async function submitPriceReport(values: PriceReportFormValues): Promise<void> {
     showPriceForm.value = false
   } catch (err) {
     priceFormError.value = err instanceof Error ? err.message : 'Fehler beim Speichern.'
+  }
+}
+
+async function handleDeleteProduct(): Promise<void> {
+  if (
+    !product.value ||
+    !confirm('Produkt wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')
+  )
+    return
+  try {
+    await deleteProduct(product.value.id)
+    await router.push({ name: 'home' })
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Fehler beim Löschen.'
   }
 }
 
@@ -308,15 +324,26 @@ onMounted(async () => {
         >
           Anmelden zum Bewerten
         </RouterLink>
-        <RouterLink
+        <div
           v-if="
             authStore.isLoggedIn && (product.created_by === authStore.user?.id || authStore.isAdmin)
           "
-          :to="{ name: 'product-edit', params: { id: product.id } }"
-          class="flex items-center justify-center gap-2 w-full py-3 border border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+          class="flex gap-2"
         >
-          Produkt bearbeiten
-        </RouterLink>
+          <RouterLink
+            :to="{ name: 'product-edit', params: { id: product.id } }"
+            class="flex flex-1 items-center justify-center gap-2 py-3 border border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+          >
+            Bearbeiten
+          </RouterLink>
+          <button
+            type="button"
+            class="flex flex-1 items-center justify-center gap-2 py-3 border border-red-100 text-red-600 rounded-xl font-medium hover:bg-red-50 transition-colors"
+            @click="handleDeleteProduct"
+          >
+            Löschen
+          </button>
+        </div>
       </div>
 
       <div v-if="product.ratings.length">
