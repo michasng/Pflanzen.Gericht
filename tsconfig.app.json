@@ -5,7 +5,12 @@
   "compilerOptions": {
     // Extra safety for array and object lookups, but may have false positives.
     "noUncheckedIndexedAccess": true,
-
+    "plugins": [
+      {
+        "name": "@vue/typescript-plugin",
+        "languages": ["vue"]
+      }
+    ],
     // Path mapping for cleaner imports.
     "paths": {
       "@/*": ["./src/*"]
