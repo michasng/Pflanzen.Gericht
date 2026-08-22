@@ -84,6 +84,28 @@ export const STORE_SUGGESTIONS = [
   'Online-Shop',
 ] as const
 
+export const TAG_GROUPS: { label: string; tags: Tag[] }[] = [
+  {
+    label: 'Nachhaltigkeit',
+    tags: ['organic', 'sustainable_packaging', 'lots_of_plastic', 'palm_oil'],
+  },
+  { label: 'Geschmack', tags: ['sweet', 'salty', 'bitter', 'sour', 'umami'] },
+  {
+    label: 'Nährwerte',
+    tags: [
+      'high_protein',
+      'low_fat',
+      'high_fat',
+      'low_sugar',
+      'high_sugar',
+      'few_ingredients',
+      'many_ingredients',
+    ],
+  },
+  { label: 'Allergene', tags: ['gluten', 'soy', 'nuts'] },
+  { label: 'Sonstiges', tags: ['similar_to_animal_product'] },
+]
+
 export const RATING_CRITERION_LABELS = {
   taste: 'Geschmack',
   consistency: 'Konsistenz',

@@ -3,17 +3,11 @@ import { ref, watch } from 'vue'
 import { useCatalogStore } from '@/stores/catalog'
 import { useCatalogUrlSync } from '@/composables/useCatalogUrlSync'
 import ProductCard from '@/components/ProductCard.vue'
+import CatalogFilterSheet from '@/components/CatalogFilterSheet.vue'
 import AppLogo from '@/components/AppLogo.vue'
-import {
-  CATEGORIES,
-  CATEGORY_LABELS,
-  BASES,
-  BASE_LABELS,
-  STORE_SUGGESTIONS,
-} from '@/config/taxonomy'
-import type { Category, Base } from '@/config/taxonomy'
+import { CATEGORIES, CATEGORY_LABELS, TAG_LABELS } from '@/config/taxonomy'
+import type { Category, Tag } from '@/config/taxonomy'
 import type { SortOption } from '@/services/catalog'
-import { parseEurosToCents } from '@/lib/price'
 
 const catalogStore = useCatalogStore()
 useCatalogUrlSync()
@@ -34,36 +28,11 @@ function selectCategory(cat: string | null): void {
   catalogStore.load(true)
 }
 
-function selectBase(event: Event): void {
-  const value = (event.target as HTMLSelectElement).value
-  catalogStore.setBase(value || null)
-  catalogStore.load(true)
-}
-
 function selectSort(event: Event): void {
   const value = (event.target as HTMLSelectElement).value as SortOption
   catalogStore.setSort(value)
   catalogStore.load(true)
 }
-
-function selectStore(event: Event): void {
-  const value = (event.target as HTMLSelectElement).value
-  catalogStore.setStore(value || null)
-  catalogStore.load(true)
-}
-
-const minPriceInput = ref('')
-const maxPriceInput = ref('')
-let priceTimer: ReturnType<typeof setTimeout> | undefined
-
-watch([minPriceInput, maxPriceInput], ([min, max]) => {
-  clearTimeout(priceTimer)
-  priceTimer = setTimeout(() => {
-    catalogStore.setMinPriceCents(parseEurosToCents(min) ?? null)
-    catalogStore.setMaxPriceCents(parseEurosToCents(max) ?? null)
-    catalogStore.load(true)
-  }, 400)
-})
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'newest', label: 'Neueste' },
@@ -72,10 +41,40 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'price_asc', label: 'Günstigste' },
   { value: 'price_desc', label: 'Teuerste' },
 ]
+
+const filterSheetOpen = ref(false)
+
+function removeTag(tag: string): void {
+  catalogStore.setTags(catalogStore.tags.filter((t) => t !== tag))
+  catalogStore.load(true)
+}
+
+function clearMinRating(): void {
+  catalogStore.setMinRating(null)
+  catalogStore.load(true)
+}
+
+function clearBase(): void {
+  catalogStore.setBase(null)
+  catalogStore.load(true)
+}
+
+function clearStore(): void {
+  catalogStore.setStore(null)
+  catalogStore.setCity(null)
+  catalogStore.load(true)
+}
+
+function clearPrice(): void {
+  catalogStore.setMinPriceCents(null)
+  catalogStore.setMaxPriceCents(null)
+  catalogStore.load(true)
+}
 </script>
 
 <template>
   <div>
+    <!-- Search -->
     <div class="mb-4 relative">
       <svg
         class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
@@ -99,6 +98,7 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
       />
     </div>
 
+    <!-- Category pills -->
     <div class="flex gap-2 overflow-x-auto pb-2 mb-3 -mx-4 px-4 scrollbar-none">
       <button
         class="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
@@ -126,17 +126,34 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
       </button>
     </div>
 
-    <div class="flex gap-2 mb-5">
-      <select
-        class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
-        :value="catalogStore.base ?? ''"
-        @change="selectBase"
+    <!-- Filter button + sort -->
+    <div class="flex items-center gap-2 mb-3">
+      <button
+        type="button"
+        class="relative flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-primary-300 transition-colors"
+        @click="filterSheetOpen = true"
       >
-        <option value="">Alle Basen</option>
-        <option v-for="base in BASES" :key="base" :value="base">
-          {{ BASE_LABELS[base as Base] }}
-        </option>
-      </select>
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"
+          />
+        </svg>
+        Filter
+        <span
+          v-if="catalogStore.activeFilterCount > 0"
+          class="absolute -top-1.5 -right-1.5 min-w-[1.1rem] h-[1.1rem] flex items-center justify-center rounded-full bg-primary-600 text-white text-[10px] font-bold px-0.5"
+          >{{ catalogStore.activeFilterCount }}</span
+        >
+      </button>
 
       <select
         class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -149,43 +166,118 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
       </select>
     </div>
 
-    <div class="flex gap-2 mb-5">
-      <select
-        class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
-        :value="catalogStore.store ?? ''"
-        @change="selectStore"
+    <!-- Active filter chips -->
+    <div v-if="catalogStore.activeFilterCount > 0" class="flex flex-wrap gap-2 mb-3">
+      <span
+        v-if="catalogStore.minRating"
+        class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
       >
-        <option value="">Alle Geschäfte</option>
-        <option v-for="s in STORE_SUGGESTIONS" :key="s" :value="s">{{ s }}</option>
-      </select>
+        ≥ {{ catalogStore.minRating }} ★
+        <button type="button" aria-label="Min-Bewertung entfernen" @click="clearMinRating">
+          <svg
+            class="w-3 h-3"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </span>
+      <span
+        v-for="tag in catalogStore.tags"
+        :key="tag"
+        class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
+      >
+        {{ TAG_LABELS[tag as Tag] }}
+        <button
+          type="button"
+          :aria-label="`${TAG_LABELS[tag as Tag]} entfernen`"
+          @click="removeTag(tag)"
+        >
+          <svg
+            class="w-3 h-3"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </span>
+      <span
+        v-if="catalogStore.base"
+        class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
+      >
+        {{ catalogStore.base }}
+        <button type="button" aria-label="Basis entfernen" @click="clearBase">
+          <svg
+            class="w-3 h-3"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </span>
+      <span
+        v-if="catalogStore.store"
+        class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
+      >
+        {{ catalogStore.store }}{{ catalogStore.city ? ` · ${catalogStore.city}` : '' }}
+        <button type="button" aria-label="Geschäft entfernen" @click="clearStore">
+          <svg
+            class="w-3 h-3"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </span>
+      <span
+        v-if="catalogStore.minPriceCents != null || catalogStore.maxPriceCents != null"
+        class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
+      >
+        {{
+          catalogStore.minPriceCents != null && catalogStore.maxPriceCents != null
+            ? `${(catalogStore.minPriceCents / 100).toFixed(2).replace('.', ',')} – ${(catalogStore.maxPriceCents / 100).toFixed(2).replace('.', ',')} €`
+            : catalogStore.minPriceCents != null
+              ? `ab ${(catalogStore.minPriceCents / 100).toFixed(2).replace('.', ',')} €`
+              : `bis ${(catalogStore.maxPriceCents! / 100).toFixed(2).replace('.', ',')} €`
+        }}
+        <button type="button" aria-label="Preisfilter entfernen" @click="clearPrice">
+          <svg
+            class="w-3 h-3"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </span>
     </div>
 
-    <div class="flex gap-2 mb-5">
-      <div class="flex-1">
-        <label class="block text-xs text-gray-500 mb-1" for="hv-min-price">Preis ab (€)</label>
-        <input
-          id="hv-min-price"
-          v-model="minPriceInput"
-          type="text"
-          inputmode="decimal"
-          maxlength="8"
-          placeholder="0,00"
-          class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-        />
-      </div>
-      <div class="flex-1">
-        <label class="block text-xs text-gray-500 mb-1" for="hv-max-price">Preis bis (€)</label>
-        <input
-          id="hv-max-price"
-          v-model="maxPriceInput"
-          type="text"
-          inputmode="decimal"
-          maxlength="8"
-          placeholder="z. B. 5,00"
-          class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-        />
-      </div>
-    </div>
+    <!-- Result count -->
+    <p
+      v-if="!catalogStore.loading || catalogStore.products.length > 0"
+      class="text-xs text-gray-400 mb-4"
+    >
+      {{ catalogStore.totalCount }} Produkt{{ catalogStore.totalCount !== 1 ? 'e' : '' }}
+    </p>
 
     <div
       v-if="catalogStore.error"
@@ -208,13 +300,13 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
         <p class="text-gray-600 font-semibold text-lg mb-1">Keine Produkte gefunden</p>
         <p class="text-gray-400 text-sm mb-6">
           {{
-            catalogStore.search || catalogStore.category || catalogStore.base
+            catalogStore.search || catalogStore.category || catalogStore.activeFilterCount
               ? 'Versuche einen anderen Filter.'
               : 'Sei der Erste und füge ein veganes Produkt hinzu!'
           }}
         </p>
         <RouterLink
-          v-if="!catalogStore.search && !catalogStore.category && !catalogStore.base"
+          v-if="!catalogStore.search && !catalogStore.category && !catalogStore.activeFilterCount"
           :to="{ name: 'product-new' }"
           class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors"
         >
@@ -252,5 +344,7 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
         </button>
       </div>
     </template>
+
+    <CatalogFilterSheet :open="filterSheetOpen" @close="filterSheetOpen = false" />
   </div>
 </template>
