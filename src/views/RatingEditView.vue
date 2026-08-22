@@ -13,6 +13,7 @@ import { toErrorMessage } from '@/lib/error'
 import { useImageUpload } from '@/composables/useImageUpload'
 import RatingForm from '@/components/RatingForm.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
+import LoadingText from '@/components/LoadingText.vue'
 import type { RatingFormValues } from '@/components/RatingForm.vue'
 import type { Product, Rating, RatingImage } from '@/types'
 
@@ -79,7 +80,7 @@ async function handleSubmit(values: RatingFormValues): Promise<void> {
 
 <template>
   <div class="max-w-lg mx-auto">
-    <div v-if="loading" class="py-12 text-center text-gray-400 text-sm">Wird geladen …</div>
+    <LoadingText v-if="loading" />
     <AlertMessage v-else-if="loadError" :message="loadError" />
     <template v-else-if="rating && product">
       <div class="mb-6">

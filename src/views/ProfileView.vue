@@ -14,6 +14,7 @@ import { deleteProduct } from '@/services/products'
 import type { Product } from '@/types'
 import StarDisplay from '@/components/StarDisplay.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
+import LoadingText from '@/components/LoadingText.vue'
 import TagList from '@/components/TagList.vue'
 import { categoryToLabel } from '@/config/taxonomy'
 import { formatDate } from '@/lib/date'
@@ -236,7 +237,7 @@ onMounted(async () => {
       </button>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-gray-400 text-sm">Wird geladen …</div>
+    <LoadingText v-if="loading" />
     <AlertMessage v-else-if="loadError" :message="loadError" />
 
     <template v-else-if="activeTab === 'ratings'">
