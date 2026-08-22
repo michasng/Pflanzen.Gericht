@@ -98,7 +98,8 @@ CREATE TABLE public.price_report (
   product_id                uuid    NOT NULL REFERENCES public.product(id) ON DELETE CASCADE,
   user_id                   uuid    NOT NULL REFERENCES public.profile(id),
   store                     text    NOT NULL CHECK (length(trim(store)) >= 1),
-  city_name                 text,
+  -- empty string means no city specified
+  city_name                 text    NOT NULL DEFAULT '',
   price_euro_cents          integer NOT NULL CHECK (price_euro_cents >= 0),
   sale_price_euro_cents     integer          CHECK (sale_price_euro_cents >= 0),
   -- lower of sale price and regular price; drives product.min_price_euro_cents
@@ -109,6 +110,6 @@ CREATE TABLE public.price_report (
 );
 -- One editable row per user / store / city; upsert on conflict
 CREATE UNIQUE INDEX price_report_user_store_city_idx
-  ON public.price_report (product_id, user_id, store, coalesce(city_name, ''));
+  ON public.price_report (product_id, user_id, store, city_name);
 CREATE INDEX price_report_product_id_idx    ON public.price_report (product_id);
 CREATE INDEX price_report_effective_price_idx ON public.price_report (effective_price_euro_cents);

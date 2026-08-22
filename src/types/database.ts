@@ -30,7 +30,7 @@ export type Database = {
     Tables: {
       price_report: {
         Row: {
-          city_name: string | null
+          city_name: string
           created_at: string
           effective_price_euro_cents: number | null
           id: string
@@ -42,7 +42,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          city_name?: string | null
+          city_name?: string
           created_at?: string
           effective_price_euro_cents?: number | null
           id?: string
@@ -54,7 +54,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          city_name?: string | null
+          city_name?: string
           created_at?: string
           effective_price_euro_cents?: number | null
           id?: string
