@@ -31,6 +31,17 @@ Vue 3 + Vite + TypeScript SPA. Package manager: **pnpm**.
 
 Add or update unit tests (`src/**/__tests__`) for behavior changes. Run `pnpm lint` and `pnpm type-check` before finishing.
 
+## Database
+
+- `src/types/database.ts` is generated — never edit it by hand.
+- After every schema change: `pnpm db:push:local` then `pnpm db:types:local`.
+
+## Commit Discipline
+
+- Make atomic commits: one logical change per commit so the app is always in a working state between commits.
+- Before every commit run, in order: `pnpm lint` → `pnpm format` → `pnpm test:unit` → `pnpm type-check`.
+- Commit messages must be short and non-technical, prefixed by `chore|refactor:`, `fix|patch:`, `feat:`, or `feat!:`. Maximum one short sentence; no body, no bullet points.
+
 ## For the Agent
 
 - Keep responses and diffs minimal to conserve tokens; skip restating unchanged code.
