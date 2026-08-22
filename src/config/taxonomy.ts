@@ -35,34 +35,40 @@ export const BASE_LABELS = {
 export type Base = keyof typeof BASE_LABELS
 export const BASES = Object.keys(BASE_LABELS) as Base[]
 
-export const TAG_LABELS = {
-  // sustainability
-  organic: 'Bio',
-  lots_of_plastic: 'Viel Plastik',
-  sustainable_packaging: 'Nachhaltige Verpackung',
-  palm_oil: 'Mit Palmöl',
-  // taste
-  sweet: 'Süß',
-  salty: 'Salzig',
-  bitter: 'Bitter',
-  sour: 'Sauer',
-  umami: 'Umami',
-  // nutrition
-  many_ingredients: 'Viele Zutaten',
-  few_ingredients: 'Wenige Zutaten',
-  high_sugar: 'Viel Zucker',
-  low_sugar: 'Wenig Zucker',
-  high_fat: 'Viel Fett',
-  low_fat: 'Wenig Fett',
-  high_protein: 'Viel Protein',
-  // allergens
-  gluten: 'Mit Gluten',
-  soy: 'Mit Soja',
-  nuts: 'Mit Nüssen',
-  // other
-  similar_to_animal_product: 'Ähnlich zu tierischem Produkt',
-} as const
-export type Tag = keyof typeof TAG_LABELS
+export const TAG_GROUPS = [
+  {
+    label: 'Nachhaltigkeit',
+    tags: {
+      organic: 'Bio',
+      lots_of_plastic: 'Viel Plastik',
+      sustainable_packaging: 'Nachhaltige Verpackung',
+      palm_oil: 'Mit Palmöl',
+    },
+  },
+  {
+    label: 'Geschmack',
+    tags: { sweet: 'Süß', salty: 'Salzig', bitter: 'Bitter', sour: 'Sauer', umami: 'Umami' },
+  },
+  {
+    label: 'Nährwerte',
+    tags: {
+      high_protein: 'Viel Protein',
+      low_fat: 'Wenig Fett',
+      high_fat: 'Viel Fett',
+      low_sugar: 'Wenig Zucker',
+      high_sugar: 'Viel Zucker',
+      few_ingredients: 'Wenige Zutaten',
+      many_ingredients: 'Viele Zutaten',
+    },
+  },
+  { label: 'Allergene', tags: { gluten: 'Mit Gluten', soy: 'Mit Soja', nuts: 'Mit Nüssen' } },
+  { label: 'Sonstiges', tags: { similar_to_animal_product: 'Ähnlich zu tierischem Produkt' } },
+] as const
+
+export type Tag = keyof (typeof TAG_GROUPS)[number]['tags']
+export const TAG_LABELS = Object.fromEntries(
+  TAG_GROUPS.flatMap((g) => Object.entries(g.tags)),
+) as Record<Tag, string>
 export const TAGS = Object.keys(TAG_LABELS) as Tag[]
 
 export const STORE_SUGGESTIONS = [
@@ -83,28 +89,6 @@ export const STORE_SUGGESTIONS = [
   'Spar',
   'Online-Shop',
 ] as const
-
-export const TAG_GROUPS: { label: string; tags: Tag[] }[] = [
-  {
-    label: 'Nachhaltigkeit',
-    tags: ['organic', 'sustainable_packaging', 'lots_of_plastic', 'palm_oil'],
-  },
-  { label: 'Geschmack', tags: ['sweet', 'salty', 'bitter', 'sour', 'umami'] },
-  {
-    label: 'Nährwerte',
-    tags: [
-      'high_protein',
-      'low_fat',
-      'high_fat',
-      'low_sugar',
-      'high_sugar',
-      'few_ingredients',
-      'many_ingredients',
-    ],
-  },
-  { label: 'Allergene', tags: ['gluten', 'soy', 'nuts'] },
-  { label: 'Sonstiges', tags: ['similar_to_animal_product'] },
-]
 
 export const RATING_CRITERION_LABELS = {
   taste: 'Geschmack',

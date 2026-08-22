@@ -2,8 +2,8 @@
 import { ref, watch, computed } from 'vue'
 import { useCatalogStore } from '@/stores/catalog'
 import StarRatingInput from '@/components/StarRatingInput.vue'
-import { BASES, BASE_LABELS, STORE_SUGGESTIONS, TAG_GROUPS, TAG_LABELS } from '@/config/taxonomy'
-import type { Base, Tag } from '@/config/taxonomy'
+import { BASES, BASE_LABELS, STORE_SUGGESTIONS, TAG_GROUPS } from '@/config/taxonomy'
+import type { Base } from '@/config/taxonomy'
 import { parseEurosToCents, formatEuroCents } from '@/lib/price'
 import { supabase } from '@/lib/supabase'
 
@@ -170,7 +170,7 @@ function reset(): void {
             <h3 class="text-sm font-medium text-gray-700 mb-2">{{ group.label }}</h3>
             <div class="flex flex-wrap gap-2">
               <button
-                v-for="tag in group.tags"
+                v-for="(tagLabel, tag) in group.tags"
                 :key="tag"
                 type="button"
                 class="px-3 py-1.5 rounded-full text-sm font-medium border transition-colors"
@@ -181,7 +181,7 @@ function reset(): void {
                 "
                 @click="toggleTag(tag)"
               >
-                {{ TAG_LABELS[tag as Tag] }}
+                {{ tagLabel }}
               </button>
             </div>
           </section>
