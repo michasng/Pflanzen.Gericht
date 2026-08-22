@@ -8,7 +8,8 @@ GRANT SELECT ON
   public.product_image,
   public.rating,
   public.rating_tag,
-  public.rating_image
+  public.rating_image,
+  public.price_report
 TO anon, authenticated;
 
 -- Authenticated users may write data; RLS policies restrict to own rows
@@ -26,3 +27,5 @@ TO authenticated;
 
 -- rating_tag rows are inserted/deleted together with the parent rating, never updated
 GRANT INSERT, DELETE ON public.rating_tag TO authenticated;
+
+GRANT INSERT, UPDATE, DELETE ON public.price_report TO authenticated;

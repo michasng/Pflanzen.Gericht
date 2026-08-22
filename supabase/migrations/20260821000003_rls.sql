@@ -4,6 +4,7 @@ ALTER TABLE public.product_image ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rating        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rating_tag    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rating_image  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.price_report  ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "profiles: publicly readable"
   ON public.profile FOR SELECT
@@ -114,3 +115,19 @@ CREATE POLICY "rating_images: rating owner delete"
         AND (user_id = auth.uid() OR public.is_admin())
     )
   );
+
+CREATE POLICY "price_reports: publicly readable"
+  ON public.price_report FOR SELECT USING (true);
+
+CREATE POLICY "price_reports: create when authenticated"
+  ON public.price_report FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "price_reports: edit own or admin"
+  ON public.price_report FOR UPDATE
+  USING (user_id = auth.uid() OR public.is_admin())
+  WITH CHECK (user_id = auth.uid() OR public.is_admin());
+
+CREATE POLICY "price_reports: delete own or admin"
+  ON public.price_report FOR DELETE
+  USING (user_id = auth.uid() OR public.is_admin());

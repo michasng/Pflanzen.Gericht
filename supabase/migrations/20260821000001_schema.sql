@@ -21,13 +21,15 @@ CREATE TABLE public.product (
   created_by      uuid       NOT NULL REFERENCES public.profile(id),
   normalized_name text       GENERATED ALWAYS AS (lower(trim(name))) STORED,
   -- Denormalized aggregate values; kept in sync by trigger
-  avg_overall     numeric(3, 2),
-  ratings_count   integer    NOT NULL DEFAULT 0,
-  avg_price       numeric(8, 2),
-  created_at      timestamptz NOT NULL DEFAULT now(),
+  avg_overall          numeric(3, 2),
+  ratings_count        integer    NOT NULL DEFAULT 0,
+  -- min effective price across all price_report rows for this product
+  min_price_euro_cents integer,
+  created_at           timestamptz NOT NULL DEFAULT now(),
   updated_at      timestamptz NOT NULL DEFAULT now()
 );
 COMMENT ON COLUMN public.product.avg_overall IS 'avg of overall (only is_current=true rows)';
+COMMENT ON COLUMN public.product.min_price_euro_cents IS 'min(effective_price_euro_cents) across all price_report rows; kept in sync by trigger';
 
 CREATE TABLE public.product_image (
   id           uuid       PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -73,7 +75,8 @@ CREATE INDEX product_base_idx          ON public.product (base);
 CREATE INDEX product_created_by_idx    ON public.product (created_by);
 CREATE INDEX product_created_at_idx    ON public.product (created_at DESC);
 CREATE INDEX product_avg_overall_idx   ON public.product (avg_overall DESC NULLS LAST);
-CREATE INDEX product_ratings_count_idx ON public.product (ratings_count DESC);
+CREATE INDEX product_ratings_count_idx   ON public.product (ratings_count DESC);
+CREATE INDEX product_min_price_idx       ON public.product (min_price_euro_cents ASC NULLS LAST);
 -- Enables LIKE/ILIKE search on normalized_name via trigrams
 CREATE INDEX product_name_trgm_idx     ON public.product USING gin (normalized_name gin_trgm_ops);
 -- Prevents duplicate name+brand combinations
@@ -89,3 +92,23 @@ CREATE INDEX rating_current_idx    ON public.rating (product_id, is_current)
 CREATE UNIQUE INDEX rating_one_current_per_user_idx
   ON public.rating (product_id, user_id)
   WHERE is_current = true;
+
+CREATE TABLE public.price_report (
+  id                        uuid    PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id                uuid    NOT NULL REFERENCES public.product(id) ON DELETE CASCADE,
+  user_id                   uuid    NOT NULL REFERENCES public.profile(id),
+  store                     text    NOT NULL CHECK (length(trim(store)) >= 1),
+  city_name                 text,
+  price_euro_cents          integer NOT NULL CHECK (price_euro_cents >= 0),
+  sale_price_euro_cents     integer          CHECK (sale_price_euro_cents >= 0),
+  -- lower of sale price and regular price; drives product.min_price_euro_cents
+  effective_price_euro_cents integer GENERATED ALWAYS AS
+    (coalesce(sale_price_euro_cents, price_euro_cents)) STORED,
+  observed_at               date    NOT NULL DEFAULT current_date,
+  created_at                timestamptz NOT NULL DEFAULT now()
+);
+-- One editable row per user / store / city; upsert on conflict
+CREATE UNIQUE INDEX price_report_user_store_city_idx
+  ON public.price_report (product_id, user_id, store, coalesce(city_name, ''));
+CREATE INDEX price_report_product_id_idx    ON public.price_report (product_id);
+CREATE INDEX price_report_effective_price_idx ON public.price_report (effective_price_euro_cents);

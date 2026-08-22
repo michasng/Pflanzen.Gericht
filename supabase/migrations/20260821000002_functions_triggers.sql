@@ -95,8 +95,7 @@ BEGIN
       SELECT count(*)
       FROM   public.rating
       WHERE  product_id = v_product_id AND is_current = true
-    ),
-    avg_price     = NULL
+    )
   WHERE id = v_product_id;
 
   RETURN NULL; -- AFTER trigger; return value is irrelevant
@@ -106,6 +105,30 @@ $$;
 CREATE TRIGGER rating_update_aggregates
   AFTER INSERT OR UPDATE OR DELETE ON public.rating
   FOR EACH ROW EXECUTE FUNCTION public.update_product_aggregates();
+
+CREATE OR REPLACE FUNCTION public.update_product_min_price()
+RETURNS trigger
+LANGUAGE plpgsql AS $$
+DECLARE
+  v_product_id uuid;
+BEGIN
+  v_product_id := COALESCE(NEW.product_id, OLD.product_id);
+
+  UPDATE public.product
+  SET min_price_euro_cents = (
+    SELECT min(effective_price_euro_cents)
+    FROM   public.price_report
+    WHERE  product_id = v_product_id
+  )
+  WHERE id = v_product_id;
+
+  RETURN NULL;
+END;
+$$;
+
+CREATE TRIGGER price_report_update_min_price
+  AFTER INSERT OR UPDATE OR DELETE ON public.price_report
+  FOR EACH ROW EXECUTE FUNCTION public.update_product_min_price();
 
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS boolean
