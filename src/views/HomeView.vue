@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { useCatalogStore } from '@/stores/catalog'
+import { useCatalogUrlSync } from '@/composables/useCatalogUrlSync'
 import ProductCard from '@/components/ProductCard.vue'
 import AppLogo from '@/components/AppLogo.vue'
 import {
@@ -15,6 +16,7 @@ import type { SortOption } from '@/services/catalog'
 import { parseEurosToCents } from '@/lib/price'
 
 const catalogStore = useCatalogStore()
+useCatalogUrlSync()
 
 const searchInput = ref(catalogStore.search)
 let searchTimer: ReturnType<typeof setTimeout> | undefined
@@ -70,10 +72,6 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'price_asc', label: 'Günstigste' },
   { value: 'price_desc', label: 'Teuerste' },
 ]
-
-onMounted(() => {
-  catalogStore.load(true)
-})
 </script>
 
 <template>
