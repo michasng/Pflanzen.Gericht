@@ -20,16 +20,7 @@ Vue 3 + Vite + TypeScript SPA. Package manager: **pnpm**.
 
 - `src/` app code, `src/router/` routing. Keep view/route components thin; extract reusable logic into composables (`useX`).
 - One-way data flow: props down, events up. Avoid shared mutable module state.
-
-## Build and Test
-
-- `pnpm dev` — dev server
-- `pnpm test:unit` — Vitest unit tests
-- `pnpm type-check` — vue-tsc
-- `pnpm lint` — oxlint + eslint (autofix)
-- `pnpm build` — production build (runs type-check)
-
-Add or update unit tests (`src/**/__tests__`) for behavior changes. Run `pnpm lint` and `pnpm type-check` before finishing.
+- Add or update unit tests (`src/**/__tests__`) for behavior changes.
 
 ## Database
 
@@ -38,9 +29,17 @@ Add or update unit tests (`src/**/__tests__`) for behavior changes. Run `pnpm li
 
 ## Commit Discipline
 
-- Make atomic commits: one logical change per commit so the app is always in a working state between commits.
-- Before every commit run, in order: `pnpm lint` → `pnpm format` → `pnpm test:unit` → `pnpm type-check`.
-- Commit messages must be short and non-technical, prefixed by `chore|refactor:`, `fix|patch:`, `feat:`, or `feat!:`. Maximum one short sentence; no body, no bullet points.
+- Make atomic commits
+  - Smallest logical change per commit
+  - The app must always be in a working state between commits
+- Before every commit run, in order:
+  - `pnpm build`
+  - `pnpm lint`
+  - `pnpm format`
+  - `pnpm test:unit`
+- Commit messages must be short and non-technical
+  - Maximum one short sentence; no body, no bullet points
+  - Prefix messages by `chore|refactor:`, `fix|patch:`, `feat:`, or `feat!:`
 
 ## For the Agent
 
