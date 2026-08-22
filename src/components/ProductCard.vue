@@ -49,8 +49,8 @@ const categoryLabel = computed(
           {{ product.ratings_count > 0 ? `(${product.ratings_count})` : 'Neu' }}
         </span>
       </div>
-      <p v-if="product.avg_price" class="text-xs font-medium text-gray-600">
-        Ø {{ product.avg_price.toFixed(2).replace('.', ',') }} €
+      <p v-if="product.min_price_euro_cents != null" class="text-xs font-medium text-gray-600">
+        ab {{ (product.min_price_euro_cents / 100).toFixed(2).replace('.', ',') }} €
       </p>
     </div>
   </RouterLink>

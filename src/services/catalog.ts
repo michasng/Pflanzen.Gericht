@@ -48,10 +48,10 @@ export async function fetchProducts(filter: CatalogFilter, page = 0): Promise<Pr
       query = query.order('ratings_count', { ascending: false })
       break
     case 'price_asc':
-      query = query.order('avg_price', { ascending: true, nullsFirst: false })
+      query = query.order('min_price_euro_cents', { ascending: true, nullsFirst: false })
       break
     case 'price_desc':
-      query = query.order('avg_price', { ascending: false, nullsFirst: false })
+      query = query.order('min_price_euro_cents', { ascending: false, nullsFirst: false })
       break
     default:
       query = query.order('created_at', { ascending: false })

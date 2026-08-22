@@ -1,11 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: '14.15'
-  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -33,10 +28,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      price_report: {
+        Row: {
+          city_name: string | null
+          created_at: string
+          effective_price_euro_cents: number | null
+          id: string
+          observed_at: string
+          price_euro_cents: number
+          product_id: string
+          sale_price_euro_cents: number | null
+          store: string
+          user_id: string
+        }
+        Insert: {
+          city_name?: string | null
+          created_at?: string
+          effective_price_euro_cents?: number | null
+          id?: string
+          observed_at?: string
+          price_euro_cents: number
+          product_id: string
+          sale_price_euro_cents?: number | null
+          store: string
+          user_id: string
+        }
+        Update: {
+          city_name?: string | null
+          created_at?: string
+          effective_price_euro_cents?: number | null
+          id?: string
+          observed_at?: string
+          price_euro_cents?: number
+          product_id?: string
+          sale_price_euro_cents?: number | null
+          store?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'price_report_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'product'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'price_report_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profile'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       product: {
         Row: {
           avg_overall: number | null
-          avg_price: number | null
           base: string | null
           brand: string | null
           category: string
@@ -44,6 +92,7 @@ export type Database = {
           created_by: string
           description: string | null
           id: string
+          min_price_euro_cents: number | null
           name: string
           normalized_name: string | null
           ratings_count: number
@@ -51,7 +100,6 @@ export type Database = {
         }
         Insert: {
           avg_overall?: number | null
-          avg_price?: number | null
           base?: string | null
           brand?: string | null
           category: string
@@ -59,6 +107,7 @@ export type Database = {
           created_by: string
           description?: string | null
           id?: string
+          min_price_euro_cents?: number | null
           name: string
           normalized_name?: string | null
           ratings_count?: number
@@ -66,7 +115,6 @@ export type Database = {
         }
         Update: {
           avg_overall?: number | null
-          avg_price?: number | null
           base?: string | null
           brand?: string | null
           category?: string
@@ -74,6 +122,7 @@ export type Database = {
           created_by?: string
           description?: string | null
           id?: string
+          min_price_euro_cents?: number | null
           name?: string
           normalized_name?: string | null
           ratings_count?: number

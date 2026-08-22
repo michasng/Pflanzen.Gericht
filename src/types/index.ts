@@ -19,3 +19,7 @@ export type RatingImage = Tables<'rating_image'>
 export type RatingImageInsert = TablesInsert<'rating_image'>
 
 export type RatingTag = Tables<'rating_tag'>
+
+export type PriceReport = Tables<'price_report'>
+export type PriceReportInsert = TablesInsert<'price_report'>
+export type PriceReportUpdate = TablesUpdate<'price_report'>
