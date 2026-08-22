@@ -22,7 +22,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Format check
-        run: pnpm exec oxfmt --check src/
+        run: pnpm exec oxfmt --check .
 
       - name: Lint
         run: pnpm lint
