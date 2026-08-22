@@ -3,9 +3,16 @@ import { ref, watch, onMounted } from 'vue'
 import { useCatalogStore } from '@/stores/catalog'
 import ProductCard from '@/components/ProductCard.vue'
 import AppLogo from '@/components/AppLogo.vue'
-import { CATEGORIES, CATEGORY_LABELS, BASES, BASE_LABELS } from '@/config/taxonomy'
+import {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  BASES,
+  BASE_LABELS,
+  STORE_SUGGESTIONS,
+} from '@/config/taxonomy'
 import type { Category, Base } from '@/config/taxonomy'
 import type { SortOption } from '@/services/catalog'
+import { parseEurosToCents } from '@/lib/price'
 
 const catalogStore = useCatalogStore()
 
@@ -36,6 +43,25 @@ function selectSort(event: Event): void {
   catalogStore.setSort(value)
   catalogStore.load(true)
 }
+
+function selectStore(event: Event): void {
+  const value = (event.target as HTMLSelectElement).value
+  catalogStore.setStore(value || null)
+  catalogStore.load(true)
+}
+
+const minPriceInput = ref('')
+const maxPriceInput = ref('')
+let priceTimer: ReturnType<typeof setTimeout> | undefined
+
+watch([minPriceInput, maxPriceInput], ([min, max]) => {
+  clearTimeout(priceTimer)
+  priceTimer = setTimeout(() => {
+    catalogStore.setMinPriceCents(parseEurosToCents(min) ?? null)
+    catalogStore.setMaxPriceCents(parseEurosToCents(max) ?? null)
+    catalogStore.load(true)
+  }, 400)
+})
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'newest', label: 'Neueste' },
@@ -123,6 +149,44 @@ onMounted(() => {
           {{ opt.label }}
         </option>
       </select>
+    </div>
+
+    <div class="flex gap-2 mb-5">
+      <select
+        class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        :value="catalogStore.store ?? ''"
+        @change="selectStore"
+      >
+        <option value="">Alle Geschäfte</option>
+        <option v-for="s in STORE_SUGGESTIONS" :key="s" :value="s">{{ s }}</option>
+      </select>
+    </div>
+
+    <div class="flex gap-2 mb-5">
+      <div class="flex-1">
+        <label class="block text-xs text-gray-500 mb-1" for="hv-min-price">Preis ab (€)</label>
+        <input
+          id="hv-min-price"
+          v-model="minPriceInput"
+          type="text"
+          inputmode="decimal"
+          maxlength="8"
+          placeholder="0,00"
+          class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+      </div>
+      <div class="flex-1">
+        <label class="block text-xs text-gray-500 mb-1" for="hv-max-price">Preis bis (€)</label>
+        <input
+          id="hv-max-price"
+          v-model="maxPriceInput"
+          type="text"
+          inputmode="decimal"
+          maxlength="8"
+          placeholder="z. B. 5,00"
+          class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+      </div>
     </div>
 
     <div
