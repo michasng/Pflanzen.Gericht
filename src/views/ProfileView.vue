@@ -300,6 +300,13 @@ onMounted(async () => {
 
           <div class="flex gap-3 pt-2 border-t border-gray-50">
             <RouterLink
+              v-if="rating.is_current"
+              :to="{ name: 'rating-edit', params: { ratingId: rating.id } }"
+              class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
+            >
+              Bearbeiten
+            </RouterLink>
+            <RouterLink
               :to="{ name: 'rating-new', params: { id: rating.product.id } }"
               class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
             >

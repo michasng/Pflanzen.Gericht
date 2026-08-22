@@ -65,6 +65,48 @@ export async function uploadRatingImage(
   return data
 }
 
+export async function fetchRatingForEdit(
+  ratingId: string,
+): Promise<(Rating & { tags: string[]; images: RatingImage[] }) | null> {
+  const { data, error } = await supabase
+    .from('rating')
+    .select('*, tags:rating_tag(tag), images:rating_image(id, storage_path, sort_order)')
+    .eq('id', ratingId)
+    .single()
+  if (error?.code === 'PGRST116') return null
+  if (error) throw error
+  return {
+    ...data,
+    tags: ((data.tags ?? []) as { tag: string }[]).map((t) => t.tag),
+    images: (data.images as RatingImage[] | null) ?? [],
+  }
+}
+
+export async function updateRating(
+  ratingId: string,
+  fields: RatingFields,
+  tags: string[],
+): Promise<void> {
+  const { error } = await supabase.from('rating').update(fields).eq('id', ratingId)
+  if (error) throw error
+
+  const { error: delErr } = await supabase.from('rating_tag').delete().eq('rating_id', ratingId)
+  if (delErr) throw delErr
+
+  if (tags.length) {
+    const { error: tagErr } = await supabase
+      .from('rating_tag')
+      .insert(tags.map((tag) => ({ rating_id: ratingId, tag })))
+    if (tagErr) throw tagErr
+  }
+}
+
+export async function deleteRatingImage(id: string, storagePath: string): Promise<void> {
+  const { error } = await supabase.from('rating_image').delete().eq('id', id)
+  if (error) throw error
+  await supabase.storage.from('review-images').remove([storagePath])
+}
+
 export async function fetchAllRatingsForAdmin(page = 0): Promise<AdminRatingItem[]> {
   const { data, error } = await supabase
     .from('rating')

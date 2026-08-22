@@ -6,7 +6,7 @@ import type { Tag } from '@/config/taxonomy'
 import type { RatingWithDetails } from '@/services/catalog'
 import { formatDate } from '@/lib/date'
 
-const props = defineProps<{ rating: RatingWithDetails }>()
+const props = defineProps<{ rating: RatingWithDetails; editable?: boolean }>()
 
 const displayName = computed(
   () => props.rating.profile.display_name || props.rating.profile.username,
@@ -78,6 +78,15 @@ function tagLabel(tag: string): string {
     <div v-if="rating.location || rating.price !== null" class="flex gap-3 text-xs text-gray-400">
       <span v-if="rating.location">{{ rating.location }}</span>
       <span v-if="rating.price !== null">{{ rating.price.toFixed(2).replace('.', ',') }} €</span>
+    </div>
+
+    <div v-if="editable" class="mt-3 pt-2 border-t border-gray-50">
+      <RouterLink
+        :to="{ name: 'rating-edit', params: { ratingId: rating.id } }"
+        class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
+      >
+        Bearbeiten
+      </RouterLink>
     </div>
   </div>
 </template>

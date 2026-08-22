@@ -194,7 +194,14 @@ onMounted(async () => {
           Bewertungen ({{ product.ratings.length }})
         </h2>
         <div class="space-y-3">
-          <RatingCard v-for="rating in product.ratings" :key="rating.id" :rating="rating" />
+          <RatingCard
+            v-for="rating in product.ratings"
+            :key="rating.id"
+            :rating="rating"
+            :editable="
+              authStore.isLoggedIn && rating.user_id === authStore.user?.id && rating.is_current
+            "
+          />
         </div>
       </div>
     </template>

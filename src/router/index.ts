@@ -38,6 +38,12 @@ const router = createRouter({
           meta: { requiresAuth: true },
         },
         {
+          path: 'rating/:ratingId/edit',
+          name: 'rating-edit',
+          component: () => import('@/views/RatingEditView.vue'),
+          meta: { requiresAuth: true },
+        },
+        {
           path: 'profile',
           name: 'profile',
           component: () => import('@/views/ProfileView.vue'),
