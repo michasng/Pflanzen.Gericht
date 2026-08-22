@@ -10,8 +10,7 @@ import {
 } from '@/services/profile'
 import type { Product } from '@/types'
 import StarDisplay from '@/components/StarDisplay.vue'
-import { CATEGORY_LABELS, TAG_LABELS } from '@/config/taxonomy'
-import type { Category, Tag } from '@/config/taxonomy'
+import { categoryToLabel, tagToLabel } from '@/config/taxonomy'
 import { toErrorMessage } from '@/lib/error'
 import { formatDate } from '@/lib/date'
 
@@ -24,14 +23,6 @@ const loading = ref(true)
 const notFound = ref(false)
 const error = ref<string | null>(null)
 const activeTab = ref<'ratings' | 'products'>('ratings')
-
-function categoryLabel(cat: string): string {
-  return CATEGORY_LABELS[cat as Category] ?? cat
-}
-
-function tagLabel(tag: string): string {
-  return TAG_LABELS[tag as Tag] ?? tag
-}
 
 onMounted(async () => {
   const userId = route.params.id as string
@@ -162,7 +153,7 @@ onMounted(async () => {
                 :key="tag"
                 class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5"
               >
-                {{ tagLabel(tag) }}
+                {{ tagToLabel(tag) }}
               </span>
             </div>
 
@@ -190,7 +181,7 @@ onMounted(async () => {
               {{ product.name }}
             </RouterLink>
             <p class="text-sm text-gray-500 mt-0.5">
-              {{ categoryLabel(product.category) }}
+              {{ categoryToLabel(product.category) }}
               <span v-if="product.brand"> · {{ product.brand }}</span>
             </p>
           </li>

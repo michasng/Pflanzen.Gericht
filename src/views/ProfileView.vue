@@ -13,8 +13,7 @@ import {
 import { deleteProduct } from '@/services/products'
 import type { Product } from '@/types'
 import StarDisplay from '@/components/StarDisplay.vue'
-import { CATEGORY_LABELS, TAG_LABELS } from '@/config/taxonomy'
-import type { Category, Tag } from '@/config/taxonomy'
+import { categoryToLabel, tagToLabel } from '@/config/taxonomy'
 import { formatDate } from '@/lib/date'
 
 const router = useRouter()
@@ -37,14 +36,6 @@ const deletingProductId = ref<string | null>(null)
 
 const currentRatingsCount = computed(() => ratings.value.filter((r) => r.is_current).length)
 const initials = computed(() => authStore.profile?.username?.charAt(0).toUpperCase() ?? '?')
-
-function categoryLabel(cat: string): string {
-  return CATEGORY_LABELS[cat as Category] ?? cat
-}
-
-function tagLabel(tag: string): string {
-  return TAG_LABELS[tag as Tag] ?? tag
-}
 
 function startEdit(): void {
   displayName.value = authStore.profile?.display_name ?? ''
@@ -296,7 +287,7 @@ onMounted(async () => {
               :key="tag"
               class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5"
             >
-              {{ tagLabel(tag) }}
+              {{ tagToLabel(tag) }}
             </span>
           </div>
 
@@ -347,7 +338,7 @@ onMounted(async () => {
             {{ product.name }}
           </RouterLink>
           <p class="text-sm text-gray-500 mt-0.5">
-            {{ categoryLabel(product.category) }}
+            {{ categoryToLabel(product.category) }}
             <span v-if="product.brand"> · {{ product.brand }}</span>
           </p>
           <p class="text-xs text-gray-400 mt-1">{{ formatDate(product.created_at) }}</p>

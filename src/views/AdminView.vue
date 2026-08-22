@@ -4,8 +4,7 @@ import { fetchAllProductsForAdmin, deleteProduct } from '@/services/products'
 import { fetchAllRatingsForAdmin, type AdminRatingItem } from '@/services/ratings'
 import { deleteRating } from '@/services/profile'
 import { toErrorMessage } from '@/lib/error'
-import { CATEGORY_LABELS } from '@/config/taxonomy'
-import type { Category } from '@/config/taxonomy'
+import { categoryToLabel } from '@/config/taxonomy'
 import type { ProductListItem } from '@/services/catalog'
 import StarDisplay from '@/components/StarDisplay.vue'
 import { formatDate } from '@/lib/date'
@@ -21,10 +20,6 @@ const productHasMore = ref(true)
 const ratingPage = ref(0)
 const ratingHasMore = ref(true)
 const loadingMore = ref(false)
-
-function categoryLabel(cat: string): string {
-  return CATEGORY_LABELS[cat as Category] ?? cat
-}
 
 onMounted(async () => {
   try {
@@ -153,7 +148,7 @@ async function handleDeleteRating(id: string): Promise<void> {
                   {{ product.name }}
                 </RouterLink>
                 <p class="text-sm text-gray-500 mt-0.5">
-                  {{ categoryLabel(product.category) }}
+                  {{ categoryToLabel(product.category) }}
                   <span v-if="product.brand"> · {{ product.brand }}</span>
                 </p>
                 <p class="text-xs text-gray-400 mt-0.5">

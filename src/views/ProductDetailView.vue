@@ -10,8 +10,7 @@ import StarDisplay from '@/components/StarDisplay.vue'
 import RatingCard from '@/components/RatingCard.vue'
 import PriceReportForm, { type PriceReportFormValues } from '@/components/PriceReportForm.vue'
 import AppLogo from '@/components/AppLogo.vue'
-import { CATEGORY_LABELS, BASE_LABELS } from '@/config/taxonomy'
-import type { Category, Base } from '@/config/taxonomy'
+import { categoryToLabel, baseToLabel } from '@/config/taxonomy'
 
 const route = useRoute()
 const router = useRouter()
@@ -51,14 +50,6 @@ const criteriaAverages = computed(() =>
     .map(([label, key]) => ({ label, value: avgCriteria(key) }))
     .filter((c): c is { label: string; value: number } => c.value !== null),
 )
-
-function categoryLabel(cat: string): string {
-  return CATEGORY_LABELS[cat as Category] ?? cat
-}
-
-function baseLabel(base: string): string {
-  return BASE_LABELS[base as Base] ?? base
-}
 
 const priceReports = computed(() => product.value?.priceReports ?? [])
 const showPriceForm = ref(false)
@@ -184,13 +175,13 @@ onMounted(async () => {
           <span
             class="text-xs bg-primary-50 text-primary-700 rounded-full px-2.5 py-0.5 font-medium"
           >
-            {{ categoryLabel(product.category) }}
+            {{ categoryToLabel(product.category) }}
           </span>
           <span
             v-if="product.base"
             class="text-xs bg-gray-100 text-gray-600 rounded-full px-2.5 py-0.5"
           >
-            {{ baseLabel(product.base) }}
+            {{ baseToLabel(product.base) }}
           </span>
         </div>
         <h1 class="text-2xl font-bold text-gray-900 mb-1">{{ product.name }}</h1>

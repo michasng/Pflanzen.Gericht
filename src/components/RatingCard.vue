@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import StarDisplay from '@/components/StarDisplay.vue'
-import { TAG_LABELS } from '@/config/taxonomy'
-import type { Tag } from '@/config/taxonomy'
+import { tagToLabel } from '@/config/taxonomy'
 import type { RatingWithDetails } from '@/services/catalog'
 import { formatDate } from '@/lib/date'
 
@@ -22,10 +21,6 @@ const filledCriteria = computed(() => {
   ].filter((e): e is [string, number] => e[1] !== null)
   return entries
 })
-
-function tagLabel(tag: string): string {
-  return TAG_LABELS[tag as Tag] ?? tag
-}
 </script>
 
 <template>
@@ -69,7 +64,7 @@ function tagLabel(tag: string): string {
         :key="tag"
         class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5"
       >
-        {{ tagLabel(tag) }}
+        {{ tagToLabel(tag) }}
       </span>
     </div>
 
