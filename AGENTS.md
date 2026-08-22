@@ -74,9 +74,16 @@ Write out their names when discussing their trade-offs.
 
 ### Commit messages
 
+- Non-technical messages as much as possible
 - Prefix with one of `chore|refactor|fix|patch|feat:` followed by a Capitalized Verb
-- Non-technical; first line short with no commas or bullet points
+- Tiny first line, no commas or bullet points
 - Optionally a blank line, then more context if it helps
+- Examples:
+  - feat: Add settings menu
+  - patch: Change font size in profile
+  - fix: Prevent race condition
+  - refactor: Replace functions with arrow functions
+  - chore: Format README
 
 ## For the Agent
 
