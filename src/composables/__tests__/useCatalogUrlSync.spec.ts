@@ -1,81 +1,126 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
-import { useCatalogStore } from '@/stores/catalog'
+import { describe, it, expect, vi, beforeEach, type MockInstance } from 'vitest'
+import { defineComponent } from 'vue'
+import { mount } from '@vue/test-utils'
+import { useCatalogUrlSync } from '@/composables/useCatalogUrlSync'
 
-// Tests the query-param → store mapping defined in useCatalogUrlSync.
-// The composable is exercised indirectly through the store setters it calls.
+type StoreSpy = { fn: MockInstance; value: unknown }
 
-const parseRawQuery = (q: Record<string, string>) => {
-  const asString = (v: unknown): string | null => (typeof v === 'string' && v ? v : null)
-  const asNumber = (v: unknown): number | null => {
-    const n = Number(v)
-    return typeof v === 'string' && v && Number.isFinite(n) ? n : null
+const makeStoreMock = () => {
+  const state: Record<string, unknown> = {
+    search: '',
+    category: null,
+    base: null,
+    sort: 'newest',
+    store: null,
+    city: null,
+    minRating: null,
+    tags: [],
+    minPriceCents: null,
+    maxPriceCents: null,
   }
-  const asStringArray = (v: unknown): string[] => {
-    if (Array.isArray(v)) return v.filter((x): x is string => typeof x === 'string')
-    if (typeof v === 'string' && v) return [v]
-    return []
+  const spies: Record<string, StoreSpy> = {}
+  const makeSetter = (key: string) => {
+    const spy = vi.fn<(v: unknown) => void>((v) => {
+      state[key] = v
+    })
+    spies[key] = { fn: spy, value: undefined }
+    return spy
   }
-  const VALID_SORTS = ['newest', 'top_rated', 'most_rated', 'price_asc', 'price_desc'] as const
-  type SortOption = (typeof VALID_SORTS)[number]
-  const sortParam = asString(q.sort)
-
-  const store = useCatalogStore()
-  store.setSearch(asString(q.q) ?? '')
-  store.setCategory(asString(q.category))
-  store.setBase(asString(q.base))
-  store.setStore(asString(q.store))
-  store.setCity(asString(q.city))
-  store.setMinRating(asNumber(q.minRating))
-  store.setTags(asStringArray(q.tags))
-  store.setMinPriceCents(q.minPrice ? asNumber(q.minPrice) : null)
-  store.setMaxPriceCents(q.maxPrice ? asNumber(q.maxPrice) : null)
-  store.setSort(
-    VALID_SORTS.includes(sortParam as SortOption) ? (sortParam as SortOption) : 'newest',
-  )
+  return {
+    ...state,
+    setSearch: makeSetter('search'),
+    setCategory: makeSetter('category'),
+    setBase: makeSetter('base'),
+    setSort: makeSetter('sort'),
+    setStore: makeSetter('store'),
+    setCity: makeSetter('city'),
+    setMinRating: makeSetter('minRating'),
+    setTags: makeSetter('tags'),
+    setMinPriceCents: makeSetter('minPriceCents'),
+    setMaxPriceCents: makeSetter('maxPriceCents'),
+    load: vi.fn<(reset?: boolean) => void>(),
+    get state() {
+      return state
+    },
+  }
 }
 
-describe('catalog URL sync mapping', () => {
+type StoreMock = ReturnType<typeof makeStoreMock>
+
+let storeMock: StoreMock
+let routeQuery: Record<string, string | string[]>
+const routerReplace = vi.fn<() => void>()
+
+vi.mock('@/stores/catalog', () => ({
+  useCatalogStore: () => storeMock,
+}))
+
+vi.mock('vue-router', () => ({
+  useRoute: () => ({ query: routeQuery }),
+  useRouter: () => ({ replace: routerReplace }),
+}))
+
+const mountComposable = () => {
+  const Wrapper = defineComponent({
+    setup() {
+      useCatalogUrlSync()
+    },
+    template: '<div />',
+  })
+  return mount(Wrapper)
+}
+
+describe('useCatalogUrlSync', () => {
   beforeEach(() => {
-    setActivePinia(createPinia())
+    storeMock = makeStoreMock()
+    routeQuery = {}
+    routerReplace.mockClear()
   })
 
   it('hydrates search, category and sort from query params', () => {
-    parseRawQuery({ q: 'tofu', category: 'meat', sort: 'top_rated' })
-    const store = useCatalogStore()
-    expect(store.search).toBe('tofu')
-    expect(store.category).toBe('meat')
-    expect(store.sort).toBe('top_rated')
+    routeQuery = { q: 'tofu', category: 'meat', sort: 'top_rated' }
+    mountComposable()
+    expect(storeMock.setSearch).toHaveBeenCalledWith('tofu')
+    expect(storeMock.setCategory).toHaveBeenCalledWith('meat')
+    expect(storeMock.setSort).toHaveBeenCalledWith('top_rated')
   })
 
   it('falls back to newest for unknown sort', () => {
-    parseRawQuery({ sort: 'garbage' })
-    expect(useCatalogStore().sort).toBe('newest')
+    routeQuery = { sort: 'garbage' }
+    mountComposable()
+    expect(storeMock.setSort).toHaveBeenCalledWith('newest')
   })
 
   it('maps minRating as number', () => {
-    parseRawQuery({ minRating: '4' })
-    expect(useCatalogStore().minRating).toBe(4)
+    routeQuery = { minRating: '4' }
+    mountComposable()
+    expect(storeMock.setMinRating).toHaveBeenCalledWith(4)
   })
 
   it('maps tags as array when a single string', () => {
-    parseRawQuery({ tags: 'organic' })
-    expect(useCatalogStore().tags).toEqual(['organic'])
+    routeQuery = { tags: 'organic' }
+    mountComposable()
+    expect(storeMock.setTags).toHaveBeenCalledWith(['organic'])
   })
 
   it('maps minPrice and maxPrice as raw cents numbers', () => {
-    parseRawQuery({ minPrice: '199', maxPrice: '499' })
-    const store = useCatalogStore()
-    expect(store.minPriceCents).toBe(199)
-    expect(store.maxPriceCents).toBe(499)
+    routeQuery = { minPrice: '199', maxPrice: '499' }
+    mountComposable()
+    expect(storeMock.setMinPriceCents).toHaveBeenCalledWith(199)
+    expect(storeMock.setMaxPriceCents).toHaveBeenCalledWith(499)
   })
 
   it('sets null for absent optional params', () => {
-    parseRawQuery({})
-    const store = useCatalogStore()
-    expect(store.category).toBeNull()
-    expect(store.base).toBeNull()
-    expect(store.minRating).toBeNull()
-    expect(store.tags).toEqual([])
+    routeQuery = {}
+    mountComposable()
+    expect(storeMock.setCategory).toHaveBeenCalledWith(null)
+    expect(storeMock.setBase).toHaveBeenCalledWith(null)
+    expect(storeMock.setMinRating).toHaveBeenCalledWith(null)
+    expect(storeMock.setTags).toHaveBeenCalledWith([])
+  })
+
+  it('calls load after hydrating', () => {
+    mountComposable()
+    expect(storeMock.load).toHaveBeenCalledWith(true)
   })
 })
