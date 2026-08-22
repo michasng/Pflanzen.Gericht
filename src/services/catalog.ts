@@ -10,11 +10,19 @@ export interface CatalogFilter {
   base: string | null
   sort: SortOption
   store: string | null
+  city: string | null
   minPriceCents: number | null
   maxPriceCents: number | null
+  minRating: number | null
+  tags: string[]
 }
 
 export type ProductListItem = Product & { images: ProductImage[] }
+
+export interface ProductPage {
+  items: ProductListItem[]
+  total: number
+}
 
 export type RatingWithDetails = Rating & {
   profile: { username: string; display_name: string | null }
@@ -30,60 +38,59 @@ export type ProductDetail = Product & {
 
 export const PAGE_SIZE = 20
 
-export async function fetchProducts(filter: CatalogFilter, page = 0): Promise<ProductListItem[]> {
-  let query = supabase
-    .from('product')
-    .select('*, images:product_image(id, storage_path, sort_order)')
-
-  if (filter.search.trim()) {
-    query = query.ilike('normalized_name', `%${filter.search.trim().toLowerCase()}%`)
-  }
-  if (filter.category) {
-    query = query.eq('category', filter.category)
-  }
-  if (filter.base) {
-    query = query.eq('base', filter.base)
-  }
-  if (filter.store) {
-    const { data: storeRows } = await supabase
-      .from('price_report')
-      .select('product_id')
-      .eq('store', filter.store)
-    const ids = [...new Set((storeRows ?? []).map((r) => r.product_id))]
-    if (ids.length === 0) return []
-    query = query.in('id', ids)
-  }
-  if (filter.minPriceCents != null) {
-    query = query.gte('min_price_euro_cents', filter.minPriceCents)
-  }
-  if (filter.maxPriceCents != null) {
-    query = query.lte('min_price_euro_cents', filter.maxPriceCents)
-  }
-
-  switch (filter.sort) {
-    case 'top_rated':
-      query = query.order('avg_overall', { ascending: false, nullsFirst: false })
-      break
-    case 'most_rated':
-      query = query.order('ratings_count', { ascending: false })
-      break
-    case 'price_asc':
-      query = query.order('min_price_euro_cents', { ascending: true, nullsFirst: false })
-      break
-    case 'price_desc':
-      query = query.order('min_price_euro_cents', { ascending: false, nullsFirst: false })
-      break
-    default:
-      query = query.order('created_at', { ascending: false })
-  }
-
-  const { data, error } = await query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
+export async function fetchProducts(filter: CatalogFilter, page = 0): Promise<ProductPage> {
+  const { data, error } = await supabase.rpc('search_products', {
+    p_search: filter.search || undefined,
+    p_category: filter.category ?? undefined,
+    p_base: filter.base ?? undefined,
+    p_min_rating: filter.minRating ?? undefined,
+    p_store: filter.store ?? undefined,
+    p_city: filter.city ?? undefined,
+    p_min_price: filter.minPriceCents ?? undefined,
+    p_max_price: filter.maxPriceCents ?? undefined,
+    p_tags: filter.tags.length ? filter.tags : undefined,
+    p_sort: filter.sort,
+    p_limit: PAGE_SIZE,
+    p_offset: page * PAGE_SIZE,
+  })
   if (error) throw error
 
-  return (data ?? []).map((p) => ({
-    ...p,
-    images: (p.images as ProductImage[] | null) ?? [],
-  }))
+  const rows = data ?? []
+  const total = rows[0]?.total_count ?? 0
+
+  const ids = rows.map((r) => r.id)
+  const images =
+    ids.length > 0
+      ? await supabase
+          .from('product_image')
+          .select('id, product_id, storage_path, sort_order, created_at')
+          .in('product_id', ids)
+          .then(({ data: imgs, error: imgErr }) => {
+            if (imgErr) throw imgErr
+            return imgs ?? []
+          })
+      : []
+
+  const imagesByProduct = new Map<string, ProductImage[]>()
+  for (const img of images) {
+    const list = imagesByProduct.get(img.product_id) ?? []
+    list.push(img as ProductImage)
+    imagesByProduct.set(img.product_id, list)
+  }
+
+  return {
+    items: rows.map((r) => ({
+      ...r,
+      avg_overall: r.avg_overall ?? null,
+      brand: r.brand ?? null,
+      base: r.base ?? null,
+      description: r.description ?? null,
+      min_price_euro_cents: r.min_price_euro_cents ?? null,
+      normalized_name: r.normalized_name ?? null,
+      images: imagesByProduct.get(r.id) ?? [],
+    })),
+    total,
+  }
 }
 
 export async function fetchProductDetail(id: string): Promise<ProductDetail | null> {
