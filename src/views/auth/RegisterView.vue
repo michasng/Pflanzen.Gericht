@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { isUsernameAvailable } from '@/services/profile'
+import { slugifyUsername } from '@/lib/slug'
 import AppLogo from '@/components/AppLogo.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
+const displayName = ref('')
 const username = ref('')
 const email = ref('')
 const password = ref('')
@@ -15,9 +18,53 @@ const error = ref<string | null>(null)
 const loading = ref(false)
 const needsConfirmation = ref(false)
 
+const usernameEdited = ref(false)
+const usernameAvailable = ref<boolean | null>(null)
+const usernameChecking = ref(false)
+
+const USERNAME_RE = /^[a-z0-9_]{3,30}$/
+
+watch(displayName, (val) => {
+  if (usernameEdited.value) return
+  username.value = slugifyUsername(val)
+  usernameAvailable.value = null
+})
+
+let checkTimer: ReturnType<typeof setTimeout> | null = null
+
+watch(username, (val) => {
+  usernameAvailable.value = null
+  if (!USERNAME_RE.test(val)) return
+  if (checkTimer) clearTimeout(checkTimer)
+  usernameChecking.value = true
+  checkTimer = setTimeout(async () => {
+    usernameAvailable.value = await isUsernameAvailable(val)
+    usernameChecking.value = false
+  }, 350)
+})
+
+function onUsernameInput(): void {
+  usernameEdited.value = true
+}
+
+function usernameError(): string | null {
+  if (!username.value) return null
+  if (!USERNAME_RE.test(username.value)) return 'Nur Kleinbuchstaben, Ziffern und _ (3–30 Zeichen).'
+  if (usernameAvailable.value === false) return 'Dieser Nutzername ist bereits vergeben.'
+  return null
+}
+
 async function handleSubmit(): Promise<void> {
   error.value = null
 
+  if (!USERNAME_RE.test(username.value)) {
+    error.value = 'Ungültiger Nutzername.'
+    return
+  }
+  if (usernameAvailable.value === false) {
+    error.value = 'Dieser Nutzername ist bereits vergeben.'
+    return
+  }
   if (password.value !== passwordConfirm.value) {
     error.value = 'Passwörter stimmen nicht überein.'
     return
@@ -29,7 +76,12 @@ async function handleSubmit(): Promise<void> {
 
   loading.value = true
   try {
-    const data = await authStore.signUp(email.value, password.value, username.value)
+    const data = await authStore.signUp(
+      email.value,
+      password.value,
+      username.value,
+      displayName.value.trim(),
+    )
     if (data.session) {
       await router.push({ name: 'home' })
     } else {
@@ -94,20 +146,66 @@ async function handleSubmit(): Promise<void> {
 
         <form class="flex flex-col gap-4" @submit.prevent="handleSubmit">
           <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5" for="displayName">
+              Anzeigename
+            </label>
+            <input
+              id="displayName"
+              v-model="displayName"
+              type="text"
+              autocomplete="name"
+              required
+              maxlength="60"
+              placeholder="z. B. Grüne Gabel"
+              class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
+
+          <div>
             <label class="block text-sm font-medium text-gray-700 mb-1.5" for="username">
               Nutzername
             </label>
-            <input
-              id="username"
-              v-model="username"
-              type="text"
-              autocomplete="username"
-              required
-              minlength="3"
-              maxlength="30"
-              placeholder="z. B. gruene_gabel"
-              class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            />
+            <div class="relative">
+              <span
+                class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 select-none"
+                aria-hidden="true"
+                >@</span
+              >
+              <input
+                id="username"
+                v-model="username"
+                type="text"
+                autocomplete="username"
+                required
+                minlength="3"
+                maxlength="30"
+                placeholder="gruene_gabel"
+                class="w-full pl-7 pr-8 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                :class="
+                  usernameError()
+                    ? 'border-red-300'
+                    : usernameAvailable === true
+                      ? 'border-green-400'
+                      : 'border-gray-200'
+                "
+                @input="onUsernameInput"
+              />
+              <span
+                v-if="usernameChecking"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"
+                aria-live="polite"
+                >…</span
+              >
+              <span
+                v-else-if="usernameAvailable === true"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-xs"
+                aria-live="polite"
+                >✓</span
+              >
+            </div>
+            <p v-if="usernameError()" class="mt-1 text-xs text-red-600" role="alert">
+              {{ usernameError() }}
+            </p>
           </div>
 
           <div>

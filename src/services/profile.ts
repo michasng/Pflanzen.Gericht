@@ -65,6 +65,15 @@ export async function deleteRating(ratingId: string): Promise<void> {
   }
 }
 
+export async function isUsernameAvailable(username: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('profile')
+    .select('id')
+    .eq('username', username)
+    .maybeSingle()
+  return data === null
+}
+
 export async function fetchPublicProfile(userId: string): Promise<PublicProfile | null> {
   const { data, error } = await supabase
     .from('profile')
