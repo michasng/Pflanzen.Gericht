@@ -335,6 +335,14 @@ onMounted(async () => {
             <span v-if="product.brand"> · {{ product.brand }}</span>
           </p>
           <p class="text-xs text-gray-400 mt-1">{{ formatDate(product.created_at) }}</p>
+          <div class="flex gap-3 pt-2 border-t border-gray-50 mt-2">
+            <RouterLink
+              :to="{ name: 'product-edit', params: { id: product.id } }"
+              class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
+            >
+              Bearbeiten
+            </RouterLink>
+          </div>
         </li>
       </ul>
     </template>

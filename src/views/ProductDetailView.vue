@@ -293,7 +293,7 @@ onMounted(async () => {
         </ul>
       </div>
 
-      <div class="mb-6">
+      <div class="mb-6 flex flex-col gap-2">
         <RouterLink
           v-if="authStore.isLoggedIn"
           :to="{ name: 'rating-new', params: { id: product.id } }"
@@ -307,6 +307,15 @@ onMounted(async () => {
           class="flex items-center justify-center gap-2 w-full py-3 border border-primary-600 text-primary-600 rounded-xl font-medium hover:bg-primary-50 transition-colors"
         >
           Anmelden zum Bewerten
+        </RouterLink>
+        <RouterLink
+          v-if="
+            authStore.isLoggedIn && (product.created_by === authStore.user?.id || authStore.isAdmin)
+          "
+          :to="{ name: 'product-edit', params: { id: product.id } }"
+          class="flex items-center justify-center gap-2 w-full py-3 border border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+        >
+          Produkt bearbeiten
         </RouterLink>
       </div>
 
