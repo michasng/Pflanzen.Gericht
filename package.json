@@ -10,13 +10,17 @@
     "preview": "vite preview",
     "test:unit": "vitest",
     "test:unit:run": "vitest run",
-    "verify": "run-s build lint format test:unit:run",
+    "verify": "run-s build lint format:check test:unit:run",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
-    "lint": "run-s \"lint:*\"",
-    "lint:oxlint": "oxlint . --fix",
-    "lint:eslint": "eslint . --fix --cache",
+    "lint": "run-s \"lint:check:*\"",
+    "lint:check:oxlint": "oxlint .",
+    "lint:check:eslint": "eslint . --cache",
+    "lint:fix:oxlint": "oxlint . --fix",
+    "lint:fix:eslint": "eslint . --fix --cache",
     "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "fix": "run-s \"lint:fix:*\" format",
     "prepare": "simple-git-hooks",
     "db:start:local": "supabase start",
     "db:stop:local": "supabase stop",
@@ -61,7 +65,7 @@
     "vue-tsc": "^3.3.10"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm verify && git diff --exit-code"
+    "pre-commit": "pnpm verify"
   },
   "engines": {
     "node": "^22.18.0 || >=24.12.0"

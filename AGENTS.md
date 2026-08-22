@@ -69,7 +69,8 @@ Write out their names when discussing their trade-offs.
 ## Workflow
 
 - Atomic changes: reduce every task to the smallest change that makes sense and leaves the app runnable
-- Verify every change with `pnpm verify`; the same script runs on every commit
+- Run `pnpm fix` to auto-fix lint and formatting issues before staging
+- Verify every change with `pnpm verify`
 
 ### Commit messages
 
