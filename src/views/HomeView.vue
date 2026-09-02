@@ -49,6 +49,16 @@ const removeTag = (tag: string): void => {
   catalogStore.load(true)
 }
 
+const removeIncludeIngredient = (name: string): void => {
+  catalogStore.setIncludeIngredients(catalogStore.includeIngredients.filter((n) => n !== name))
+  catalogStore.load(true)
+}
+
+const removeExcludeIngredient = (name: string): void => {
+  catalogStore.setExcludeIngredients(catalogStore.excludeIngredients.filter((n) => n !== name))
+  catalogStore.load(true)
+}
+
 const clearMinRating = (): void => {
   catalogStore.setMinRating(null)
   catalogStore.load(true)
@@ -207,6 +217,34 @@ const clearPrice = (): void => {
           >
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
+        </button>
+      </span>
+      <span
+        v-for="name in catalogStore.includeIngredients"
+        :key="`include-${name}`"
+        class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
+      >
+        {{ name }}
+        <button
+          type="button"
+          :aria-label="`${name} entfernen`"
+          @click="removeIncludeIngredient(name)"
+        >
+          ✕
+        </button>
+      </span>
+      <span
+        v-for="name in catalogStore.excludeIngredients"
+        :key="`exclude-${name}`"
+        class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full"
+      >
+        ohne {{ name }}
+        <button
+          type="button"
+          :aria-label="`ohne ${name} entfernen`"
+          @click="removeExcludeIngredient(name)"
+        >
+          ✕
         </button>
       </span>
       <span

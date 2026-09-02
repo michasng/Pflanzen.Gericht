@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import ProductForm from '@/components/ProductForm.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
-import { createProduct, uploadProductImage } from '@/services/products'
+import { createProduct, uploadProductImage, replaceProductIngredients } from '@/services/products'
 import { toErrorMessage } from '@/lib/error'
 import type { ProductFormValues } from '@/components/ProductForm.vue'
 
@@ -21,10 +21,12 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
   submitting.value = true
   error.value = null
   try {
-    const product = await createProduct(values, user.id)
-    await Promise.all(
-      pendingFiles.value.map((file, i) => uploadProductImage(product.id, user.id, file, i)),
-    )
+    const { ingredients, ...fields } = values
+    const product = await createProduct(fields, user.id)
+    await Promise.all([
+      replaceProductIngredients(product.id, ingredients),
+      ...pendingFiles.value.map((file, i) => uploadProductImage(product.id, user.id, file, i)),
+    ])
     await router.push({ name: 'product-detail', params: { id: product.id } })
   } catch (err) {
     error.value = toErrorMessage(err)

@@ -173,6 +173,41 @@ export type Database = {
           },
         ]
       }
+      product_ingredient: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          operator: string
+          percentage: number | null
+          product_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          operator?: string
+          percentage?: number | null
+          product_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          operator?: string
+          percentage?: number | null
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'product_ingredient_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'product'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       profile: {
         Row: {
           bio: string | null
@@ -333,6 +368,8 @@ export type Database = {
           p_base?: string
           p_category?: string
           p_city?: string
+          p_exclude_ingredients?: string[]
+          p_ingredients?: string[]
           p_limit?: number
           p_max_price?: number
           p_min_price?: number

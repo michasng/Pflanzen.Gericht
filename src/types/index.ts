@@ -11,6 +11,9 @@ export type ProductUpdate = TablesUpdate<'product'>
 export type ProductImage = Tables<'product_image'>
 export type ProductImageInsert = TablesInsert<'product_image'>
 
+export type ProductIngredient = Tables<'product_ingredient'>
+export type ProductIngredientInsert = TablesInsert<'product_ingredient'>
+
 export type Rating = Tables<'rating'>
 export type RatingInsert = TablesInsert<'rating'>
 export type RatingUpdate = TablesUpdate<'rating'>

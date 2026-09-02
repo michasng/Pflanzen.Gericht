@@ -8,9 +8,11 @@ import LoadingText from '@/components/LoadingText.vue'
 import {
   fetchProduct,
   fetchProductImages,
+  fetchProductIngredients,
   updateProduct,
   uploadProductImage,
   deleteProductImage,
+  replaceProductIngredients,
 } from '@/services/products'
 import { toErrorMessage } from '@/lib/error'
 import { useImageUpload } from '@/composables/useImageUpload'
@@ -22,6 +24,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const product = ref<Product | null>(null)
+const initialIngredients = ref<ProductFormValues['ingredients']>([])
 const loading = ref(true)
 const loadError = ref<string | null>(null)
 const submitting = ref(false)
@@ -38,7 +41,11 @@ const { pendingFiles, existingImages, handleDeleteImage, commitImageChanges } =
 onMounted(async () => {
   const id = route.params.id as string
   try {
-    const [p, imgs] = await Promise.all([fetchProduct(id), fetchProductImages(id)])
+    const [p, imgs, ingredients] = await Promise.all([
+      fetchProduct(id),
+      fetchProductImages(id),
+      fetchProductIngredients(id),
+    ])
     if (!p) {
       loadError.value = 'Produkt nicht gefunden.'
       return
@@ -49,6 +56,11 @@ onMounted(async () => {
     }
     product.value = p
     existingImages.value = imgs.sort((a, b) => a.sort_order - b.sort_order)
+    initialIngredients.value = ingredients.map((ingredient) => ({
+      name: ingredient.name,
+      percentage: ingredient.percentage,
+      operator: ingredient.operator as ProductFormValues['ingredients'][number]['operator'],
+    }))
   } catch (err) {
     loadError.value = toErrorMessage(err)
   } finally {
@@ -61,8 +73,12 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
   submitting.value = true
   submitError.value = null
   try {
-    await updateProduct(product.value.id, values)
-    await commitImageChanges()
+    const { ingredients, ...fields } = values
+    await updateProduct(product.value.id, fields)
+    await Promise.all([
+      replaceProductIngredients(product.value.id, ingredients),
+      commitImageChanges(),
+    ])
     await router.push({ name: 'product-detail', params: { id: product.value.id } })
   } catch (err) {
     submitError.value = toErrorMessage(err)
@@ -86,6 +102,7 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
           base: product.base,
           brand: product.brand,
           description: product.description,
+          ingredients: initialIngredients,
         }"
         :existing-images="existingImages"
         :submitting="submitting"
