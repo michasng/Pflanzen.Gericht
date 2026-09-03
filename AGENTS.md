@@ -65,6 +65,7 @@ Write out their names when discussing their trade-offs.
 
 - `src/types/database.ts` is generated — never edit it by hand
 - After every schema change: `pnpm db:push:local` then `pnpm db:types:local`
+- Both commands need `supabase start` to succeed first. This is likely only an issue in GitHub Copilot cloud sandboxes (GitHub issues/PRs), not local dev: `supabase start` fails there with `getaddrinfo EAI_AGAIN` while resolving the database container's hostname, because the sandbox blocks the Docker networking it needs. Don't retry this repeatedly; if it fails, hand-edit `database.ts` to match the migration as a stopgap, note the limitation in the PR, and ask a human to run `pnpm db:types:local` locally
 
 ## Workflow
 
