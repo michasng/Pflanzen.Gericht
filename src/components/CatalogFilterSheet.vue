@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted, type Ref } from 'vue'
 import { useCatalogStore } from '@/stores/catalog'
 import StarRatingInput from '@/components/StarRatingInput.vue'
 import { BASES, BASE_LABELS, STORE_SUGGESTIONS, TAG_GROUPS } from '@/config/taxonomy'
 import type { Base } from '@/config/taxonomy'
 import { parseEurosToCents, formatEuroCents } from '@/lib/price'
 import { supabase } from '@/lib/supabase'
+import { fetchIngredientNameSuggestions } from '@/services/products'
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: [] }>()
@@ -18,6 +19,11 @@ const draftBase = ref<string | null>(catalogStore.base)
 const draftStore = ref<string | null>(catalogStore.store)
 const draftCity = ref<string | null>(catalogStore.city)
 const draftTags = ref<string[]>([...catalogStore.tags])
+const draftIncludeIngredients = ref<string[]>([...catalogStore.includeIngredients])
+const draftExcludeIngredients = ref<string[]>([...catalogStore.excludeIngredients])
+const includeIngredientInput = ref('')
+const excludeIngredientInput = ref('')
+const ingredientSuggestions = ref<string[]>([])
 const draftMinPriceInput = ref(
   catalogStore.minPriceCents != null
     ? formatEuroCents(catalogStore.minPriceCents).replace(' €', '')
@@ -28,6 +34,33 @@ const draftMaxPriceInput = ref(
     ? formatEuroCents(catalogStore.maxPriceCents).replace(' €', '')
     : '',
 )
+
+onMounted(async () => {
+  ingredientSuggestions.value = await fetchIngredientNameSuggestions()
+})
+
+const addIngredient = (list: Ref<string[]>, input: Ref<string>): void => {
+  const name = input.value.trim()
+  if (!name || list.value.includes(name)) {
+    input.value = ''
+    return
+  }
+  list.value = [...list.value, name]
+  input.value = ''
+}
+
+const addIncludeIngredient = (): void =>
+  addIngredient(draftIncludeIngredients, includeIngredientInput)
+const addExcludeIngredient = (): void =>
+  addIngredient(draftExcludeIngredients, excludeIngredientInput)
+
+const removeIncludeIngredient = (name: string): void => {
+  draftIncludeIngredients.value = draftIncludeIngredients.value.filter((n) => n !== name)
+}
+
+const removeExcludeIngredient = (name: string): void => {
+  draftExcludeIngredients.value = draftExcludeIngredients.value.filter((n) => n !== name)
+}
 
 const cities = ref<string[]>([])
 
@@ -61,6 +94,8 @@ watch(
     draftStore.value = catalogStore.store
     draftCity.value = catalogStore.city
     draftTags.value = [...catalogStore.tags]
+    draftIncludeIngredients.value = [...catalogStore.includeIngredients]
+    draftExcludeIngredients.value = [...catalogStore.excludeIngredients]
     draftMinPriceInput.value =
       catalogStore.minPriceCents != null
         ? formatEuroCents(catalogStore.minPriceCents).replace(' €', '')
@@ -87,6 +122,10 @@ const hasChanges = computed(
     draftCity.value !== catalogStore.city ||
     JSON.stringify(draftTags.value.slice().sort()) !==
       JSON.stringify(catalogStore.tags.slice().sort()) ||
+    JSON.stringify(draftIncludeIngredients.value.slice().sort()) !==
+      JSON.stringify(catalogStore.includeIngredients.slice().sort()) ||
+    JSON.stringify(draftExcludeIngredients.value.slice().sort()) !==
+      JSON.stringify(catalogStore.excludeIngredients.slice().sort()) ||
     draftMinPriceInput.value !==
       (catalogStore.minPriceCents != null
         ? formatEuroCents(catalogStore.minPriceCents).replace(' €', '')
@@ -103,6 +142,8 @@ const apply = (): void => {
   catalogStore.setStore(draftStore.value)
   catalogStore.setCity(draftCity.value)
   catalogStore.setTags(draftTags.value)
+  catalogStore.setIncludeIngredients(draftIncludeIngredients.value)
+  catalogStore.setExcludeIngredients(draftExcludeIngredients.value)
   catalogStore.setMinPriceCents(parseEurosToCents(draftMinPriceInput.value) ?? null)
   catalogStore.setMaxPriceCents(parseEurosToCents(draftMaxPriceInput.value) ?? null)
   catalogStore.load(true)
@@ -115,6 +156,8 @@ const reset = (): void => {
   draftStore.value = null
   draftCity.value = null
   draftTags.value = []
+  draftIncludeIngredients.value = []
+  draftExcludeIngredients.value = []
   draftMinPriceInput.value = ''
   draftMaxPriceInput.value = ''
   catalogStore.resetFilters()
@@ -184,6 +227,84 @@ const reset = (): void => {
                 {{ tagLabel }}
               </button>
             </div>
+          </section>
+
+          <!-- Ingredients -->
+          <section>
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Zutaten enthalten</h3>
+            <div class="flex gap-2 mb-2">
+              <input
+                v-model="includeIngredientInput"
+                type="text"
+                list="fs-ingredient-suggestions"
+                placeholder="z. B. Hafer"
+                class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                @keydown.enter.prevent="addIncludeIngredient"
+              />
+              <button
+                type="button"
+                class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                @click="addIncludeIngredient"
+              >
+                +
+              </button>
+            </div>
+            <div v-if="draftIncludeIngredients.length" class="flex flex-wrap gap-2">
+              <span
+                v-for="name in draftIncludeIngredients"
+                :key="name"
+                class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
+              >
+                {{ name }}
+                <button
+                  type="button"
+                  :aria-label="`${name} entfernen`"
+                  @click="removeIncludeIngredient(name)"
+                >
+                  ✕
+                </button>
+              </span>
+            </div>
+          </section>
+
+          <section>
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Zutaten ausschließen</h3>
+            <div class="flex gap-2 mb-2">
+              <input
+                v-model="excludeIngredientInput"
+                type="text"
+                list="fs-ingredient-suggestions"
+                placeholder="z. B. Milch"
+                class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                @keydown.enter.prevent="addExcludeIngredient"
+              />
+              <button
+                type="button"
+                class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                @click="addExcludeIngredient"
+              >
+                +
+              </button>
+            </div>
+            <div v-if="draftExcludeIngredients.length" class="flex flex-wrap gap-2">
+              <span
+                v-for="name in draftExcludeIngredients"
+                :key="name"
+                class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full"
+              >
+                {{ name }}
+                <button
+                  type="button"
+                  :aria-label="`${name} entfernen`"
+                  @click="removeExcludeIngredient(name)"
+                >
+                  ✕
+                </button>
+              </span>
+            </div>
+            <datalist id="fs-ingredient-suggestions">
+              <option v-for="name in ingredientSuggestions" :key="name" :value="name" />
+            </datalist>
           </section>
 
           <!-- Price range -->

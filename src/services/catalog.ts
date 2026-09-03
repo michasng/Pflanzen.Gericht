@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { Product, ProductImage, Rating, RatingImage } from '@/types'
+import type { Product, ProductImage, ProductIngredient, Rating, RatingImage } from '@/types'
 import { fetchPriceReports, type PriceReportWithProfile } from '@/services/prices'
 
 export type SortOption = 'newest' | 'top_rated' | 'most_rated' | 'price_asc' | 'price_desc'
@@ -15,6 +15,8 @@ export interface CatalogFilter {
   maxPriceCents: number | null
   minRating: number | null
   tags: string[]
+  includeIngredients: string[]
+  excludeIngredients: string[]
 }
 
 export type ProductListItem = Product & { images: ProductImage[] }
@@ -32,6 +34,7 @@ export type RatingWithDetails = Rating & {
 
 export type ProductDetail = Product & {
   images: ProductImage[]
+  ingredients: ProductIngredient[]
   ratings: RatingWithDetails[]
   priceReports: PriceReportWithProfile[]
 }
@@ -52,6 +55,8 @@ export const fetchProducts = async (filter: CatalogFilter, page = 0): Promise<Pr
     p_sort: filter.sort,
     p_limit: PAGE_SIZE,
     p_offset: page * PAGE_SIZE,
+    p_ingredients: filter.includeIngredients.length ? filter.includeIngredients : undefined,
+    p_exclude_ingredients: filter.excludeIngredients.length ? filter.excludeIngredients : undefined,
   })
   if (error) throw error
 
@@ -98,7 +103,9 @@ export const fetchProductDetail = async (id: string): Promise<ProductDetail | nu
     await Promise.all([
       supabase
         .from('product')
-        .select('*, images:product_image(id, storage_path, sort_order)')
+        .select(
+          '*, images:product_image(id, storage_path, sort_order), ingredients:product_ingredient(id, name, percentage, comparator)',
+        )
         .eq('id', id)
         .single(),
       supabase
@@ -120,6 +127,7 @@ export const fetchProductDetail = async (id: string): Promise<ProductDetail | nu
   return {
     ...p,
     images: (p.images as ProductImage[] | null) ?? [],
+    ingredients: (p.ingredients as ProductIngredient[] | null) ?? [],
     ratings: (rawRatings ?? []).map((r) => ({
       ...r,
       profile: r.profile as { username: string; display_name: string | null },

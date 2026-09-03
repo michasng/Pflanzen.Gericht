@@ -13,6 +13,7 @@ import PriceReportForm, { type PriceReportFormValues } from '@/components/PriceR
 import AppLogo from '@/components/AppLogo.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import { categoryToLabel, baseToLabel } from '@/config/taxonomy'
+import { formatIngredientLabel, sortIngredientsByPercentageDesc } from '@/config/ingredients'
 
 const route = useRoute()
 const router = useRouter()
@@ -29,6 +30,10 @@ const images = computed(() =>
 )
 
 const activeImage = computed(() => images.value[activeImageIndex.value] ?? null)
+
+const sortedIngredients = computed(() =>
+  sortIngredientsByPercentageDesc(product.value?.ingredients ?? []),
+)
 
 const currentRatings = computed(() => product.value?.ratings.filter((r) => r.is_current) ?? [])
 
@@ -181,6 +186,18 @@ onMounted(async () => {
         <h1 class="text-2xl font-bold text-gray-900 mb-1">{{ product.name }}</h1>
         <p v-if="product.brand" class="text-sm text-gray-500 mb-3">von {{ product.brand }}</p>
         <p v-if="product.description" class="text-sm text-gray-600">{{ product.description }}</p>
+      </div>
+
+      <div
+        v-if="sortedIngredients.length"
+        class="mb-4 bg-white rounded-2xl border border-gray-100 p-4"
+      >
+        <h2 class="text-base font-bold text-gray-900 mb-2">Zutaten</h2>
+        <p class="text-sm text-gray-600">
+          <template v-for="(ingredient, index) in sortedIngredients" :key="ingredient.id">
+            <span v-if="index > 0">, </span>{{ formatIngredientLabel(ingredient) }}
+          </template>
+        </p>
       </div>
 
       <div class="bg-white rounded-2xl border border-gray-100 p-4 mb-4">
