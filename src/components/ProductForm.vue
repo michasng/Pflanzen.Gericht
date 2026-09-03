@@ -26,6 +26,7 @@ import {
   INGREDIENT_COMPARATORS,
   DEFAULT_INGREDIENT_COMPARATOR,
   isLikelyNonVeganIngredient,
+  parsePercentageInput,
 } from '@/config/ingredients'
 import { searchSimilarProducts, fetchIngredientNameSuggestions } from '@/services/products'
 import { getImageUrl } from '@/services/catalog'
@@ -114,17 +115,11 @@ const handleSubmit = (): void => {
     description: description.value.trim() || null,
     ingredients: ingredientRows.value
       .filter((row) => row.name.trim())
-      .map((row) => {
-        const parsedPercentage = Number(row.percentageInput)
-        return {
-          name: row.name.trim(),
-          percentage:
-            row.percentageInput.trim() && Number.isFinite(parsedPercentage)
-              ? parsedPercentage
-              : null,
-          comparator: row.comparator,
-        }
-      }),
+      .map((row) => ({
+        name: row.name.trim(),
+        percentage: parsePercentageInput(row.percentageInput),
+        comparator: row.comparator,
+      })),
   })
 }
 </script>
@@ -265,10 +260,8 @@ const handleSubmit = (): void => {
         </select>
         <input
           v-model="row.percentageInput"
-          type="number"
-          min="0"
-          max="100"
-          step="0.1"
+          type="text"
+          inputmode="decimal"
           placeholder="%"
           class="w-20 px-2 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
