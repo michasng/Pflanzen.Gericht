@@ -28,4 +28,4 @@ describe('ingredientPercentage', () => {
       expect(parsePercentageInput('abc')).toBeNull()
     })
   })
-}
+})

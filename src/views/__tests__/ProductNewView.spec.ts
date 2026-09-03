@@ -8,19 +8,19 @@ vi.mock('@/services/products', () => ({
   searchSimilarProducts: vi
     .fn<(name: string) => Promise<Pick<Product, 'id' | 'name' | 'brand' | 'category'>[]>>()
     .mockResolvedValue([]),
-  createProduct: vi
-    .fn<
+  createProduct:
+    vi.fn<
       (
         fields: Pick<ProductInsert, 'name' | 'category' | 'base' | 'brand' | 'description'>,
         userId: string,
       ) => Promise<Product>
     >(),
-  uploadProductImage: vi
-    .fn<
+  uploadProductImage:
+    vi.fn<
       (productId: string, userId: string, file: File, sortOrder: number) => Promise<ProductImage>
     >(),
-  replaceProductIngredients: vi
-    .fn<
+  replaceProductIngredients:
+    vi.fn<
       (
         productId: string,
         ingredients: Pick<ProductIngredientInsert, 'name' | 'percentage' | 'comparator'>[],
