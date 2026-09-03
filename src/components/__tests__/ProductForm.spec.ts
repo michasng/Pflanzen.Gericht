@@ -1,13 +1,16 @@
 import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import ProductForm from '@/components/ProductForm.vue'
+import type { Product } from '@/types'
 
 vi.mock('@/services/products', () => ({
   fetchIngredientNameSuggestions: vi.fn<() => Promise<string[]>>().mockResolvedValue([]),
-  searchSimilarProducts: vi.fn<() => Promise<[]>>().mockResolvedValue([]),
+  searchSimilarProducts: vi
+    .fn<(name: string) => Promise<Pick<Product, 'id' | 'name' | 'brand' | 'category'>[]>>()
+    .mockResolvedValue([]),
 }))
 vi.mock('@/services/catalog', () => ({
-  getImageUrl: vi.fn<() => string>(),
+  getImageUrl: vi.fn<(bucket: string, path: string) => string>(),
 }))
 
 const mountForm = () =>
