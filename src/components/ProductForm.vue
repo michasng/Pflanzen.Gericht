@@ -26,10 +26,10 @@ import {
   INGREDIENT_COMPARATORS,
   DEFAULT_INGREDIENT_COMPARATOR,
   isLikelyNonVeganIngredient,
-  parsePercentageInput,
 } from '@/config/ingredients'
 import { searchSimilarProducts, fetchIngredientNameSuggestions } from '@/services/products'
 import { getImageUrl } from '@/services/catalog'
+import { parsePercentageInput } from '@/lib/ingredientPercentage'
 import type { Product, ProductImage } from '@/types'
 
 const props = withDefaults(

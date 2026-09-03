@@ -67,16 +67,3 @@ export const sortIngredientsByPercentageDesc = <T extends IngredientLike>(ingred
     if (b.percentage === null) return -1
     return b.percentage - a.percentage
   })
-
-const MIN_INGREDIENT_PERCENTAGE = 0
-const MAX_INGREDIENT_PERCENTAGE = 100
-
-// Clamps to the valid range instead of relying on native number input constraints,
-// which can silently block form submission (e.g. on step mismatches).
-export const parsePercentageInput = (input: string): number | null => {
-  const trimmed = input.trim()
-  if (!trimmed) return null
-  const parsed = Number(trimmed)
-  if (!Number.isFinite(parsed)) return null
-  return Math.min(MAX_INGREDIENT_PERCENTAGE, Math.max(MIN_INGREDIENT_PERCENTAGE, parsed))
-}
