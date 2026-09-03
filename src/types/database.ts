@@ -175,26 +175,26 @@ export type Database = {
       }
       product_ingredient: {
         Row: {
+          comparator: string
           created_at: string
           id: string
           name: string
-          comparator: string
           percentage: number | null
           product_id: string
         }
         Insert: {
+          comparator?: string
           created_at?: string
           id?: string
           name: string
-          comparator?: string
           percentage?: number | null
           product_id: string
         }
         Update: {
+          comparator?: string
           created_at?: string
           id?: string
           name?: string
-          comparator?: string
           percentage?: number | null
           product_id?: string
         }
