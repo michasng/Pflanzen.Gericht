@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  INGREDIENT_OPERATORS,
+  INGREDIENT_COMPARATORS,
   isLikelyNonVeganIngredient,
   formatIngredientLabel,
   sortIngredientsByPercentageDesc,
@@ -25,19 +25,19 @@ describe('ingredients config', () => {
 
   describe('formatIngredientLabel', () => {
     it('given no percentage, shows only the name', () => {
-      expect(formatIngredientLabel({ name: 'Wasser', percentage: null, operator: '=' })).toBe(
+      expect(formatIngredientLabel({ name: 'Wasser', percentage: null, comparator: '=' })).toBe(
         'Wasser',
       )
     })
 
-    it('given the default operator, omits the comparator symbol', () => {
-      expect(formatIngredientLabel({ name: 'Zucker', percentage: 12, operator: '=' })).toBe(
+    it('given the default comparator, omits the comparator symbol', () => {
+      expect(formatIngredientLabel({ name: 'Zucker', percentage: 12, comparator: '=' })).toBe(
         'Zucker 12 %',
       )
     })
 
-    it('given a non-default operator, shows the comparator symbol', () => {
-      expect(formatIngredientLabel({ name: 'Alkohol', percentage: 0.5, operator: '≤' })).toBe(
+    it('given a non-default comparator, shows the comparator symbol', () => {
+      expect(formatIngredientLabel({ name: 'Alkohol', percentage: 0.5, comparator: '≤' })).toBe(
         'Alkohol ≤ 0.5 %',
       )
     })
@@ -46,17 +46,17 @@ describe('ingredients config', () => {
   describe('sortIngredientsByPercentageDesc', () => {
     it('given mixed percentages, sorts from highest to lowest with unknowns last', () => {
       const sorted = sortIngredientsByPercentageDesc([
-        { name: 'Salz', percentage: null, operator: '=' },
-        { name: 'Wasser', percentage: 60, operator: '=' },
-        { name: 'Zucker', percentage: 12, operator: '=' },
+        { name: 'Salz', percentage: null, comparator: '=' },
+        { name: 'Wasser', percentage: 60, comparator: '=' },
+        { name: 'Zucker', percentage: 12, comparator: '=' },
       ])
       expect(sorted.map((i) => i.name)).toEqual(['Wasser', 'Zucker', 'Salz'])
     })
   })
 
-  it('has a label for every operator', () => {
-    for (const operator of INGREDIENT_OPERATORS) {
-      expect(operator).toBeTruthy()
+  it('has a label for every comparator', () => {
+    for (const comparator of INGREDIENT_COMPARATORS) {
+      expect(comparator).toBeTruthy()
     }
   })
 })

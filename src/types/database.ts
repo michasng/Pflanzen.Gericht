@@ -178,7 +178,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          operator: string
+          comparator: string
           percentage: number | null
           product_id: string
         }
@@ -186,7 +186,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
-          operator?: string
+          comparator?: string
           percentage?: number | null
           product_id: string
         }
@@ -194,7 +194,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
-          operator?: string
+          comparator?: string
           percentage?: number | null
           product_id?: string
         }

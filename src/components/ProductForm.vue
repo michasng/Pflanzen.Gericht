@@ -1,10 +1,10 @@
 <script lang="ts">
-import type { IngredientOperator } from '@/config/ingredients'
+import type { IngredientComparator } from '@/config/ingredients'
 
 export interface ProductFormIngredient {
   name: string
   percentage: number | null
-  operator: IngredientOperator
+  comparator: IngredientComparator
 }
 
 export interface ProductFormValues {
@@ -23,8 +23,8 @@ import ImageUpload from '@/components/ImageUpload.vue'
 import { CATEGORIES, CATEGORY_LABELS, BASES, BASE_LABELS } from '@/config/taxonomy'
 import type { Category, Base } from '@/config/taxonomy'
 import {
-  INGREDIENT_OPERATORS,
-  DEFAULT_INGREDIENT_OPERATOR,
+  INGREDIENT_COMPARATORS,
+  DEFAULT_INGREDIENT_COMPARATOR,
   isLikelyNonVeganIngredient,
 } from '@/config/ingredients'
 import { searchSimilarProducts, fetchIngredientNameSuggestions } from '@/services/products'
@@ -56,14 +56,14 @@ interface IngredientRow {
   key: string
   name: string
   percentageInput: string
-  operator: IngredientOperator
+  comparator: IngredientComparator
 }
 
 const toRow = (ingredient: ProductFormIngredient): IngredientRow => ({
   key: crypto.randomUUID(),
   name: ingredient.name,
   percentageInput: ingredient.percentage != null ? String(ingredient.percentage) : '',
-  operator: ingredient.operator,
+  comparator: ingredient.comparator,
 })
 
 const ingredientRows = ref<IngredientRow[]>((props.initial?.ingredients ?? []).map(toRow))
@@ -76,7 +76,7 @@ onMounted(async () => {
 const addIngredientRow = (): void => {
   ingredientRows.value = [
     ...ingredientRows.value,
-    toRow({ name: '', percentage: null, operator: DEFAULT_INGREDIENT_OPERATOR }),
+    toRow({ name: '', percentage: null, comparator: DEFAULT_INGREDIENT_COMPARATOR }),
   ]
 }
 
@@ -122,7 +122,7 @@ const handleSubmit = (): void => {
             row.percentageInput.trim() && Number.isFinite(parsedPercentage)
               ? parsedPercentage
               : null,
-          operator: row.operator,
+          comparator: row.comparator,
         }
       }),
   })
@@ -252,11 +252,15 @@ const handleSubmit = (): void => {
           class="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
         <select
-          v-model="row.operator"
+          v-model="row.comparator"
           class="px-2 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
-          <option v-for="operator in INGREDIENT_OPERATORS" :key="operator" :value="operator">
-            {{ operator }}
+          <option
+            v-for="comparator in INGREDIENT_COMPARATORS"
+            :key="comparator"
+            :value="comparator"
+          >
+            {{ comparator }}
           </option>
         </select>
         <input

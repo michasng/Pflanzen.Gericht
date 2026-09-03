@@ -3,15 +3,14 @@ CREATE TABLE public.product_ingredient (
   product_id uuid        NOT NULL REFERENCES public.product(id) ON DELETE CASCADE,
   name       text        NOT NULL CHECK (length(trim(name)) >= 1),
   percentage numeric(5, 2) CHECK (percentage IS NULL OR (percentage >= 0 AND percentage <= 100)),
-  operator   text        NOT NULL DEFAULT '=' CHECK (operator IN ('=', '≈', '<', '≤', '≥', '>')),
+  comparator text        NOT NULL DEFAULT '=' CHECK (comparator IN ('=', '≈', '<', '≤', '≥', '>')),
   created_at timestamptz NOT NULL DEFAULT now()
 );
-COMMENT ON COLUMN public.product_ingredient.operator IS 'comparator shown before the percentage, e.g. "≤" in "Alkohol ≤ 0.5 %"';
+COMMENT ON COLUMN public.product_ingredient.comparator IS 'symbol shown before the percentage, e.g. "≤" in "Alkohol ≤ 0.5 %"';
 
 CREATE INDEX product_ingredient_product_id_idx ON public.product_ingredient (product_id);
 -- trigram index enables ILIKE suggestions while typing an ingredient name
 CREATE INDEX product_ingredient_name_trgm_idx  ON public.product_ingredient USING gin (name gin_trgm_ops);
--- prevents the same ingredient being listed twice for a product
 CREATE UNIQUE INDEX product_ingredient_dedupe_idx
   ON public.product_ingredient (product_id, lower(trim(name)));
 

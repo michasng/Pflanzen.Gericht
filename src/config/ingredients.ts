@@ -1,4 +1,4 @@
-export const INGREDIENT_OPERATOR_LABELS = {
+export const INGREDIENT_COMPARATOR_LABELS = {
   '=': '=',
   '≈': '≈',
   '<': '<',
@@ -6,9 +6,11 @@ export const INGREDIENT_OPERATOR_LABELS = {
   '≥': '≥',
   '>': '>',
 } as const
-export type IngredientOperator = keyof typeof INGREDIENT_OPERATOR_LABELS
-export const INGREDIENT_OPERATORS = Object.keys(INGREDIENT_OPERATOR_LABELS) as IngredientOperator[]
-export const DEFAULT_INGREDIENT_OPERATOR: IngredientOperator = '='
+export type IngredientComparator = keyof typeof INGREDIENT_COMPARATOR_LABELS
+export const INGREDIENT_COMPARATORS = Object.keys(
+  INGREDIENT_COMPARATOR_LABELS,
+) as IngredientComparator[]
+export const DEFAULT_INGREDIENT_COMPARATOR: IngredientComparator = '='
 
 // Heuristic keywords indicating a non-vegan ingredient; not exhaustive, used only for a form warning
 export const NON_VEGAN_INGREDIENT_KEYWORDS = [
@@ -49,12 +51,12 @@ export const isLikelyNonVeganIngredient = (name: string): boolean => {
 export interface IngredientLike {
   name: string
   percentage: number | null
-  operator: string
+  comparator: string
 }
 
 export const formatIngredientLabel = (ingredient: IngredientLike): string => {
   if (ingredient.percentage === null) return ingredient.name
-  const comparator = ingredient.operator === '=' ? '' : `${ingredient.operator} `
+  const comparator = ingredient.comparator === '=' ? '' : `${ingredient.comparator} `
   return `${ingredient.name} ${comparator}${ingredient.percentage} %`
 }
 

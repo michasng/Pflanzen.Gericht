@@ -71,7 +71,7 @@ export const fetchProductIngredients = async (productId: string): Promise<Produc
 
 export const replaceProductIngredients = async (
   productId: string,
-  ingredients: Pick<ProductIngredientInsert, 'name' | 'percentage' | 'operator'>[],
+  ingredients: Pick<ProductIngredientInsert, 'name' | 'percentage' | 'comparator'>[],
 ): Promise<void> => {
   const { error: deleteError } = await supabase
     .from('product_ingredient')

@@ -59,7 +59,7 @@ onMounted(async () => {
     initialIngredients.value = ingredients.map((ingredient) => ({
       name: ingredient.name,
       percentage: ingredient.percentage,
-      operator: ingredient.operator as ProductFormValues['ingredients'][number]['operator'],
+      comparator: ingredient.comparator as ProductFormValues['ingredients'][number]['comparator'],
     }))
   } catch (err) {
     loadError.value = toErrorMessage(err)
