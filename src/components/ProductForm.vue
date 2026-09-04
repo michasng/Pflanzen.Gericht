@@ -312,14 +312,17 @@ const handleSubmit = (): void => {
             {{ comparator }}
           </option>
         </select>
-        <input
-          v-model="row.fractionInput"
-          type="text"
-          inputmode="decimal"
-          maxlength="6"
-          placeholder="%"
-          class="w-20 px-2 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-        />
+        <div class="flex items-center gap-1">
+          <input
+            v-model="row.fractionInput"
+            type="text"
+            inputmode="decimal"
+            maxlength="6"
+            placeholder="0,1"
+            class="w-20 px-2 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+          <span class="text-sm text-gray-500" aria-hidden="true">%</span>
+        </div>
         <button
           type="button"
           class="px-2 text-gray-400 hover:text-red-500 transition-colors"
