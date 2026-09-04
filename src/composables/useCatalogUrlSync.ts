@@ -32,6 +32,8 @@ export const useCatalogUrlSync = (): void => {
     store.setCity(asString(q.city))
     store.setMinRating(asNumber(q.minRating))
     store.setTags(asStringArray(q.tags))
+    store.setIncludeIngredients(asStringArray(q.includeIngredients))
+    store.setExcludeIngredients(asStringArray(q.excludeIngredients))
     store.setMinPriceCents(q.minPrice ? asNumber(q.minPrice) : null)
     store.setMaxPriceCents(q.maxPrice ? asNumber(q.maxPrice) : null)
     const sortParam = asString(q.sort)
@@ -55,6 +57,8 @@ export const useCatalogUrlSync = (): void => {
       city: store.city,
       minRating: store.minRating,
       tags: store.tags.length ? store.tags : undefined,
+      includeIngredients: store.includeIngredients.length ? store.includeIngredients : undefined,
+      excludeIngredients: store.excludeIngredients.length ? store.excludeIngredients : undefined,
       minPrice: store.minPriceCents != null ? store.minPriceCents : undefined,
       maxPrice: store.maxPriceCents != null ? store.maxPriceCents : undefined,
     }),

@@ -27,6 +27,8 @@ export const useCatalogStore = defineStore('catalog', () => {
   const maxPriceCents = ref<number | null>(null)
   const minRating = ref<number | null>(null)
   const tags = ref<string[]>([])
+  const includeIngredients = ref<string[]>([])
+  const excludeIngredients = ref<string[]>([])
 
   const filter = computed<CatalogFilter>(() => ({
     search: search.value,
@@ -39,6 +41,8 @@ export const useCatalogStore = defineStore('catalog', () => {
     maxPriceCents: maxPriceCents.value,
     minRating: minRating.value,
     tags: tags.value,
+    includeIngredients: includeIngredients.value,
+    excludeIngredients: excludeIngredients.value,
   }))
 
   const load = async (reset = false): Promise<void> => {
@@ -102,6 +106,14 @@ export const useCatalogStore = defineStore('catalog', () => {
     tags.value = value
   }
 
+  const setIncludeIngredients = (value: string[]): void => {
+    includeIngredients.value = value
+  }
+
+  const setExcludeIngredients = (value: string[]): void => {
+    excludeIngredients.value = value
+  }
+
   // counts how many non-default filters are active for the badge
   const activeFilterCount = computed(() => {
     let n = 0
@@ -112,6 +124,8 @@ export const useCatalogStore = defineStore('catalog', () => {
     if (maxPriceCents.value != null) n++
     if (minRating.value != null) n++
     n += tags.value.length
+    n += includeIngredients.value.length
+    n += excludeIngredients.value.length
     return n
   })
 
@@ -123,6 +137,8 @@ export const useCatalogStore = defineStore('catalog', () => {
     maxPriceCents.value = null
     minRating.value = null
     tags.value = []
+    includeIngredients.value = []
+    excludeIngredients.value = []
   }
 
   return {
@@ -141,6 +157,8 @@ export const useCatalogStore = defineStore('catalog', () => {
     maxPriceCents,
     minRating,
     tags,
+    includeIngredients,
+    excludeIngredients,
     activeFilterCount,
     load,
     setSearch,
@@ -153,6 +171,8 @@ export const useCatalogStore = defineStore('catalog', () => {
     setMaxPriceCents,
     setMinRating,
     setTags,
+    setIncludeIngredients,
+    setExcludeIngredients,
     resetFilters,
   }
 })

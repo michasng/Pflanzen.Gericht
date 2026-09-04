@@ -1,5 +1,12 @@
 import { supabase } from '@/lib/supabase'
-import type { Product, ProductInsert, ProductUpdate, ProductImage } from '@/types'
+import type {
+  Product,
+  ProductInsert,
+  ProductUpdate,
+  ProductImage,
+  ProductIngredient,
+  ProductIngredientInsert,
+} from '@/types'
 import type { ProductListItem } from '@/services/catalog'
 
 export const fetchProduct = async (id: string): Promise<Product | null> => {
@@ -51,6 +58,37 @@ export const updateProduct = async (
 ): Promise<void> => {
   const { error } = await supabase.from('product').update(updates).eq('id', id)
   if (error) throw error
+}
+
+export const fetchProductIngredients = async (productId: string): Promise<ProductIngredient[]> => {
+  const { data, error } = await supabase
+    .from('product_ingredient')
+    .select('*')
+    .eq('product_id', productId)
+  if (error) throw error
+  return data ?? []
+}
+
+export const replaceProductIngredients = async (
+  productId: string,
+  ingredients: Pick<ProductIngredientInsert, 'name' | 'fraction_basis_points' | 'comparator'>[],
+): Promise<void> => {
+  const { error: deleteError } = await supabase
+    .from('product_ingredient')
+    .delete()
+    .eq('product_id', productId)
+  if (deleteError) throw deleteError
+  if (!ingredients.length) return
+  const { error: insertError } = await supabase
+    .from('product_ingredient')
+    .insert(ingredients.map((ingredient) => ({ ...ingredient, product_id: productId })))
+  if (insertError) throw insertError
+}
+
+export const fetchIngredientNameSuggestions = async (): Promise<string[]> => {
+  const { data, error } = await supabase.from('product_ingredient').select('name').limit(500)
+  if (error) throw error
+  return [...new Set((data ?? []).map((row) => row.name))].sort()
 }
 
 export const uploadProductImage = async (
