@@ -20,4 +20,4 @@ jobs:
           version: latest
 
       - name: Reset database
-        run: supabase db reset --linked --project-ref ${{ vars.SUPABASE_PROJECT_REF }} --yes
+        run: supabase db reset --project-ref ${{ vars.SUPABASE_PROJECT_REF }} --yes
