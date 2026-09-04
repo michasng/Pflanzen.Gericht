@@ -20,19 +20,18 @@ Write out their names when discussing their trade-offs.
 - **Command-Query Separation (CQS)**: A method either has a side-effect or returns data, but never both; the name indicates which
 - **Composition over Inheritance**: Prefer "has a" over "is a"
 - **Deep Modules**: Hide complexity behind simple interfaces
-- **Self-Documenting Code**: Expressive naming over comments; avoid abbreviations; include units in names (e.g. `timeoutSeconds`)
+- **Self-Documenting Code**: Expressive naming over comments; avoid abbreviations; include units in names (e.g. `timeoutSeconds`); only ever leave comments when they provide information that cannot be derived from reading the code
 - **Flat Control Flow**: Use early returns to avoid nesting
 
 ## Code Style
 
 - English for code, comments, and commit messages
 - TypeScript strict; no `any`, no non-null `!` assertions — model types honestly
-- Never suppress type or lint errors
+- Never suppress type or lint errors; unsafe casts like `as unknown` are prohibited
 - No type casts unless there is no better option; if unavoidable, add a short comment explaining why
 - Only arrow functions; never the `function` keyword
 - Prefer enums over union types
 - No magic numbers or strings; extract them to named constants or enums
-- No comments unless they add meaning the code cannot; then keep them to one short line
 - No dead code, commented-out blocks, or leftover `TODO`s
 - Vue 3 `<script setup>` with the Composition API and typed props/emits
 - Naming: PascalCase components, `use`-prefixed composables, `@/` import alias
@@ -65,6 +64,7 @@ Write out their names when discussing their trade-offs.
 
 - `src/types/database.ts` is generated — never edit it by hand
 - After every schema change: `pnpm db:push:local` then `pnpm db:types:local`
+- Both commands need `supabase start` to succeed first. This fails in GitHub Copilot cloud sandboxes with `getaddrinfo EAI_AGAIN` while resolving the database container's hostname. In this environment, hand-edit `database.ts` to match the migration as a stopgap while emulating the expected code format of the generator (order of declarations, casing, etc.). Note the limitation in the PR and ask a human to run `pnpm db:types:local` locally.
 
 ## Workflow
 
