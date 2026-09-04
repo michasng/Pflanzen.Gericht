@@ -20,7 +20,7 @@ Write out their names when discussing their trade-offs.
 - **Command-Query Separation (CQS)**: A method either has a side-effect or returns data, but never both; the name indicates which
 - **Composition over Inheritance**: Prefer "has a" over "is a"
 - **Deep Modules**: Hide complexity behind simple interfaces
-- **Self-Documenting Code**: Expressive naming over comments; avoid abbreviations; include units in names (e.g. `timeoutSeconds`); only ever leave comments when they provide information that cannot be derived from reading the code
+- **Self-Documenting Code**: Expressive naming, include units, no abbreviations (e.g. `timeoutSeconds`); avoid comments, especially when they duplicate the code
 - **Flat Control Flow**: Use early returns to avoid nesting
 
 ## Code Style
