@@ -7,6 +7,8 @@ jobs:
   reset:
     runs-on: ubuntu-latest
     environment: github-pages
+    permissions:
+      contents: read
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
