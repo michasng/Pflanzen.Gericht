@@ -26,11 +26,15 @@ Write out their names when discussing their trade-offs.
 ## Code Style
 
 - English for code, comments, and commit messages
+- One unit (class or function) per file; files names by their unit, e.g. `doSomething.ts` would contain a function called `doSomethint` (and maybe some constants)
 - TypeScript strict; no `any`, no non-null `!` assertions — model types honestly
-- Never suppress type or lint errors; unsafe casts like `as unknown` are prohibited
+- Never suppress type or lint errors
 - No type casts unless there is no better option; if unavoidable, add a short comment explaining why
+- No unsafe casts like `as unknown`
 - Only arrow functions; never the `function` keyword
+- Consider optional vs. nullable parameters
 - Prefer enums over union types
+- Prefer `interface` over `type`
 - No magic numbers or strings; extract them to named constants or enums
 - No dead code, commented-out blocks, or leftover `TODO`s
 - Vue 3 `<script setup>` with the Composition API and typed props/emits
