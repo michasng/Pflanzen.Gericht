@@ -13,7 +13,8 @@ import PriceReportForm, { type PriceReportFormValues } from '@/components/PriceR
 import AppLogo from '@/components/AppLogo.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import { categoryToLabel, baseToLabel } from '@/config/taxonomy'
-import { formatIngredientLabel, sortIngredientsByFractionDesc } from '@/config/ingredients'
+import { formatIngredientLabel } from '@/config/formatIngredientLabel'
+import { sortIngredientsByFractionDesc } from '@/config/ingredients'
 import type { IngredientComparator } from '@/config/ingredients'
 
 const route = useRoute()

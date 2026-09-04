@@ -29,7 +29,8 @@ import {
   sumGuaranteedFractionBasisPoints,
   exceedsWholeFraction,
 } from '@/config/ingredients'
-import { parsePercentInputToBasisPoints, formatFractionBasisPointsAsPercent } from '@/lib/fraction'
+import { parsePercentInputToBasisPoints } from '@/lib/parsePercentInputToBasisPoints'
+import { formatFractionBasisPointsAsPercent } from '@/lib/formatFractionBasisPointsAsPercent'
 import { searchSimilarProducts, fetchIngredientNameSuggestions } from '@/services/products'
 import { getImageUrl } from '@/services/catalog'
 import type { Product, ProductImage } from '@/types'

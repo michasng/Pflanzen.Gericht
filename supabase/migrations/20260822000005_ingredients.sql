@@ -1,7 +1,3 @@
--- fraction_basis_points stores the ingredient's share of the product in basis
--- points (1 bp = 0.01 %, 10000 bp = 100 %), mirroring price_euro_cents: an
--- exact integer avoids floating point rounding while keeping "traces of"
--- amounts (e.g. 0.01 %) representable.
 CREATE TABLE public.product_ingredient (
   id                   uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id           uuid        NOT NULL REFERENCES public.product(id) ON DELETE CASCADE,
@@ -20,7 +16,6 @@ COMMENT ON COLUMN public.product_ingredient.comparator IS
 CREATE INDEX product_ingredient_product_id_idx ON public.product_ingredient (product_id);
 -- trigram index enables ILIKE suggestions while typing an ingredient name
 CREATE INDEX product_ingredient_name_trgm_idx ON public.product_ingredient USING gin (name gin_trgm_ops);
--- prevents the same ingredient name from being listed twice on one product
 CREATE UNIQUE INDEX product_ingredient_dedupe_idx
   ON public.product_ingredient (product_id, lower(trim(name)));
 
@@ -50,7 +45,6 @@ CREATE POLICY "product_ingredients: product owner delete"
   );
 
 GRANT SELECT ON public.product_ingredient TO anon, authenticated;
--- rows are replaced wholesale with their parent product, never updated
 GRANT INSERT, DELETE ON public.product_ingredient TO authenticated;
 
 -- CREATE OR REPLACE with additional trailing parameters would create a second

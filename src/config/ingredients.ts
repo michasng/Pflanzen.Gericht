@@ -1,4 +1,4 @@
-import { BASIS_POINTS_PER_WHOLE, formatFractionBasisPointsAsPercent } from '@/lib/fraction'
+import { BASIS_POINTS_PER_WHOLE } from '@/lib/basisPoints'
 
 export const INGREDIENT_COMPARATOR_LABELS = {
   '=': '=',
@@ -60,13 +60,6 @@ export interface IngredientLike {
   comparator: IngredientComparator
 }
 
-export const formatIngredientLabel = (ingredient: IngredientLike): string => {
-  if (ingredient.fractionBasisPoints === null) return ingredient.name
-  const comparatorPrefix =
-    ingredient.comparator === DEFAULT_INGREDIENT_COMPARATOR ? '' : `${ingredient.comparator} `
-  return `${ingredient.name} ${comparatorPrefix}${formatFractionBasisPointsAsPercent(ingredient.fractionBasisPoints)}`
-}
-
 export const sortIngredientsByFractionDesc = <T extends IngredientLike>(ingredients: T[]): T[] =>
   [...ingredients].sort((a, b) => {
     if (a.fractionBasisPoints === null && b.fractionBasisPoints === null) return 0
@@ -75,9 +68,6 @@ export const sortIngredientsByFractionDesc = <T extends IngredientLike>(ingredie
     return b.fractionBasisPoints - a.fractionBasisPoints
   })
 
-// Sums only the fractions that guarantee a minimum share (see
-// MINIMUM_GUARANTEED_COMPARATORS); a total above BASIS_POINTS_PER_WHOLE (100 %)
-// is impossible and should be flagged to the person entering the ingredients.
 export const sumGuaranteedFractionBasisPoints = (ingredients: IngredientLike[]): number =>
   ingredients
     .filter(
