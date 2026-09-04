@@ -1,12 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import {
-  DEFAULT_INGREDIENT_COMPARATOR,
-  exceedsWholeFraction,
-  isLikelyNonVeganIngredient,
-  sortIngredientsByFractionDesc,
-  sumGuaranteedFractionBasisPoints,
-  type IngredientLike,
-} from '../ingredients'
+import { DEFAULT_INGREDIENT_COMPARATOR, type IngredientLike } from '../ingredients'
+import { exceedsWholeFraction } from '../exceedsWholeFraction'
+import { isLikelyNonVeganIngredient } from '../isLikelyNonVeganIngredient'
+import { sortIngredientsByFractionDesc } from '../sortIngredientsByFractionDesc'
+import { sumGuaranteedFractionBasisPoints } from '../sumGuaranteedFractionBasisPoints'
 
 describe('isLikelyNonVeganIngredient', () => {
   it('detects known non-vegan keywords regardless of case', () => {

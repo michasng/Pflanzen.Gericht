@@ -22,13 +22,10 @@ import { ref, computed, watch, onMounted } from 'vue'
 import ImageUpload from '@/components/ImageUpload.vue'
 import { CATEGORIES, CATEGORY_LABELS, BASES, BASE_LABELS } from '@/config/taxonomy'
 import type { Category, Base } from '@/config/taxonomy'
-import {
-  INGREDIENT_COMPARATORS,
-  DEFAULT_INGREDIENT_COMPARATOR,
-  isLikelyNonVeganIngredient,
-  sumGuaranteedFractionBasisPoints,
-  exceedsWholeFraction,
-} from '@/config/ingredients'
+import { INGREDIENT_COMPARATORS, DEFAULT_INGREDIENT_COMPARATOR } from '@/config/ingredients'
+import { exceedsWholeFraction } from '@/config/exceedsWholeFraction'
+import { isLikelyNonVeganIngredient } from '@/config/isLikelyNonVeganIngredient'
+import { sumGuaranteedFractionBasisPoints } from '@/config/sumGuaranteedFractionBasisPoints'
 import { parsePercentInputToBasisPoints } from '@/lib/parsePercentInputToBasisPoints'
 import { formatFractionBasisPointsAsPercent } from '@/lib/formatFractionBasisPointsAsPercent'
 import { searchSimilarProducts, fetchIngredientNameSuggestions } from '@/services/products'
@@ -77,7 +74,11 @@ const ingredientRows = ref<IngredientRow[]>((props.initial?.ingredients ?? []).m
 const ingredientSuggestions = ref<string[]>([])
 
 onMounted(async () => {
-  ingredientSuggestions.value = await fetchIngredientNameSuggestions()
+  try {
+    ingredientSuggestions.value = await fetchIngredientNameSuggestions()
+  } catch {
+    ingredientSuggestions.value = []
+  }
 })
 
 const addIngredientRow = (): void => {
@@ -103,6 +104,18 @@ const parsedIngredients = computed(() =>
       }
     }),
 )
+
+const hasInvalidIngredientFraction = computed(() =>
+  ingredientRows.value.some((row) => {
+    const trimmedInput = row.fractionInput.trim()
+    return trimmedInput.length > 0 && parsePercentInputToBasisPoints(trimmedInput) === null
+  }),
+)
+
+const hasDuplicateIngredientNames = computed(() => {
+  const names = ingredientRows.value.map((row) => row.name.trim()).filter(Boolean)
+  return new Set(names).size !== names.length
+})
 
 const nonVeganIngredientNames = computed(() =>
   ingredientRows.value
@@ -130,6 +143,8 @@ watch(name, (val) => {
 })
 
 const handleSubmit = (): void => {
+  if (hasInvalidIngredientFraction.value) return
+  if (hasDuplicateIngredientNames.value) return
   emit('submit', {
     name: name.value.trim(),
     category: category.value,
@@ -246,6 +261,20 @@ const handleSubmit = (): void => {
         <span class="text-xs text-gray-400 font-normal">(optional)</span>
       </p>
       <div
+        v-if="hasInvalidIngredientFraction"
+        role="alert"
+        class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
+      >
+        Bitte gib für Zutatenanteile nur gültige Werte zwischen 0 und 100 ein.
+      </div>
+      <div
+        v-if="hasDuplicateIngredientNames"
+        role="alert"
+        class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
+      >
+        Jede Zutat darf nur einmal eingetragen werden.
+      </div>
+      <div
         v-if="nonVeganIngredientNames.length"
         role="alert"
         class="mb-2 p-3 bg-amber-50 border border-amber-100 rounded-lg text-sm text-amber-800"
@@ -272,7 +301,7 @@ const handleSubmit = (): void => {
         />
         <select
           v-model="row.comparator"
-          :disabled="!row.fractionInput.trim()"
+          :disabled="parsePercentInputToBasisPoints(row.fractionInput) === null"
           class="px-2 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
         >
           <option

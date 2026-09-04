@@ -5,9 +5,47 @@ import type {
   ProductUpdate,
   ProductImage,
   ProductIngredient,
-  ProductIngredientInsert,
 } from '@/types'
 import type { ProductListItem } from '@/services/catalog'
+
+type IngredientWrite = {
+  name: string
+  fraction_basis_points: number | null
+  comparator: string
+}
+
+const getIngredientSignature = (ingredient: {
+  name: string
+  comparator: string
+  fractionBasisPoints: number | null
+}): string =>
+  `${ingredient.name}|${ingredient.comparator}|${ingredient.fractionBasisPoints === null ? '' : ingredient.fractionBasisPoints}`
+
+const haveSameIngredientEntries = (
+  existingIngredients: Pick<ProductIngredient, 'name' | 'fraction_basis_points' | 'comparator'>[],
+  nextIngredients: IngredientWrite[],
+): boolean => {
+  if (existingIngredients.length !== nextIngredients.length) return false
+  const existingSignatures = existingIngredients
+    .map((ingredient) =>
+      getIngredientSignature({
+        name: ingredient.name,
+        comparator: ingredient.comparator,
+        fractionBasisPoints: ingredient.fraction_basis_points,
+      }),
+    )
+    .sort()
+  const nextSignatures = nextIngredients
+    .map((ingredient) =>
+      getIngredientSignature({
+        name: ingredient.name,
+        comparator: ingredient.comparator,
+        fractionBasisPoints: ingredient.fraction_basis_points,
+      }),
+    )
+    .sort()
+  return existingSignatures.every((signature, index) => signature === nextSignatures[index])
+}
 
 export const fetchProduct = async (id: string): Promise<Product | null> => {
   const { data, error } = await supabase.from('product').select('*').eq('id', id).single()
@@ -71,8 +109,15 @@ export const fetchProductIngredients = async (productId: string): Promise<Produc
 
 export const replaceProductIngredients = async (
   productId: string,
-  ingredients: Pick<ProductIngredientInsert, 'name' | 'fraction_basis_points' | 'comparator'>[],
+  ingredients: IngredientWrite[],
 ): Promise<void> => {
+  const { data: existingIngredients, error: fetchError } = await supabase
+    .from('product_ingredient')
+    .select('name, fraction_basis_points, comparator')
+    .eq('product_id', productId)
+  if (fetchError) throw fetchError
+  if (haveSameIngredientEntries(existingIngredients ?? [], ingredients)) return
+
   const { error: deleteError } = await supabase
     .from('product_ingredient')
     .delete()

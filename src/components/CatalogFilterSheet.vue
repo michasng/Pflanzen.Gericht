@@ -36,7 +36,11 @@ const draftMaxPriceInput = ref(
 )
 
 onMounted(async () => {
-  ingredientSuggestions.value = await fetchIngredientNameSuggestions()
+  try {
+    ingredientSuggestions.value = await fetchIngredientNameSuggestions()
+  } catch {
+    ingredientSuggestions.value = []
+  }
 })
 
 const addIngredient = (list: Ref<string[]>, input: Ref<string>): void => {

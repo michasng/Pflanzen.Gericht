@@ -38,6 +38,19 @@ const { pendingFiles, existingImages, handleDeleteImage, commitImageChanges } =
     (img) => deleteProductImage(img.id, img.storage_path),
   )
 
+const toIngredientSignature = (ingredient: ProductFormValues['ingredients'][number]): string =>
+  `${ingredient.name}|${ingredient.comparator}|${ingredient.fractionBasisPoints === null ? '' : ingredient.fractionBasisPoints}`
+
+const haveSameIngredients = (
+  currentIngredients: ProductFormValues['ingredients'],
+  nextIngredients: ProductFormValues['ingredients'],
+): boolean => {
+  if (currentIngredients.length !== nextIngredients.length) return false
+  const currentSignatures = currentIngredients.map(toIngredientSignature).sort()
+  const nextSignatures = nextIngredients.map(toIngredientSignature).sort()
+  return currentSignatures.every((signature, index) => signature === nextSignatures[index])
+}
+
 onMounted(async () => {
   const id = route.params.id as string
   try {
@@ -74,18 +87,27 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
   submitError.value = null
   try {
     const { ingredients, ...fields } = values
-    await updateProduct(product.value.id, fields)
-    await Promise.all([
-      replaceProductIngredients(
+    const shouldUpdateProductFields =
+      product.value.name !== fields.name ||
+      product.value.category !== fields.category ||
+      product.value.base !== fields.base ||
+      product.value.brand !== fields.brand ||
+      product.value.description !== fields.description
+    if (shouldUpdateProductFields) {
+      await updateProduct(product.value.id, fields)
+    }
+    const shouldReplaceIngredients = !haveSameIngredients(initialIngredients.value, ingredients)
+    if (shouldReplaceIngredients) {
+      await replaceProductIngredients(
         product.value.id,
         ingredients.map((ingredient) => ({
           name: ingredient.name,
           fraction_basis_points: ingredient.fractionBasisPoints,
           comparator: ingredient.comparator,
         })),
-      ),
-      commitImageChanges(),
-    ])
+      )
+    }
+    await commitImageChanges()
     await router.push({ name: 'product-detail', params: { id: product.value.id } })
   } catch (err) {
     submitError.value = toErrorMessage(err)
