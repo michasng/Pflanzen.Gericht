@@ -14,7 +14,6 @@ COMMENT ON COLUMN public.product_ingredient.comparator IS
   'symbol shown before the fraction, e.g. "≤" in "Alkohol ≤ 0,5 %"; only meaningful when fraction_basis_points is set';
 
 CREATE INDEX product_ingredient_product_id_idx ON public.product_ingredient (product_id);
--- trigram index enables ILIKE suggestions while typing an ingredient name
 CREATE INDEX product_ingredient_name_trgm_idx ON public.product_ingredient USING gin (name gin_trgm_ops);
 CREATE UNIQUE INDEX product_ingredient_dedupe_idx
   ON public.product_ingredient (product_id, lower(trim(name)));
