@@ -31,13 +31,12 @@ import { ref, computed, watch } from 'vue'
 import ImageUpload from '@/components/ImageUpload.vue'
 import {
   CATEGORIES,
-  CATEGORY_LABELS,
+  categoryToLabel,
   BASES,
-  BASE_LABELS,
+  baseToLabel,
   ALLERGENS,
-  ALLERGEN_LABELS,
+  allergenToLabel,
 } from '@/config/taxonomy'
-import type { Category, Base, Allergen } from '@/config/taxonomy'
 import { INGREDIENT_COMPARATORS, DEFAULT_INGREDIENT_COMPARATOR } from '@/config/ingredients'
 import { NUTRIENT_UNITS, NUTRIENT_UNIT_LABELS, DEFAULT_NUTRIENT_UNIT } from '@/config/nutrients'
 import type { NutrientUnit } from '@/config/nutrients'
@@ -314,7 +313,7 @@ const handleSubmit = (): void => {
       >
         <option value="" disabled>Bitte wählen …</option>
         <option v-for="cat in CATEGORIES" :key="cat" :value="cat">
-          {{ CATEGORY_LABELS[cat as Category] }}
+          {{ categoryToLabel(cat) }}
         </option>
       </select>
     </div>
@@ -331,7 +330,7 @@ const handleSubmit = (): void => {
       >
         <option value="">Keine Angabe</option>
         <option v-for="b in BASES" :key="b" :value="b">
-          {{ BASE_LABELS[b as Base] }}
+          {{ baseToLabel(b) }}
         </option>
       </select>
     </div>
@@ -384,7 +383,7 @@ const handleSubmit = (): void => {
           "
           @click="toggleAllergen(allergen)"
         >
-          {{ ALLERGEN_LABELS[allergen as Allergen] }}
+          {{ allergenToLabel(allergen) }}
         </button>
       </div>
     </div>

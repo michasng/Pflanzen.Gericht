@@ -5,8 +5,7 @@ import { useCatalogUrlSync } from '@/composables/useCatalogUrlSync'
 import ProductCard from '@/components/ProductCard.vue'
 import CatalogFilterSheet from '@/components/CatalogFilterSheet.vue'
 import AppLogo from '@/components/AppLogo.vue'
-import { CATEGORIES, CATEGORY_LABELS, TAG_LABELS, allergenToLabel } from '@/config/taxonomy'
-import type { Category, Tag } from '@/config/taxonomy'
+import { CATEGORIES, categoryToLabel, tagToLabel, allergenToLabel } from '@/config/taxonomy'
 import { SORT_OPTIONS, SORT_OPTION_LABELS, type SortOption } from '@/config/sortOptions'
 
 const catalogStore = useCatalogStore()
@@ -139,7 +138,7 @@ const clearPrice = (): void => {
         "
         @click="selectCategory(cat)"
       >
-        {{ CATEGORY_LABELS[cat as Category] }}
+        {{ categoryToLabel(cat) }}
       </button>
     </div>
 
@@ -208,12 +207,8 @@ const clearPrice = (): void => {
         :key="tag"
         class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
       >
-        {{ TAG_LABELS[tag as Tag] }}
-        <button
-          type="button"
-          :aria-label="`${TAG_LABELS[tag as Tag]} entfernen`"
-          @click="removeTag(tag)"
-        >
+        {{ tagToLabel(tag) }}
+        <button type="button" :aria-label="`${tagToLabel(tag)} entfernen`" @click="removeTag(tag)">
           <svg
             class="w-3 h-3"
             fill="none"

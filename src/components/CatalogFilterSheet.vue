@@ -4,13 +4,12 @@ import { useCatalogStore } from '@/stores/catalog'
 import StarRatingInput from '@/components/StarRatingInput.vue'
 import {
   BASES,
-  BASE_LABELS,
+  baseToLabel,
   STORE_SUGGESTIONS,
   TAG_GROUPS,
   ALLERGENS,
-  ALLERGEN_LABELS,
+  allergenToLabel,
 } from '@/config/taxonomy'
-import type { Base, Allergen } from '@/config/taxonomy'
 import { parseEurosToCents, formatEuroCents } from '@/lib/price'
 import { supabase } from '@/lib/supabase'
 import { useNameSuggestions } from '@/composables/useNameSuggestions'
@@ -265,7 +264,7 @@ const reset = (): void => {
             >
               <option :value="null">Alle</option>
               <option v-for="base in BASES" :key="base" :value="base">
-                {{ BASE_LABELS[base as Base] }}
+                {{ baseToLabel(base) }}
               </option>
             </select>
           </section>
@@ -368,7 +367,7 @@ const reset = (): void => {
                 "
                 @click="toggleAllergen(allergen)"
               >
-                {{ ALLERGEN_LABELS[allergen as Allergen] }}
+                {{ allergenToLabel(allergen) }}
               </button>
             </div>
           </section>
