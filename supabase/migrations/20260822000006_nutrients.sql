@@ -1,6 +1,6 @@
-ALTER TABLE public.product ADD COLUMN energy_kilojoules integer CHECK (energy_kilojoules IS NULL OR energy_kilojoules >= 0);
-COMMENT ON COLUMN public.product.energy_kilojoules IS
-  'energy content in kJ per 100 g/ml of product, as sold; null means unknown';
+ALTER TABLE public.product ADD COLUMN energy_joules integer CHECK (energy_joules IS NULL OR energy_joules >= 0);
+COMMENT ON COLUMN public.product.energy_joules IS
+  'energy content in J per 100 g/ml of product, as sold; null means unknown';
 
 CREATE TABLE public.product_nutrient (
   id                uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -75,7 +75,7 @@ RETURNS TABLE (
   avg_overall          numeric,
   ratings_count        integer,
   min_price_euro_cents integer,
-  energy_kilojoules    integer,
+  energy_joules        integer,
   created_at           timestamptz,
   updated_at           timestamptz,
   tags                 text[],
@@ -167,7 +167,7 @@ BEGIN
     p.avg_overall,
     p.ratings_count,
     p.min_price_euro_cents,
-    p.energy_kilojoules,
+    p.energy_joules,
     p.created_at,
     p.updated_at,
     p.tags,
@@ -181,8 +181,8 @@ BEGIN
     CASE WHEN p_sort = 'price_asc'   THEN p.min_price_euro_cents::numeric  END ASC  NULLS LAST,
     CASE WHEN p_sort = 'price_desc'  THEN p.min_price_euro_cents::numeric  END DESC NULLS LAST,
     CASE WHEN p_sort = 'few_ingredients' THEN ingredient_stats.ingredient_count::numeric END ASC NULLS LAST,
-    CASE WHEN p_sort = 'calories_asc'  THEN p.energy_kilojoules::numeric END ASC  NULLS LAST,
-    CASE WHEN p_sort = 'calories_desc' THEN p.energy_kilojoules::numeric END DESC NULLS LAST,
+    CASE WHEN p_sort = 'calories_asc'  THEN p.energy_joules::numeric END ASC  NULLS LAST,
+    CASE WHEN p_sort = 'calories_desc' THEN p.energy_joules::numeric END DESC NULLS LAST,
     CASE WHEN p_sort = 'fat_asc' THEN nutrient_sort_values.fat_amount_micrograms::numeric END ASC NULLS LAST,
     CASE WHEN p_sort = 'saturated_fat_asc' THEN nutrient_sort_values.saturated_fat_amount_micrograms::numeric END ASC NULLS LAST,
     CASE WHEN p_sort = 'sugar_asc' THEN nutrient_sort_values.sugar_amount_micrograms::numeric END ASC NULLS LAST,
