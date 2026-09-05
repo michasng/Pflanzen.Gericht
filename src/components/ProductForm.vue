@@ -18,7 +18,7 @@ export interface ProductFormValues {
   base: string | null
   brand: string | null
   description: string | null
-  energyKilojoules: number | null
+  energyJoules: number | null
   ingredients: ProductFormIngredient[]
   nutrients: ProductFormNutrient[]
 }
@@ -32,7 +32,12 @@ import type { Category, Base } from '@/config/taxonomy'
 import { INGREDIENT_COMPARATORS, DEFAULT_INGREDIENT_COMPARATOR } from '@/config/ingredients'
 import { NUTRIENT_UNITS, NUTRIENT_UNIT_LABELS, DEFAULT_NUTRIENT_UNIT } from '@/config/nutrients'
 import type { NutrientUnit } from '@/config/nutrients'
-import { ENERGY_UNITS, ENERGY_UNIT_LABELS, DEFAULT_ENERGY_UNIT } from '@/config/energy'
+import {
+  ENERGY_UNITS,
+  ENERGY_UNIT_LABELS,
+  DEFAULT_ENERGY_UNIT,
+  JOULES_PER_ENERGY_UNIT,
+} from '@/config/energy'
 import type { EnergyUnit } from '@/config/energy'
 import { exceedsWholeFraction } from '@/config/exceedsWholeFraction'
 import { isLikelyNonVeganIngredient } from '@/config/isLikelyNonVeganIngredient'
@@ -42,7 +47,7 @@ import { formatFractionBasisPointsAsPercent } from '@/lib/formatFractionBasisPoi
 import { parseNutrientAmountInputToMicrograms } from '@/lib/parseNutrientAmountInputToMicrograms'
 import { chooseNutrientDisplayUnit, formatNutrientAmountValue } from '@/lib/formatNutrientAmount'
 import { hasDuplicateNames } from '@/lib/hasDuplicateNames'
-import { parseEnergyInputToKilojoules } from '@/lib/parseEnergyInputToKilojoules'
+import { parseEnergyInputToJoules } from '@/lib/parseEnergyInputToJoules'
 import { useNameSuggestions } from '@/composables/useNameSuggestions'
 import {
   searchSimilarProducts,
@@ -74,16 +79,18 @@ const brand = ref(props.initial?.brand ?? '')
 const description = ref(props.initial?.description ?? '')
 
 const energyInput = ref(
-  props.initial?.energyKilojoules != null ? String(props.initial.energyKilojoules) : '',
+  props.initial?.energyJoules != null
+    ? String(props.initial.energyJoules / JOULES_PER_ENERGY_UNIT[DEFAULT_ENERGY_UNIT])
+    : '',
 )
 const energyUnit = ref<EnergyUnit>(DEFAULT_ENERGY_UNIT)
 
-const parsedEnergyKilojoules = computed(() =>
-  parseEnergyInputToKilojoules(energyInput.value, energyUnit.value),
+const parsedEnergyJoules = computed(() =>
+  parseEnergyInputToJoules(energyInput.value, energyUnit.value),
 )
 
 const hasInvalidEnergy = computed(
-  () => energyInput.value.trim().length > 0 && parsedEnergyKilojoules.value === null,
+  () => energyInput.value.trim().length > 0 && parsedEnergyJoules.value === null,
 )
 
 interface IngredientRow {
@@ -234,7 +241,7 @@ const handleSubmit = (): void => {
     base: base.value || null,
     brand: brand.value.trim() || null,
     description: description.value.trim() || null,
-    energyKilojoules: parsedEnergyKilojoules.value,
+    energyJoules: parsedEnergyJoules.value,
     ingredients: parsedIngredients.value,
     nutrients: parsedNutrients.value,
   })

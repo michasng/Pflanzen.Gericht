@@ -10,4 +10,10 @@ export const ENERGY_UNIT_LABELS: Record<EnergyUnit, string> = {
 export const ENERGY_UNITS = Object.values(EnergyUnit)
 export const DEFAULT_ENERGY_UNIT = EnergyUnit.Kilojoule
 
-export const KILOJOULES_PER_KILOCALORIE = 4.184
+export const JOULES_PER_KILOJOULE = 1000
+export const JOULES_PER_KILOCALORIE = 4184
+
+export const JOULES_PER_ENERGY_UNIT: Record<EnergyUnit, number> = {
+  [EnergyUnit.Kilojoule]: JOULES_PER_KILOJOULE,
+  [EnergyUnit.Kilocalorie]: JOULES_PER_KILOCALORIE,
+}

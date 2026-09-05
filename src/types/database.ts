@@ -91,7 +91,7 @@ export type Database = {
           created_at: string
           created_by: string
           description: string | null
-          energy_kilojoules: number | null
+          energy_joules: number | null
           id: string
           min_price_euro_cents: number | null
           name: string
@@ -108,7 +108,7 @@ export type Database = {
           created_at?: string
           created_by: string
           description?: string | null
-          energy_kilojoules?: number | null
+          energy_joules?: number | null
           id?: string
           min_price_euro_cents?: number | null
           name: string
@@ -125,7 +125,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string | null
-          energy_kilojoules?: number | null
+          energy_joules?: number | null
           id?: string
           min_price_euro_cents?: number | null
           name?: string
@@ -423,7 +423,7 @@ export type Database = {
           created_at: string
           created_by: string
           description: string
-          energy_kilojoules: number
+          energy_joules: number
           id: string
           min_price_euro_cents: number
           name: string
