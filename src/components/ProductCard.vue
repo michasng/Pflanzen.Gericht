@@ -43,6 +43,12 @@ const categoryLabel = computed(
         {{ product.name }}
       </h3>
       <p v-if="product.brand" class="text-xs text-gray-400 truncate">{{ product.brand }}</p>
+      <span
+        v-if="product.is_organic"
+        class="self-start text-xs bg-green-50 text-green-700 rounded-full px-2 py-0.5 font-medium"
+      >
+        Bio
+      </span>
       <div class="flex items-center gap-1.5 mt-0.5">
         <StarDisplay :value="product.avg_overall" />
         <span class="text-xs text-gray-400">

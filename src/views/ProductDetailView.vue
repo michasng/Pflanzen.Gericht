@@ -12,7 +12,7 @@ import RatingCard from '@/components/RatingCard.vue'
 import PriceReportForm, { type PriceReportFormValues } from '@/components/PriceReportForm.vue'
 import AppLogo from '@/components/AppLogo.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
-import { categoryToLabel, baseToLabel } from '@/config/taxonomy'
+import { categoryToLabel, baseToLabel, allergenToLabel } from '@/config/taxonomy'
 import { formatIngredientLabel } from '@/config/formatIngredientLabel'
 import { sortIngredientsByFractionDesc } from '@/config/sortIngredientsByFractionDesc'
 import type { IngredientComparator } from '@/config/ingredients'
@@ -194,6 +194,19 @@ onMounted(async () => {
             class="text-xs bg-gray-100 text-gray-600 rounded-full px-2.5 py-0.5"
           >
             {{ baseToLabel(product.base) }}
+          </span>
+          <span
+            v-if="product.is_organic"
+            class="text-xs bg-green-50 text-green-700 rounded-full px-2.5 py-0.5 font-medium"
+          >
+            Bio
+          </span>
+          <span
+            v-for="allergen in product.allergens"
+            :key="allergen"
+            class="text-xs bg-amber-50 text-amber-700 rounded-full px-2.5 py-0.5"
+          >
+            {{ allergenToLabel(allergen) }}
           </span>
         </div>
         <h1 class="text-2xl font-bold text-gray-900 mb-1">{{ product.name }}</h1>

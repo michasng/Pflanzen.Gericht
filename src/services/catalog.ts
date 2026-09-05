@@ -25,6 +25,8 @@ export interface CatalogFilter {
   tags: string[]
   includeIngredients: string[]
   excludeIngredients: string[]
+  excludeAllergens: string[]
+  organic: boolean
 }
 
 export type ProductListItem = Product & { images: ProductImage[] }
@@ -66,6 +68,8 @@ export const fetchProducts = async (filter: CatalogFilter, page = 0): Promise<Pr
     p_offset: page * PAGE_SIZE,
     p_include_ingredients: filter.includeIngredients.length ? filter.includeIngredients : undefined,
     p_exclude_ingredients: filter.excludeIngredients.length ? filter.excludeIngredients : undefined,
+    p_exclude_allergens: filter.excludeAllergens.length ? filter.excludeAllergens : undefined,
+    p_organic: filter.organic ? true : undefined,
   })
   if (error) throw error
 
@@ -102,6 +106,8 @@ export const fetchProducts = async (filter: CatalogFilter, page = 0): Promise<Pr
       energy_joules: r.energy_joules ?? null,
       min_price_euro_cents: r.min_price_euro_cents ?? null,
       normalized_name: r.normalized_name ?? null,
+      allergens: r.allergens ?? [],
+      is_organic: r.is_organic ?? false,
       images: imagesByProduct.get(r.id) ?? [],
     })),
     total,

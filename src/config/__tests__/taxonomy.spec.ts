@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest'
-import { CATEGORIES, CATEGORY_LABELS, BASES, BASE_LABELS, TAGS, TAG_LABELS } from '../taxonomy'
+import {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  BASES,
+  BASE_LABELS,
+  TAGS,
+  TAG_LABELS,
+  ALLERGENS,
+  ALLERGEN_LABELS,
+} from '../taxonomy'
 
 describe('taxonomy labels', () => {
   it('has a German label for every category', () => {
@@ -17,6 +26,12 @@ describe('taxonomy labels', () => {
   it('has a German label for every tag', () => {
     for (const tag of TAGS) {
       expect(TAG_LABELS[tag], `missing label for tag "${tag}"`).toBeTruthy()
+    }
+  })
+
+  it('has a German label for every allergen', () => {
+    for (const allergen of ALLERGENS) {
+      expect(ALLERGEN_LABELS[allergen], `missing label for allergen "${allergen}"`).toBeTruthy()
     }
   })
 })

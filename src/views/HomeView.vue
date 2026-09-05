@@ -5,8 +5,8 @@ import { useCatalogUrlSync } from '@/composables/useCatalogUrlSync'
 import ProductCard from '@/components/ProductCard.vue'
 import CatalogFilterSheet from '@/components/CatalogFilterSheet.vue'
 import AppLogo from '@/components/AppLogo.vue'
-import { CATEGORIES, CATEGORY_LABELS, TAG_LABELS } from '@/config/taxonomy'
-import type { Category, Tag } from '@/config/taxonomy'
+import { CATEGORIES, CATEGORY_LABELS, TAG_LABELS, ALLERGEN_LABELS } from '@/config/taxonomy'
+import type { Category, Tag, Allergen } from '@/config/taxonomy'
 import { SORT_OPTIONS, SORT_OPTION_LABELS, type SortOption } from '@/config/sortOptions'
 
 const catalogStore = useCatalogStore()
@@ -53,6 +53,16 @@ const removeIncludeIngredient = (name: string): void => {
 
 const removeExcludeIngredient = (name: string): void => {
   catalogStore.setExcludeIngredients(catalogStore.excludeIngredients.filter((n) => n !== name))
+  catalogStore.load(true)
+}
+
+const removeExcludeAllergen = (allergen: string): void => {
+  catalogStore.setExcludeAllergens(catalogStore.excludeAllergens.filter((a) => a !== allergen))
+  catalogStore.load(true)
+}
+
+const clearOrganic = (): void => {
+  catalogStore.setOrganic(false)
   catalogStore.load(true)
 }
 
@@ -263,7 +273,47 @@ const clearPrice = (): void => {
         </button>
       </span>
       <span
-        v-if="catalogStore.base"
+        v-for="allergen in catalogStore.excludeAllergens"
+        :key="`allergen-${allergen}`"
+        class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full"
+      >
+        ohne {{ ALLERGEN_LABELS[allergen as Allergen] }}
+        <button
+          type="button"
+          :aria-label="`ohne ${ALLERGEN_LABELS[allergen as Allergen]} entfernen`"
+          @click="removeExcludeAllergen(allergen)"
+        >
+          <svg
+            class="w-3 h-3"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </span>
+      <span
+        v-if="catalogStore.organic"
+        class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
+      >
+        Bio
+        <button type="button" aria-label="Bio-Filter entfernen" @click="clearOrganic">
+          <svg
+            class="w-3 h-3"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </span>
+      <span
         class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
       >
         {{ catalogStore.base }}
