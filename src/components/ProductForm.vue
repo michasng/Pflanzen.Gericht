@@ -25,7 +25,7 @@ export interface ProductFormValues {
 </script>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import ImageUpload from '@/components/ImageUpload.vue'
 import { CATEGORIES, CATEGORY_LABELS, BASES, BASE_LABELS } from '@/config/taxonomy'
 import type { Category, Base } from '@/config/taxonomy'
@@ -42,6 +42,7 @@ import { formatFractionBasisPointsAsPercent } from '@/lib/formatFractionBasisPoi
 import { parseNutrientAmountInputToMicrograms } from '@/lib/parseNutrientAmountInputToMicrograms'
 import { chooseNutrientDisplayUnit, formatNutrientAmountValue } from '@/lib/formatNutrientAmount'
 import { parseEnergyInputToKilojoules } from '@/lib/parseEnergyInputToKilojoules'
+import { useNameSuggestions } from '@/composables/useNameSuggestions'
 import {
   searchSimilarProducts,
   fetchIngredientNameSuggestions,
@@ -102,15 +103,7 @@ const toRow = (ingredient: ProductFormIngredient): IngredientRow => ({
 })
 
 const ingredientRows = ref<IngredientRow[]>((props.initial?.ingredients ?? []).map(toRow))
-const ingredientSuggestions = ref<string[]>([])
-
-onMounted(async () => {
-  try {
-    ingredientSuggestions.value = await fetchIngredientNameSuggestions()
-  } catch {
-    ingredientSuggestions.value = []
-  }
-})
+const { suggestions: ingredientSuggestions } = useNameSuggestions(fetchIngredientNameSuggestions)
 
 const addIngredientRow = (): void => {
   ingredientRows.value = [
@@ -176,15 +169,7 @@ const toNutrientRow = (nutrient: ProductFormNutrient): NutrientRow => {
 }
 
 const nutrientRows = ref<NutrientRow[]>((props.initial?.nutrients ?? []).map(toNutrientRow))
-const nutrientSuggestions = ref<string[]>([])
-
-onMounted(async () => {
-  try {
-    nutrientSuggestions.value = await fetchNutrientNameSuggestions()
-  } catch {
-    nutrientSuggestions.value = []
-  }
-})
+const { suggestions: nutrientSuggestions } = useNameSuggestions(fetchNutrientNameSuggestions)
 
 const addNutrientRow = (): void => {
   nutrientRows.value = [
@@ -424,13 +409,13 @@ const handleSubmit = (): void => {
       >
         Achtung: Die Zutatenanteile ergeben zusammen mehr als 100 %.
       </div>
-      <div v-for="(row, index) in ingredientRows" :key="row.key" class="flex gap-2 mb-2">
+      <div v-for="row in ingredientRows" :key="row.key" class="flex gap-2 mb-2">
         <input
           v-model="row.name"
           type="text"
           list="pf-ingredient-suggestions"
           maxlength="80"
-          :placeholder="`Zutat ${index + 1}, z. B. Hafer`"
+          placeholder="z. B. Hafer"
           class="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
         <select

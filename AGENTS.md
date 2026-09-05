@@ -63,6 +63,8 @@ Write out their names when discussing their trade-offs.
 - Follow Arrange–Act–Assert
 - Keep a minimal shared setup
 - Prefer dependency injection over intrusive mocking
+- Don't mock imports; pass simple stubs, fakes or spies directly to the tested code (dependency injection)
+- Never use `await flushPromises()`; await the specific concrete promise the code under test is waiting on
 
 ## Database
 
