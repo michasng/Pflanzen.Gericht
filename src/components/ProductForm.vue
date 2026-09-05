@@ -18,7 +18,7 @@ export interface ProductFormValues {
 </script>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import ImageUpload from '@/components/ImageUpload.vue'
 import { CATEGORIES, CATEGORY_LABELS, BASES, BASE_LABELS } from '@/config/taxonomy'
 import type { Category, Base } from '@/config/taxonomy'
@@ -28,7 +28,8 @@ import { isLikelyNonVeganIngredient } from '@/config/isLikelyNonVeganIngredient'
 import { sumGuaranteedFractionBasisPoints } from '@/config/sumGuaranteedFractionBasisPoints'
 import { parsePercentInputToBasisPoints } from '@/lib/parsePercentInputToBasisPoints'
 import { formatFractionBasisPointsAsPercent } from '@/lib/formatFractionBasisPointsAsPercent'
-import { searchSimilarProducts, fetchIngredientNameSuggestions } from '@/services/products'
+import { useIngredientSuggestions } from '@/composables/useIngredientSuggestions'
+import { searchSimilarProducts } from '@/services/products'
 import { getImageUrl } from '@/services/catalog'
 import type { Product, ProductImage } from '@/types'
 
@@ -71,15 +72,7 @@ const toRow = (ingredient: ProductFormIngredient): IngredientRow => ({
 })
 
 const ingredientRows = ref<IngredientRow[]>((props.initial?.ingredients ?? []).map(toRow))
-const ingredientSuggestions = ref<string[]>([])
-
-onMounted(async () => {
-  try {
-    ingredientSuggestions.value = await fetchIngredientNameSuggestions()
-  } catch {
-    ingredientSuggestions.value = []
-  }
-})
+const { suggestions: ingredientSuggestions } = useIngredientSuggestions()
 
 const addIngredientRow = (): void => {
   ingredientRows.value = [
@@ -290,13 +283,13 @@ const handleSubmit = (): void => {
       >
         Achtung: Die Zutatenanteile ergeben zusammen mehr als 100 %.
       </div>
-      <div v-for="(row, index) in ingredientRows" :key="row.key" class="flex gap-2 mb-2">
+      <div v-for="row in ingredientRows" :key="row.key" class="flex gap-2 mb-2">
         <input
           v-model="row.name"
           type="text"
           list="pf-ingredient-suggestions"
           maxlength="80"
-          :placeholder="`Zutat ${index + 1}, z. B. Hafer`"
+          placeholder="z. B. Hafer"
           class="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
         <select
