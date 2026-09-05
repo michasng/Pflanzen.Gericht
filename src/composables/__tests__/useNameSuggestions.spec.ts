@@ -1,14 +1,14 @@
 import { describe, it, expect, vi } from 'vitest'
 import { defineComponent } from 'vue'
 import { mount } from '@vue/test-utils'
-import { useIngredientSuggestions } from '@/composables/useIngredientSuggestions'
+import { useNameSuggestions } from '@/composables/useNameSuggestions'
 
 const mountComposable = (fetchSuggestions: () => Promise<string[]>) => {
-  let result!: ReturnType<typeof useIngredientSuggestions>
+  let result!: ReturnType<typeof useNameSuggestions>
   const wrapper = mount(
     defineComponent({
       setup() {
-        result = useIngredientSuggestions(fetchSuggestions)
+        result = useNameSuggestions(fetchSuggestions)
         return () => null
       },
     }),
@@ -16,7 +16,7 @@ const mountComposable = (fetchSuggestions: () => Promise<string[]>) => {
   return { wrapper, result: () => result }
 }
 
-describe('useIngredientSuggestions', () => {
+describe('useNameSuggestions', () => {
   it('given suggestions load successfully, exposes them after mount', async () => {
     const suggestionsPromise = Promise.resolve(['Hafer', 'Palmöl'])
     const fetchSuggestions = vi.fn<() => Promise<string[]>>(() => suggestionsPromise)

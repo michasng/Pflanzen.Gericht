@@ -7,7 +7,7 @@ import CatalogFilterSheet from '@/components/CatalogFilterSheet.vue'
 import AppLogo from '@/components/AppLogo.vue'
 import { CATEGORIES, CATEGORY_LABELS, TAG_LABELS } from '@/config/taxonomy'
 import type { Category, Tag } from '@/config/taxonomy'
-import type { SortOption } from '@/services/catalog'
+import { SORT_OPTIONS, SORT_OPTION_LABELS, type SortOption } from '@/config/sortOptions'
 
 const catalogStore = useCatalogStore()
 useCatalogUrlSync()
@@ -34,13 +34,10 @@ const selectSort = (event: Event): void => {
   catalogStore.load(true)
 }
 
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: 'newest', label: 'Neueste' },
-  { value: 'top_rated', label: 'Beste Bewertung' },
-  { value: 'most_rated', label: 'Meiste Bewertungen' },
-  { value: 'price_asc', label: 'Günstigste' },
-  { value: 'price_desc', label: 'Teuerste' },
-]
+const SORT_SELECT_OPTIONS: { value: SortOption; label: string }[] = SORT_OPTIONS.map((value) => ({
+  value,
+  label: SORT_OPTION_LABELS[value],
+}))
 
 const filterSheetOpen = ref(false)
 
@@ -170,7 +167,7 @@ const clearPrice = (): void => {
         :value="catalogStore.sort"
         @change="selectSort"
       >
-        <option v-for="opt in SORT_OPTIONS" :key="opt.value" :value="opt.value">
+        <option v-for="opt in SORT_SELECT_OPTIONS" :key="opt.value" :value="opt.value">
           {{ opt.label }}
         </option>
       </select>

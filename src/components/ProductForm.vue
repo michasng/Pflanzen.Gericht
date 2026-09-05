@@ -7,13 +7,20 @@ export interface ProductFormIngredient {
   comparator: IngredientComparator
 }
 
+export interface ProductFormNutrient {
+  name: string
+  amountMicrograms: number
+}
+
 export interface ProductFormValues {
   name: string
   category: string
   base: string | null
   brand: string | null
   description: string | null
+  energyKilojoules: number | null
   ingredients: ProductFormIngredient[]
+  nutrients: ProductFormNutrient[]
 }
 </script>
 
@@ -23,13 +30,25 @@ import ImageUpload from '@/components/ImageUpload.vue'
 import { CATEGORIES, CATEGORY_LABELS, BASES, BASE_LABELS } from '@/config/taxonomy'
 import type { Category, Base } from '@/config/taxonomy'
 import { INGREDIENT_COMPARATORS, DEFAULT_INGREDIENT_COMPARATOR } from '@/config/ingredients'
+import { NUTRIENT_UNITS, NUTRIENT_UNIT_LABELS, DEFAULT_NUTRIENT_UNIT } from '@/config/nutrients'
+import type { NutrientUnit } from '@/config/nutrients'
+import { ENERGY_UNITS, ENERGY_UNIT_LABELS, DEFAULT_ENERGY_UNIT } from '@/config/energy'
+import type { EnergyUnit } from '@/config/energy'
 import { exceedsWholeFraction } from '@/config/exceedsWholeFraction'
 import { isLikelyNonVeganIngredient } from '@/config/isLikelyNonVeganIngredient'
 import { sumGuaranteedFractionBasisPoints } from '@/config/sumGuaranteedFractionBasisPoints'
 import { parsePercentInputToBasisPoints } from '@/lib/parsePercentInputToBasisPoints'
 import { formatFractionBasisPointsAsPercent } from '@/lib/formatFractionBasisPointsAsPercent'
-import { useIngredientSuggestions } from '@/composables/useIngredientSuggestions'
-import { searchSimilarProducts, fetchIngredientNameSuggestions } from '@/services/products'
+import { parseNutrientAmountInputToMicrograms } from '@/lib/parseNutrientAmountInputToMicrograms'
+import { chooseNutrientDisplayUnit, formatNutrientAmountValue } from '@/lib/formatNutrientAmount'
+import { hasDuplicateNames } from '@/lib/hasDuplicateNames'
+import { parseEnergyInputToKilojoules } from '@/lib/parseEnergyInputToKilojoules'
+import { useNameSuggestions } from '@/composables/useNameSuggestions'
+import {
+  searchSimilarProducts,
+  fetchIngredientNameSuggestions,
+  fetchNutrientNameSuggestions,
+} from '@/services/products'
 import { getImageUrl } from '@/services/catalog'
 import type { Product, ProductImage } from '@/types'
 
@@ -54,6 +73,19 @@ const base = ref(props.initial?.base ?? '')
 const brand = ref(props.initial?.brand ?? '')
 const description = ref(props.initial?.description ?? '')
 
+const energyInput = ref(
+  props.initial?.energyKilojoules != null ? String(props.initial.energyKilojoules) : '',
+)
+const energyUnit = ref<EnergyUnit>(DEFAULT_ENERGY_UNIT)
+
+const parsedEnergyKilojoules = computed(() =>
+  parseEnergyInputToKilojoules(energyInput.value, energyUnit.value),
+)
+
+const hasInvalidEnergy = computed(
+  () => energyInput.value.trim().length > 0 && parsedEnergyKilojoules.value === null,
+)
+
 interface IngredientRow {
   key: string
   name: string
@@ -72,9 +104,7 @@ const toRow = (ingredient: ProductFormIngredient): IngredientRow => ({
 })
 
 const ingredientRows = ref<IngredientRow[]>((props.initial?.ingredients ?? []).map(toRow))
-const { suggestions: ingredientSuggestions } = useIngredientSuggestions(
-  fetchIngredientNameSuggestions,
-)
+const { suggestions: ingredientSuggestions } = useNameSuggestions(fetchIngredientNameSuggestions)
 
 const addIngredientRow = (): void => {
   ingredientRows.value = [
@@ -107,10 +137,9 @@ const hasInvalidIngredientFraction = computed(() =>
   }),
 )
 
-const hasDuplicateIngredientNames = computed(() => {
-  const names = ingredientRows.value.map((row) => row.name.trim()).filter(Boolean)
-  return new Set(names).size !== names.length
-})
+const hasDuplicateIngredientNames = computed(() =>
+  hasDuplicateNames(ingredientRows.value.map((row) => row.name)),
+)
 
 const nonVeganIngredientNames = computed(() =>
   ingredientRows.value
@@ -120,6 +149,62 @@ const nonVeganIngredientNames = computed(() =>
 
 const exceedsTotalFraction = computed(() =>
   exceedsWholeFraction(sumGuaranteedFractionBasisPoints(parsedIngredients.value)),
+)
+
+interface NutrientRow {
+  key: string
+  name: string
+  amountInput: string
+  unit: NutrientUnit
+}
+
+const toNutrientRow = (nutrient: ProductFormNutrient): NutrientRow => {
+  const unit = chooseNutrientDisplayUnit(nutrient.amountMicrograms)
+  return {
+    key: crypto.randomUUID(),
+    name: nutrient.name,
+    amountInput: formatNutrientAmountValue(nutrient.amountMicrograms, unit),
+    unit,
+  }
+}
+
+const nutrientRows = ref<NutrientRow[]>((props.initial?.nutrients ?? []).map(toNutrientRow))
+const { suggestions: nutrientSuggestions } = useNameSuggestions(fetchNutrientNameSuggestions)
+
+const addNutrientRow = (): void => {
+  nutrientRows.value = [
+    ...nutrientRows.value,
+    { key: crypto.randomUUID(), name: '', amountInput: '', unit: DEFAULT_NUTRIENT_UNIT },
+  ]
+}
+
+const removeNutrientRow = (key: string): void => {
+  nutrientRows.value = nutrientRows.value.filter((row) => row.key !== key)
+}
+
+const parsedNutrients = computed(() =>
+  nutrientRows.value
+    .filter((row) => row.name.trim() && row.amountInput.trim())
+    .map((row) => ({
+      name: row.name.trim(),
+      amountMicrograms: parseNutrientAmountInputToMicrograms(row.amountInput, row.unit),
+    }))
+    .filter((nutrient): nutrient is ProductFormNutrient => nutrient.amountMicrograms !== null),
+)
+
+const hasInvalidNutrientAmount = computed(() =>
+  nutrientRows.value.some((row) => {
+    if (!row.name.trim()) return false
+    const trimmedInput = row.amountInput.trim()
+    return (
+      trimmedInput.length === 0 ||
+      parseNutrientAmountInputToMicrograms(trimmedInput, row.unit) === null
+    )
+  }),
+)
+
+const hasDuplicateNutrientNames = computed(() =>
+  hasDuplicateNames(nutrientRows.value.map((row) => row.name)),
 )
 
 type SimilarProduct = Pick<Product, 'id' | 'name' | 'brand' | 'category'>
@@ -140,13 +225,18 @@ watch(name, (val) => {
 const handleSubmit = (): void => {
   if (hasInvalidIngredientFraction.value) return
   if (hasDuplicateIngredientNames.value) return
+  if (hasInvalidEnergy.value) return
+  if (hasInvalidNutrientAmount.value) return
+  if (hasDuplicateNutrientNames.value) return
   emit('submit', {
     name: name.value.trim(),
     category: category.value,
     base: base.value || null,
     brand: brand.value.trim() || null,
     description: description.value.trim() || null,
+    energyKilojoules: parsedEnergyKilojoules.value,
     ingredients: parsedIngredients.value,
+    nutrients: parsedNutrients.value,
   })
 }
 </script>
@@ -251,6 +341,39 @@ const handleSubmit = (): void => {
     </div>
 
     <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-energy">
+        Energie
+        <span class="text-xs text-gray-400 font-normal">(optional, pro 100 g/ml)</span>
+      </label>
+      <div
+        v-if="hasInvalidEnergy"
+        role="alert"
+        class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
+      >
+        Bitte gib für die Energie einen gültigen Wert ein.
+      </div>
+      <div class="flex gap-2">
+        <input
+          id="pf-energy"
+          v-model="energyInput"
+          type="text"
+          inputmode="decimal"
+          maxlength="8"
+          placeholder="z. B. 1500"
+          class="flex-1 min-w-0 px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+        <select
+          v-model="energyUnit"
+          class="px-2 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+        >
+          <option v-for="unit in ENERGY_UNITS" :key="unit" :value="unit">
+            {{ ENERGY_UNIT_LABELS[unit] }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <div>
       <p class="text-sm font-medium text-gray-700 mb-1.5">
         Zutaten
         <span class="text-xs text-gray-400 font-normal">(optional)</span>
@@ -336,6 +459,71 @@ const handleSubmit = (): void => {
         @click="addIngredientRow"
       >
         + Zutat hinzufügen
+      </button>
+    </div>
+
+    <div>
+      <p class="text-sm font-medium text-gray-700 mb-1.5">
+        Nährwerte
+        <span class="text-xs text-gray-400 font-normal">(optional, pro 100 g/ml)</span>
+      </p>
+      <div
+        v-if="hasInvalidNutrientAmount"
+        role="alert"
+        class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
+      >
+        Bitte gib für jeden Nährwert einen gültigen Wert ein.
+      </div>
+      <div
+        v-if="hasDuplicateNutrientNames"
+        role="alert"
+        class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
+      >
+        Jeder Nährwert darf nur einmal eingetragen werden.
+      </div>
+      <div v-for="(row, index) in nutrientRows" :key="row.key" class="flex gap-2 mb-2">
+        <input
+          v-model="row.name"
+          type="text"
+          list="pf-nutrient-suggestions"
+          maxlength="80"
+          :placeholder="`Nährwert ${index + 1}, z. B. Ballaststoffe`"
+          class="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+        <input
+          v-model="row.amountInput"
+          type="text"
+          inputmode="decimal"
+          maxlength="10"
+          placeholder="0,8"
+          class="w-20 px-2 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+        <select
+          v-model="row.unit"
+          class="px-2 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+        >
+          <option v-for="unit in NUTRIENT_UNITS" :key="unit" :value="unit">
+            {{ NUTRIENT_UNIT_LABELS[unit] }}
+          </option>
+        </select>
+        <button
+          type="button"
+          class="px-2 text-gray-400 hover:text-red-500 transition-colors"
+          aria-label="Nährwert entfernen"
+          @click="removeNutrientRow(row.key)"
+        >
+          ✕
+        </button>
+      </div>
+      <datalist id="pf-nutrient-suggestions">
+        <option v-for="suggestion in nutrientSuggestions" :key="suggestion" :value="suggestion" />
+      </datalist>
+      <button
+        type="button"
+        class="text-sm text-primary-600 font-medium hover:text-primary-700 transition-colors"
+        @click="addNutrientRow"
+      >
+        + Nährwert hinzufügen
       </button>
     </div>
 

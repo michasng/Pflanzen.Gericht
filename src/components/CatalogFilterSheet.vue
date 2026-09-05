@@ -6,7 +6,7 @@ import { BASES, BASE_LABELS, STORE_SUGGESTIONS, TAG_GROUPS } from '@/config/taxo
 import type { Base } from '@/config/taxonomy'
 import { parseEurosToCents, formatEuroCents } from '@/lib/price'
 import { supabase } from '@/lib/supabase'
-import { useIngredientSuggestions } from '@/composables/useIngredientSuggestions'
+import { useNameSuggestions } from '@/composables/useNameSuggestions'
 import { fetchIngredientNameSuggestions } from '@/services/products'
 
 const props = defineProps<{ open: boolean }>()
@@ -24,7 +24,7 @@ const draftIncludeIngredients = ref<string[]>([...catalogStore.includeIngredient
 const draftExcludeIngredients = ref<string[]>([...catalogStore.excludeIngredients])
 const includeIngredientInput = ref('')
 const excludeIngredientInput = ref('')
-const { suggestions: ingredientSuggestions, refreshSuggestions } = useIngredientSuggestions(
+const { suggestions: ingredientSuggestions, refreshSuggestions } = useNameSuggestions(
   fetchIngredientNameSuggestions,
 )
 const draftMinPriceInput = ref(

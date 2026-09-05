@@ -1,8 +1,16 @@
 import { supabase } from '@/lib/supabase'
-import type { Product, ProductImage, ProductIngredient, Rating, RatingImage } from '@/types'
+import type {
+  Product,
+  ProductImage,
+  ProductIngredient,
+  ProductNutrient,
+  Rating,
+  RatingImage,
+} from '@/types'
 import { fetchPriceReports, type PriceReportWithProfile } from '@/services/prices'
+import type { SortOption } from '@/config/sortOptions'
 
-export type SortOption = 'newest' | 'top_rated' | 'most_rated' | 'price_asc' | 'price_desc'
+export type { SortOption }
 
 export interface CatalogFilter {
   search: string
@@ -35,6 +43,7 @@ export type RatingWithDetails = Rating & {
 export type ProductDetail = Product & {
   images: ProductImage[]
   ingredients: ProductIngredient[]
+  nutrients: ProductNutrient[]
   ratings: RatingWithDetails[]
   priceReports: PriceReportWithProfile[]
 }
@@ -90,6 +99,7 @@ export const fetchProducts = async (filter: CatalogFilter, page = 0): Promise<Pr
       brand: r.brand ?? null,
       base: r.base ?? null,
       description: r.description ?? null,
+      energy_kilojoules: r.energy_kilojoules ?? null,
       min_price_euro_cents: r.min_price_euro_cents ?? null,
       normalized_name: r.normalized_name ?? null,
       images: imagesByProduct.get(r.id) ?? [],
@@ -104,7 +114,7 @@ export const fetchProductDetail = async (id: string): Promise<ProductDetail | nu
       supabase
         .from('product')
         .select(
-          '*, images:product_image(id, storage_path, sort_order), ingredients:product_ingredient(id, name, fraction_basis_points, comparator)',
+          '*, images:product_image(id, storage_path, sort_order), ingredients:product_ingredient(id, name, fraction_basis_points, comparator), nutrients:product_nutrient(id, name, amount_micrograms)',
         )
         .eq('id', id)
         .single(),
@@ -128,6 +138,7 @@ export const fetchProductDetail = async (id: string): Promise<ProductDetail | nu
     ...p,
     images: (p.images as ProductImage[] | null) ?? [],
     ingredients: (p.ingredients as ProductIngredient[] | null) ?? [],
+    nutrients: (p.nutrients as ProductNutrient[] | null) ?? [],
     ratings: (rawRatings ?? []).map((r) => ({
       ...r,
       profile: r.profile as { username: string; display_name: string | null },
