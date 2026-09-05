@@ -29,7 +29,7 @@ import { sumGuaranteedFractionBasisPoints } from '@/config/sumGuaranteedFraction
 import { parsePercentInputToBasisPoints } from '@/lib/parsePercentInputToBasisPoints'
 import { formatFractionBasisPointsAsPercent } from '@/lib/formatFractionBasisPointsAsPercent'
 import { useIngredientSuggestions } from '@/composables/useIngredientSuggestions'
-import { searchSimilarProducts } from '@/services/products'
+import { searchSimilarProducts, fetchIngredientNameSuggestions } from '@/services/products'
 import { getImageUrl } from '@/services/catalog'
 import type { Product, ProductImage } from '@/types'
 
@@ -72,7 +72,9 @@ const toRow = (ingredient: ProductFormIngredient): IngredientRow => ({
 })
 
 const ingredientRows = ref<IngredientRow[]>((props.initial?.ingredients ?? []).map(toRow))
-const { suggestions: ingredientSuggestions } = useIngredientSuggestions()
+const { suggestions: ingredientSuggestions } = useIngredientSuggestions(
+  fetchIngredientNameSuggestions,
+)
 
 const addIngredientRow = (): void => {
   ingredientRows.value = [

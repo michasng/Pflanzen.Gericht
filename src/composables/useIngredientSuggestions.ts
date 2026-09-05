@@ -1,8 +1,7 @@
 import { ref, onMounted, type Ref } from 'vue'
-import { fetchIngredientNameSuggestions } from '@/services/products'
 
 export const useIngredientSuggestions = (
-  fetchSuggestions: () => Promise<string[]> = fetchIngredientNameSuggestions,
+  fetchSuggestions: () => Promise<string[]>,
 ): {
   suggestions: Ref<string[]>
   refreshSuggestions: () => Promise<void>
