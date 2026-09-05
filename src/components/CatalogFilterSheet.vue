@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, watch, computed, onMounted, type Ref } from 'vue'
+import { ref, watch, computed, type Ref } from 'vue'
 import { useCatalogStore } from '@/stores/catalog'
 import StarRatingInput from '@/components/StarRatingInput.vue'
 import { BASES, BASE_LABELS, STORE_SUGGESTIONS, TAG_GROUPS } from '@/config/taxonomy'
 import type { Base } from '@/config/taxonomy'
 import { parseEurosToCents, formatEuroCents } from '@/lib/price'
 import { supabase } from '@/lib/supabase'
-import { fetchIngredientNameSuggestions } from '@/services/products'
+import { useIngredientSuggestions } from '@/composables/useIngredientSuggestions'
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: [] }>()
@@ -23,7 +23,7 @@ const draftIncludeIngredients = ref<string[]>([...catalogStore.includeIngredient
 const draftExcludeIngredients = ref<string[]>([...catalogStore.excludeIngredients])
 const includeIngredientInput = ref('')
 const excludeIngredientInput = ref('')
-const ingredientSuggestions = ref<string[]>([])
+const { suggestions: ingredientSuggestions, refreshSuggestions } = useIngredientSuggestions()
 const draftMinPriceInput = ref(
   catalogStore.minPriceCents != null
     ? formatEuroCents(catalogStore.minPriceCents).replace(' €', '')
@@ -34,14 +34,6 @@ const draftMaxPriceInput = ref(
     ? formatEuroCents(catalogStore.maxPriceCents).replace(' €', '')
     : '',
 )
-
-onMounted(async () => {
-  try {
-    ingredientSuggestions.value = await fetchIngredientNameSuggestions()
-  } catch {
-    ingredientSuggestions.value = []
-  }
-})
 
 const addIngredient = (list: Ref<string[]>, input: Ref<string>): void => {
   const name = input.value.trim()
@@ -109,6 +101,7 @@ watch(
         ? formatEuroCents(catalogStore.maxPriceCents).replace(' €', '')
         : ''
     void loadCities(catalogStore.store)
+    void refreshSuggestions()
   },
 )
 
@@ -278,7 +271,7 @@ const reset = (): void => {
                 v-model="excludeIngredientInput"
                 type="text"
                 list="fs-ingredient-suggestions"
-                placeholder="z. B. Milch"
+                placeholder="z. B. Palmöl"
                 class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 @keydown.enter.prevent="addExcludeIngredient"
               />

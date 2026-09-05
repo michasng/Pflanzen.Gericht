@@ -45,7 +45,6 @@ export const TAG_GROUPS = [
       organic: 'Bio',
       lots_of_plastic: 'Viel Plastik',
       sustainable_packaging: 'Nachhaltige Verpackung',
-      palm_oil: 'Mit Palmöl',
     },
   },
   {
