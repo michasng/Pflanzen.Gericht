@@ -7,6 +7,7 @@ import type { Base } from '@/config/taxonomy'
 import { parseEurosToCents, formatEuroCents } from '@/lib/price'
 import { supabase } from '@/lib/supabase'
 import { useIngredientSuggestions } from '@/composables/useIngredientSuggestions'
+import { fetchIngredientNameSuggestions } from '@/services/products'
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: [] }>()
@@ -23,7 +24,9 @@ const draftIncludeIngredients = ref<string[]>([...catalogStore.includeIngredient
 const draftExcludeIngredients = ref<string[]>([...catalogStore.excludeIngredients])
 const includeIngredientInput = ref('')
 const excludeIngredientInput = ref('')
-const { suggestions: ingredientSuggestions, refreshSuggestions } = useIngredientSuggestions()
+const { suggestions: ingredientSuggestions, refreshSuggestions } = useIngredientSuggestions(
+  fetchIngredientNameSuggestions,
+)
 const draftMinPriceInput = ref(
   catalogStore.minPriceCents != null
     ? formatEuroCents(catalogStore.minPriceCents).replace(' €', '')
