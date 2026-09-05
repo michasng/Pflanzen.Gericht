@@ -2,14 +2,9 @@ ALTER TABLE public.product
   ADD COLUMN allergens  text[]  NOT NULL DEFAULT '{}',
   ADD COLUMN is_organic boolean NOT NULL DEFAULT false;
 
--- GIN index enables array-contains filtering on allergens
 CREATE INDEX product_allergens_gin_idx ON public.product USING gin (allergens);
--- partial index; only organic products are ever filtered on
 CREATE INDEX product_is_organic_idx ON public.product (is_organic) WHERE is_organic = true;
 
--- CREATE OR REPLACE with additional trailing parameters would create a second
--- overload instead of replacing the function, making every call ambiguous.
--- Drop the prior signature first so only the extended version remains.
 DROP FUNCTION IF EXISTS public.search_products(
   text, text, text, numeric, text, text, integer, integer, text[], text, integer, integer, text[], text[]
 );
