@@ -1,47 +1,6 @@
-ALTER TABLE public.product ADD COLUMN energy_kilojoules integer CHECK (energy_kilojoules IS NULL OR energy_kilojoules >= 0);
-COMMENT ON COLUMN public.product.energy_kilojoules IS
-  'energy content in kJ per 100 g/ml of product, as sold; null means unknown';
-
-CREATE TABLE public.product_nutrient (
-  id                uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  product_id        uuid        NOT NULL REFERENCES public.product(id) ON DELETE CASCADE,
-  name              text        NOT NULL CHECK (length(trim(name)) >= 1),
-  amount_micrograms bigint      NOT NULL CHECK (amount_micrograms >= 0),
-  created_at        timestamptz NOT NULL DEFAULT now()
-);
-
-CREATE INDEX product_nutrient_product_id_idx ON public.product_nutrient (product_id);
-CREATE INDEX product_nutrient_name_trgm_idx ON public.product_nutrient USING gin (name gin_trgm_ops);
-CREATE UNIQUE INDEX product_nutrient_dedupe_idx
-  ON public.product_nutrient (product_id, lower(trim(name)));
-
-ALTER TABLE public.product_nutrient ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "product_nutrients: publicly readable"
-  ON public.product_nutrient FOR SELECT USING (true);
-
-CREATE POLICY "product_nutrients: product owner add"
-  ON public.product_nutrient FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.product
-      WHERE id = product_id
-        AND (created_by = auth.uid() OR public.is_admin())
-    )
-  );
-
-CREATE POLICY "product_nutrients: product owner delete"
-  ON public.product_nutrient FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.product
-      WHERE id = product_id
-        AND (created_by = auth.uid() OR public.is_admin())
-    )
-  );
-
-GRANT SELECT ON public.product_nutrient TO anon, authenticated;
-GRANT INSERT, DELETE ON public.product_nutrient TO authenticated;
+ALTER TABLE public.product RENAME COLUMN energy_kilojoules TO energy_joules;
+COMMENT ON COLUMN public.product.energy_joules IS
+  'energy content in J per 100 g/ml of product, as sold; null means unknown';
 
 DROP FUNCTION IF EXISTS public.search_products(
   text, text, text, numeric, text, text, integer, integer, text[], text, integer, integer, text[], text[]
@@ -75,7 +34,7 @@ RETURNS TABLE (
   avg_overall          numeric,
   ratings_count        integer,
   min_price_euro_cents integer,
-  energy_kilojoules    integer,
+  energy_joules        integer,
   created_at           timestamptz,
   updated_at           timestamptz,
   tags                 text[],
@@ -167,7 +126,7 @@ BEGIN
     p.avg_overall,
     p.ratings_count,
     p.min_price_euro_cents,
-    p.energy_kilojoules,
+    p.energy_joules,
     p.created_at,
     p.updated_at,
     p.tags,
@@ -181,8 +140,8 @@ BEGIN
     CASE WHEN p_sort = 'price_asc'   THEN p.min_price_euro_cents::numeric  END ASC  NULLS LAST,
     CASE WHEN p_sort = 'price_desc'  THEN p.min_price_euro_cents::numeric  END DESC NULLS LAST,
     CASE WHEN p_sort = 'few_ingredients' THEN ingredient_stats.ingredient_count::numeric END ASC NULLS LAST,
-    CASE WHEN p_sort = 'calories_asc'  THEN p.energy_kilojoules::numeric END ASC  NULLS LAST,
-    CASE WHEN p_sort = 'calories_desc' THEN p.energy_kilojoules::numeric END DESC NULLS LAST,
+    CASE WHEN p_sort = 'calories_asc'  THEN p.energy_joules::numeric END ASC  NULLS LAST,
+    CASE WHEN p_sort = 'calories_desc' THEN p.energy_joules::numeric END DESC NULLS LAST,
     CASE WHEN p_sort = 'fat_asc' THEN nutrient_sort_values.fat_amount_micrograms::numeric END ASC NULLS LAST,
     CASE WHEN p_sort = 'saturated_fat_asc' THEN nutrient_sort_values.saturated_fat_amount_micrograms::numeric END ASC NULLS LAST,
     CASE WHEN p_sort = 'sugar_asc' THEN nutrient_sort_values.sugar_amount_micrograms::numeric END ASC NULLS LAST,
