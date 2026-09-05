@@ -17,7 +17,7 @@ import { formatIngredientLabel } from '@/config/formatIngredientLabel'
 import { sortIngredientsByFractionDesc } from '@/config/sortIngredientsByFractionDesc'
 import type { IngredientComparator } from '@/config/ingredients'
 import { formatNutrientAmount } from '@/lib/formatNutrientAmount'
-import { formatEnergyInJoulesAsKilojoulesAndKilocalories } from '@/lib/formatEnergyInJoulesAsKilojoulesAndKilocalories'
+import { formatEnergy } from '@/lib/formatEnergy'
 
 const route = useRoute()
 const router = useRouter()
@@ -224,7 +224,7 @@ onMounted(async () => {
             <tr v-if="product.energy_joules != null">
               <td class="py-1.5 pr-2 text-gray-600">Energie</td>
               <td class="py-1.5 text-right font-medium text-gray-900 tabular-nums">
-                {{ formatEnergyInJoulesAsKilojoulesAndKilocalories(product.energy_joules) }}
+                {{ formatEnergy(product.energy_joules) }}
               </td>
             </tr>
             <tr v-for="nutrient in nutrients" :key="nutrient.id">

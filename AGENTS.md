@@ -58,6 +58,7 @@ Write out their names when discussing their trade-offs.
 ## Testing
 
 - All logic must be unit tested (`src/**/__tests__`); add or update tests with every behavior change
+- Do not add unit tests for declarations or constant maps when the test only duplicates the declaration values
 - One `describe` block at the top per unit under test
 - Nest scenarios with non-technical `given|when <scenario>` describes
 - Follow Arrange–Act–Assert
