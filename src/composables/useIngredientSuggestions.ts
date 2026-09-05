@@ -1,7 +1,9 @@
 import { ref, onMounted, type Ref } from 'vue'
 import { fetchIngredientNameSuggestions } from '@/services/products'
 
-export const useIngredientSuggestions = (): {
+export const useIngredientSuggestions = (
+  fetchSuggestions: () => Promise<string[]> = fetchIngredientNameSuggestions,
+): {
   suggestions: Ref<string[]>
   refreshSuggestions: () => Promise<void>
 } => {
@@ -9,7 +11,7 @@ export const useIngredientSuggestions = (): {
 
   const refreshSuggestions = async (): Promise<void> => {
     try {
-      suggestions.value = await fetchIngredientNameSuggestions()
+      suggestions.value = await fetchSuggestions()
     } catch {
       suggestions.value = []
     }
