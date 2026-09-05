@@ -49,6 +49,16 @@ const removeTag = (tag: string): void => {
   catalogStore.load(true)
 }
 
+const removeIncludeIngredient = (name: string): void => {
+  catalogStore.setIncludeIngredients(catalogStore.includeIngredients.filter((n) => n !== name))
+  catalogStore.load(true)
+}
+
+const removeExcludeIngredient = (name: string): void => {
+  catalogStore.setExcludeIngredients(catalogStore.excludeIngredients.filter((n) => n !== name))
+  catalogStore.load(true)
+}
+
 const clearMinRating = (): void => {
   catalogStore.setMinRating(null)
   catalogStore.load(true)
@@ -196,6 +206,52 @@ const clearPrice = (): void => {
           type="button"
           :aria-label="`${TAG_LABELS[tag as Tag]} entfernen`"
           @click="removeTag(tag)"
+        >
+          <svg
+            class="w-3 h-3"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </span>
+      <span
+        v-for="ingredientName in catalogStore.includeIngredients"
+        :key="`include-${ingredientName}`"
+        class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
+      >
+        {{ ingredientName }}
+        <button
+          type="button"
+          :aria-label="`${ingredientName} entfernen`"
+          @click="removeIncludeIngredient(ingredientName)"
+        >
+          <svg
+            class="w-3 h-3"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </span>
+      <span
+        v-for="ingredientName in catalogStore.excludeIngredients"
+        :key="`exclude-${ingredientName}`"
+        class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full"
+      >
+        ohne {{ ingredientName }}
+        <button
+          type="button"
+          :aria-label="`ohne ${ingredientName} entfernen`"
+          @click="removeExcludeIngredient(ingredientName)"
         >
           <svg
             class="w-3 h-3"

@@ -8,9 +8,11 @@ import LoadingText from '@/components/LoadingText.vue'
 import {
   fetchProduct,
   fetchProductImages,
+  fetchProductIngredients,
   updateProduct,
   uploadProductImage,
   deleteProductImage,
+  replaceProductIngredients,
 } from '@/services/products'
 import { toErrorMessage } from '@/lib/error'
 import { useImageUpload } from '@/composables/useImageUpload'
@@ -22,6 +24,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const product = ref<Product | null>(null)
+const initialIngredients = ref<ProductFormValues['ingredients']>([])
 const loading = ref(true)
 const loadError = ref<string | null>(null)
 const submitting = ref(false)
@@ -35,10 +38,27 @@ const { pendingFiles, existingImages, handleDeleteImage, commitImageChanges } =
     (img) => deleteProductImage(img.id, img.storage_path),
   )
 
+const toIngredientSignature = (ingredient: ProductFormValues['ingredients'][number]): string =>
+  `${ingredient.name}|${ingredient.comparator}|${ingredient.fractionBasisPoints === null ? '' : ingredient.fractionBasisPoints}`
+
+const haveSameIngredients = (
+  currentIngredients: ProductFormValues['ingredients'],
+  nextIngredients: ProductFormValues['ingredients'],
+): boolean => {
+  if (currentIngredients.length !== nextIngredients.length) return false
+  const currentSignatures = currentIngredients.map(toIngredientSignature).sort()
+  const nextSignatures = nextIngredients.map(toIngredientSignature).sort()
+  return currentSignatures.every((signature, index) => signature === nextSignatures[index])
+}
+
 onMounted(async () => {
   const id = route.params.id as string
   try {
-    const [p, imgs] = await Promise.all([fetchProduct(id), fetchProductImages(id)])
+    const [p, imgs, ingredients] = await Promise.all([
+      fetchProduct(id),
+      fetchProductImages(id),
+      fetchProductIngredients(id),
+    ])
     if (!p) {
       loadError.value = 'Produkt nicht gefunden.'
       return
@@ -49,6 +69,11 @@ onMounted(async () => {
     }
     product.value = p
     existingImages.value = imgs.sort((a, b) => a.sort_order - b.sort_order)
+    initialIngredients.value = ingredients.map((ingredient) => ({
+      name: ingredient.name,
+      fractionBasisPoints: ingredient.fraction_basis_points,
+      comparator: ingredient.comparator as ProductFormValues['ingredients'][number]['comparator'],
+    }))
   } catch (err) {
     loadError.value = toErrorMessage(err)
   } finally {
@@ -61,7 +86,27 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
   submitting.value = true
   submitError.value = null
   try {
-    await updateProduct(product.value.id, values)
+    const { ingredients, ...fields } = values
+    const shouldUpdateProductFields =
+      product.value.name !== fields.name ||
+      product.value.category !== fields.category ||
+      product.value.base !== fields.base ||
+      product.value.brand !== fields.brand ||
+      product.value.description !== fields.description
+    if (shouldUpdateProductFields) {
+      await updateProduct(product.value.id, fields)
+    }
+    const shouldReplaceIngredients = !haveSameIngredients(initialIngredients.value, ingredients)
+    if (shouldReplaceIngredients) {
+      await replaceProductIngredients(
+        product.value.id,
+        ingredients.map((ingredient) => ({
+          name: ingredient.name,
+          fraction_basis_points: ingredient.fractionBasisPoints,
+          comparator: ingredient.comparator,
+        })),
+      )
+    }
     await commitImageChanges()
     await router.push({ name: 'product-detail', params: { id: product.value.id } })
   } catch (err) {
@@ -86,6 +131,7 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
           base: product.base,
           brand: product.brand,
           description: product.description,
+          ingredients: initialIngredients,
         }"
         :existing-images="existingImages"
         :submitting="submitting"

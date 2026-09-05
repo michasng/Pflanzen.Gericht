@@ -15,6 +15,8 @@ const makeStoreMock = () => {
     city: null,
     minRating: null,
     tags: [],
+    includeIngredients: [],
+    excludeIngredients: [],
     minPriceCents: null,
     maxPriceCents: null,
   }
@@ -36,6 +38,8 @@ const makeStoreMock = () => {
     setCity: makeSetter('city'),
     setMinRating: makeSetter('minRating'),
     setTags: makeSetter('tags'),
+    setIncludeIngredients: makeSetter('includeIngredients'),
+    setExcludeIngredients: makeSetter('excludeIngredients'),
     setMinPriceCents: makeSetter('minPriceCents'),
     setMaxPriceCents: makeSetter('maxPriceCents'),
     load: vi.fn<(reset?: boolean) => void>(),
@@ -101,6 +105,13 @@ describe('useCatalogUrlSync', () => {
     routeQuery = { tags: 'organic' }
     mountComposable()
     expect(storeMock.setTags).toHaveBeenCalledWith(['organic'])
+  })
+
+  it('maps ingredient filters as arrays', () => {
+    routeQuery = { includeIngredients: ['Hafer'], excludeIngredients: 'Milch' }
+    mountComposable()
+    expect(storeMock.setIncludeIngredients).toHaveBeenCalledWith(['Hafer'])
+    expect(storeMock.setExcludeIngredients).toHaveBeenCalledWith(['Milch'])
   })
 
   it('maps minPrice and maxPrice as raw cents numbers', () => {

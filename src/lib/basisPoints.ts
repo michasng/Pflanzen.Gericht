@@ -1,0 +1,2 @@
+export const BASIS_POINTS_PER_PERCENT = 100
+export const BASIS_POINTS_PER_WHOLE = 10000

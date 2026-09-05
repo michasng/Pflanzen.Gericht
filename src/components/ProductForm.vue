@@ -1,19 +1,34 @@
 <script lang="ts">
+import type { IngredientComparator } from '@/config/ingredients'
+
+export interface ProductFormIngredient {
+  name: string
+  fractionBasisPoints: number | null
+  comparator: IngredientComparator
+}
+
 export interface ProductFormValues {
   name: string
   category: string
   base: string | null
   brand: string | null
   description: string | null
+  ingredients: ProductFormIngredient[]
 }
 </script>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import ImageUpload from '@/components/ImageUpload.vue'
 import { CATEGORIES, CATEGORY_LABELS, BASES, BASE_LABELS } from '@/config/taxonomy'
 import type { Category, Base } from '@/config/taxonomy'
-import { searchSimilarProducts } from '@/services/products'
+import { INGREDIENT_COMPARATORS, DEFAULT_INGREDIENT_COMPARATOR } from '@/config/ingredients'
+import { exceedsWholeFraction } from '@/config/exceedsWholeFraction'
+import { isLikelyNonVeganIngredient } from '@/config/isLikelyNonVeganIngredient'
+import { sumGuaranteedFractionBasisPoints } from '@/config/sumGuaranteedFractionBasisPoints'
+import { parsePercentInputToBasisPoints } from '@/lib/parsePercentInputToBasisPoints'
+import { formatFractionBasisPointsAsPercent } from '@/lib/formatFractionBasisPointsAsPercent'
+import { searchSimilarProducts, fetchIngredientNameSuggestions } from '@/services/products'
 import { getImageUrl } from '@/services/catalog'
 import type { Product, ProductImage } from '@/types'
 
@@ -38,6 +53,80 @@ const base = ref(props.initial?.base ?? '')
 const brand = ref(props.initial?.brand ?? '')
 const description = ref(props.initial?.description ?? '')
 
+interface IngredientRow {
+  key: string
+  name: string
+  fractionInput: string
+  comparator: IngredientComparator
+}
+
+const toRow = (ingredient: ProductFormIngredient): IngredientRow => ({
+  key: crypto.randomUUID(),
+  name: ingredient.name,
+  fractionInput:
+    ingredient.fractionBasisPoints !== null
+      ? formatFractionBasisPointsAsPercent(ingredient.fractionBasisPoints).replace(' %', '')
+      : '',
+  comparator: ingredient.comparator,
+})
+
+const ingredientRows = ref<IngredientRow[]>((props.initial?.ingredients ?? []).map(toRow))
+const ingredientSuggestions = ref<string[]>([])
+
+onMounted(async () => {
+  try {
+    ingredientSuggestions.value = await fetchIngredientNameSuggestions()
+  } catch {
+    ingredientSuggestions.value = []
+  }
+})
+
+const addIngredientRow = (): void => {
+  ingredientRows.value = [
+    ...ingredientRows.value,
+    toRow({ name: '', fractionBasisPoints: null, comparator: DEFAULT_INGREDIENT_COMPARATOR }),
+  ]
+}
+
+const removeIngredientRow = (key: string): void => {
+  ingredientRows.value = ingredientRows.value.filter((row) => row.key !== key)
+}
+
+const parsedIngredients = computed(() =>
+  ingredientRows.value
+    .filter((row) => row.name.trim())
+    .map((row) => {
+      const fractionBasisPoints = parsePercentInputToBasisPoints(row.fractionInput)
+      return {
+        name: row.name.trim(),
+        fractionBasisPoints,
+        comparator: fractionBasisPoints !== null ? row.comparator : DEFAULT_INGREDIENT_COMPARATOR,
+      }
+    }),
+)
+
+const hasInvalidIngredientFraction = computed(() =>
+  ingredientRows.value.some((row) => {
+    const trimmedInput = row.fractionInput.trim()
+    return trimmedInput.length > 0 && parsePercentInputToBasisPoints(trimmedInput) === null
+  }),
+)
+
+const hasDuplicateIngredientNames = computed(() => {
+  const names = ingredientRows.value.map((row) => row.name.trim()).filter(Boolean)
+  return new Set(names).size !== names.length
+})
+
+const nonVeganIngredientNames = computed(() =>
+  ingredientRows.value
+    .filter((row) => isLikelyNonVeganIngredient(row.name))
+    .map((row) => row.name.trim()),
+)
+
+const exceedsTotalFraction = computed(() =>
+  exceedsWholeFraction(sumGuaranteedFractionBasisPoints(parsedIngredients.value)),
+)
+
 type SimilarProduct = Pick<Product, 'id' | 'name' | 'brand' | 'category'>
 const similarProducts = ref<SimilarProduct[]>([])
 let dedupeTimer: ReturnType<typeof setTimeout> | undefined
@@ -54,12 +143,15 @@ watch(name, (val) => {
 })
 
 const handleSubmit = (): void => {
+  if (hasInvalidIngredientFraction.value) return
+  if (hasDuplicateIngredientNames.value) return
   emit('submit', {
     name: name.value.trim(),
     category: category.value,
     base: base.value || null,
     brand: brand.value.trim() || null,
     description: description.value.trim() || null,
+    ingredients: parsedIngredients.value,
   })
 }
 </script>
@@ -161,6 +253,95 @@ const handleSubmit = (): void => {
         placeholder="Kurze Beschreibung des Produkts …"
         class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
       />
+    </div>
+
+    <div>
+      <p class="text-sm font-medium text-gray-700 mb-1.5">
+        Zutaten
+        <span class="text-xs text-gray-400 font-normal">(optional)</span>
+      </p>
+      <div
+        v-if="hasInvalidIngredientFraction"
+        role="alert"
+        class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
+      >
+        Bitte gib für Zutatenanteile nur gültige Werte zwischen 0 und 100 ein.
+      </div>
+      <div
+        v-if="hasDuplicateIngredientNames"
+        role="alert"
+        class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
+      >
+        Jede Zutat darf nur einmal eingetragen werden.
+      </div>
+      <div
+        v-if="nonVeganIngredientNames.length"
+        role="alert"
+        class="mb-2 p-3 bg-amber-50 border border-amber-100 rounded-lg text-sm text-amber-800"
+      >
+        Achtung: {{ nonVeganIngredientNames.join(', ') }}
+        {{ nonVeganIngredientNames.length > 1 ? 'sind' : 'ist' }}
+        möglicherweise nicht vegan. Nicht-vegane Produkte sind in dieser App nicht erlaubt.
+      </div>
+      <div
+        v-if="exceedsTotalFraction"
+        role="alert"
+        class="mb-2 p-3 bg-amber-50 border border-amber-100 rounded-lg text-sm text-amber-800"
+      >
+        Achtung: Die Zutatenanteile ergeben zusammen mehr als 100 %.
+      </div>
+      <div v-for="(row, index) in ingredientRows" :key="row.key" class="flex gap-2 mb-2">
+        <input
+          v-model="row.name"
+          type="text"
+          list="pf-ingredient-suggestions"
+          maxlength="80"
+          :placeholder="`Zutat ${index + 1}, z. B. Hafer`"
+          class="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+        <select
+          v-model="row.comparator"
+          :disabled="parsePercentInputToBasisPoints(row.fractionInput) === null"
+          class="px-2 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+        >
+          <option
+            v-for="comparator in INGREDIENT_COMPARATORS"
+            :key="comparator"
+            :value="comparator"
+          >
+            {{ comparator }}
+          </option>
+        </select>
+        <div class="flex items-center gap-1">
+          <input
+            v-model="row.fractionInput"
+            type="text"
+            inputmode="decimal"
+            maxlength="6"
+            placeholder="0,1"
+            class="w-20 px-2 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+          <span class="text-sm text-gray-500" aria-hidden="true">%</span>
+        </div>
+        <button
+          type="button"
+          class="px-2 text-gray-400 hover:text-red-500 transition-colors"
+          aria-label="Zutat entfernen"
+          @click="removeIngredientRow(row.key)"
+        >
+          ✕
+        </button>
+      </div>
+      <datalist id="pf-ingredient-suggestions">
+        <option v-for="suggestion in ingredientSuggestions" :key="suggestion" :value="suggestion" />
+      </datalist>
+      <button
+        type="button"
+        class="text-sm text-primary-600 font-medium hover:text-primary-700 transition-colors"
+        @click="addIngredientRow"
+      >
+        + Zutat hinzufügen
+      </button>
     </div>
 
     <div v-if="existingImages.length">
