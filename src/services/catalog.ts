@@ -8,20 +8,9 @@ import type {
   RatingImage,
 } from '@/types'
 import { fetchPriceReports, type PriceReportWithProfile } from '@/services/prices'
+import type { SortOption } from '@/config/sortOptions'
 
-export type SortOption =
-  | 'newest'
-  | 'top_rated'
-  | 'most_rated'
-  | 'price_asc'
-  | 'price_desc'
-  | 'calories_desc'
-  | 'calories_asc'
-  | 'fat_asc'
-  | 'saturated_fat_asc'
-  | 'sugar_asc'
-  | 'protein_desc'
-  | 'fiber_desc'
+export type { SortOption }
 
 export interface CatalogFilter {
   search: string
@@ -110,7 +99,7 @@ export const fetchProducts = async (filter: CatalogFilter, page = 0): Promise<Pr
       brand: r.brand ?? null,
       base: r.base ?? null,
       description: r.description ?? null,
-      energy_kj: r.energy_kj ?? null,
+      energy_kilojoules: r.energy_kilojoules ?? null,
       min_price_euro_cents: r.min_price_euro_cents ?? null,
       normalized_name: r.normalized_name ?? null,
       images: imagesByProduct.get(r.id) ?? [],

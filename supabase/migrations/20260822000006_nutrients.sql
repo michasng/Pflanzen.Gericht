@@ -1,5 +1,5 @@
-ALTER TABLE public.product ADD COLUMN energy_kj integer CHECK (energy_kj IS NULL OR energy_kj >= 0);
-COMMENT ON COLUMN public.product.energy_kj IS
+ALTER TABLE public.product ADD COLUMN energy_kilojoules integer CHECK (energy_kilojoules IS NULL OR energy_kilojoules >= 0);
+COMMENT ON COLUMN public.product.energy_kilojoules IS
   'energy content in kJ per 100 g/ml of product, as sold; null means unknown';
 
 CREATE TABLE public.product_nutrient (
@@ -9,8 +9,6 @@ CREATE TABLE public.product_nutrient (
   amount_micrograms bigint      NOT NULL CHECK (amount_micrograms >= 0),
   created_at        timestamptz NOT NULL DEFAULT now()
 );
-COMMENT ON COLUMN public.product_nutrient.amount_micrograms IS
-  'amount in micrograms (µg) per 100 g/ml of product, as sold, e.g. 800000 for "0,8 g"';
 
 CREATE INDEX product_nutrient_product_id_idx ON public.product_nutrient (product_id);
 CREATE INDEX product_nutrient_name_trgm_idx ON public.product_nutrient USING gin (name gin_trgm_ops);
@@ -45,12 +43,8 @@ CREATE POLICY "product_nutrients: product owner delete"
 GRANT SELECT ON public.product_nutrient TO anon, authenticated;
 GRANT INSERT, DELETE ON public.product_nutrient TO authenticated;
 
--- Nutrient-based review tags are superseded by sorting on actual nutrient values.
-DELETE FROM public.rating_tag
-WHERE tag IN ('high_protein', 'low_fat', 'high_fat', 'low_sugar', 'high_sugar');
-
 -- CREATE OR REPLACE cannot change the RETURNS TABLE shape, so the prior
--- signature (which lacked energy_kj) must be dropped before recreating it.
+-- signature (which lacked energy_kilojoules) must be dropped before recreating it.
 DROP FUNCTION IF EXISTS public.search_products(
   text, text, text, numeric, text, text, integer, integer, text[], text, integer, integer, text[], text[]
 );
@@ -83,7 +77,7 @@ RETURNS TABLE (
   avg_overall          numeric,
   ratings_count        integer,
   min_price_euro_cents integer,
-  energy_kj            integer,
+  energy_kilojoules    integer,
   created_at           timestamptz,
   updated_at           timestamptz,
   tags                 text[],
@@ -108,7 +102,7 @@ BEGIN
     p.avg_overall,
     p.ratings_count,
     p.min_price_euro_cents,
-    p.energy_kj,
+    p.energy_kilojoules,
     p.created_at,
     p.updated_at,
     p.tags,
@@ -152,8 +146,8 @@ BEGIN
     CASE WHEN p_sort = 'most_rated'  THEN p.ratings_count::numeric         END DESC NULLS LAST,
     CASE WHEN p_sort = 'price_asc'   THEN p.min_price_euro_cents::numeric  END ASC  NULLS LAST,
     CASE WHEN p_sort = 'price_desc'  THEN p.min_price_euro_cents::numeric  END DESC NULLS LAST,
-    CASE WHEN p_sort = 'calories_desc' THEN p.energy_kj::numeric           END DESC NULLS LAST,
-    CASE WHEN p_sort = 'calories_asc'  THEN p.energy_kj::numeric           END ASC  NULLS LAST,
+    CASE WHEN p_sort = 'calories_asc'  THEN p.energy_kilojoules::numeric END ASC  NULLS LAST,
+    CASE WHEN p_sort = 'calories_desc' THEN p.energy_kilojoules::numeric END DESC NULLS LAST,
     CASE WHEN p_sort = 'fat_asc' THEN (
       SELECT pn.amount_micrograms FROM public.product_nutrient pn
       WHERE pn.product_id = p.id AND lower(trim(pn.name)) = ANY (ARRAY['fett'])

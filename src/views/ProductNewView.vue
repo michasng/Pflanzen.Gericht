@@ -27,7 +27,7 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
   error.value = null
   try {
     const { ingredients, nutrients, energyKilojoules, ...fields } = values
-    const product = await createProduct({ ...fields, energy_kj: energyKilojoules }, user.id)
+    const product = await createProduct({ ...fields, energy_kilojoules: energyKilojoules }, user.id)
     await Promise.all([
       replaceProductIngredients(
         product.id,

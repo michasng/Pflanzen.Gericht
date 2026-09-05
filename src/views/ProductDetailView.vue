@@ -214,17 +214,17 @@ onMounted(async () => {
       </div>
 
       <div
-        v-if="product.energy_kj != null || nutrients.length"
+        v-if="product.energy_kilojoules != null || nutrients.length"
         class="mb-4 bg-white rounded-2xl border border-gray-100 p-4"
       >
         <h2 class="text-base font-bold text-gray-900 mb-2">Nährwerte</h2>
         <p class="text-xs text-gray-400 mb-2">pro 100 g/ml</p>
         <table class="w-full text-sm">
           <tbody class="divide-y divide-gray-50">
-            <tr v-if="product.energy_kj != null">
+            <tr v-if="product.energy_kilojoules != null">
               <td class="py-1.5 pr-2 text-gray-600">Energie</td>
               <td class="py-1.5 text-right font-medium text-gray-900 tabular-nums">
-                {{ formatEnergyInKilojoulesAndKilocalories(product.energy_kj) }}
+                {{ formatEnergyInKilojoulesAndKilocalories(product.energy_kilojoules) }}
               </td>
             </tr>
             <tr v-for="nutrient in nutrients" :key="nutrient.id">

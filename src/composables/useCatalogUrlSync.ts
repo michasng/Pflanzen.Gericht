@@ -1,22 +1,7 @@
 import { watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCatalogStore } from '@/stores/catalog'
-import type { SortOption } from '@/services/catalog'
-
-const VALID_SORTS: SortOption[] = [
-  'newest',
-  'top_rated',
-  'most_rated',
-  'price_asc',
-  'price_desc',
-  'calories_desc',
-  'calories_asc',
-  'fat_asc',
-  'saturated_fat_asc',
-  'sugar_asc',
-  'protein_desc',
-  'fiber_desc',
-]
+import { SORT_OPTIONS, type SortOption } from '@/config/sortOptions'
 
 const asString = (v: unknown): string | null => (typeof v === 'string' && v ? v : null)
 
@@ -51,7 +36,7 @@ export const useCatalogUrlSync = (): void => {
     store.setMaxPriceCents(q.maxPrice ? asNumber(q.maxPrice) : null)
     const sortParam = asString(q.sort)
     store.setSort(
-      VALID_SORTS.includes(sortParam as SortOption) ? (sortParam as SortOption) : 'newest',
+      SORT_OPTIONS.includes(sortParam as SortOption) ? (sortParam as SortOption) : 'newest',
     )
   }
 
