@@ -488,13 +488,13 @@ const handleSubmit = (): void => {
       >
         Jeder Nährwert darf nur einmal eingetragen werden.
       </div>
-      <div v-for="(row, index) in nutrientRows" :key="row.key" class="flex gap-2 mb-2">
+      <div v-for="row in nutrientRows" :key="row.key" class="flex gap-2 mb-2">
         <input
           v-model="row.name"
           type="text"
           list="pf-nutrient-suggestions"
           maxlength="80"
-          :placeholder="`Nährwert ${index + 1}, z. B. Ballaststoffe`"
+          placeholder="z. B. Ballaststoffe"
           class="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
         <input

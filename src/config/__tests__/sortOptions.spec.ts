@@ -10,4 +10,10 @@ describe('sort option labels', () => {
       ).toBeTruthy()
     }
   })
+
+  it('uses the natural German wording for low-value sorts', () => {
+    expect(SORT_OPTION_LABELS.few_ingredients).toBe('Wenige Zutaten')
+    expect(SORT_OPTION_LABELS.calories_asc).toBe('Wenige Kalorien')
+    expect(SORT_OPTION_LABELS.saturated_fat_asc).toBe('Wenige gesättigte Fettsäuren')
+  })
 })
