@@ -3,7 +3,20 @@ import { useRoute, useRouter } from 'vue-router'
 import { useCatalogStore } from '@/stores/catalog'
 import type { SortOption } from '@/services/catalog'
 
-const VALID_SORTS: SortOption[] = ['newest', 'top_rated', 'most_rated', 'price_asc', 'price_desc']
+const VALID_SORTS: SortOption[] = [
+  'newest',
+  'top_rated',
+  'most_rated',
+  'price_asc',
+  'price_desc',
+  'calories_desc',
+  'calories_asc',
+  'fat_asc',
+  'saturated_fat_asc',
+  'sugar_asc',
+  'protein_desc',
+  'fiber_desc',
+]
 
 const asString = (v: unknown): string | null => (typeof v === 'string' && v ? v : null)
 

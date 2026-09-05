@@ -5,6 +5,7 @@ import type {
   ProductUpdate,
   ProductImage,
   ProductIngredient,
+  ProductNutrient,
 } from '@/types'
 import type { ProductListItem } from '@/services/catalog'
 
@@ -12,6 +13,11 @@ type IngredientWrite = {
   name: string
   fraction_basis_points: number | null
   comparator: string
+}
+
+type NutrientWrite = {
+  name: string
+  amount_micrograms: number
 }
 
 const getIngredientSignature = (ingredient: {
@@ -47,6 +53,19 @@ const haveSameIngredientEntries = (
   return existingSignatures.every((signature, index) => signature === nextSignatures[index])
 }
 
+const getNutrientSignature = (nutrient: NutrientWrite): string =>
+  `${nutrient.name}|${nutrient.amount_micrograms}`
+
+const haveSameNutrientEntries = (
+  existingNutrients: Pick<ProductNutrient, 'name' | 'amount_micrograms'>[],
+  nextNutrients: NutrientWrite[],
+): boolean => {
+  if (existingNutrients.length !== nextNutrients.length) return false
+  const existingSignatures = existingNutrients.map(getNutrientSignature).sort()
+  const nextSignatures = nextNutrients.map(getNutrientSignature).sort()
+  return existingSignatures.every((signature, index) => signature === nextSignatures[index])
+}
+
 export const fetchProduct = async (id: string): Promise<Product | null> => {
   const { data, error } = await supabase.from('product').select('*').eq('id', id).single()
   if (error?.code === 'PGRST116') return null
@@ -78,7 +97,7 @@ export const searchSimilarProducts = async (
 }
 
 export const createProduct = async (
-  fields: Pick<ProductInsert, 'name' | 'category' | 'base' | 'brand' | 'description'>,
+  fields: Pick<ProductInsert, 'name' | 'category' | 'base' | 'brand' | 'description' | 'energy_kj'>,
   userId: string,
 ): Promise<Product> => {
   const { data, error } = await supabase
@@ -92,7 +111,10 @@ export const createProduct = async (
 
 export const updateProduct = async (
   id: string,
-  updates: Pick<ProductUpdate, 'name' | 'category' | 'base' | 'brand' | 'description'>,
+  updates: Pick<
+    ProductUpdate,
+    'name' | 'category' | 'base' | 'brand' | 'description' | 'energy_kj'
+  >,
 ): Promise<void> => {
   const { error } = await supabase.from('product').update(updates).eq('id', id)
   if (error) throw error
@@ -132,6 +154,44 @@ export const replaceProductIngredients = async (
 
 export const fetchIngredientNameSuggestions = async (): Promise<string[]> => {
   const { data, error } = await supabase.from('product_ingredient').select('name').limit(500)
+  if (error) throw error
+  return [...new Set((data ?? []).map((row) => row.name))].sort()
+}
+
+export const fetchProductNutrients = async (productId: string): Promise<ProductNutrient[]> => {
+  const { data, error } = await supabase
+    .from('product_nutrient')
+    .select('*')
+    .eq('product_id', productId)
+  if (error) throw error
+  return data ?? []
+}
+
+export const replaceProductNutrients = async (
+  productId: string,
+  nutrients: NutrientWrite[],
+): Promise<void> => {
+  const { data: existingNutrients, error: fetchError } = await supabase
+    .from('product_nutrient')
+    .select('name, amount_micrograms')
+    .eq('product_id', productId)
+  if (fetchError) throw fetchError
+  if (haveSameNutrientEntries(existingNutrients ?? [], nutrients)) return
+
+  const { error: deleteError } = await supabase
+    .from('product_nutrient')
+    .delete()
+    .eq('product_id', productId)
+  if (deleteError) throw deleteError
+  if (!nutrients.length) return
+  const { error: insertError } = await supabase
+    .from('product_nutrient')
+    .insert(nutrients.map((nutrient) => ({ ...nutrient, product_id: productId })))
+  if (insertError) throw insertError
+}
+
+export const fetchNutrientNameSuggestions = async (): Promise<string[]> => {
+  const { data, error } = await supabase.from('product_nutrient').select('name').limit(500)
   if (error) throw error
   return [...new Set((data ?? []).map((row) => row.name))].sort()
 }

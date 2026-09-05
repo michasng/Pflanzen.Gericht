@@ -40,6 +40,13 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'most_rated', label: 'Meiste Bewertungen' },
   { value: 'price_asc', label: 'Günstigste' },
   { value: 'price_desc', label: 'Teuerste' },
+  { value: 'calories_desc', label: 'Viele Kalorien' },
+  { value: 'calories_asc', label: 'Wenig Kalorien' },
+  { value: 'fat_asc', label: 'Wenig Fett' },
+  { value: 'saturated_fat_asc', label: 'Wenig gesättigte Fettsäuren' },
+  { value: 'sugar_asc', label: 'Wenig Zucker' },
+  { value: 'protein_desc', label: 'Viel Protein' },
+  { value: 'fiber_desc', label: 'Viele Ballaststoffe' },
 ]
 
 const filterSheetOpen = ref(false)

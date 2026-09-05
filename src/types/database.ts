@@ -91,6 +91,7 @@ export type Database = {
           created_at: string
           created_by: string
           description: string | null
+          energy_kj: number | null
           id: string
           min_price_euro_cents: number | null
           name: string
@@ -107,6 +108,7 @@ export type Database = {
           created_at?: string
           created_by: string
           description?: string | null
+          energy_kj?: number | null
           id?: string
           min_price_euro_cents?: number | null
           name: string
@@ -123,6 +125,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string | null
+          energy_kj?: number | null
           id?: string
           min_price_euro_cents?: number | null
           name?: string
@@ -201,6 +204,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: 'product_ingredient_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'product'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      product_nutrient: {
+        Row: {
+          amount_micrograms: number
+          created_at: string
+          id: string
+          name: string
+          product_id: string
+        }
+        Insert: {
+          amount_micrograms: number
+          created_at?: string
+          id?: string
+          name: string
+          product_id: string
+        }
+        Update: {
+          amount_micrograms?: number
+          created_at?: string
+          id?: string
+          name?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'product_nutrient_product_id_fkey'
             columns: ['product_id']
             isOneToOne: false
             referencedRelation: 'product'
@@ -388,6 +423,7 @@ export type Database = {
           created_at: string
           created_by: string
           description: string
+          energy_kj: number
           id: string
           min_price_euro_cents: number
           name: string

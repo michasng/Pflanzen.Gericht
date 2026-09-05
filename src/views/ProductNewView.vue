@@ -4,7 +4,12 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import ProductForm from '@/components/ProductForm.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
-import { createProduct, uploadProductImage, replaceProductIngredients } from '@/services/products'
+import {
+  createProduct,
+  uploadProductImage,
+  replaceProductIngredients,
+  replaceProductNutrients,
+} from '@/services/products'
 import { toErrorMessage } from '@/lib/error'
 import type { ProductFormValues } from '@/components/ProductForm.vue'
 
@@ -21,8 +26,8 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
   submitting.value = true
   error.value = null
   try {
-    const { ingredients, ...fields } = values
-    const product = await createProduct(fields, user.id)
+    const { ingredients, nutrients, energyKilojoules, ...fields } = values
+    const product = await createProduct({ ...fields, energy_kj: energyKilojoules }, user.id)
     await Promise.all([
       replaceProductIngredients(
         product.id,
@@ -30,6 +35,13 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
           name: ingredient.name,
           fraction_basis_points: ingredient.fractionBasisPoints,
           comparator: ingredient.comparator,
+        })),
+      ),
+      replaceProductNutrients(
+        product.id,
+        nutrients.map((nutrient) => ({
+          name: nutrient.name,
+          amount_micrograms: nutrient.amountMicrograms,
         })),
       ),
       ...pendingFiles.value.map((file, i) => uploadProductImage(product.id, user.id, file, i)),

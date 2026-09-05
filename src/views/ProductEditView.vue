@@ -9,10 +9,12 @@ import {
   fetchProduct,
   fetchProductImages,
   fetchProductIngredients,
+  fetchProductNutrients,
   updateProduct,
   uploadProductImage,
   deleteProductImage,
   replaceProductIngredients,
+  replaceProductNutrients,
 } from '@/services/products'
 import { toErrorMessage } from '@/lib/error'
 import { useImageUpload } from '@/composables/useImageUpload'
@@ -25,6 +27,7 @@ const authStore = useAuthStore()
 
 const product = ref<Product | null>(null)
 const initialIngredients = ref<ProductFormValues['ingredients']>([])
+const initialNutrients = ref<ProductFormValues['nutrients']>([])
 const loading = ref(true)
 const loadError = ref<string | null>(null)
 const submitting = ref(false)
@@ -51,13 +54,27 @@ const haveSameIngredients = (
   return currentSignatures.every((signature, index) => signature === nextSignatures[index])
 }
 
+const toNutrientSignature = (nutrient: ProductFormValues['nutrients'][number]): string =>
+  `${nutrient.name}|${nutrient.amountMicrograms}`
+
+const haveSameNutrients = (
+  currentNutrients: ProductFormValues['nutrients'],
+  nextNutrients: ProductFormValues['nutrients'],
+): boolean => {
+  if (currentNutrients.length !== nextNutrients.length) return false
+  const currentSignatures = currentNutrients.map(toNutrientSignature).sort()
+  const nextSignatures = nextNutrients.map(toNutrientSignature).sort()
+  return currentSignatures.every((signature, index) => signature === nextSignatures[index])
+}
+
 onMounted(async () => {
   const id = route.params.id as string
   try {
-    const [p, imgs, ingredients] = await Promise.all([
+    const [p, imgs, ingredients, nutrients] = await Promise.all([
       fetchProduct(id),
       fetchProductImages(id),
       fetchProductIngredients(id),
+      fetchProductNutrients(id),
     ])
     if (!p) {
       loadError.value = 'Produkt nicht gefunden.'
@@ -74,6 +91,10 @@ onMounted(async () => {
       fractionBasisPoints: ingredient.fraction_basis_points,
       comparator: ingredient.comparator as ProductFormValues['ingredients'][number]['comparator'],
     }))
+    initialNutrients.value = nutrients.map((nutrient) => ({
+      name: nutrient.name,
+      amountMicrograms: nutrient.amount_micrograms,
+    }))
   } catch (err) {
     loadError.value = toErrorMessage(err)
   } finally {
@@ -86,15 +107,16 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
   submitting.value = true
   submitError.value = null
   try {
-    const { ingredients, ...fields } = values
+    const { ingredients, nutrients, energyKilojoules, ...fields } = values
     const shouldUpdateProductFields =
       product.value.name !== fields.name ||
       product.value.category !== fields.category ||
       product.value.base !== fields.base ||
       product.value.brand !== fields.brand ||
-      product.value.description !== fields.description
+      product.value.description !== fields.description ||
+      product.value.energy_kj !== energyKilojoules
     if (shouldUpdateProductFields) {
-      await updateProduct(product.value.id, fields)
+      await updateProduct(product.value.id, { ...fields, energy_kj: energyKilojoules })
     }
     const shouldReplaceIngredients = !haveSameIngredients(initialIngredients.value, ingredients)
     if (shouldReplaceIngredients) {
@@ -104,6 +126,16 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
           name: ingredient.name,
           fraction_basis_points: ingredient.fractionBasisPoints,
           comparator: ingredient.comparator,
+        })),
+      )
+    }
+    const shouldReplaceNutrients = !haveSameNutrients(initialNutrients.value, nutrients)
+    if (shouldReplaceNutrients) {
+      await replaceProductNutrients(
+        product.value.id,
+        nutrients.map((nutrient) => ({
+          name: nutrient.name,
+          amount_micrograms: nutrient.amountMicrograms,
         })),
       )
     }
@@ -131,7 +163,9 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
           base: product.base,
           brand: product.brand,
           description: product.description,
+          energyKilojoules: product.energy_kj,
           ingredients: initialIngredients,
+          nutrients: initialNutrients,
         }"
         :existing-images="existingImages"
         :submitting="submitting"

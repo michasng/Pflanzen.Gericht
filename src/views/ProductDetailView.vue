@@ -16,6 +16,8 @@ import { categoryToLabel, baseToLabel } from '@/config/taxonomy'
 import { formatIngredientLabel } from '@/config/formatIngredientLabel'
 import { sortIngredientsByFractionDesc } from '@/config/sortIngredientsByFractionDesc'
 import type { IngredientComparator } from '@/config/ingredients'
+import { formatNutrientAmount } from '@/lib/formatNutrientAmount'
+import { formatEnergyInKilojoulesAndKilocalories } from '@/lib/formatEnergyInKilojoulesAndKilocalories'
 
 const route = useRoute()
 const router = useRouter()
@@ -43,6 +45,8 @@ const sortedIngredients = computed(() =>
     })),
   ),
 )
+
+const nutrients = computed(() => product.value?.nutrients ?? [])
 
 const currentRatings = computed(() => product.value?.ratings.filter((r) => r.is_current) ?? [])
 
@@ -207,6 +211,30 @@ onMounted(async () => {
             <span v-if="index > 0">, </span>{{ formatIngredientLabel(ingredient) }}
           </template>
         </p>
+      </div>
+
+      <div
+        v-if="product.energy_kj != null || nutrients.length"
+        class="mb-4 bg-white rounded-2xl border border-gray-100 p-4"
+      >
+        <h2 class="text-base font-bold text-gray-900 mb-2">Nährwerte</h2>
+        <p class="text-xs text-gray-400 mb-2">pro 100 g/ml</p>
+        <table class="w-full text-sm">
+          <tbody class="divide-y divide-gray-50">
+            <tr v-if="product.energy_kj != null">
+              <td class="py-1.5 pr-2 text-gray-600">Energie</td>
+              <td class="py-1.5 text-right font-medium text-gray-900 tabular-nums">
+                {{ formatEnergyInKilojoulesAndKilocalories(product.energy_kj) }}
+              </td>
+            </tr>
+            <tr v-for="nutrient in nutrients" :key="nutrient.id">
+              <td class="py-1.5 pr-2 text-gray-600">{{ nutrient.name }}</td>
+              <td class="py-1.5 text-right font-medium text-gray-900 tabular-nums">
+                {{ formatNutrientAmount(nutrient.amount_micrograms) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <div class="bg-white rounded-2xl border border-gray-100 p-4 mb-4">
