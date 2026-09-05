@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { defineComponent } from 'vue'
-import { mount, flushPromises } from '@vue/test-utils'
+import { mount } from '@vue/test-utils'
 import { useIngredientSuggestions } from '@/composables/useIngredientSuggestions'
 
 vi.mock('@/services/products', () => ({
@@ -23,33 +23,37 @@ const mountComposable = () => {
 describe('useIngredientSuggestions', () => {
   it('given suggestions load successfully, exposes them after mount', async () => {
     const { fetchIngredientNameSuggestions } = await import('@/services/products')
-    vi.mocked(fetchIngredientNameSuggestions).mockResolvedValueOnce(['Hafer', 'Palmöl'])
+    const suggestionsPromise = Promise.resolve(['Hafer', 'Palmöl'])
+    vi.mocked(fetchIngredientNameSuggestions).mockReturnValueOnce(suggestionsPromise)
 
     const { result } = mountComposable()
-    await flushPromises()
+    await suggestionsPromise
 
     expect(result().suggestions.value).toEqual(['Hafer', 'Palmöl'])
   })
 
   it('given fetching suggestions fails, falls back to an empty list', async () => {
     const { fetchIngredientNameSuggestions } = await import('@/services/products')
-    vi.mocked(fetchIngredientNameSuggestions).mockRejectedValueOnce(new Error('network error'))
+    const suggestionsPromise = Promise.reject(new Error('network error'))
+    vi.mocked(fetchIngredientNameSuggestions).mockReturnValueOnce(suggestionsPromise)
 
     const { result } = mountComposable()
-    await flushPromises()
+    await suggestionsPromise.catch(() => undefined)
 
     expect(result().suggestions.value).toEqual([])
   })
 
   it('given refreshSuggestions is called again, replaces the previous suggestions', async () => {
     const { fetchIngredientNameSuggestions } = await import('@/services/products')
-    vi.mocked(fetchIngredientNameSuggestions).mockResolvedValueOnce(['Hafer'])
+    const initialSuggestionsPromise = Promise.resolve(['Hafer'])
+    vi.mocked(fetchIngredientNameSuggestions).mockReturnValueOnce(initialSuggestionsPromise)
 
     const { result } = mountComposable()
-    await flushPromises()
+    await initialSuggestionsPromise
     expect(result().suggestions.value).toEqual(['Hafer'])
 
-    vi.mocked(fetchIngredientNameSuggestions).mockResolvedValueOnce(['Hafer', 'Palmöl'])
+    const updatedSuggestionsPromise = Promise.resolve(['Hafer', 'Palmöl'])
+    vi.mocked(fetchIngredientNameSuggestions).mockReturnValueOnce(updatedSuggestionsPromise)
     await result().refreshSuggestions()
 
     expect(result().suggestions.value).toEqual(['Hafer', 'Palmöl'])
