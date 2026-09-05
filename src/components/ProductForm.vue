@@ -19,6 +19,8 @@ export interface ProductFormValues {
   brand: string | null
   description: string | null
   energyJoules: number | null
+  allergens: string[]
+  isOrganic: boolean
   ingredients: ProductFormIngredient[]
   nutrients: ProductFormNutrient[]
 }
@@ -27,8 +29,14 @@ export interface ProductFormValues {
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import ImageUpload from '@/components/ImageUpload.vue'
-import { CATEGORIES, CATEGORY_LABELS, BASES, BASE_LABELS } from '@/config/taxonomy'
-import type { Category, Base } from '@/config/taxonomy'
+import {
+  CATEGORIES,
+  categoryToLabel,
+  BASES,
+  baseToLabel,
+  ALLERGENS,
+  allergenToLabel,
+} from '@/config/taxonomy'
 import { INGREDIENT_COMPARATORS, DEFAULT_INGREDIENT_COMPARATOR } from '@/config/ingredients'
 import { NUTRIENT_UNITS, NUTRIENT_UNIT_LABELS, DEFAULT_NUTRIENT_UNIT } from '@/config/nutrients'
 import type { NutrientUnit } from '@/config/nutrients'
@@ -77,6 +85,14 @@ const category = ref(props.initial?.category ?? '')
 const base = ref(props.initial?.base ?? '')
 const brand = ref(props.initial?.brand ?? '')
 const description = ref(props.initial?.description ?? '')
+const allergens = ref<string[]>(props.initial?.allergens ? [...props.initial.allergens] : [])
+const isOrganic = ref(props.initial?.isOrganic ?? false)
+
+const toggleAllergen = (allergen: string): void => {
+  const idx = allergens.value.indexOf(allergen)
+  if (idx === -1) allergens.value = [...allergens.value, allergen]
+  else allergens.value = allergens.value.filter((a) => a !== allergen)
+}
 
 const energyInput = ref(
   props.initial?.energyJoules != null
@@ -242,6 +258,8 @@ const handleSubmit = (): void => {
     brand: brand.value.trim() || null,
     description: description.value.trim() || null,
     energyJoules: parsedEnergyJoules.value,
+    allergens: allergens.value,
+    isOrganic: isOrganic.value,
     ingredients: parsedIngredients.value,
     nutrients: parsedNutrients.value,
   })
@@ -295,7 +313,7 @@ const handleSubmit = (): void => {
       >
         <option value="" disabled>Bitte wählen …</option>
         <option v-for="cat in CATEGORIES" :key="cat" :value="cat">
-          {{ CATEGORY_LABELS[cat as Category] }}
+          {{ categoryToLabel(cat) }}
         </option>
       </select>
     </div>
@@ -312,7 +330,7 @@ const handleSubmit = (): void => {
       >
         <option value="">Keine Angabe</option>
         <option v-for="b in BASES" :key="b" :value="b">
-          {{ BASE_LABELS[b as Base] }}
+          {{ baseToLabel(b) }}
         </option>
       </select>
     </div>
@@ -345,6 +363,34 @@ const handleSubmit = (): void => {
         placeholder="Kurze Beschreibung des Produkts …"
         class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
       />
+    </div>
+
+    <div>
+      <p class="text-sm font-medium text-gray-700 mb-1.5">
+        Allergene
+        <span class="text-xs text-gray-400 font-normal">(optional)</span>
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="allergen in ALLERGENS"
+          :key="allergen"
+          type="button"
+          class="px-3 py-1.5 rounded-full text-sm transition-colors"
+          :class="
+            allergens.includes(allergen)
+              ? 'bg-primary-600 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          "
+          @click="toggleAllergen(allergen)"
+        >
+          {{ allergenToLabel(allergen) }}
+        </button>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <input id="pf-organic" v-model="isOrganic" type="checkbox" class="h-4 w-4 rounded" />
+      <label class="text-sm font-medium text-gray-700" for="pf-organic">Bio-Produkt</label>
     </div>
 
     <div>

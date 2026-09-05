@@ -99,7 +99,14 @@ export const searchSimilarProducts = async (
 export const createProduct = async (
   fields: Pick<
     ProductInsert,
-    'name' | 'category' | 'base' | 'brand' | 'description' | 'energy_joules'
+    | 'name'
+    | 'category'
+    | 'base'
+    | 'brand'
+    | 'description'
+    | 'energy_joules'
+    | 'allergens'
+    | 'is_organic'
   >,
   userId: string,
 ): Promise<Product> => {
@@ -116,7 +123,14 @@ export const updateProduct = async (
   id: string,
   updates: Pick<
     ProductUpdate,
-    'name' | 'category' | 'base' | 'brand' | 'description' | 'energy_joules'
+    | 'name'
+    | 'category'
+    | 'base'
+    | 'brand'
+    | 'description'
+    | 'energy_joules'
+    | 'allergens'
+    | 'is_organic'
   >,
 ): Promise<void> => {
   const { error } = await supabase.from('product').update(updates).eq('id', id)

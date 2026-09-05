@@ -15,8 +15,7 @@ export interface RatingFormValues {
 import { ref, reactive } from 'vue'
 import StarRatingInput from '@/components/StarRatingInput.vue'
 import ImageUpload from '@/components/ImageUpload.vue'
-import { TAGS, TAG_LABELS } from '@/config/taxonomy'
-import type { Tag } from '@/config/taxonomy'
+import { TAGS, tagToLabel } from '@/config/taxonomy'
 import type { RatingImage } from '@/types'
 import { getImageUrl } from '@/services/catalog'
 
@@ -120,7 +119,7 @@ const handleSubmit = (): void => {
           "
           @click="toggleTag(tag)"
         >
-          {{ TAG_LABELS[tag as Tag] }}
+          {{ tagToLabel(tag) }}
         </button>
       </div>
     </div>

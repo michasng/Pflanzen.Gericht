@@ -2,8 +2,14 @@
 import { ref, watch, computed, type Ref } from 'vue'
 import { useCatalogStore } from '@/stores/catalog'
 import StarRatingInput from '@/components/StarRatingInput.vue'
-import { BASES, BASE_LABELS, STORE_SUGGESTIONS, TAG_GROUPS } from '@/config/taxonomy'
-import type { Base } from '@/config/taxonomy'
+import {
+  BASES,
+  baseToLabel,
+  STORE_SUGGESTIONS,
+  TAG_GROUPS,
+  ALLERGENS,
+  allergenToLabel,
+} from '@/config/taxonomy'
 import { parseEurosToCents, formatEuroCents } from '@/lib/price'
 import { supabase } from '@/lib/supabase'
 import { useNameSuggestions } from '@/composables/useNameSuggestions'
@@ -22,6 +28,8 @@ const draftCity = ref<string | null>(catalogStore.city)
 const draftTags = ref<string[]>([...catalogStore.tags])
 const draftIncludeIngredients = ref<string[]>([...catalogStore.includeIngredients])
 const draftExcludeIngredients = ref<string[]>([...catalogStore.excludeIngredients])
+const draftExcludeAllergens = ref<string[]>([...catalogStore.excludeAllergens])
+const draftOrganic = ref(catalogStore.organic)
 const includeIngredientInput = ref('')
 const excludeIngredientInput = ref('')
 const { suggestions: ingredientSuggestions, refreshSuggestions } = useNameSuggestions(
@@ -95,6 +103,8 @@ watch(
     draftTags.value = [...catalogStore.tags]
     draftIncludeIngredients.value = [...catalogStore.includeIngredients]
     draftExcludeIngredients.value = [...catalogStore.excludeIngredients]
+    draftExcludeAllergens.value = [...catalogStore.excludeAllergens]
+    draftOrganic.value = catalogStore.organic
     draftMinPriceInput.value =
       catalogStore.minPriceCents != null
         ? formatEuroCents(catalogStore.minPriceCents).replace(' €', '')
@@ -114,6 +124,12 @@ const toggleTag = (tag: string): void => {
   else draftTags.value = draftTags.value.filter((t) => t !== tag)
 }
 
+const toggleAllergen = (allergen: string): void => {
+  const idx = draftExcludeAllergens.value.indexOf(allergen)
+  if (idx === -1) draftExcludeAllergens.value = [...draftExcludeAllergens.value, allergen]
+  else draftExcludeAllergens.value = draftExcludeAllergens.value.filter((a) => a !== allergen)
+}
+
 const hasChanges = computed(
   () =>
     draftMinRating.value !== catalogStore.minRating ||
@@ -126,6 +142,9 @@ const hasChanges = computed(
       JSON.stringify(catalogStore.includeIngredients.slice().sort()) ||
     JSON.stringify(draftExcludeIngredients.value.slice().sort()) !==
       JSON.stringify(catalogStore.excludeIngredients.slice().sort()) ||
+    JSON.stringify(draftExcludeAllergens.value.slice().sort()) !==
+      JSON.stringify(catalogStore.excludeAllergens.slice().sort()) ||
+    draftOrganic.value !== catalogStore.organic ||
     draftMinPriceInput.value !==
       (catalogStore.minPriceCents != null
         ? formatEuroCents(catalogStore.minPriceCents).replace(' €', '')
@@ -144,6 +163,8 @@ const apply = (): void => {
   catalogStore.setTags(draftTags.value)
   catalogStore.setIncludeIngredients(draftIncludeIngredients.value)
   catalogStore.setExcludeIngredients(draftExcludeIngredients.value)
+  catalogStore.setExcludeAllergens(draftExcludeAllergens.value)
+  catalogStore.setOrganic(draftOrganic.value)
   catalogStore.setMinPriceCents(parseEurosToCents(draftMinPriceInput.value) ?? null)
   catalogStore.setMaxPriceCents(parseEurosToCents(draftMaxPriceInput.value) ?? null)
   catalogStore.load(true)
@@ -158,6 +179,8 @@ const reset = (): void => {
   draftTags.value = []
   draftIncludeIngredients.value = []
   draftExcludeIngredients.value = []
+  draftExcludeAllergens.value = []
+  draftOrganic.value = false
   draftMinPriceInput.value = ''
   draftMaxPriceInput.value = ''
   catalogStore.resetFilters()
@@ -208,25 +231,42 @@ const reset = (): void => {
             </div>
           </section>
 
-          <!-- Tags grouped -->
-          <section v-for="group in TAG_GROUPS" :key="group.label">
-            <h3 class="text-sm font-medium text-gray-700 mb-2">{{ group.label }}</h3>
-            <div class="flex flex-wrap gap-2">
-              <button
-                v-for="(tagLabel, tag) in group.tags"
-                :key="tag"
-                type="button"
-                class="px-3 py-1.5 rounded-full text-sm font-medium border transition-colors"
-                :class="
-                  draftTags.includes(tag)
-                    ? 'bg-primary-600 text-white border-primary-600'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300'
-                "
-                @click="toggleTag(tag)"
-              >
-                {{ tagLabel }}
-              </button>
+          <!-- Review tags -->
+          <section>
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Bewertungs-Tags</h3>
+            <div v-for="group in TAG_GROUPS" :key="group.label" class="mb-3 last:mb-0">
+              <h4 class="text-xs font-medium text-gray-500 mb-1.5">{{ group.label }}</h4>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="(tagLabel, tag) in group.tags"
+                  :key="tag"
+                  type="button"
+                  class="px-3 py-1.5 rounded-full text-sm font-medium border transition-colors"
+                  :class="
+                    draftTags.includes(tag)
+                      ? 'bg-primary-600 text-white border-primary-600'
+                      : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300'
+                  "
+                  @click="toggleTag(tag)"
+                >
+                  {{ tagLabel }}
+                </button>
+              </div>
             </div>
+          </section>
+
+          <!-- Base -->
+          <section>
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Basis</h3>
+            <select
+              v-model="draftBase"
+              class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              <option :value="null">Alle</option>
+              <option v-for="base in BASES" :key="base" :value="base">
+                {{ baseToLabel(base) }}
+              </option>
+            </select>
           </section>
 
           <!-- Ingredients -->
@@ -311,6 +351,35 @@ const reset = (): void => {
             </datalist>
           </section>
 
+          <!-- Allergens -->
+          <section>
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Allergene ausschließen</h3>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="allergen in ALLERGENS"
+                :key="allergen"
+                type="button"
+                class="px-3 py-1.5 rounded-full text-sm font-medium border transition-colors"
+                :class="
+                  draftExcludeAllergens.includes(allergen)
+                    ? 'bg-primary-600 text-white border-primary-600'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300'
+                "
+                @click="toggleAllergen(allergen)"
+              >
+                {{ allergenToLabel(allergen) }}
+              </button>
+            </div>
+          </section>
+
+          <!-- Organic -->
+          <section>
+            <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <input v-model="draftOrganic" type="checkbox" class="h-4 w-4 rounded" />
+              Nur Bio-Produkte
+            </label>
+          </section>
+
           <!-- Price range -->
           <section>
             <h3 class="text-sm font-medium text-gray-700 mb-2">Preis</h3>
@@ -340,20 +409,6 @@ const reset = (): void => {
                 />
               </div>
             </div>
-          </section>
-
-          <!-- Base -->
-          <section>
-            <h3 class="text-sm font-medium text-gray-700 mb-2">Basis</h3>
-            <select
-              v-model="draftBase"
-              class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              <option :value="null">Alle</option>
-              <option v-for="base in BASES" :key="base" :value="base">
-                {{ BASE_LABELS[base as Base] }}
-              </option>
-            </select>
           </section>
 
           <!-- Store + City -->

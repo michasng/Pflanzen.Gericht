@@ -107,16 +107,23 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
   submitting.value = true
   submitError.value = null
   try {
-    const { ingredients, nutrients, energyJoules, ...fields } = values
+    const { ingredients, nutrients, energyJoules, isOrganic, ...fields } = values
     const shouldUpdateProductFields =
       product.value.name !== fields.name ||
       product.value.category !== fields.category ||
       product.value.base !== fields.base ||
       product.value.brand !== fields.brand ||
       product.value.description !== fields.description ||
-      product.value.energy_joules !== energyJoules
+      product.value.energy_joules !== energyJoules ||
+      product.value.is_organic !== isOrganic ||
+      product.value.allergens.length !== fields.allergens.length ||
+      product.value.allergens.some((allergen) => !fields.allergens.includes(allergen))
     if (shouldUpdateProductFields) {
-      await updateProduct(product.value.id, { ...fields, energy_joules: energyJoules })
+      await updateProduct(product.value.id, {
+        ...fields,
+        energy_joules: energyJoules,
+        is_organic: isOrganic,
+      })
     }
     const shouldReplaceIngredients = !haveSameIngredients(initialIngredients.value, ingredients)
     if (shouldReplaceIngredients) {
@@ -164,6 +171,8 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
           brand: product.brand,
           description: product.description,
           energyJoules: product.energy_joules,
+          allergens: product.allergens,
+          isOrganic: product.is_organic,
           ingredients: initialIngredients,
           nutrients: initialNutrients,
         }"
