@@ -41,6 +41,7 @@ import { parsePercentInputToBasisPoints } from '@/lib/parsePercentInputToBasisPo
 import { formatFractionBasisPointsAsPercent } from '@/lib/formatFractionBasisPointsAsPercent'
 import { parseNutrientAmountInputToMicrograms } from '@/lib/parseNutrientAmountInputToMicrograms'
 import { chooseNutrientDisplayUnit, formatNutrientAmountValue } from '@/lib/formatNutrientAmount'
+import { hasDuplicateNames } from '@/lib/hasDuplicateNames'
 import { parseEnergyInputToKilojoules } from '@/lib/parseEnergyInputToKilojoules'
 import { useNameSuggestions } from '@/composables/useNameSuggestions'
 import {
@@ -136,10 +137,9 @@ const hasInvalidIngredientFraction = computed(() =>
   }),
 )
 
-const hasDuplicateIngredientNames = computed(() => {
-  const names = ingredientRows.value.map((row) => row.name.trim()).filter(Boolean)
-  return new Set(names).size !== names.length
-})
+const hasDuplicateIngredientNames = computed(() =>
+  hasDuplicateNames(ingredientRows.value.map((row) => row.name)),
+)
 
 const nonVeganIngredientNames = computed(() =>
   ingredientRows.value
@@ -203,10 +203,9 @@ const hasInvalidNutrientAmount = computed(() =>
   }),
 )
 
-const hasDuplicateNutrientNames = computed(() => {
-  const names = nutrientRows.value.map((row) => row.name.trim()).filter(Boolean)
-  return new Set(names).size !== names.length
-})
+const hasDuplicateNutrientNames = computed(() =>
+  hasDuplicateNames(nutrientRows.value.map((row) => row.name)),
+)
 
 type SimilarProduct = Pick<Product, 'id' | 'name' | 'brand' | 'category'>
 const similarProducts = ref<SimilarProduct[]>([])

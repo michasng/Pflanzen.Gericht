@@ -4,6 +4,7 @@ export const SORT_OPTION_LABELS = {
   most_rated: 'Meiste Bewertungen',
   price_asc: 'Günstigste',
   price_desc: 'Teuerste',
+  few_ingredients: 'Wenig Zutaten',
   calories_asc: 'Wenig Kalorien',
   calories_desc: 'Viele Kalorien',
   fat_asc: 'Wenig Fett',

@@ -51,13 +51,6 @@ export const TAG_GROUPS = [
     label: 'Geschmack',
     tags: { sweet: 'Süß', salty: 'Salzig', bitter: 'Bitter', sour: 'Sauer', umami: 'Umami' },
   },
-  {
-    label: 'Nährwerte',
-    tags: {
-      few_ingredients: 'Wenige Zutaten',
-      many_ingredients: 'Viele Zutaten',
-    },
-  },
   { label: 'Allergene', tags: { gluten: 'Mit Gluten', soy: 'Mit Soja', nuts: 'Mit Nüssen' } },
   { label: 'Sonstiges', tags: { similar_to_animal_product: 'Ähnlich zu tierischem Produkt' } },
 ] as const

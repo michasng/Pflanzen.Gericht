@@ -95,6 +95,12 @@ describe('useCatalogUrlSync', () => {
     expect(storeMock.setSort).toHaveBeenCalledWith('newest')
   })
 
+  it('hydrates the few ingredients sort from query params', () => {
+    routeQuery = { sort: 'few_ingredients' }
+    mountComposable()
+    expect(storeMock.setSort).toHaveBeenCalledWith('few_ingredients')
+  })
+
   it('maps minRating as number', () => {
     routeQuery = { minRating: '4' }
     mountComposable()
