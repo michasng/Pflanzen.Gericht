@@ -1,5 +1,6 @@
 <script lang="ts">
 import type { IngredientComparator } from '@/config/ingredients'
+import type { Allergen } from '@/config/taxonomy'
 
 export interface ProductFormIngredient {
   name: string
@@ -19,7 +20,7 @@ export interface ProductFormValues {
   brand: string | null
   description: string | null
   energyJoules: number | null
-  allergens: string[]
+  allergens: Allergen[]
   isOrganic: boolean
   ingredients: ProductFormIngredient[]
   nutrients: ProductFormNutrient[]
@@ -85,10 +86,10 @@ const category = ref(props.initial?.category ?? '')
 const base = ref(props.initial?.base ?? '')
 const brand = ref(props.initial?.brand ?? '')
 const description = ref(props.initial?.description ?? '')
-const allergens = ref<string[]>(props.initial?.allergens ? [...props.initial.allergens] : [])
+const allergens = ref<Allergen[]>(props.initial?.allergens ? [...props.initial.allergens] : [])
 const isOrganic = ref(props.initial?.isOrganic ?? false)
 
-const toggleAllergen = (allergen: string): void => {
+const toggleAllergen = (allergen: Allergen): void => {
   const idx = allergens.value.indexOf(allergen)
   if (idx === -1) allergens.value = [...allergens.value, allergen]
   else allergens.value = allergens.value.filter((a) => a !== allergen)

@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import ProductForm from '@/components/ProductForm.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
+import { ALLERGENS } from '@/config/taxonomy'
 import {
   fetchProduct,
   fetchProductImages,
@@ -32,6 +33,7 @@ const loading = ref(true)
 const loadError = ref<string | null>(null)
 const submitting = ref(false)
 const submitError = ref<string | null>(null)
+const knownAllergens = new Set<string>(ALLERGENS)
 const { pendingFiles, existingImages, handleDeleteImage, commitImageChanges } =
   useImageUpload<ProductImage>(
     (file, sortOrder) => {
@@ -56,6 +58,9 @@ const haveSameIngredients = (
 
 const toNutrientSignature = (nutrient: ProductFormValues['nutrients'][number]): string =>
   `${nutrient.name}|${nutrient.amountMicrograms}`
+
+const isKnownAllergen = (allergen: string): allergen is ProductFormValues['allergens'][number] =>
+  knownAllergens.has(allergen)
 
 const haveSameNutrients = (
   currentNutrients: ProductFormValues['nutrients'],
@@ -108,6 +113,7 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
   submitError.value = null
   try {
     const { ingredients, nutrients, energyJoules, isOrganic, ...fields } = values
+    const submittedAllergens = new Set<string>(fields.allergens)
     const shouldUpdateProductFields =
       product.value.name !== fields.name ||
       product.value.category !== fields.category ||
@@ -117,7 +123,7 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
       product.value.energy_joules !== energyJoules ||
       product.value.is_organic !== isOrganic ||
       product.value.allergens.length !== fields.allergens.length ||
-      product.value.allergens.some((allergen) => !fields.allergens.includes(allergen))
+      product.value.allergens.some((allergen) => !submittedAllergens.has(allergen))
     if (shouldUpdateProductFields) {
       await updateProduct(product.value.id, {
         ...fields,
@@ -171,7 +177,7 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
           brand: product.brand,
           description: product.description,
           energyJoules: product.energy_joules,
-          allergens: product.allergens,
+          allergens: product.allergens.filter(isKnownAllergen),
           isOrganic: product.is_organic,
           ingredients: initialIngredients,
           nutrients: initialNutrients,
