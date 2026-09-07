@@ -1,10 +1,12 @@
-ALTER TABLE public.profile       ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.product       ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.product_image ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.rating        ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.rating_tag    ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.rating_image  ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.price_report  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profile           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_image     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_ingredient ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_nutrient  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.rating            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.rating_tag        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.rating_image      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.price_report      ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "profiles: publicly readable"
   ON public.profile FOR SELECT
@@ -46,6 +48,52 @@ CREATE POLICY "product_images: product owner add"
 
 CREATE POLICY "product_images: product owner delete"
   ON public.product_image FOR DELETE
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.product
+      WHERE id = product_id
+        AND (created_by = auth.uid() OR public.is_admin())
+    )
+  );
+
+CREATE POLICY "product_ingredients: publicly readable"
+  ON public.product_ingredient FOR SELECT USING (true);
+
+CREATE POLICY "product_ingredients: product owner add"
+  ON public.product_ingredient FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.product
+      WHERE id = product_id
+        AND (created_by = auth.uid() OR public.is_admin())
+    )
+  );
+
+CREATE POLICY "product_ingredients: product owner delete"
+  ON public.product_ingredient FOR DELETE
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.product
+      WHERE id = product_id
+        AND (created_by = auth.uid() OR public.is_admin())
+    )
+  );
+
+CREATE POLICY "product_nutrients: publicly readable"
+  ON public.product_nutrient FOR SELECT USING (true);
+
+CREATE POLICY "product_nutrients: product owner add"
+  ON public.product_nutrient FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.product
+      WHERE id = product_id
+        AND (created_by = auth.uid() OR public.is_admin())
+    )
+  );
+
+CREATE POLICY "product_nutrients: product owner delete"
+  ON public.product_nutrient FOR DELETE
   USING (
     EXISTS (
       SELECT 1 FROM public.product
@@ -138,6 +186,8 @@ GRANT SELECT ON
   public.profile,
   public.product,
   public.product_image,
+  public.product_ingredient,
+  public.product_nutrient,
   public.rating,
   public.rating_tag,
   public.rating_image,
@@ -149,6 +199,11 @@ GRANT UPDATE ON public.profile TO authenticated;
 GRANT INSERT, UPDATE, DELETE ON
   public.product,
   public.product_image
+TO authenticated;
+
+GRANT INSERT, DELETE ON
+  public.product_ingredient,
+  public.product_nutrient
 TO authenticated;
 
 GRANT INSERT, UPDATE, DELETE ON
