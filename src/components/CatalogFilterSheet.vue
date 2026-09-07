@@ -255,6 +255,14 @@ const reset = (): void => {
             </div>
           </section>
 
+          <!-- Organic -->
+          <section>
+            <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <input v-model="draftOrganic" type="checkbox" class="h-4 w-4 rounded" />
+              Nur Bio-Produkte
+            </label>
+          </section>
+
           <!-- Base -->
           <section>
             <h3 class="text-sm font-medium text-gray-700 mb-2">Basis</h3>
@@ -267,6 +275,27 @@ const reset = (): void => {
                 {{ baseToLabel(base) }}
               </option>
             </select>
+          </section>
+
+          <!-- Allergens -->
+          <section>
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Allergene ausschließen</h3>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="allergen in ALLERGENS"
+                :key="allergen"
+                type="button"
+                class="px-3 py-1.5 rounded-full text-sm font-medium border transition-colors"
+                :class="
+                  draftExcludeAllergens.includes(allergen)
+                    ? 'bg-primary-600 text-white border-primary-600'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300'
+                "
+                @click="toggleAllergen(allergen)"
+              >
+                {{ allergenToLabel(allergen) }}
+              </button>
+            </div>
           </section>
 
           <!-- Ingredients -->
@@ -349,35 +378,6 @@ const reset = (): void => {
                 :value="ingredientName"
               />
             </datalist>
-          </section>
-
-          <!-- Allergens -->
-          <section>
-            <h3 class="text-sm font-medium text-gray-700 mb-2">Allergene ausschließen</h3>
-            <div class="flex flex-wrap gap-2">
-              <button
-                v-for="allergen in ALLERGENS"
-                :key="allergen"
-                type="button"
-                class="px-3 py-1.5 rounded-full text-sm font-medium border transition-colors"
-                :class="
-                  draftExcludeAllergens.includes(allergen)
-                    ? 'bg-primary-600 text-white border-primary-600'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300'
-                "
-                @click="toggleAllergen(allergen)"
-              >
-                {{ allergenToLabel(allergen) }}
-              </button>
-            </div>
-          </section>
-
-          <!-- Organic -->
-          <section>
-            <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <input v-model="draftOrganic" type="checkbox" class="h-4 w-4 rounded" />
-              Nur Bio-Produkte
-            </label>
           </section>
 
           <!-- Price range -->
