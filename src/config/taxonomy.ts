@@ -50,7 +50,13 @@ export const TAG_GROUPS = [
     label: 'Geschmack',
     tags: { sweet: 'Süß', salty: 'Salzig', bitter: 'Bitter', sour: 'Sauer', umami: 'Umami' },
   },
-  { label: 'Sonstiges', tags: { similar_to_animal_product: 'Ähnlich zu tierischem Produkt' } },
+  {
+    label: 'Vergleich',
+    tags: {
+      similar_to_animal_product: 'Ähnlich zu tierischem Produkt',
+      similar_to_brand_product: 'Ähnlich zu Markenprodukt',
+    },
+  },
 ] as const
 
 export type Tag = keyof (typeof TAG_GROUPS)[number]['tags']

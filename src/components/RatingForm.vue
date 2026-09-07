@@ -88,10 +88,7 @@ const handleSubmit = (): void => {
     </div>
 
     <div class="space-y-3">
-      <p class="text-sm font-medium text-gray-700">
-        Detailbewertungen
-        <span class="text-xs text-gray-400 font-normal">(optional)</span>
-      </p>
+      <p class="text-sm font-medium text-gray-700">Detailbewertungen</p>
       <div v-for="key in CRITERIA_KEYS" :key="key" class="flex items-center gap-4">
         <span class="text-sm text-gray-600 w-32 shrink-0">{{ CRITERIA_LABELS[key] }}</span>
         <StarRatingInput
@@ -102,10 +99,7 @@ const handleSubmit = (): void => {
     </div>
 
     <div>
-      <p class="text-sm font-medium text-gray-700 mb-2">
-        Tags
-        <span class="text-xs text-gray-400 font-normal">(optional)</span>
-      </p>
+      <p class="text-sm font-medium text-gray-700 mb-2">Tags</p>
       <div class="flex flex-wrap gap-2">
         <button
           v-for="tag in TAGS"
@@ -127,7 +121,6 @@ const handleSubmit = (): void => {
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1.5" for="rf-comment">
         Kommentar
-        <span class="text-xs text-gray-400 font-normal">(optional)</span>
       </label>
       <textarea
         id="rf-comment"
@@ -176,7 +169,6 @@ const handleSubmit = (): void => {
     <div>
       <p class="text-sm font-medium text-gray-700 mb-2">
         {{ existingImages.length ? 'Weitere Fotos hinzufügen' : 'Fotos' }}
-        <span class="text-xs text-gray-400 font-normal">(optional)</span>
       </p>
       <ImageUpload @change="emit('filesChanged', $event)" />
     </div>

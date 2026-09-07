@@ -320,26 +320,8 @@ const handleSubmit = (): void => {
     </div>
 
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-base">
-        Basis
-        <span class="text-xs text-gray-400 font-normal">(optional)</span>
-      </label>
-      <select
-        id="pf-base"
-        v-model="base"
-        class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
-      >
-        <option value="">Keine Angabe</option>
-        <option v-for="b in BASES" :key="b" :value="b">
-          {{ baseToLabel(b) }}
-        </option>
-      </select>
-    </div>
-
-    <div>
       <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-brand">
         Marke / Hersteller
-        <span class="text-xs text-gray-400 font-normal">(optional)</span>
       </label>
       <input
         id="pf-brand"
@@ -354,7 +336,6 @@ const handleSubmit = (): void => {
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-description">
         Beschreibung
-        <span class="text-xs text-gray-400 font-normal">(optional)</span>
       </label>
       <textarea
         id="pf-description"
@@ -366,11 +347,27 @@ const handleSubmit = (): void => {
       />
     </div>
 
+    <div class="flex items-center gap-2">
+      <input id="pf-organic" v-model="isOrganic" type="checkbox" class="h-4 w-4 rounded" />
+      <label class="text-sm font-medium text-gray-700" for="pf-organic">Bio-Produkt</label>
+    </div>
+
     <div>
-      <p class="text-sm font-medium text-gray-700 mb-1.5">
-        Allergene
-        <span class="text-xs text-gray-400 font-normal">(optional)</span>
-      </p>
+      <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-base"> Basis </label>
+      <select
+        id="pf-base"
+        v-model="base"
+        class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+      >
+        <option value="">Keine Angabe</option>
+        <option v-for="b in BASES" :key="b" :value="b">
+          {{ baseToLabel(b) }}
+        </option>
+      </select>
+    </div>
+
+    <div>
+      <p class="text-sm font-medium text-gray-700 mb-1.5">Allergene</p>
       <div class="flex flex-wrap gap-2">
         <button
           v-for="allergen in ALLERGENS"
@@ -389,49 +386,8 @@ const handleSubmit = (): void => {
       </div>
     </div>
 
-    <div class="flex items-center gap-2">
-      <input id="pf-organic" v-model="isOrganic" type="checkbox" class="h-4 w-4 rounded" />
-      <label class="text-sm font-medium text-gray-700" for="pf-organic">Bio-Produkt</label>
-    </div>
-
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-energy">
-        Energie
-        <span class="text-xs text-gray-400 font-normal">(optional, pro 100 g/ml)</span>
-      </label>
-      <div
-        v-if="hasInvalidEnergy"
-        role="alert"
-        class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
-      >
-        Bitte gib für die Energie einen gültigen Wert ein.
-      </div>
-      <div class="flex gap-2">
-        <input
-          id="pf-energy"
-          v-model="energyInput"
-          type="text"
-          inputmode="decimal"
-          maxlength="8"
-          placeholder="z. B. 1500"
-          class="flex-1 min-w-0 px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-        />
-        <select
-          v-model="energyUnit"
-          class="px-2 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-        >
-          <option v-for="unit in ENERGY_UNITS" :key="unit" :value="unit">
-            {{ ENERGY_UNIT_LABELS[unit] }}
-          </option>
-        </select>
-      </div>
-    </div>
-
-    <div>
-      <p class="text-sm font-medium text-gray-700 mb-1.5">
-        Zutaten
-        <span class="text-xs text-gray-400 font-normal">(optional)</span>
-      </p>
+      <p class="text-sm font-medium text-gray-700 mb-1.5">Zutaten</p>
       <div
         v-if="hasInvalidIngredientFraction"
         role="alert"
@@ -517,9 +473,42 @@ const handleSubmit = (): void => {
     </div>
 
     <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-energy">
+        Energie
+        <span class="text-xs text-gray-400 font-normal">(pro 100 g/ml)</span>
+      </label>
+      <div
+        v-if="hasInvalidEnergy"
+        role="alert"
+        class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
+      >
+        Bitte gib für die Energie einen gültigen Wert ein.
+      </div>
+      <div class="flex gap-2">
+        <input
+          id="pf-energy"
+          v-model="energyInput"
+          type="text"
+          inputmode="decimal"
+          maxlength="8"
+          placeholder="z. B. 1500"
+          class="flex-1 min-w-0 px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+        <select
+          v-model="energyUnit"
+          class="px-2 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+        >
+          <option v-for="unit in ENERGY_UNITS" :key="unit" :value="unit">
+            {{ ENERGY_UNIT_LABELS[unit] }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <div>
       <p class="text-sm font-medium text-gray-700 mb-1.5">
         Nährwerte
-        <span class="text-xs text-gray-400 font-normal">(optional, pro 100 g/ml)</span>
+        <span class="text-xs text-gray-400 font-normal">(pro 100 g/ml)</span>
       </p>
       <div
         v-if="hasInvalidNutrientAmount"
@@ -618,7 +607,6 @@ const handleSubmit = (): void => {
     <div>
       <p class="text-sm font-medium text-gray-700 mb-2">
         {{ existingImages.length ? 'Weitere Bilder hinzufügen' : 'Bilder' }}
-        <span class="text-xs text-gray-400 font-normal">(optional)</span>
       </p>
       <ImageUpload @change="emit('filesChanged', $event)" />
     </div>

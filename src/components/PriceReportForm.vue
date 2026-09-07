@@ -68,10 +68,7 @@ const handleSubmit = (): void => {
       </div>
 
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1" for="prf-city">
-          Stadt
-          <span class="text-xs text-gray-400 font-normal">(optional)</span>
-        </label>
+        <label class="block text-xs font-medium text-gray-600 mb-1" for="prf-city"> Stadt </label>
         <input
           id="prf-city"
           v-model="cityName"
@@ -104,7 +101,6 @@ const handleSubmit = (): void => {
       <div>
         <label class="block text-xs font-medium text-gray-600 mb-1" for="prf-sale-price">
           Angebotspreis (€)
-          <span class="text-xs text-gray-400 font-normal">(optional)</span>
         </label>
         <input
           id="prf-sale-price"
