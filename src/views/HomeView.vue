@@ -309,6 +309,7 @@ const clearPrice = (): void => {
         </button>
       </span>
       <span
+        v-if="catalogStore.base"
         class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
       >
         {{ catalogStore.base }}
