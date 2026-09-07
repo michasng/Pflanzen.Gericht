@@ -5,6 +5,8 @@ import { SORT_OPTIONS, type SortOption } from '@/config/sortOptions'
 
 const asString = (v: unknown): string | null => (typeof v === 'string' && v ? v : null)
 
+const asBoolean = (v: unknown): boolean => v === '1' || v === 'true'
+
 const asNumber = (v: unknown): number | null => {
   const n = Number(v)
   return typeof v === 'string' && v && Number.isFinite(n) ? n : null
@@ -32,6 +34,8 @@ export const useCatalogUrlSync = (): void => {
     store.setTags(asStringArray(q.tags))
     store.setIncludeIngredients(asStringArray(q.includeIngredients))
     store.setExcludeIngredients(asStringArray(q.excludeIngredients))
+    store.setExcludeAllergens(asStringArray(q.excludeAllergens))
+    store.setOrganic(asBoolean(q.organic))
     store.setMinPriceCents(q.minPrice ? asNumber(q.minPrice) : null)
     store.setMaxPriceCents(q.maxPrice ? asNumber(q.maxPrice) : null)
     const sortParam = asString(q.sort)
@@ -57,6 +61,8 @@ export const useCatalogUrlSync = (): void => {
       tags: store.tags.length ? store.tags : undefined,
       includeIngredients: store.includeIngredients.length ? store.includeIngredients : undefined,
       excludeIngredients: store.excludeIngredients.length ? store.excludeIngredients : undefined,
+      excludeAllergens: store.excludeAllergens.length ? store.excludeAllergens : undefined,
+      organic: store.organic ? '1' : undefined,
       minPrice: store.minPriceCents != null ? store.minPriceCents : undefined,
       maxPrice: store.maxPriceCents != null ? store.maxPriceCents : undefined,
     }),

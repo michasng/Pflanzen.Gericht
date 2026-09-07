@@ -17,6 +17,8 @@ const makeStoreMock = () => {
     tags: [],
     includeIngredients: [],
     excludeIngredients: [],
+    excludeAllergens: [],
+    organic: false,
     minPriceCents: null,
     maxPriceCents: null,
   }
@@ -40,6 +42,8 @@ const makeStoreMock = () => {
     setTags: makeSetter('tags'),
     setIncludeIngredients: makeSetter('includeIngredients'),
     setExcludeIngredients: makeSetter('excludeIngredients'),
+    setExcludeAllergens: makeSetter('excludeAllergens'),
+    setOrganic: makeSetter('organic'),
     setMinPriceCents: makeSetter('minPriceCents'),
     setMaxPriceCents: makeSetter('maxPriceCents'),
     load: vi.fn<(reset?: boolean) => void>(),
@@ -118,6 +122,19 @@ describe('useCatalogUrlSync', () => {
     mountComposable()
     expect(storeMock.setIncludeIngredients).toHaveBeenCalledWith(['Hafer'])
     expect(storeMock.setExcludeIngredients).toHaveBeenCalledWith(['Milch'])
+  })
+
+  it('maps allergen and organic filters', () => {
+    routeQuery = { excludeAllergens: 'gluten', organic: '1' }
+    mountComposable()
+    expect(storeMock.setExcludeAllergens).toHaveBeenCalledWith(['gluten'])
+    expect(storeMock.setOrganic).toHaveBeenCalledWith(true)
+  })
+
+  it('defaults organic to false when absent', () => {
+    routeQuery = {}
+    mountComposable()
+    expect(storeMock.setOrganic).toHaveBeenCalledWith(false)
   })
 
   it('maps minPrice and maxPrice as raw cents numbers', () => {

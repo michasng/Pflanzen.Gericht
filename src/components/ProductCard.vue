@@ -3,8 +3,7 @@ import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import StarDisplay from '@/components/StarDisplay.vue'
 import AppLogo from '@/components/AppLogo.vue'
-import { CATEGORY_LABELS } from '@/config/taxonomy'
-import type { Category } from '@/config/taxonomy'
+import { categoryToLabel } from '@/config/taxonomy'
 import { getImageUrl, type ProductListItem } from '@/services/catalog'
 
 const props = defineProps<{ product: ProductListItem }>()
@@ -14,9 +13,7 @@ const coverUrl = computed(() => {
   return sorted[0] ? getImageUrl('product-images', sorted[0].storage_path) : null
 })
 
-const categoryLabel = computed(
-  () => CATEGORY_LABELS[props.product.category as Category] ?? props.product.category,
-)
+const categoryLabel = computed(() => categoryToLabel(props.product.category))
 </script>
 
 <template>

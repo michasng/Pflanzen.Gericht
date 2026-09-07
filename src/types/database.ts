@@ -84,6 +84,7 @@ export type Database = {
       }
       product: {
         Row: {
+          allergens: string[]
           avg_overall: number | null
           base: string | null
           brand: string | null
@@ -93,6 +94,7 @@ export type Database = {
           description: string | null
           energy_joules: number | null
           id: string
+          is_organic: boolean
           min_price_euro_cents: number | null
           name: string
           normalized_name: string | null
@@ -101,6 +103,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allergens?: string[]
           avg_overall?: number | null
           base?: string | null
           brand?: string | null
@@ -110,6 +113,7 @@ export type Database = {
           description?: string | null
           energy_joules?: number | null
           id?: string
+          is_organic?: boolean
           min_price_euro_cents?: number | null
           name: string
           normalized_name?: string | null
@@ -118,6 +122,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allergens?: string[]
           avg_overall?: number | null
           base?: string | null
           brand?: string | null
@@ -127,6 +132,7 @@ export type Database = {
           description?: string | null
           energy_joules?: number | null
           id?: string
+          is_organic?: boolean
           min_price_euro_cents?: number | null
           name?: string
           normalized_name?: string | null
@@ -403,6 +409,7 @@ export type Database = {
           p_base?: string
           p_category?: string
           p_city?: string
+          p_exclude_allergens?: string[]
           p_exclude_ingredients?: string[]
           p_include_ingredients?: string[]
           p_limit?: number
@@ -410,12 +417,14 @@ export type Database = {
           p_min_price?: number
           p_min_rating?: number
           p_offset?: number
+          p_organic?: boolean
           p_search?: string
           p_sort?: string
           p_store?: string
           p_tags?: string[]
         }
         Returns: {
+          allergens: string[]
           avg_overall: number
           base: string
           brand: string
@@ -425,6 +434,7 @@ export type Database = {
           description: string
           energy_joules: number
           id: string
+          is_organic: boolean
           min_price_euro_cents: number
           name: string
           normalized_name: string

@@ -29,6 +29,8 @@ export const useCatalogStore = defineStore('catalog', () => {
   const tags = ref<string[]>([])
   const includeIngredients = ref<string[]>([])
   const excludeIngredients = ref<string[]>([])
+  const excludeAllergens = ref<string[]>([])
+  const organic = ref(false)
 
   const filter = computed<CatalogFilter>(() => ({
     search: search.value,
@@ -43,6 +45,8 @@ export const useCatalogStore = defineStore('catalog', () => {
     tags: tags.value,
     includeIngredients: includeIngredients.value,
     excludeIngredients: excludeIngredients.value,
+    excludeAllergens: excludeAllergens.value,
+    organic: organic.value,
   }))
 
   const load = async (reset = false): Promise<void> => {
@@ -114,6 +118,14 @@ export const useCatalogStore = defineStore('catalog', () => {
     excludeIngredients.value = value
   }
 
+  const setExcludeAllergens = (value: string[]): void => {
+    excludeAllergens.value = value
+  }
+
+  const setOrganic = (value: boolean): void => {
+    organic.value = value
+  }
+
   // counts how many non-default filters are active for the badge
   const activeFilterCount = computed(() => {
     let n = 0
@@ -126,6 +138,8 @@ export const useCatalogStore = defineStore('catalog', () => {
     n += tags.value.length
     n += includeIngredients.value.length
     n += excludeIngredients.value.length
+    n += excludeAllergens.value.length
+    if (organic.value) n++
     return n
   })
 
@@ -139,6 +153,8 @@ export const useCatalogStore = defineStore('catalog', () => {
     tags.value = []
     includeIngredients.value = []
     excludeIngredients.value = []
+    excludeAllergens.value = []
+    organic.value = false
   }
 
   return {
@@ -159,6 +175,8 @@ export const useCatalogStore = defineStore('catalog', () => {
     tags,
     includeIngredients,
     excludeIngredients,
+    excludeAllergens,
+    organic,
     activeFilterCount,
     load,
     setSearch,
@@ -173,6 +191,8 @@ export const useCatalogStore = defineStore('catalog', () => {
     setTags,
     setIncludeIngredients,
     setExcludeIngredients,
+    setExcludeAllergens,
+    setOrganic,
     resetFilters,
   }
 })
