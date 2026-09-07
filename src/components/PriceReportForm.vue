@@ -68,7 +68,7 @@ const handleSubmit = (): void => {
       </div>
 
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1" for="prf-city"> Stadt </label>
+        <label class="block text-xs font-medium text-gray-600 mb-1" for="prf-city">Stadt</label>
         <input
           id="prf-city"
           v-model="cityName"

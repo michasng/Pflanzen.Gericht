@@ -353,7 +353,7 @@ const handleSubmit = (): void => {
     </div>
 
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-base"> Basis </label>
+      <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-base">Basis</label>
       <select
         id="pf-base"
         v-model="base"
