@@ -9,7 +9,7 @@ import type { BarcodeReader } from '@/composables/useBarcodeScanner'
 import { createZxingBarcodeReader } from '@/lib/createZxingBarcodeReader'
 import { toErrorMessage } from '@/lib/error'
 import { mapOpenFoodFactsProductToFormValues } from '@/lib/mapOpenFoodFactsProductToFormValues'
-import { fetchOpenFoodFactsProduct } from '@/services/openFoodFacts'
+import { fetchOpenFoodFactsProduct, fetchOpenFoodFactsProductImage } from '@/services/openFoodFacts'
 import type { ProductFormValues } from '@/types/productForm'
 
 interface ProductBarcodeScannerComponentDependencies extends ProductBarcodeScannerDependencies {
@@ -20,6 +20,7 @@ const createDefaultDependencies = (): ProductBarcodeScannerComponentDependencies
   createReader: createZxingBarcodeReader,
   fetchProduct: fetchOpenFoodFactsProduct,
   mapProductToFormValues: mapOpenFoodFactsProductToFormValues,
+  fetchProductImage: fetchOpenFoodFactsProductImage,
   toErrorMessage,
 })
 
@@ -30,6 +31,7 @@ const dependencies = props.dependencies ?? createDefaultDependencies()
 
 const emit = defineEmits<{
   scanned: [values: Partial<ProductFormValues>]
+  scannedImage: [file: File]
 }>()
 
 const {
@@ -42,8 +44,10 @@ const {
 } = useProductBarcodeScanner(dependencies)
 
 const handleDecoded = async (barcode: string): Promise<void> => {
-  const values = await populateFromBarcode(barcode)
-  if (values) emit('scanned', values)
+  const result = await populateFromBarcode(barcode)
+  if (!result) return
+  emit('scanned', result.values)
+  if (result.imageFile) emit('scannedImage', result.imageFile)
 }
 </script>
 

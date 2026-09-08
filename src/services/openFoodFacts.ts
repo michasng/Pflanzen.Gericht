@@ -12,6 +12,8 @@ const PRODUCT_NETWORK_ERROR_MESSAGE =
   'Produktdaten konnten nicht abgerufen werden. Bitte prüfe deine Internetverbindung.'
 const PRODUCT_RESPONSE_ERROR_MESSAGE =
   'Produktdaten konnten nicht verarbeitet werden. Bitte versuche es später erneut.'
+const PRODUCT_IMAGE_FETCH_ERROR_MESSAGE = 'Produktbild konnte nicht abgerufen werden.'
+const DEFAULT_PRODUCT_IMAGE_FILE_NAME = 'product-image.jpg'
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null
@@ -38,7 +40,8 @@ const isOpenFoodFactsProduct = (value: unknown): value is OpenFoodFactsProduct =
   (value.allergens_tags === undefined || isStringArray(value.allergens_tags)) &&
   (value.nutriments === undefined || isNutrimentRecord(value.nutriments)) &&
   (value.ingredients === undefined ||
-    (Array.isArray(value.ingredients) && value.ingredients.every(isOpenFoodFactsIngredient)))
+    (Array.isArray(value.ingredients) && value.ingredients.every(isOpenFoodFactsIngredient))) &&
+  (value.image_url === undefined || typeof value.image_url === 'string')
 
 const isOpenFoodFactsApiResponse = (value: unknown): value is OpenFoodFactsApiResponse =>
   isRecord(value) &&
@@ -68,4 +71,19 @@ export const fetchOpenFoodFactsProduct = async (barcode: string): Promise<OpenFo
     throw new Error('Zu diesem Barcode wurde kein Produkt gefunden.')
   }
   return data.product
+}
+
+export const fetchOpenFoodFactsProductImage = async (imageUrl: string): Promise<File> => {
+  let response: Response
+  try {
+    response = await fetch(imageUrl)
+  } catch {
+    throw new Error(PRODUCT_IMAGE_FETCH_ERROR_MESSAGE)
+  }
+  if (!response.ok) {
+    throw new Error(PRODUCT_IMAGE_FETCH_ERROR_MESSAGE)
+  }
+  const imageBlob = await response.blob()
+  const fileName = imageUrl.split('/').pop() || DEFAULT_PRODUCT_IMAGE_FILE_NAME
+  return new File([imageBlob], fileName, { type: imageBlob.type })
 }

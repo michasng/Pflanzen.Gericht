@@ -2,9 +2,15 @@ import { ref, type Ref } from 'vue'
 import type { OpenFoodFactsProduct } from '@/types/openFoodFacts'
 import type { ProductFormValues } from '@/types/productForm'
 
+export interface ScannedProductData {
+  values: Partial<ProductFormValues>
+  imageFile: File | null
+}
+
 export interface ProductBarcodeScannerDependencies {
   fetchProduct: (barcode: string) => Promise<OpenFoodFactsProduct>
   mapProductToFormValues: (product: OpenFoodFactsProduct) => Partial<ProductFormValues>
+  fetchProductImage: (imageUrl: string) => Promise<File>
   toErrorMessage: (error: unknown) => string
 }
 
@@ -16,7 +22,7 @@ export const useProductBarcodeScanner = (
   scanErrorMessage: Ref<string | null>
   openScanner: () => void
   closeScanner: () => void
-  populateFromBarcode: (barcode: string) => Promise<Partial<ProductFormValues> | null>
+  populateFromBarcode: (barcode: string) => Promise<ScannedProductData | null>
 } => {
   const showScanner = ref(false)
   const loadingProduct = ref(false)
@@ -30,16 +36,18 @@ export const useProductBarcodeScanner = (
     showScanner.value = false
   }
 
-  const populateFromBarcode = async (
-    barcode: string,
-  ): Promise<Partial<ProductFormValues> | null> => {
+  const populateFromBarcode = async (barcode: string): Promise<ScannedProductData | null> => {
     closeScanner()
     loadingProduct.value = true
     scanErrorMessage.value = null
 
     try {
       const product = await dependencies.fetchProduct(barcode)
-      return dependencies.mapProductToFormValues(product)
+      const values = dependencies.mapProductToFormValues(product)
+      const imageFile = product.image_url
+        ? await dependencies.fetchProductImage(product.image_url).catch(() => null)
+        : null
+      return { values, imageFile }
     } catch (error) {
       scanErrorMessage.value = dependencies.toErrorMessage(error)
       return null

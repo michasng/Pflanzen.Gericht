@@ -83,6 +83,29 @@ const addFiles = async (fileList: FileList | null): Promise<void> => {
   )
 }
 
+const addFile = async (file: File): Promise<void> => {
+  if (processing.value || !file.type.startsWith('image/')) return
+  error.value = null
+  if (previews.value.length >= MAX_FILES) {
+    error.value = `Maximal ${MAX_FILES} Bilder erlaubt.`
+    return
+  }
+  processing.value = true
+  try {
+    const compressed = await compressImage(file)
+    previews.value.push({ url: URL.createObjectURL(compressed), file: compressed })
+  } catch {
+    error.value = 'Ein Bild konnte nicht verarbeitet werden.'
+  }
+  processing.value = false
+  emit(
+    'change',
+    previews.value.map((p) => p.file),
+  )
+}
+
+defineExpose({ addFile })
+
 const remove = (index: number): void => {
   const preview = previews.value[index]
   if (preview) URL.revokeObjectURL(preview.url)

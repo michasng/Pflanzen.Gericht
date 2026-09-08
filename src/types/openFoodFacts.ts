@@ -14,6 +14,7 @@ export interface OpenFoodFactsProduct {
   allergens_tags?: string[]
   nutriments?: Record<string, OpenFoodFactsNutrimentValue>
   ingredients?: OpenFoodFactsIngredient[]
+  image_url?: string
 }
 
 export interface OpenFoodFactsApiResponse {
