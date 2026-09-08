@@ -84,3 +84,7 @@ WHERE id = (
 ```
 
 Then sign out and back in so the profile is reloaded.
+
+## Credits
+
+Product data for the barcode scanner is provided by [Open Food Facts](https://world.openfoodfacts.org), licensed under the [Open Database License (ODbL)](https://opendatacommons.org/licenses/odbl/1.0/).

@@ -19,6 +19,33 @@ const BarcodeScannerDialogStub = defineComponent({
 })
 
 describe('ProductBarcodeScanner', () => {
+  it('renders an attribution link to Open Food Facts', () => {
+    const dependencies = {
+      createReader: (): BarcodeReader => ({
+        decodeFromVideoDevice: () => Promise.reject(new Error('unused')),
+      }),
+      fetchProduct: vi.fn<(barcode: string) => Promise<OpenFoodFactsProduct>>(() =>
+        Promise.resolve({}),
+      ),
+      mapProductToFormValues: vi.fn<(product: OpenFoodFactsProduct) => Partial<ProductFormValues>>(
+        () => ({}),
+      ),
+      toErrorMessage: vi.fn<(error: unknown) => string>(() => 'ignored'),
+    }
+
+    const wrapper = mount(ProductBarcodeScanner, {
+      props: { dependencies },
+      global: {
+        stubs: {
+          BarcodeScannerDialog: BarcodeScannerDialogStub,
+        },
+      },
+    })
+
+    const attributionLink = wrapper.get('a[href="https://world.openfoodfacts.org"]')
+    expect(attributionLink.text()).toBe('Open Food Facts')
+  })
+
   it('given a barcode was decoded, emits mapped form values', async () => {
     const product: OpenFoodFactsProduct = { product_name: 'Soja Drink' }
     const mappedValues: Partial<ProductFormValues> = { name: 'Soja Drink' }
