@@ -18,6 +18,9 @@ import { sortIngredientsByFractionDesc } from '@/config/sortIngredientsByFractio
 import type { IngredientComparator } from '@/config/ingredients'
 import { formatNutrientAmount } from '@/lib/formatNutrientAmount'
 import { formatEnergy } from '@/lib/formatEnergy'
+import { sortNutrientsByHierarchy } from '@/lib/sortNutrientsByHierarchy'
+import { getNutrientHierarchyDepth } from '@/lib/getNutrientHierarchyDepth'
+import { NUTRIENT_PARENT_NAME } from '@/config/nutrientHierarchy'
 
 const route = useRoute()
 const router = useRouter()
@@ -46,7 +49,14 @@ const sortedIngredients = computed(() =>
   ),
 )
 
-const nutrients = computed(() => product.value?.nutrients ?? [])
+const nutrients = computed(() => sortNutrientsByHierarchy(product.value?.nutrients ?? []))
+
+const NUTRIENT_INDENT_CLASSES_BY_DEPTH = ['', 'pl-4', 'pl-8']
+
+const nutrientIndentClass = (name: string): string =>
+  NUTRIENT_INDENT_CLASSES_BY_DEPTH[getNutrientHierarchyDepth(name)] ?? ''
+
+const nutrientLabel = (name: string): string => (NUTRIENT_PARENT_NAME.has(name) ? `davon ${name}` : name)
 
 const currentRatings = computed(() => product.value?.ratings.filter((r) => r.is_current) ?? [])
 
@@ -241,7 +251,9 @@ onMounted(async () => {
               </td>
             </tr>
             <tr v-for="nutrient in nutrients" :key="nutrient.id">
-              <td class="py-1.5 pr-2 text-gray-600">{{ nutrient.name }}</td>
+              <td class="py-1.5 pr-2 text-gray-600" :class="nutrientIndentClass(nutrient.name)">
+                {{ nutrientLabel(nutrient.name) }}
+              </td>
               <td class="py-1.5 text-right font-medium text-gray-900 tabular-nums">
                 {{ formatNutrientAmount(nutrient.amount_micrograms) }}
               </td>
