@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import ImageUpload from '@/components/ImageUpload.vue'
-import BarcodeScannerDialog from '@/components/BarcodeScannerDialog.vue'
-import AlertMessage from '@/components/AlertMessage.vue'
+import ProductBarcodeScanner from '@/components/ProductBarcodeScanner.vue'
 import type { IngredientComparator } from '@/config/ingredients'
 import {
   CATEGORIES,
@@ -39,9 +38,6 @@ import {
   fetchNutrientNameSuggestions,
 } from '@/services/products'
 import { getImageUrl } from '@/services/catalog'
-import { fetchOpenFoodFactsProduct } from '@/services/openFoodFacts'
-import { mapOpenFoodFactsProductToFormValues } from '@/lib/mapOpenFoodFactsProductToFormValues'
-import { toErrorMessage } from '@/lib/error'
 import type { Product, ProductImage } from '@/types'
 import type {
   ProductFormValues,
@@ -249,10 +245,6 @@ const handleSubmit = (): void => {
   })
 }
 
-const showScanner = ref(false)
-const scanning = ref(false)
-const scanError = ref<string | null>(null)
-
 const applyScannedValues = (values: Partial<ProductFormValues>): void => {
   if (values.name !== undefined) name.value = values.name
   if (typeof values.brand === 'string') brand.value = values.brand
@@ -266,55 +258,11 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
   if (values.ingredients !== undefined) ingredientRows.value = values.ingredients.map(toRow)
   if (values.nutrients !== undefined) nutrientRows.value = values.nutrients.map(toNutrientRow)
 }
-
-const handleBarcodeDecoded = async (barcode: string): Promise<void> => {
-  showScanner.value = false
-  scanning.value = true
-  scanError.value = null
-  try {
-    const product = await fetchOpenFoodFactsProduct(barcode)
-    applyScannedValues(mapOpenFoodFactsProductToFormValues(product))
-  } catch (err) {
-    scanError.value = toErrorMessage(err)
-  } finally {
-    scanning.value = false
-  }
-}
 </script>
 
 <template>
   <form class="space-y-5" @submit.prevent="handleSubmit">
-    <div>
-      <button
-        type="button"
-        :disabled="scanning"
-        class="w-full py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
-        @click="showScanner = true"
-      >
-        <svg
-          class="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M3.75 4.5v4.5m0-4.5h4.5m-4.5 0L9 9M20.25 4.5v4.5m0-4.5h-4.5m4.5 0L15 9M3.75 19.5v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 19.5v-4.5m0 4.5h-4.5m4.5 0L15 15M9 9h6v6H9V9z"
-          />
-        </svg>
-        {{ scanning ? 'Produkt wird geladen …' : 'Barcode scannen' }}
-      </button>
-      <AlertMessage :message="scanError" class="mt-2" />
-    </div>
-
-    <BarcodeScannerDialog
-      v-if="showScanner"
-      @decoded="handleBarcodeDecoded"
-      @cancel="showScanner = false"
-    />
+    <ProductBarcodeScanner @scanned="applyScannedValues" />
 
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-name">

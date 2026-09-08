@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { defineComponent, nextTick } from 'vue'
+import { defineComponent } from 'vue'
 import { mount } from '@vue/test-utils'
 import { DEFAULT_ENERGY_UNIT, EnergyUnit } from '@/config/energy'
 
@@ -15,10 +15,10 @@ vi.mock('@/services/catalog', () => ({
 
 import ProductForm from '../ProductForm.vue'
 
-const BarcodeScannerDialogStub = defineComponent({
-  emits: ['decoded', 'cancel'],
+const ProductBarcodeScannerStub = defineComponent({
+  emits: ['scanned'],
   template:
-    '<button type="button" data-test="decode-barcode" @click="$emit(\'decoded\', \'4006381333931\')"></button>',
+    '<button type="button" data-test="scan-product" @click="$emit(\'scanned\', { energyJoules: 250000 })"></button>',
 })
 
 describe('ProductForm', () => {
@@ -27,33 +27,11 @@ describe('ProductForm', () => {
   })
 
   it('given kcal is selected when barcode data fills energy, resets the field to the default unit', async () => {
-    const fetchResponsePromise = Promise.resolve(
-      new Response(
-        JSON.stringify({
-          status: 1,
-          product: {
-            nutriments: {
-              'energy-kj_100g': 250,
-            },
-          },
-        }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      ),
-    )
-    vi.stubGlobal(
-      'fetch',
-      vi.fn<typeof fetch>(() => fetchResponsePromise),
-    )
-
     const wrapper = mount(ProductForm, {
       global: {
         stubs: {
-          AlertMessage: true,
-          BarcodeScannerDialog: BarcodeScannerDialogStub,
           ImageUpload: true,
+          ProductBarcodeScanner: ProductBarcodeScannerStub,
           RouterLink: true,
         },
       },
@@ -62,11 +40,7 @@ describe('ProductForm', () => {
     if (!energySelect) throw new Error('Energy select not found.')
 
     await energySelect.setValue(EnergyUnit.Kilocalorie)
-    await wrapper.get('button').trigger('click')
-    await wrapper.get('[data-test="decode-barcode"]').trigger('click')
-    await fetchResponsePromise
-    await Promise.resolve()
-    await nextTick()
+    await wrapper.get('[data-test="scan-product"]').trigger('click')
 
     const energyInput = wrapper.get('#pf-energy').element
     if (!(energyInput instanceof HTMLInputElement)) throw new Error('Energy input not found.')
