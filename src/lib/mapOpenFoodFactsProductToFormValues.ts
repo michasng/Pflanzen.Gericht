@@ -1,4 +1,3 @@
-import type { ProductFormValues } from '@/components/ProductForm.vue'
 import { JOULES_PER_KILOJOULE } from '@/config/energy'
 import { DEFAULT_INGREDIENT_COMPARATOR } from '@/config/ingredients'
 import { MICROGRAMS_PER_UNIT, NutrientUnit } from '@/config/nutrients'
@@ -10,6 +9,7 @@ import {
 } from '@/config/openFoodFacts'
 import type { Allergen } from '@/config/taxonomy'
 import { BASIS_POINTS_PER_PERCENT } from '@/lib/basisPoints'
+import type { ProductFormValues } from '@/types/productForm'
 import type { OpenFoodFactsProduct } from '@/types/openFoodFacts'
 
 const mapName = (product: OpenFoodFactsProduct): string | undefined =>

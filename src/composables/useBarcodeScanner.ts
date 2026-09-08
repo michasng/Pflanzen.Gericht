@@ -68,7 +68,8 @@ export const useBarcodeScanner = (
           controls = nextControls
         })
         .catch((error: unknown) => {
-          scanning.value = false
+          frameErrorMessage.value = null
+          stopScanning()
           reject(error)
         })
     })

@@ -1,37 +1,9 @@
-<script lang="ts">
-import type { IngredientComparator } from '@/config/ingredients'
-import type { Allergen } from '@/config/taxonomy'
-
-export interface ProductFormIngredient {
-  name: string
-  fractionBasisPoints: number | null
-  comparator: IngredientComparator
-}
-
-export interface ProductFormNutrient {
-  name: string
-  amountMicrograms: number
-}
-
-export interface ProductFormValues {
-  name: string
-  category: string
-  base: string | null
-  brand: string | null
-  description: string | null
-  energyJoules: number | null
-  allergens: Allergen[]
-  isOrganic: boolean
-  ingredients: ProductFormIngredient[]
-  nutrients: ProductFormNutrient[]
-}
-</script>
-
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import ImageUpload from '@/components/ImageUpload.vue'
 import BarcodeScannerDialog from '@/components/BarcodeScannerDialog.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
+import type { IngredientComparator } from '@/config/ingredients'
 import {
   CATEGORIES,
   categoryToLabel,
@@ -40,6 +12,7 @@ import {
   ALLERGENS,
   allergenToLabel,
 } from '@/config/taxonomy'
+import type { Allergen } from '@/config/taxonomy'
 import { INGREDIENT_COMPARATORS, DEFAULT_INGREDIENT_COMPARATOR } from '@/config/ingredients'
 import { NUTRIENT_UNITS, NUTRIENT_UNIT_LABELS, DEFAULT_NUTRIENT_UNIT } from '@/config/nutrients'
 import type { NutrientUnit } from '@/config/nutrients'
@@ -70,6 +43,11 @@ import { fetchOpenFoodFactsProduct } from '@/services/openFoodFacts'
 import { mapOpenFoodFactsProductToFormValues } from '@/lib/mapOpenFoodFactsProductToFormValues'
 import { toErrorMessage } from '@/lib/error'
 import type { Product, ProductImage } from '@/types'
+import type {
+  ProductFormValues,
+  ProductFormIngredient,
+  ProductFormNutrient,
+} from '@/types/productForm'
 
 const props = withDefaults(
   defineProps<{
@@ -280,7 +258,8 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
   if (typeof values.brand === 'string') brand.value = values.brand
   if (typeof values.description === 'string') description.value = values.description
   if (typeof values.energyJoules === 'number') {
-    energyInput.value = String(values.energyJoules / JOULES_PER_ENERGY_UNIT[energyUnit.value])
+    energyUnit.value = DEFAULT_ENERGY_UNIT
+    energyInput.value = String(values.energyJoules / JOULES_PER_ENERGY_UNIT[DEFAULT_ENERGY_UNIT])
   }
   if (values.allergens !== undefined) allergens.value = [...values.allergens]
   if (values.isOrganic !== undefined) isOrganic.value = values.isOrganic

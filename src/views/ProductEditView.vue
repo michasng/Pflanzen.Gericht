@@ -20,7 +20,7 @@ import {
 import { toErrorMessage } from '@/lib/error'
 import { useImageUpload } from '@/composables/useImageUpload'
 import type { Product, ProductImage } from '@/types'
-import type { ProductFormValues } from '@/components/ProductForm.vue'
+import type { ProductFormValues } from '@/types/productForm'
 
 const route = useRoute()
 const router = useRouter()
