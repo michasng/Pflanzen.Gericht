@@ -3,6 +3,8 @@ export interface OpenFoodFactsIngredient {
   percent_estimate?: number
 }
 
+export type OpenFoodFactsNutrimentValue = number | string
+
 export interface OpenFoodFactsProduct {
   product_name?: string
   brands?: string
@@ -10,7 +12,7 @@ export interface OpenFoodFactsProduct {
   ingredients_text?: string
   labels_tags?: string[]
   allergens_tags?: string[]
-  nutriments?: Record<string, number>
+  nutriments?: Record<string, OpenFoodFactsNutrimentValue>
   ingredients?: OpenFoodFactsIngredient[]
 }
 

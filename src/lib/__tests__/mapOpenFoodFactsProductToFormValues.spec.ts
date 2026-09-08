@@ -74,7 +74,7 @@ describe('mapOpenFoodFactsProductToFormValues', () => {
     ])
   })
 
-  it('given known nutrient fields are present, maps them to their German names in micrograms', () => {
+  it('given known nutrient fields are present, maps them and keeps unmapped ones with english fallback names', () => {
     const product: OpenFoodFactsProduct = {
       nutriments: {
         fat_100g: 3.5,
@@ -88,6 +88,39 @@ describe('mapOpenFoodFactsProductToFormValues', () => {
     expect(values.nutrients).toEqual([
       { name: 'Fett', amountMicrograms: 3_500_000 },
       { name: 'Zucker', amountMicrograms: 3_000_000 },
+      { name: 'Unmapped Field', amountMicrograms: 42_000_000 },
     ])
+  })
+
+  it('given additional nutriments use supported units, maps them with fallback english names', () => {
+    const product: OpenFoodFactsProduct = {
+      nutriments: {
+        calcium_100g: 120,
+        calcium_unit: 'mg',
+        'vitamin-c_100g': 30,
+        'vitamin-c_unit': 'mg',
+        'vitamin-b12_100g': 2.5,
+        'vitamin-b12_unit': 'µg',
+      },
+    }
+
+    const values = mapOpenFoodFactsProductToFormValues(product)
+
+    expect(values.nutrients).toEqual([
+      { name: 'Calcium', amountMicrograms: 120_000 },
+      { name: 'Vitamin C', amountMicrograms: 30_000 },
+      { name: 'Vitamin B12', amountMicrograms: 3 },
+    ])
+  })
+
+  it('given a nutriment uses an unsupported unit, skips it instead of guessing', () => {
+    const product: OpenFoodFactsProduct = {
+      nutriments: {
+        'vitamin-d_100g': 40,
+        'vitamin-d_unit': 'IU',
+      },
+    }
+
+    expect(mapOpenFoodFactsProductToFormValues(product).nutrients).toBeUndefined()
   })
 })

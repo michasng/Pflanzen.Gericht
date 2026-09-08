@@ -58,6 +58,10 @@ describe('fetchOpenFoodFactsProduct', () => {
               status: 1,
               product: {
                 product_name: 'Soja Drink',
+                nutriments: {
+                  calcium_100g: 120,
+                  calcium_unit: 'mg',
+                },
               },
             }),
             {
@@ -71,6 +75,10 @@ describe('fetchOpenFoodFactsProduct', () => {
 
     await expect(fetchOpenFoodFactsProduct('4006381333931')).resolves.toEqual({
       product_name: 'Soja Drink',
+      nutriments: {
+        calcium_100g: 120,
+        calcium_unit: 'mg',
+      },
     })
   })
 })

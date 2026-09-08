@@ -12,6 +12,20 @@ import { BASIS_POINTS_PER_PERCENT } from '@/lib/basisPoints'
 import type { ProductFormValues } from '@/types/productForm'
 import type { OpenFoodFactsProduct } from '@/types/openFoodFacts'
 
+const NUTRIMENT_FIELD_SUFFIX = '_100g'
+const NUTRIMENT_UNIT_SUFFIX = '_unit'
+
+const isSupportedNutrientUnit = (value: string): value is NutrientUnit =>
+  value === NutrientUnit.Gram ||
+  value === NutrientUnit.Milligram ||
+  value === NutrientUnit.Microgram
+
+const toEnglishNutrientName = (value: string): string =>
+  value
+    .split(/[-_]/)
+    .map((segment) => `${segment.charAt(0).toUpperCase()}${segment.slice(1)}`)
+    .join(' ')
+
 const mapName = (product: OpenFoodFactsProduct): string | undefined =>
   product.product_name?.trim() || undefined
 
@@ -67,15 +81,36 @@ const mapNutrients = (
   product: OpenFoodFactsProduct,
 ): ProductFormValues['nutrients'] | undefined => {
   const nutriments = product.nutriments ?? {}
-  const nutrients = Object.entries(OPEN_FOOD_FACTS_NUTRIENT_FIELD_TO_NAME)
-    .map(([field, name]) => ({ name, amountGrams: nutriments[field] }))
+  const nutrients = Object.entries(nutriments)
     .filter(
-      (nutrient): nutrient is { name: string; amountGrams: number } =>
-        typeof nutrient.amountGrams === 'number',
+      ([field, amount]) =>
+        field.endsWith(NUTRIMENT_FIELD_SUFFIX) &&
+        !field.startsWith('energy-') &&
+        typeof amount === 'number',
+    )
+    .map(([field, amount]) => {
+      const baseField = field.slice(0, -NUTRIMENT_FIELD_SUFFIX.length)
+      const unitValue = nutriments[`${baseField}${NUTRIMENT_UNIT_SUFFIX}`]
+      return {
+        amount,
+        field,
+        name: OPEN_FOOD_FACTS_NUTRIENT_FIELD_TO_NAME[field] ?? toEnglishNutrientName(baseField),
+        unit: typeof unitValue === 'string' ? unitValue : NutrientUnit.Gram,
+      }
+    })
+    .filter(
+      (
+        nutrient,
+      ): nutrient is {
+        amount: number
+        field: string
+        name: string
+        unit: NutrientUnit
+      } => isSupportedNutrientUnit(nutrient.unit),
     )
     .map((nutrient) => ({
       name: nutrient.name,
-      amountMicrograms: Math.round(nutrient.amountGrams * MICROGRAMS_PER_UNIT[NutrientUnit.Gram]),
+      amountMicrograms: Math.round(nutrient.amount * MICROGRAMS_PER_UNIT[nutrient.unit]),
     }))
   return nutrients.length ? nutrients : undefined
 }

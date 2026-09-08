@@ -1,5 +1,9 @@
 import { OPEN_FOOD_FACTS_API_BASE_URL } from '@/config/openFoodFacts'
-import type { OpenFoodFactsApiResponse, OpenFoodFactsProduct } from '@/types/openFoodFacts'
+import type {
+  OpenFoodFactsApiResponse,
+  OpenFoodFactsNutrimentValue,
+  OpenFoodFactsProduct,
+} from '@/types/openFoodFacts'
 
 const PRODUCT_NOT_FOUND_STATUS = 0
 const PRODUCT_FETCH_ERROR_MESSAGE =
@@ -15,8 +19,9 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((entry) => typeof entry === 'string')
 
-const isNumberRecord = (value: unknown): value is Record<string, number> =>
-  isRecord(value) && Object.values(value).every((entry) => typeof entry === 'number')
+const isNutrimentRecord = (value: unknown): value is Record<string, OpenFoodFactsNutrimentValue> =>
+  isRecord(value) &&
+  Object.values(value).every((entry) => typeof entry === 'number' || typeof entry === 'string')
 
 const isOpenFoodFactsIngredient = (value: unknown): boolean =>
   isRecord(value) &&
@@ -31,7 +36,7 @@ const isOpenFoodFactsProduct = (value: unknown): value is OpenFoodFactsProduct =
   (value.ingredients_text === undefined || typeof value.ingredients_text === 'string') &&
   (value.labels_tags === undefined || isStringArray(value.labels_tags)) &&
   (value.allergens_tags === undefined || isStringArray(value.allergens_tags)) &&
-  (value.nutriments === undefined || isNumberRecord(value.nutriments)) &&
+  (value.nutriments === undefined || isNutrimentRecord(value.nutriments)) &&
   (value.ingredients === undefined ||
     (Array.isArray(value.ingredients) && value.ingredients.every(isOpenFoodFactsIngredient)))
 
