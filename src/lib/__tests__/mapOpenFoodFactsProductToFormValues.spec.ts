@@ -74,11 +74,11 @@ describe('mapOpenFoodFactsProductToFormValues', () => {
     ])
   })
 
-  it('given known nutrient fields are present, maps them and keeps unmapped ones with english fallback names', () => {
+  it('given known nutrient fields are present, maps them, sorts by hierarchy and keeps unmapped ones with english fallback names', () => {
     const product: OpenFoodFactsProduct = {
       nutriments: {
-        fat_100g: 3.5,
         sugars_100g: 3,
+        fat_100g: 3.5,
         'unmapped-field_100g': 42,
       },
     }
@@ -90,6 +90,33 @@ describe('mapOpenFoodFactsProductToFormValues', () => {
       { name: 'Zucker', amountMicrograms: 3_000_000 },
       { name: 'Unmapped Field', amountMicrograms: 42_000_000 },
     ])
+  })
+
+  it('given added sugars are present, translates them to german and sorts them after sugars', () => {
+    const product: OpenFoodFactsProduct = {
+      nutriments: {
+        'added-sugars_100g': 2,
+        sugars_100g: 3,
+      },
+    }
+
+    const values = mapOpenFoodFactsProductToFormValues(product)
+
+    expect(values.nutrients).toEqual([
+      { name: 'Zucker', amountMicrograms: 3_000_000 },
+      { name: 'Zugesetzter Zucker', amountMicrograms: 2_000_000 },
+    ])
+  })
+
+  it('given fruits/vegetables estimates from ingredients are present, does not use them to populate the form', () => {
+    const product: OpenFoodFactsProduct = {
+      nutriments: {
+        'fruits-vegetables-legumes-estimate-from-ingredients_100g': 20,
+        'fruits-vegetables-nuts-estimate-from-ingredients_100g': 10,
+      },
+    }
+
+    expect(mapOpenFoodFactsProductToFormValues(product).nutrients).toBeUndefined()
   })
 
   it('given additional nutriments use supported units, maps them with fallback english names', () => {
@@ -108,8 +135,8 @@ describe('mapOpenFoodFactsProductToFormValues', () => {
 
     expect(values.nutrients).toEqual([
       { name: 'Calcium', amountMicrograms: 120_000 },
-      { name: 'Vitamin C', amountMicrograms: 30_000 },
       { name: 'Vitamin B12', amountMicrograms: 3 },
+      { name: 'Vitamin C', amountMicrograms: 30_000 },
     ])
   })
 

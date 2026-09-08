@@ -56,7 +56,8 @@ const NUTRIENT_INDENT_CLASSES_BY_DEPTH = ['', 'pl-4', 'pl-8']
 const nutrientIndentClass = (name: string): string =>
   NUTRIENT_INDENT_CLASSES_BY_DEPTH[getNutrientHierarchyDepth(name)] ?? ''
 
-const nutrientLabel = (name: string): string => (NUTRIENT_PARENT_NAME.has(name) ? `davon ${name}` : name)
+const nutrientLabel = (name: string): string =>
+  NUTRIENT_PARENT_NAME.has(name) ? `davon ${name}` : name
 
 const currentRatings = computed(() => product.value?.ratings.filter((r) => r.is_current) ?? [])
 
