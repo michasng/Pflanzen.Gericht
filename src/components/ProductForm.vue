@@ -1,35 +1,8 @@
-<script lang="ts">
-import type { IngredientComparator } from '@/config/ingredients'
-import type { Allergen } from '@/config/taxonomy'
-
-export interface ProductFormIngredient {
-  name: string
-  fractionBasisPoints: number | null
-  comparator: IngredientComparator
-}
-
-export interface ProductFormNutrient {
-  name: string
-  amountMicrograms: number
-}
-
-export interface ProductFormValues {
-  name: string
-  category: string
-  base: string | null
-  brand: string | null
-  description: string | null
-  energyJoules: number | null
-  allergens: Allergen[]
-  isOrganic: boolean
-  ingredients: ProductFormIngredient[]
-  nutrients: ProductFormNutrient[]
-}
-</script>
-
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import ImageUpload from '@/components/ImageUpload.vue'
+import ProductBarcodeScanner from '@/components/ProductBarcodeScanner.vue'
+import type { IngredientComparator } from '@/config/ingredients'
 import {
   CATEGORIES,
   categoryToLabel,
@@ -38,6 +11,7 @@ import {
   ALLERGENS,
   allergenToLabel,
 } from '@/config/taxonomy'
+import type { Allergen } from '@/config/taxonomy'
 import { INGREDIENT_COMPARATORS, DEFAULT_INGREDIENT_COMPARATOR } from '@/config/ingredients'
 import { NUTRIENT_UNITS, NUTRIENT_UNIT_LABELS, DEFAULT_NUTRIENT_UNIT } from '@/config/nutrients'
 import type { NutrientUnit } from '@/config/nutrients'
@@ -65,6 +39,11 @@ import {
 } from '@/services/products'
 import { getImageUrl } from '@/services/catalog'
 import type { Product, ProductImage } from '@/types'
+import type {
+  ProductFormValues,
+  ProductFormIngredient,
+  ProductFormNutrient,
+} from '@/types/productForm'
 
 const props = withDefaults(
   defineProps<{
@@ -265,10 +244,26 @@ const handleSubmit = (): void => {
     nutrients: parsedNutrients.value,
   })
 }
+
+const applyScannedValues = (values: Partial<ProductFormValues>): void => {
+  if (values.name !== undefined) name.value = values.name
+  if (typeof values.brand === 'string') brand.value = values.brand
+  if (typeof values.description === 'string') description.value = values.description
+  if (typeof values.energyJoules === 'number') {
+    energyUnit.value = DEFAULT_ENERGY_UNIT
+    energyInput.value = String(values.energyJoules / JOULES_PER_ENERGY_UNIT[DEFAULT_ENERGY_UNIT])
+  }
+  if (values.allergens !== undefined) allergens.value = [...values.allergens]
+  if (values.isOrganic !== undefined) isOrganic.value = values.isOrganic
+  if (values.ingredients !== undefined) ingredientRows.value = values.ingredients.map(toRow)
+  if (values.nutrients !== undefined) nutrientRows.value = values.nutrients.map(toNutrientRow)
+}
 </script>
 
 <template>
   <form class="space-y-5" @submit.prevent="handleSubmit">
+    <ProductBarcodeScanner @scanned="applyScannedValues" />
+
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-name">
         Name <span class="text-red-500" aria-hidden="true">*</span>

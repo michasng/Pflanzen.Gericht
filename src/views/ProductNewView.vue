@@ -11,7 +11,7 @@ import {
   replaceProductNutrients,
 } from '@/services/products'
 import { toErrorMessage } from '@/lib/error'
-import type { ProductFormValues } from '@/components/ProductForm.vue'
+import type { ProductFormValues } from '@/types/productForm'
 
 const router = useRouter()
 const authStore = useAuthStore()
