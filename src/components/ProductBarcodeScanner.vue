@@ -75,6 +75,27 @@ const handleDecoded = async (barcode: string): Promise<void> => {
       </svg>
       {{ loadingProduct ? 'Produkt wird geladen …' : 'Barcode scannen' }}
     </button>
+    <p class="mt-2 text-xs text-gray-600">
+      Produktdaten von
+      <a
+        href="https://world.openfoodfacts.org"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="underline hover:text-gray-900"
+      >
+        Open Food Facts
+      </a>
+      , lizenziert unter der
+      <a
+        href="https://opendatacommons.org/licenses/odbl/1.0/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="underline hover:text-gray-900"
+      >
+        Open Database License (ODbL)
+      </a>
+      .
+    </p>
     <AlertMessage :message="scanErrorMessage" class="mt-2" />
   </div>
 
