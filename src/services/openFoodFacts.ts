@@ -14,6 +14,7 @@ const PRODUCT_RESPONSE_ERROR_MESSAGE =
   'Produktdaten konnten nicht verarbeitet werden. Bitte versuche es später erneut.'
 const PRODUCT_IMAGE_FETCH_ERROR_MESSAGE = 'Produktbild konnte nicht abgerufen werden.'
 const DEFAULT_PRODUCT_IMAGE_FILE_NAME = 'product-image.jpg'
+const IMAGE_FILE_NAME_PATTERN = /\.(avif|bmp|gif|heic|heif|jpe?g|png|svg|webp)$/i
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null
@@ -48,6 +49,15 @@ const isOpenFoodFactsApiResponse = (value: unknown): value is OpenFoodFactsApiRe
   typeof value.status === 'number' &&
   (value.product === undefined || isOpenFoodFactsProduct(value.product))
 
+const isHttpUrl = (url: URL): boolean => url.protocol === 'http:' || url.protocol === 'https:'
+
+const isImageFileName = (fileName: string): boolean => IMAGE_FILE_NAME_PATTERN.test(fileName)
+
+const getImageFileName = (imageUrl: URL): string => {
+  const fileName = imageUrl.pathname.split('/').pop() ?? ''
+  return fileName || DEFAULT_PRODUCT_IMAGE_FILE_NAME
+}
+
 export const fetchOpenFoodFactsProduct = async (barcode: string): Promise<OpenFoodFactsProduct> => {
   let response: Response
   try {
@@ -74,6 +84,15 @@ export const fetchOpenFoodFactsProduct = async (barcode: string): Promise<OpenFo
 }
 
 export const fetchOpenFoodFactsProductImage = async (imageUrl: string): Promise<File> => {
+  let parsedImageUrl: URL
+  try {
+    parsedImageUrl = new URL(imageUrl)
+  } catch {
+    throw new Error(PRODUCT_IMAGE_FETCH_ERROR_MESSAGE)
+  }
+  if (!isHttpUrl(parsedImageUrl)) {
+    throw new Error(PRODUCT_IMAGE_FETCH_ERROR_MESSAGE)
+  }
   let response: Response
   try {
     response = await fetch(imageUrl)
@@ -83,7 +102,14 @@ export const fetchOpenFoodFactsProductImage = async (imageUrl: string): Promise<
   if (!response.ok) {
     throw new Error(PRODUCT_IMAGE_FETCH_ERROR_MESSAGE)
   }
+  const contentType = response.headers.get('Content-Type')?.split(';')[0]?.trim() ?? ''
+  const fileName = getImageFileName(parsedImageUrl)
+  if (
+    (contentType && !contentType.startsWith('image/')) ||
+    (!contentType && !isImageFileName(fileName))
+  ) {
+    throw new Error(PRODUCT_IMAGE_FETCH_ERROR_MESSAGE)
+  }
   const imageBlob = await response.blob()
-  const fileName = imageUrl.split('/').pop() || DEFAULT_PRODUCT_IMAGE_FILE_NAME
-  return new File([imageBlob], fileName, { type: imageBlob.type })
+  return new File([imageBlob], fileName, { type: contentType || imageBlob.type })
 }
