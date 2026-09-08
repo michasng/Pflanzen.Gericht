@@ -6,8 +6,11 @@ describe('isRecord', () => {
     expect(isRecord({ key: 'value' })).toBe(true)
   })
 
-  it('given null or a primitive, returns false', () => {
+  it('given null, returns false', () => {
     expect(isRecord(null)).toBe(false)
+  })
+
+  it('given a primitive, returns false', () => {
     expect(isRecord('text')).toBe(false)
   })
 })

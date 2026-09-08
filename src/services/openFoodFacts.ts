@@ -1,7 +1,7 @@
 import { OPEN_FOOD_FACTS_API_BASE_URL } from '@/config/openFoodFacts'
 import { isImageFileName } from '@/lib/isImageFileName'
-import { isRecord } from '@/lib/isRecord'
-import { isStringArray } from '@/lib/isStringArray'
+import { isRecord } from '@/lib/typeGuards/isRecord'
+import { isStringArray } from '@/lib/typeGuards/isStringArray'
 import type {
   OpenFoodFactsApiResponse,
   OpenFoodFactsNutrimentValue,

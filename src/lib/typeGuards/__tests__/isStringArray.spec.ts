@@ -6,8 +6,11 @@ describe('isStringArray', () => {
     expect(isStringArray(['a', 'b'])).toBe(true)
   })
 
-  it('given a mixed array or non-array, returns false', () => {
+  it('given a mixed array, returns false', () => {
     expect(isStringArray(['a', 1])).toBe(false)
+  })
+
+  it('given a non-array, returns false', () => {
     expect(isStringArray('a')).toBe(false)
   })
 })
