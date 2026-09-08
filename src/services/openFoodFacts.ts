@@ -1,4 +1,7 @@
 import { OPEN_FOOD_FACTS_API_BASE_URL } from '@/config/openFoodFacts'
+import { isImageFileName } from '@/lib/isImageFileName'
+import { isRecord } from '@/lib/isRecord'
+import { isStringArray } from '@/lib/isStringArray'
 import type {
   OpenFoodFactsApiResponse,
   OpenFoodFactsNutrimentValue,
@@ -14,13 +17,6 @@ const PRODUCT_RESPONSE_ERROR_MESSAGE =
   'Produktdaten konnten nicht verarbeitet werden. Bitte versuche es später erneut.'
 const PRODUCT_IMAGE_FETCH_ERROR_MESSAGE = 'Produktbild konnte nicht abgerufen werden.'
 const DEFAULT_PRODUCT_IMAGE_FILE_NAME = 'product-image.jpg'
-const IMAGE_FILE_NAME_PATTERN = /\.(avif|bmp|gif|heic|heif|jpe?g|png|svg|webp)$/i
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null
-
-const isStringArray = (value: unknown): value is string[] =>
-  Array.isArray(value) && value.every((entry) => typeof entry === 'string')
 
 const isNutrimentRecord = (value: unknown): value is Record<string, OpenFoodFactsNutrimentValue> =>
   isRecord(value) &&
@@ -50,8 +46,6 @@ const isOpenFoodFactsApiResponse = (value: unknown): value is OpenFoodFactsApiRe
   (value.product === undefined || isOpenFoodFactsProduct(value.product))
 
 const isHttpUrl = (url: URL): boolean => url.protocol === 'http:' || url.protocol === 'https:'
-
-const isImageFileName = (fileName: string): boolean => IMAGE_FILE_NAME_PATTERN.test(fileName)
 
 const getImageFileName = (imageUrl: URL): string => {
   const fileName = imageUrl.pathname.split('/').pop() ?? ''

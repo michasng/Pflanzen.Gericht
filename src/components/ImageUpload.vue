@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import { isImageFileName } from '@/lib/isImageFileName'
 import { ref, onUnmounted } from 'vue'
 
 const MAX_DIMENSION = 1280
 const MAX_FILES = 5
 const WEBP_QUALITY = 0.85
-const IMAGE_FILE_NAME_PATTERN = /\.(avif|bmp|gif|heic|heif|jpe?g|png|svg|webp)$/i
 
 interface Preview {
   url: string
@@ -19,7 +19,7 @@ const error = ref<string | null>(null)
 const dragOver = ref(false)
 
 const isImageFile = (file: File): boolean =>
-  file.type.startsWith('image/') || (file.type === '' && IMAGE_FILE_NAME_PATTERN.test(file.name))
+  file.type.startsWith('image/') || (file.type === '' && isImageFileName(file.name))
 
 const compressImage = (file: File): Promise<File> => {
   return new Promise((resolve, reject) => {
