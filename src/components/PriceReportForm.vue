@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import SuggestionTextInput from '@/components/SuggestionTextInput.vue'
 import { STORE_SUGGESTIONS } from '@/config/taxonomy'
 import { parseEurosToCents } from '@/lib/price'
 
@@ -52,19 +53,14 @@ const handleSubmit = (): void => {
         <label class="block text-xs font-medium text-gray-600 mb-1" for="prf-store">
           Geschäft <span class="text-red-500" aria-hidden="true">*</span>
         </label>
-        <input
+        <SuggestionTextInput
           id="prf-store"
           v-model="store"
-          type="text"
-          list="prf-store-suggestions"
-          maxlength="80"
+          :suggestions="STORE_SUGGESTIONS"
+          :maxlength="80"
           required
           placeholder="z. B. REWE"
-          class="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
-        <datalist id="prf-store-suggestions">
-          <option v-for="s in STORE_SUGGESTIONS" :key="s" :value="s" />
-        </datalist>
       </div>
 
       <div>
