@@ -32,6 +32,9 @@ describe('ProductBarcodeScanner', () => {
       mapProductToFormValues: vi.fn<(product: OpenFoodFactsProduct) => Partial<ProductFormValues>>(
         () => mappedValues,
       ),
+      fetchProductImage: vi.fn<(imageUrl: string) => Promise<File>>(() =>
+        Promise.reject(new Error('unused')),
+      ),
       toErrorMessage: vi.fn<(error: unknown) => string>(() => 'ignored'),
     }
 
@@ -52,5 +55,45 @@ describe('ProductBarcodeScanner', () => {
     expect(dependencies.fetchProduct).toHaveBeenCalledWith('4006381333931')
     expect(dependencies.mapProductToFormValues).toHaveBeenCalledWith(product)
     expect(wrapper.emitted('scanned')).toEqual([[mappedValues]])
+  })
+
+  it('given a scanned product has an image, emits the image file', async () => {
+    const product: OpenFoodFactsProduct = {
+      product_name: 'Soja Drink',
+      image_url: 'https://example.com/soja-drink.jpg',
+    }
+    const imageFile = new File(['data'], 'soja-drink.jpg', { type: 'image/jpeg' })
+    const dependencies = {
+      createReader: (): BarcodeReader => ({
+        decodeFromVideoDevice: () => Promise.reject(new Error('unused')),
+      }),
+      fetchProduct: vi.fn<(barcode: string) => Promise<OpenFoodFactsProduct>>(() =>
+        Promise.resolve(product),
+      ),
+      mapProductToFormValues: vi.fn<(product: OpenFoodFactsProduct) => Partial<ProductFormValues>>(
+        () => ({ name: 'Soja Drink' }),
+      ),
+      fetchProductImage: vi.fn<(imageUrl: string) => Promise<File>>(() =>
+        Promise.resolve(imageFile),
+      ),
+      toErrorMessage: vi.fn<(error: unknown) => string>(() => 'ignored'),
+    }
+
+    const wrapper = mount(ProductBarcodeScanner, {
+      props: { dependencies },
+      global: {
+        stubs: {
+          BarcodeScannerDialog: BarcodeScannerDialogStub,
+        },
+      },
+    })
+
+    await wrapper.get('button').trigger('click')
+    await wrapper.get('[data-test="decode-barcode"]').trigger('click')
+    await Promise.resolve()
+    await Promise.resolve()
+    await nextTick()
+
+    expect(wrapper.emitted('scannedImage')).toEqual([[imageFile]])
   })
 })

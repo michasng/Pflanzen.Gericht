@@ -245,6 +245,8 @@ const handleSubmit = (): void => {
   })
 }
 
+const imageUploadRef = ref<InstanceType<typeof ImageUpload> | null>(null)
+
 const applyScannedValues = (values: Partial<ProductFormValues>): void => {
   if (values.name !== undefined) name.value = values.name
   if (typeof values.brand === 'string') brand.value = values.brand
@@ -262,7 +264,10 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
 
 <template>
   <form class="space-y-5" @submit.prevent="handleSubmit">
-    <ProductBarcodeScanner @scanned="applyScannedValues" />
+    <ProductBarcodeScanner
+      @scanned="applyScannedValues"
+      @scanned-image="(file) => imageUploadRef?.addFile(file)"
+    />
 
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-name">
@@ -603,7 +608,7 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
       <p class="text-sm font-medium text-gray-700 mb-2">
         {{ existingImages.length ? 'Weitere Bilder hinzufügen' : 'Bilder' }}
       </p>
-      <ImageUpload @change="emit('filesChanged', $event)" />
+      <ImageUpload ref="imageUploadRef" @change="emit('filesChanged', $event)" />
     </div>
 
     <button

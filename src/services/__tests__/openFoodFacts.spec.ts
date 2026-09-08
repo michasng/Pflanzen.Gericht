@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { fetchOpenFoodFactsProduct } from '../openFoodFacts'
+import { fetchOpenFoodFactsProduct, fetchOpenFoodFactsProductImage } from '../openFoodFacts'
 
 describe('fetchOpenFoodFactsProduct', () => {
   afterEach(() => {
@@ -80,5 +80,79 @@ describe('fetchOpenFoodFactsProduct', () => {
         calcium_unit: 'mg',
       },
     })
+  })
+})
+
+describe('fetchOpenFoodFactsProductImage', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('given the image request fails, throws a user-facing error', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(() => Promise.reject(new Error('network'))),
+    )
+
+    await expect(
+      fetchOpenFoodFactsProductImage('https://example.com/soja-drink.jpg'),
+    ).rejects.toThrow('Produktbild konnte nicht abgerufen werden.')
+  })
+
+  it('given the image response is not ok, throws a user-facing error', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(() => Promise.resolve(new Response(null, { status: 404 }))),
+    )
+
+    await expect(
+      fetchOpenFoodFactsProductImage('https://example.com/soja-drink.jpg'),
+    ).rejects.toThrow('Produktbild konnte nicht abgerufen werden.')
+  })
+
+  it('given the image url is not http or https, throws a user-facing error', async () => {
+    await expect(
+      fetchOpenFoodFactsProductImage('ftp://example.com/soja-drink.jpg'),
+    ).rejects.toThrow('Produktbild konnte nicht abgerufen werden.')
+  })
+
+  it('given the image response is not an image, throws a user-facing error', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(() =>
+        Promise.resolve(
+          new Response('not-image', {
+            status: 200,
+            headers: { 'Content-Type': 'text/html' },
+          }),
+        ),
+      ),
+    )
+
+    await expect(
+      fetchOpenFoodFactsProductImage('https://example.com/soja-drink.jpg'),
+    ).rejects.toThrow('Produktbild konnte nicht abgerufen werden.')
+  })
+
+  it('given the image request succeeds, returns a file named after the url path', async () => {
+    const imageBlob = new Blob(['data'], { type: 'image/jpeg' })
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(() =>
+        Promise.resolve(
+          new Response(imageBlob, {
+            status: 200,
+            headers: { 'Content-Type': 'image/jpeg' },
+          }),
+        ),
+      ),
+    )
+
+    const file = await fetchOpenFoodFactsProductImage(
+      'https://example.com/soja-drink.jpg?rev=1#thumbnail',
+    )
+
+    expect(file.name).toBe('soja-drink.jpg')
+    expect(file.type).toBe('image/jpeg')
   })
 })

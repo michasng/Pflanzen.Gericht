@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isImageFileName } from '@/lib/isImageFileName'
 import { ref, onUnmounted } from 'vue'
 
 const MAX_DIMENSION = 1280
@@ -16,6 +17,9 @@ const previews = ref<Preview[]>([])
 const processing = ref(false)
 const error = ref<string | null>(null)
 const dragOver = ref(false)
+
+const isImageFile = (file: File): boolean =>
+  file.type.startsWith('image/') || (file.type === '' && isImageFileName(file.name))
 
 const compressImage = (file: File): Promise<File> => {
   return new Promise((resolve, reject) => {
@@ -65,9 +69,7 @@ const addFiles = async (fileList: FileList | null): Promise<void> => {
     return
   }
   processing.value = true
-  const incoming = Array.from(fileList)
-    .filter((f) => f.type.startsWith('image/'))
-    .slice(0, slots)
+  const incoming = Array.from(fileList).filter(isImageFile).slice(0, slots)
   for (const raw of incoming) {
     try {
       const compressed = await compressImage(raw)
@@ -82,6 +84,29 @@ const addFiles = async (fileList: FileList | null): Promise<void> => {
     previews.value.map((p) => p.file),
   )
 }
+
+const addFile = async (file: File): Promise<void> => {
+  if (processing.value || !isImageFile(file)) return
+  error.value = null
+  if (previews.value.length >= MAX_FILES) {
+    error.value = `Maximal ${MAX_FILES} Bilder erlaubt.`
+    return
+  }
+  processing.value = true
+  try {
+    const compressed = await compressImage(file)
+    previews.value.push({ url: URL.createObjectURL(compressed), file: compressed })
+  } catch {
+    error.value = 'Ein Bild konnte nicht verarbeitet werden.'
+  }
+  processing.value = false
+  emit(
+    'change',
+    previews.value.map((p) => p.file),
+  )
+}
+
+defineExpose({ addFile })
 
 const remove = (index: number): void => {
   const preview = previews.value[index]

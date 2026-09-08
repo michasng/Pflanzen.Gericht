@@ -1,4 +1,7 @@
 import { OPEN_FOOD_FACTS_API_BASE_URL } from '@/config/openFoodFacts'
+import { isImageFileName } from '@/lib/isImageFileName'
+import { isRecord } from '@/lib/typeGuards/isRecord'
+import { isStringArray } from '@/lib/typeGuards/isStringArray'
 import type {
   OpenFoodFactsApiResponse,
   OpenFoodFactsNutrimentValue,
@@ -12,12 +15,8 @@ const PRODUCT_NETWORK_ERROR_MESSAGE =
   'Produktdaten konnten nicht abgerufen werden. Bitte prüfe deine Internetverbindung.'
 const PRODUCT_RESPONSE_ERROR_MESSAGE =
   'Produktdaten konnten nicht verarbeitet werden. Bitte versuche es später erneut.'
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null
-
-const isStringArray = (value: unknown): value is string[] =>
-  Array.isArray(value) && value.every((entry) => typeof entry === 'string')
+const PRODUCT_IMAGE_FETCH_ERROR_MESSAGE = 'Produktbild konnte nicht abgerufen werden.'
+const DEFAULT_PRODUCT_IMAGE_FILE_NAME = 'product-image.jpg'
 
 const isNutrimentRecord = (value: unknown): value is Record<string, OpenFoodFactsNutrimentValue> =>
   isRecord(value) &&
@@ -38,12 +37,20 @@ const isOpenFoodFactsProduct = (value: unknown): value is OpenFoodFactsProduct =
   (value.allergens_tags === undefined || isStringArray(value.allergens_tags)) &&
   (value.nutriments === undefined || isNutrimentRecord(value.nutriments)) &&
   (value.ingredients === undefined ||
-    (Array.isArray(value.ingredients) && value.ingredients.every(isOpenFoodFactsIngredient)))
+    (Array.isArray(value.ingredients) && value.ingredients.every(isOpenFoodFactsIngredient))) &&
+  (value.image_url === undefined || typeof value.image_url === 'string')
 
 const isOpenFoodFactsApiResponse = (value: unknown): value is OpenFoodFactsApiResponse =>
   isRecord(value) &&
   typeof value.status === 'number' &&
   (value.product === undefined || isOpenFoodFactsProduct(value.product))
+
+const isHttpUrl = (url: URL): boolean => url.protocol === 'http:' || url.protocol === 'https:'
+
+const getImageFileName = (imageUrl: URL): string => {
+  const fileName = imageUrl.pathname.split('/').pop() ?? ''
+  return fileName || DEFAULT_PRODUCT_IMAGE_FILE_NAME
+}
 
 export const fetchOpenFoodFactsProduct = async (barcode: string): Promise<OpenFoodFactsProduct> => {
   let response: Response
@@ -68,4 +75,35 @@ export const fetchOpenFoodFactsProduct = async (barcode: string): Promise<OpenFo
     throw new Error('Zu diesem Barcode wurde kein Produkt gefunden.')
   }
   return data.product
+}
+
+export const fetchOpenFoodFactsProductImage = async (imageUrl: string): Promise<File> => {
+  let parsedImageUrl: URL
+  try {
+    parsedImageUrl = new URL(imageUrl)
+  } catch {
+    throw new Error(PRODUCT_IMAGE_FETCH_ERROR_MESSAGE)
+  }
+  if (!isHttpUrl(parsedImageUrl)) {
+    throw new Error(PRODUCT_IMAGE_FETCH_ERROR_MESSAGE)
+  }
+  let response: Response
+  try {
+    response = await fetch(imageUrl)
+  } catch {
+    throw new Error(PRODUCT_IMAGE_FETCH_ERROR_MESSAGE)
+  }
+  if (!response.ok) {
+    throw new Error(PRODUCT_IMAGE_FETCH_ERROR_MESSAGE)
+  }
+  const contentType = response.headers.get('Content-Type')?.split(';')[0]?.trim() ?? ''
+  const fileName = getImageFileName(parsedImageUrl)
+  if (
+    (contentType && !contentType.startsWith('image/')) ||
+    (!contentType && !isImageFileName(fileName))
+  ) {
+    throw new Error(PRODUCT_IMAGE_FETCH_ERROR_MESSAGE)
+  }
+  const imageBlob = await response.blob()
+  return new File([imageBlob], fileName, { type: contentType || imageBlob.type })
 }
