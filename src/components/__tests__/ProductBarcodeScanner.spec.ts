@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { defineComponent, nextTick } from 'vue'
+import { defineComponent } from 'vue'
 import { mount } from '@vue/test-utils'
 import ProductBarcodeScanner from '../ProductBarcodeScanner.vue'
 import type { BarcodeReader } from '@/composables/useBarcodeScanner'
@@ -49,8 +49,7 @@ describe('ProductBarcodeScanner', () => {
 
     await wrapper.get('button').trigger('click')
     await wrapper.get('[data-test="decode-barcode"]').trigger('click')
-    await Promise.resolve()
-    await nextTick()
+    await dependencies.fetchProduct.mock.results[0]?.value
 
     expect(dependencies.fetchProduct).toHaveBeenCalledWith('4006381333931')
     expect(dependencies.mapProductToFormValues).toHaveBeenCalledWith(product)
@@ -90,9 +89,8 @@ describe('ProductBarcodeScanner', () => {
 
     await wrapper.get('button').trigger('click')
     await wrapper.get('[data-test="decode-barcode"]').trigger('click')
-    await Promise.resolve()
-    await Promise.resolve()
-    await nextTick()
+    await dependencies.fetchProduct.mock.results[0]?.value
+    await dependencies.fetchProductImage.mock.results[0]?.value
 
     expect(wrapper.emitted('scannedImage')).toEqual([[imageFile]])
   })

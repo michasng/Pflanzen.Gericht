@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { nextTick } from 'vue'
+import { createDeferred } from '@/__tests__/createDeferred'
 import type { OriginalProductCandidate } from '@/services/products'
 
 const searchOriginalProductCandidates =
@@ -23,40 +23,11 @@ vi.mock('@/services/catalog', () => ({
 
 import OriginalProductPicker from '../OriginalProductPicker.vue'
 
-interface Deferred<T> {
-  promise: Promise<T>
-  resolve: (value: T) => void
-  reject: (reason?: unknown) => void
-}
-
-const createDeferred = <T>(): Deferred<T> => {
-  let resolvePromise: ((value: T) => void) | undefined
-  let rejectPromise: ((reason?: unknown) => void) | undefined
-  const promise = new Promise<T>((resolve, reject) => {
-    resolvePromise = resolve
-    rejectPromise = reject
-  })
-
-  const resolve = (value: T): void => {
-    if (!resolvePromise) throw new Error('Deferred promise is not initialized.')
-    resolvePromise(value)
-  }
-
-  const reject = (reason?: unknown): void => {
-    if (!rejectPromise) throw new Error('Deferred promise is not initialized.')
-    rejectPromise(reason)
-  }
-
-  return { promise, resolve, reject }
-}
-
 const runDebouncedSearch = async (
   searchPromise: Promise<OriginalProductCandidate[]>,
 ): Promise<void> => {
-  vi.advanceTimersByTime(400)
-  await nextTick()
+  await vi.advanceTimersByTimeAsync(400)
   await searchPromise.catch(() => undefined)
-  await nextTick()
 }
 
 describe('OriginalProductPicker', () => {
@@ -125,12 +96,11 @@ describe('OriginalProductPicker', () => {
     })
 
     await wrapper.get('input').setValue('Marke')
-    vi.advanceTimersByTime(400)
-    await nextTick()
+    await vi.advanceTimersByTimeAsync(400)
 
     failedSearch.reject(new Error('boom'))
     await failedSearch.promise.catch(() => undefined)
-    await nextTick()
+    await vi.advanceTimersByTimeAsync(0)
 
     expect(wrapper.text()).toContain('Originale konnten nicht geladen werden.')
     expect(wrapper.findAll('li')).toHaveLength(0)
@@ -148,20 +118,18 @@ describe('OriginalProductPicker', () => {
     })
 
     await wrapper.get('input').setValue('Mar')
-    vi.advanceTimersByTime(400)
-    await nextTick()
+    await vi.advanceTimersByTimeAsync(400)
 
     await wrapper.get('input').setValue('Marke')
-    vi.advanceTimersByTime(400)
-    await nextTick()
+    await vi.advanceTimersByTimeAsync(400)
 
     newerSearch.resolve([{ id: 'p2', name: 'Neues Original', brand: null, image: null }])
     await newerSearch.promise
-    await nextTick()
+    await vi.advanceTimersByTimeAsync(0)
 
     slowerSearch.resolve([{ id: 'p1', name: 'Altes Original', brand: null, image: null }])
     await slowerSearch.promise
-    await nextTick()
+    await vi.advanceTimersByTimeAsync(0)
 
     expect(wrapper.text()).toContain('Neues Original')
     expect(wrapper.text()).not.toContain('Altes Original')
