@@ -1,5 +1,5 @@
 import type { IngredientComparator } from '@/config/ingredients'
-import type { Allergen } from '@/config/taxonomy'
+import type { Allergen } from '@/config/allergens'
 
 export interface ProductFormIngredient {
   name: string

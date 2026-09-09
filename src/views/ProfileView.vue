@@ -16,7 +16,7 @@ import StarDisplay from '@/components/StarDisplay.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
 import TagList from '@/components/TagList.vue'
-import { categoryToLabel } from '@/config/taxonomy'
+import { categoryToLabel } from '@/config/categories'
 import { formatDate } from '@/lib/date'
 
 const router = useRouter()

@@ -3,14 +3,10 @@ import { ref, watch, computed, type Ref } from 'vue'
 import { useCatalogStore } from '@/stores/catalog'
 import StarRatingInput from '@/components/StarRatingInput.vue'
 import SuggestionTextInput from '@/components/SuggestionTextInput.vue'
-import {
-  BASES,
-  baseToLabel,
-  STORE_SUGGESTIONS,
-  TAG_GROUPS,
-  ALLERGENS,
-  allergenToLabel,
-} from '@/config/taxonomy'
+import { BASES, baseToLabel } from '@/config/bases'
+import { STORE_SUGGESTIONS } from '@/config/storeSuggestions'
+import { TAG_GROUPS } from '@/config/reviewTags'
+import { ALLERGENS, allergenToLabel } from '@/config/allergens'
 import { parseEurosToCents, formatEuroCents } from '@/lib/price'
 import { supabase } from '@/lib/supabase'
 import { useNameSuggestions } from '@/composables/useNameSuggestions'
