@@ -1,4 +1,4 @@
-import type { Allergen } from '@/config/taxonomy'
+import type { Allergen } from '@/config/allergens'
 
 export const OPEN_FOOD_FACTS_API_BASE_URL = 'https://world.openfoodfacts.org/api/v2/product'
 

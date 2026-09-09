@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import StarDisplay from '@/components/StarDisplay.vue'
 import AppLogo from '@/components/AppLogo.vue'
-import { categoryToLabel } from '@/config/taxonomy'
+import { categoryToLabel } from '@/config/categories'
 import { getImageUrl, type ProductListItem } from '@/services/catalog'
 
 const props = defineProps<{ product: ProductListItem }>()

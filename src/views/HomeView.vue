@@ -5,7 +5,9 @@ import { useCatalogUrlSync } from '@/composables/useCatalogUrlSync'
 import ProductCard from '@/components/ProductCard.vue'
 import CatalogFilterSheet from '@/components/CatalogFilterSheet.vue'
 import AppLogo from '@/components/AppLogo.vue'
-import { CATEGORIES, categoryToLabel, tagToLabel, allergenToLabel } from '@/config/taxonomy'
+import { CATEGORIES, categoryToLabel } from '@/config/categories'
+import { tagToLabel } from '@/config/reviewTags'
+import { allergenToLabel } from '@/config/allergens'
 import { SORT_OPTIONS, SORT_OPTION_LABELS, type SortOption } from '@/config/sortOptions'
 
 const catalogStore = useCatalogStore()

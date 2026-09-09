@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { tagToLabel } from '@/config/taxonomy'
+import { tagToLabel } from '@/config/reviewTags'
 
 defineProps<{ tags: string[] }>()
 </script>

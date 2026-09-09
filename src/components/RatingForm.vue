@@ -15,7 +15,7 @@ export interface RatingFormValues {
 import { ref, reactive } from 'vue'
 import StarRatingInput from '@/components/StarRatingInput.vue'
 import ImageUpload from '@/components/ImageUpload.vue'
-import { TAGS, tagToLabel } from '@/config/taxonomy'
+import { TAG_GROUPS } from '@/config/reviewTags'
 import type { RatingImage } from '@/types'
 import { getImageUrl } from '@/services/catalog'
 
@@ -100,21 +100,24 @@ const handleSubmit = (): void => {
 
     <div>
       <p class="text-sm font-medium text-gray-700 mb-2">Tags</p>
-      <div class="flex flex-wrap gap-2">
-        <button
-          v-for="tag in TAGS"
-          :key="tag"
-          type="button"
-          class="px-3 py-1.5 rounded-full text-sm transition-colors"
-          :class="
-            selectedTags.includes(tag)
-              ? 'bg-primary-600 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          "
-          @click="toggleTag(tag)"
-        >
-          {{ tagToLabel(tag) }}
-        </button>
+      <div v-for="group in TAG_GROUPS" :key="group.label" class="mb-3 last:mb-0">
+        <h4 class="text-xs font-medium text-gray-500 mb-1.5">{{ group.label }}</h4>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="(tagLabel, tag) in group.tags"
+            :key="tag"
+            type="button"
+            class="px-3 py-1.5 rounded-full text-sm transition-colors"
+            :class="
+              selectedTags.includes(tag)
+                ? 'bg-primary-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            "
+            @click="toggleTag(tag)"
+          >
+            {{ tagLabel }}
+          </button>
+        </div>
       </div>
     </div>
 
