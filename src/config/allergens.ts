@@ -4,6 +4,8 @@ export const ALLERGEN_LABELS = {
   nuts: 'Nüsse',
 } as const
 export type Allergen = keyof typeof ALLERGEN_LABELS
-export const ALLERGENS = Object.keys(ALLERGEN_LABELS) as Allergen[]
+const isAllergen = (value: string): value is Allergen =>
+  Object.prototype.hasOwnProperty.call(ALLERGEN_LABELS, value)
+export const ALLERGENS = Object.keys(ALLERGEN_LABELS).filter(isAllergen)
 export const allergenToLabel = (allergen: string): string =>
-  ALLERGEN_LABELS[allergen as Allergen] ?? allergen
+  isAllergen(allergen) ? ALLERGEN_LABELS[allergen] : allergen

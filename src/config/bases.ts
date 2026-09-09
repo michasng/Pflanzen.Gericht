@@ -14,5 +14,7 @@ export const BASE_LABELS = {
   blend: 'Gemisch',
 } as const
 export type Base = keyof typeof BASE_LABELS
-export const BASES = Object.keys(BASE_LABELS) as Base[]
-export const baseToLabel = (base: string): string => BASE_LABELS[base as Base] ?? base
+const isBase = (value: string): value is Base =>
+  Object.prototype.hasOwnProperty.call(BASE_LABELS, value)
+export const BASES = Object.keys(BASE_LABELS).filter(isBase)
+export const baseToLabel = (base: string): string => (isBase(base) ? BASE_LABELS[base] : base)

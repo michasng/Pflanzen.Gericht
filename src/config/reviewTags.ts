@@ -19,7 +19,8 @@ export const TAG_GROUPS = [
   },
 ] as const
 
-export type Tag = keyof (typeof TAG_GROUPS)[number]['tags']
+type KeysOfUnion<T> = T extends T ? keyof T : never
+export type Tag = KeysOfUnion<(typeof TAG_GROUPS)[number]['tags']>
 export const TAG_LABELS = Object.fromEntries(
   TAG_GROUPS.flatMap((g) => Object.entries(g.tags)),
 ) as Record<Tag, string>

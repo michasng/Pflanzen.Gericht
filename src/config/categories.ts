@@ -15,6 +15,8 @@ export const CATEGORY_LABELS = {
   other: 'Sonstiges',
 } as const
 export type Category = keyof typeof CATEGORY_LABELS
-export const CATEGORIES = Object.keys(CATEGORY_LABELS) as Category[]
+const isCategory = (value: string): value is Category =>
+  Object.prototype.hasOwnProperty.call(CATEGORY_LABELS, value)
+export const CATEGORIES = Object.keys(CATEGORY_LABELS).filter(isCategory)
 export const categoryToLabel = (category: string): string =>
-  CATEGORY_LABELS[category as Category] ?? category
+  isCategory(category) ? CATEGORY_LABELS[category] : category
