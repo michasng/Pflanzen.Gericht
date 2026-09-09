@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { fetchProduct } from '@/services/products'
+import type { OriginalProductCandidate } from '@/services/products'
 import {
   fetchRatingForEdit,
   updateRating,
@@ -21,7 +22,11 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-type RatingWithMeta = Rating & { tags: string[]; images: RatingImage[] }
+type RatingWithMeta = Rating & {
+  tags: string[]
+  images: RatingImage[]
+  original_product: OriginalProductCandidate | null
+}
 
 const rating = ref<RatingWithMeta | null>(null)
 const product = ref<Product | null>(null)
@@ -95,6 +100,8 @@ const handleSubmit = async (values: RatingFormValues): Promise<void> => {
       <AlertMessage :message="submitError" class="mb-4" />
 
       <RatingForm
+        :product-id="product.id"
+        :category="product.category"
         :initial="{
           overall: rating.overall,
           taste: rating.taste,
@@ -104,7 +111,9 @@ const handleSubmit = async (values: RatingFormValues): Promise<void> => {
           value: rating.value,
           comment: rating.comment,
           tags: rating.tags,
+          original_product_id: rating.original_product_id,
         }"
+        :initial-original-product="rating.original_product"
         :existing-images="existingImages"
         :submitting="submitting"
         @submit="handleSubmit"

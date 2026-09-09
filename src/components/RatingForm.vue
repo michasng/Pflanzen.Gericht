@@ -1,4 +1,6 @@
 <script lang="ts">
+import type { OriginalProductCandidate } from '@/services/products'
+
 export interface RatingFormValues {
   overall: number
   taste: number | null
@@ -8,6 +10,7 @@ export interface RatingFormValues {
   value: number | null
   comment: string | null
   tags: string[]
+  original_product_id: string | null
 }
 </script>
 
@@ -15,6 +18,7 @@ export interface RatingFormValues {
 import { ref, reactive } from 'vue'
 import StarRatingInput from '@/components/StarRatingInput.vue'
 import ImageUpload from '@/components/ImageUpload.vue'
+import OriginalProductPicker from '@/components/OriginalProductPicker.vue'
 import { TAG_GROUPS } from '@/config/reviewTags'
 import type { RatingImage } from '@/types'
 import { getImageUrl } from '@/services/catalog'
@@ -31,11 +35,14 @@ const CRITERIA_LABELS: Record<CriteriaKey, string> = {
 
 const props = withDefaults(
   defineProps<{
+    productId: string
+    category: string
     initial?: Partial<RatingFormValues>
+    initialOriginalProduct?: OriginalProductCandidate | null
     existingImages?: RatingImage[]
     submitting?: boolean
   }>(),
-  { existingImages: () => [] },
+  { existingImages: () => [], initialOriginalProduct: null },
 )
 
 const emit = defineEmits<{
@@ -56,6 +63,7 @@ const criteria = reactive<Record<CriteriaKey, number | null>>({
 
 const selectedTags = ref<string[]>(props.initial?.tags ? [...props.initial.tags] : [])
 const comment = ref(props.initial?.comment ?? '')
+const originalProduct = ref<OriginalProductCandidate | null>(props.initialOriginalProduct)
 
 const toggleTag = (tag: string): void => {
   const idx = selectedTags.value.indexOf(tag)
@@ -74,6 +82,7 @@ const handleSubmit = (): void => {
     value: criteria.value,
     comment: comment.value.trim() || null,
     tags: [...selectedTags.value],
+    original_product_id: originalProduct.value?.id ?? null,
   })
 }
 </script>
@@ -119,6 +128,16 @@ const handleSubmit = (): void => {
           </button>
         </div>
       </div>
+    </div>
+
+    <div>
+      <p class="text-sm font-medium text-gray-700 mb-2">Original</p>
+      <p class="text-xs text-gray-400 mb-2">Ahmt dieses Produkt ein anderes Produkt nach?</p>
+      <OriginalProductPicker
+        v-model="originalProduct"
+        :product-id="productId"
+        :category="category"
+      />
     </div>
 
     <div>

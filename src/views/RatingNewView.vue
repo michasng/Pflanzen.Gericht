@@ -66,6 +66,8 @@ const handleSubmit = async (values: RatingFormValues): Promise<void> => {
       <AlertMessage :message="submitError" class="mb-4" />
 
       <RatingForm
+        :product-id="product.id"
+        :category="product.category"
         :submitting="submitting"
         @submit="handleSubmit"
         @files-changed="pendingFiles = $event"
