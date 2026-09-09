@@ -1,0 +1,18 @@
+export const STORE_SUGGESTIONS = [
+  'REWE',
+  'EDEKA',
+  'Lidl',
+  'Aldi Nord',
+  'Aldi Süd',
+  'dm',
+  'Rossmann',
+  'Kaufland',
+  'Netto',
+  'Penny',
+  'Alnatura',
+  'Bio Company',
+  'tegut',
+  'Globus',
+  'Spar',
+  'Online-Shop',
+] as const

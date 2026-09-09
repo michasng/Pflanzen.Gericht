@@ -8,7 +8,7 @@ import {
   OPEN_FOOD_FACTS_ORGANIC_LABEL_TAG,
   isOpenFoodFactsEstimatedNutrimentField,
 } from '@/config/openFoodFacts'
-import type { Allergen } from '@/config/taxonomy'
+import type { Allergen } from '@/config/allergens'
 import { BASIS_POINTS_PER_PERCENT } from '@/lib/basisPoints'
 import { sortNutrientsByHierarchy } from '@/lib/sortNutrientsByHierarchy'
 import type { ProductFormValues } from '@/types/productForm'

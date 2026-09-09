@@ -12,7 +12,7 @@ import type { Product } from '@/types'
 import StarDisplay from '@/components/StarDisplay.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import TagList from '@/components/TagList.vue'
-import { categoryToLabel } from '@/config/taxonomy'
+import { categoryToLabel } from '@/config/categories'
 import { toErrorMessage } from '@/lib/error'
 import { formatDate } from '@/lib/date'
 

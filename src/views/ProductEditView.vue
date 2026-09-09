@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import ProductForm from '@/components/ProductForm.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
-import { ALLERGENS } from '@/config/taxonomy'
+import { ALLERGENS } from '@/config/allergens'
 import {
   fetchProduct,
   fetchProductImages,

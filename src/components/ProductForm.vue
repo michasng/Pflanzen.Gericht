@@ -4,15 +4,10 @@ import ImageUpload from '@/components/ImageUpload.vue'
 import ProductBarcodeScanner from '@/components/ProductBarcodeScanner.vue'
 import SuggestionTextInput from '@/components/SuggestionTextInput.vue'
 import type { IngredientComparator } from '@/config/ingredients'
-import {
-  CATEGORIES,
-  categoryToLabel,
-  BASES,
-  baseToLabel,
-  ALLERGENS,
-  allergenToLabel,
-} from '@/config/taxonomy'
-import type { Allergen } from '@/config/taxonomy'
+import { CATEGORIES, categoryToLabel } from '@/config/categories'
+import { BASES, baseToLabel } from '@/config/bases'
+import { ALLERGENS, allergenToLabel } from '@/config/allergens'
+import type { Allergen } from '@/config/allergens'
 import { INGREDIENT_COMPARATORS, DEFAULT_INGREDIENT_COMPARATOR } from '@/config/ingredients'
 import { NUTRIENT_UNITS, NUTRIENT_UNIT_LABELS, DEFAULT_NUTRIENT_UNIT } from '@/config/nutrients'
 import type { NutrientUnit } from '@/config/nutrients'

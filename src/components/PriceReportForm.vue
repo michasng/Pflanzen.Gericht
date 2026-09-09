@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import SuggestionTextInput from '@/components/SuggestionTextInput.vue'
-import { STORE_SUGGESTIONS } from '@/config/taxonomy'
+import { STORE_SUGGESTIONS } from '@/config/storeSuggestions'
 import { parseEurosToCents } from '@/lib/price'
 
 export interface PriceReportFormValues {

@@ -12,7 +12,7 @@ import {
 } from '@/services/ratings'
 import { deleteRating } from '@/services/profile'
 import { toErrorMessage } from '@/lib/error'
-import { categoryToLabel } from '@/config/taxonomy'
+import { categoryToLabel } from '@/config/categories'
 import type { ProductListItem } from '@/services/catalog'
 import StarDisplay from '@/components/StarDisplay.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
