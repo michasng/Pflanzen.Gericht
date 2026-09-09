@@ -96,62 +96,6 @@ export const searchSimilarProducts = async (
   return data ?? []
 }
 
-export type OriginalProductCandidate = Pick<Product, 'id' | 'name' | 'brand'> & {
-  image: ProductImage | null
-}
-
-const toProductWithPrimaryImage = (product: {
-  id: string
-  name: string
-  brand: string | null
-  images: ProductImage[] | null
-}): OriginalProductCandidate => {
-  const images = [...(product.images ?? [])].sort((a, b) => a.sort_order - b.sort_order)
-  return { id: product.id, name: product.name, brand: product.brand, image: images[0] ?? null }
-}
-
-export const fetchProductSummariesWithImage = async (
-  productIds: string[],
-): Promise<Map<string, OriginalProductCandidate>> => {
-  if (!productIds.length) return new Map()
-  const { data, error } = await supabase
-    .from('product')
-    .select('id, name, brand, images:product_image(id, storage_path, sort_order)')
-    .in('id', productIds)
-  if (error) throw error
-  const map = new Map<string, OriginalProductCandidate>()
-  for (const p of data ?? []) {
-    map.set(p.id, toProductWithPrimaryImage({ ...p, images: p.images as ProductImage[] | null }))
-  }
-  return map
-}
-
-export const fetchOriginalProductCandidate = async (
-  productId: string,
-): Promise<OriginalProductCandidate | null> => {
-  const summaries = await fetchProductSummariesWithImage([productId])
-  return summaries.get(productId) ?? null
-}
-
-export const searchOriginalProductCandidates = async (
-  name: string,
-  category: string,
-  excludeProductId: string,
-): Promise<OriginalProductCandidate[]> => {
-  if (!name.trim()) return []
-  const { data, error } = await supabase
-    .from('product')
-    .select('id, name, brand, images:product_image(id, storage_path, sort_order)')
-    .eq('category', category)
-    .neq('id', excludeProductId)
-    .ilike('normalized_name', `%${name.trim().toLowerCase()}%`)
-    .limit(5)
-  if (error) throw error
-  return (data ?? []).map((p) =>
-    toProductWithPrimaryImage({ ...p, images: p.images as ProductImage[] | null }),
-  )
-}
-
 export const createProduct = async (
   fields: Pick<
     ProductInsert,

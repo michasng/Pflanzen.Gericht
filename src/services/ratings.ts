@@ -1,6 +1,5 @@
 import { supabase } from '@/lib/supabase'
 import type { Rating, RatingInsert, RatingImage } from '@/types'
-import { fetchOriginalProductCandidate, type OriginalProductCandidate } from '@/services/products'
 
 export const ADMIN_PAGE_SIZE = 50
 
@@ -11,14 +10,7 @@ export type AdminRatingItem = Rating & {
 
 export type RatingFields = Pick<
   RatingInsert,
-  | 'overall'
-  | 'taste'
-  | 'consistency'
-  | 'appearance'
-  | 'nutrition'
-  | 'value'
-  | 'comment'
-  | 'original_product_id'
+  'overall' | 'taste' | 'consistency' | 'appearance' | 'nutrition' | 'value' | 'comment'
 >
 
 export const createRating = async (
@@ -67,14 +59,7 @@ export const uploadRatingImage = async (
 
 export const fetchRatingForEdit = async (
   ratingId: string,
-): Promise<
-  | (Rating & {
-      tags: string[]
-      images: RatingImage[]
-      original_product: OriginalProductCandidate | null
-    })
-  | null
-> => {
+): Promise<(Rating & { tags: string[]; images: RatingImage[] }) | null> => {
   const { data, error } = await supabase
     .from('rating')
     .select('*, tags:rating_tag(tag), images:rating_image(id, storage_path, sort_order)')
@@ -82,14 +67,10 @@ export const fetchRatingForEdit = async (
     .single()
   if (error?.code === 'PGRST116') return null
   if (error) throw error
-  const originalProduct = data.original_product_id
-    ? await fetchOriginalProductCandidate(data.original_product_id)
-    : null
   return {
     ...data,
     tags: ((data.tags ?? []) as { tag: string }[]).map((t) => t.tag),
     images: (data.images as RatingImage[] | null) ?? [],
-    original_product: originalProduct,
   }
 }
 
