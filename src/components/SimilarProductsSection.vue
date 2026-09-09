@@ -182,6 +182,7 @@ watch(
     loading.value = true
     error.value = null
     dialogError.value = null
+    similarProducts.value = []
     showSuggestionSearch.value = false
     search.value = ''
     suggestions.value = []
