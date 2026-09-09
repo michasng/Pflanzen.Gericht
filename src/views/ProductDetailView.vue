@@ -12,6 +12,7 @@ import RatingCard from '@/components/RatingCard.vue'
 import PriceReportForm, { type PriceReportFormValues } from '@/components/PriceReportForm.vue'
 import AppLogo from '@/components/AppLogo.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
+import SimilarProductsSection from '@/components/SimilarProductsSection.vue'
 import { categoryToLabel } from '@/config/categories'
 import { baseToLabel } from '@/config/bases'
 import { allergenToLabel } from '@/config/allergens'
@@ -375,6 +376,8 @@ onMounted(async () => {
           </li>
         </ul>
       </div>
+
+      <SimilarProductsSection :product-id="product.id" />
 
       <div class="mb-6 flex flex-col gap-2">
         <RouterLink

@@ -249,6 +249,58 @@ export type Database = {
           },
         ]
       }
+      product_similarity_vote: {
+        Row: {
+          agreed: boolean
+          created_at: string
+          id: string
+          product_id_a: string
+          product_id_b: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agreed?: boolean
+          created_at?: string
+          id?: string
+          product_id_a: string
+          product_id_b: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agreed?: boolean
+          created_at?: string
+          id?: string
+          product_id_a?: string
+          product_id_b?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'product_similarity_vote_product_id_a_fkey'
+            columns: ['product_id_a']
+            isOneToOne: false
+            referencedRelation: 'product'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'product_similarity_vote_product_id_b_fkey'
+            columns: ['product_id_b']
+            isOneToOne: false
+            referencedRelation: 'product'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'product_similarity_vote_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profile'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       profile: {
         Row: {
           bio: string | null
@@ -399,6 +451,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      fetch_similar_products: {
+        Args: { p_product_id: string }
+        Returns: {
+          agree_count: number
+          agreement_rate: number
+          allergens: string[]
+          avg_overall: number | null
+          base: string | null
+          brand: string | null
+          category: string
+          id: string
+          is_organic: boolean
+          my_vote: boolean | null
+          name: string
+          ratings_count: number
+          storage_path: string | null
+          total_count: number
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
       recompute_product_tags: {
         Args: { p_product_id: string }
@@ -442,6 +513,19 @@ export type Database = {
           tags: string[]
           total_count: number
           updated_at: string
+        }[]
+      }
+      search_similarity_candidates: {
+        Args: {
+          p_product_id: string
+          p_search: string
+        }
+        Returns: {
+          brand: string | null
+          category: string
+          id: string
+          name: string
+          storage_path: string | null
         }[]
       }
       show_limit: { Args: never; Returns: number }

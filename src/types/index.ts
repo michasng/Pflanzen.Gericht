@@ -17,6 +17,10 @@ export type ProductIngredientInsert = TablesInsert<'product_ingredient'>
 export type ProductNutrient = Tables<'product_nutrient'>
 export type ProductNutrientInsert = TablesInsert<'product_nutrient'>
 
+export type ProductSimilarityVote = Tables<'product_similarity_vote'>
+export type ProductSimilarityVoteInsert = TablesInsert<'product_similarity_vote'>
+export type ProductSimilarityVoteUpdate = TablesUpdate<'product_similarity_vote'>
+
 export type Rating = Tables<'rating'>
 export type RatingInsert = TablesInsert<'rating'>
 export type RatingUpdate = TablesUpdate<'rating'>
