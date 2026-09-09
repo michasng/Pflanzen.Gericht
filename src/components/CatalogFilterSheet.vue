@@ -2,6 +2,7 @@
 import { ref, watch, computed, type Ref } from 'vue'
 import { useCatalogStore } from '@/stores/catalog'
 import StarRatingInput from '@/components/StarRatingInput.vue'
+import SuggestionTextInput from '@/components/SuggestionTextInput.vue'
 import {
   BASES,
   baseToLabel,
@@ -302,13 +303,12 @@ const reset = (): void => {
           <section>
             <h3 class="text-sm font-medium text-gray-700 mb-2">Zutaten enthalten</h3>
             <div class="flex gap-2 mb-2">
-              <input
+              <SuggestionTextInput
                 v-model="includeIngredientInput"
-                type="text"
-                list="fs-ingredient-suggestions"
+                :suggestions="ingredientSuggestions"
                 placeholder="z. B. Hafer"
-                class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                @keydown.enter.prevent="addIncludeIngredient"
+                class="flex-1"
+                @enter="addIncludeIngredient"
               />
               <button
                 type="button"
@@ -339,13 +339,12 @@ const reset = (): void => {
           <section>
             <h3 class="text-sm font-medium text-gray-700 mb-2">Zutaten ausschließen</h3>
             <div class="flex gap-2 mb-2">
-              <input
+              <SuggestionTextInput
                 v-model="excludeIngredientInput"
-                type="text"
-                list="fs-ingredient-suggestions"
+                :suggestions="ingredientSuggestions"
                 placeholder="z. B. Palmöl"
-                class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                @keydown.enter.prevent="addExcludeIngredient"
+                class="flex-1"
+                @enter="addExcludeIngredient"
               />
               <button
                 type="button"
@@ -371,13 +370,6 @@ const reset = (): void => {
                 </button>
               </span>
             </div>
-            <datalist id="fs-ingredient-suggestions">
-              <option
-                v-for="ingredientName in ingredientSuggestions"
-                :key="ingredientName"
-                :value="ingredientName"
-              />
-            </datalist>
           </section>
 
           <!-- Price range -->

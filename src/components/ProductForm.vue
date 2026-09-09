@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import ImageUpload from '@/components/ImageUpload.vue'
 import ProductBarcodeScanner from '@/components/ProductBarcodeScanner.vue'
+import SuggestionTextInput from '@/components/SuggestionTextInput.vue'
 import type { IngredientComparator } from '@/config/ingredients'
 import {
   CATEGORIES,
@@ -423,13 +424,12 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
         Achtung: Die Zutatenanteile ergeben zusammen mehr als 100 %.
       </div>
       <div v-for="row in ingredientRows" :key="row.key" class="flex gap-2 mb-2">
-        <input
+        <SuggestionTextInput
           v-model="row.name"
-          type="text"
-          list="pf-ingredient-suggestions"
-          maxlength="80"
+          :suggestions="ingredientSuggestions"
+          :maxlength="80"
           placeholder="z. B. Hafer"
-          class="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          class="flex-1 min-w-0"
         />
         <select
           v-model="row.comparator"
@@ -464,9 +464,6 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
           ✕
         </button>
       </div>
-      <datalist id="pf-ingredient-suggestions">
-        <option v-for="suggestion in ingredientSuggestions" :key="suggestion" :value="suggestion" />
-      </datalist>
       <button
         type="button"
         class="text-sm text-primary-600 font-medium hover:text-primary-700 transition-colors"
@@ -529,13 +526,12 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
         Jeder Nährwert darf nur einmal eingetragen werden.
       </div>
       <div v-for="row in nutrientRows" :key="row.key" class="flex gap-2 mb-2">
-        <input
+        <SuggestionTextInput
           v-model="row.name"
-          type="text"
-          list="pf-nutrient-suggestions"
-          maxlength="80"
+          :suggestions="nutrientSuggestions"
+          :maxlength="80"
           placeholder="z. B. Ballaststoffe"
-          class="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          class="flex-1 min-w-0"
         />
         <input
           v-model="row.amountInput"
@@ -562,9 +558,6 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
           ✕
         </button>
       </div>
-      <datalist id="pf-nutrient-suggestions">
-        <option v-for="suggestion in nutrientSuggestions" :key="suggestion" :value="suggestion" />
-      </datalist>
       <button
         type="button"
         class="text-sm text-primary-600 font-medium hover:text-primary-700 transition-colors"
