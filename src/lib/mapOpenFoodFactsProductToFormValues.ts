@@ -4,9 +4,9 @@ import { MICROGRAMS_PER_UNIT, NutrientUnit } from '@/config/nutrients'
 import {
   OPEN_FOOD_FACTS_ALLERGEN_TAG_TO_ALLERGEN,
   OPEN_FOOD_FACTS_ENERGY_NUTRIMENT_FIELD,
-  OPEN_FOOD_FACTS_EXCLUDED_NUTRIMENT_FIELDS,
   OPEN_FOOD_FACTS_NUTRIENT_FIELD_TO_NAME,
   OPEN_FOOD_FACTS_ORGANIC_LABEL_TAG,
+  isOpenFoodFactsEstimatedNutrimentField,
 } from '@/config/openFoodFacts'
 import type { Allergen } from '@/config/taxonomy'
 import { BASIS_POINTS_PER_PERCENT } from '@/lib/basisPoints'
@@ -88,7 +88,7 @@ const mapNutrients = (
       ([field, amount]) =>
         field.endsWith(NUTRIMENT_FIELD_SUFFIX) &&
         !field.startsWith('energy-') &&
-        !OPEN_FOOD_FACTS_EXCLUDED_NUTRIMENT_FIELDS.has(field) &&
+        !isOpenFoodFactsEstimatedNutrimentField(field) &&
         typeof amount === 'number',
     )
     .map(([field, amount]) => {

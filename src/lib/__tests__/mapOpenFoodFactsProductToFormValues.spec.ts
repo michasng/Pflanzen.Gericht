@@ -108,15 +108,19 @@ describe('mapOpenFoodFactsProductToFormValues', () => {
     ])
   })
 
-  it('given fruits/vegetables estimates from ingredients are present, does not use them to populate the form', () => {
+  it('given nutriments contain an estimate segment, does not use them to populate the form', () => {
     const product: OpenFoodFactsProduct = {
       nutriments: {
         'fruits-vegetables-legumes-estimate-from-ingredients_100g': 20,
         'fruits-vegetables-nuts-estimate-from-ingredients_100g': 10,
+        'cocoa-estimate_100g': 5,
+        fiber_100g: 3,
       },
     }
 
-    expect(mapOpenFoodFactsProductToFormValues(product).nutrients).toBeUndefined()
+    expect(mapOpenFoodFactsProductToFormValues(product).nutrients).toEqual([
+      { name: 'Ballaststoffe', amountMicrograms: 3_000_000 },
+    ])
   })
 
   it('given additional nutriments use supported units, maps them with fallback english names', () => {
