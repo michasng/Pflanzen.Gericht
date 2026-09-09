@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import StarDisplay from '@/components/StarDisplay.vue'
 import TagList from '@/components/TagList.vue'
 import type { RatingWithDetails } from '@/services/catalog'
+import { getImageUrl } from '@/services/catalog'
 import { formatDate } from '@/lib/date'
 
 const props = defineProps<{ rating: RatingWithDetails; editable?: boolean }>()
@@ -61,6 +62,27 @@ const filledCriteria = computed(() => {
     <TagList :tags="rating.tags" class="mb-3" />
 
     <p v-if="rating.comment" class="text-sm text-gray-600 mb-3">{{ rating.comment }}</p>
+
+    <RouterLink
+      v-if="rating.original_product"
+      :to="{ name: 'product-detail', params: { id: rating.original_product.id } }"
+      class="flex items-center gap-2 mb-3 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+    >
+      <div class="w-9 h-9 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+        <img
+          v-if="rating.original_product.image"
+          :src="getImageUrl('product-images', rating.original_product.image.storage_path)"
+          alt=""
+          class="w-full h-full object-cover"
+        />
+      </div>
+      <div class="min-w-0">
+        <p class="text-xs text-gray-400">Original</p>
+        <p class="text-sm font-medium text-gray-800 truncate">
+          {{ rating.original_product.name }}
+        </p>
+      </div>
+    </RouterLink>
 
     <div v-if="editable" class="mt-3 pt-2 border-t border-gray-50">
       <RouterLink

@@ -285,6 +285,7 @@ export type Database = {
           id: string
           is_current: boolean
           nutrition: number | null
+          original_product_id: string | null
           overall: number
           product_id: string
           taste: number | null
@@ -300,6 +301,7 @@ export type Database = {
           id?: string
           is_current?: boolean
           nutrition?: number | null
+          original_product_id?: string | null
           overall: number
           product_id: string
           taste?: number | null
@@ -315,6 +317,7 @@ export type Database = {
           id?: string
           is_current?: boolean
           nutrition?: number | null
+          original_product_id?: string | null
           overall?: number
           product_id?: string
           taste?: number | null
@@ -323,6 +326,13 @@ export type Database = {
           value?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: 'rating_original_product_id_fkey'
+            columns: ['original_product_id']
+            isOneToOne: false
+            referencedRelation: 'product'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'rating_product_id_fkey'
             columns: ['product_id']
