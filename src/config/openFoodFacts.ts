@@ -26,7 +26,7 @@ export const OPEN_FOOD_FACTS_NUTRIENT_FIELD_TO_NAME: Record<string, string> = {
 
 // these nutriments are estimates derived from ingredients rather than measured
 // values, so they should not be used to populate the product form
-export const OPEN_FOOD_FACTS_EXCLUDED_NUTRIMENT_FIELDS = new Set([
+export const OPEN_FOOD_FACTS_EXCLUDED_NUTRIMENT_FIELDS: ReadonlySet<string> = new Set<string>([
   'fruits-vegetables-legumes-estimate-from-ingredients_100g',
   'fruits-vegetables-nuts-estimate-from-ingredients_100g',
 ])
