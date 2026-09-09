@@ -42,6 +42,16 @@ const {
   pickHighlighted,
 } = useSuggestionFilter(suggestions, query)
 
+const hasVisibleSuggestions = computed(() => isOpen.value && filteredSuggestions.value.length > 0)
+
+const activeDescendantId = computed(() => {
+  if (!hasVisibleSuggestions.value) return undefined
+  if (highlightedIndex.value < 0 || highlightedIndex.value >= filteredSuggestions.value.length) {
+    return undefined
+  }
+  return optionId(highlightedIndex.value)
+})
+
 const pick = (suggestion: string): void => {
   query.value = suggestion
   close()
@@ -68,8 +78,8 @@ const handleEnter = (event: KeyboardEvent): void => {
       role="combobox"
       aria-haspopup="listbox"
       :aria-expanded="isOpen"
-      :aria-controls="listboxId"
-      :aria-activedescendant="highlightedIndex !== -1 ? optionId(highlightedIndex) : undefined"
+      :aria-controls="hasVisibleSuggestions ? listboxId : undefined"
+      :aria-activedescendant="activeDescendantId"
       :placeholder="placeholder"
       :maxlength="maxlength"
       :required="required"
@@ -82,7 +92,7 @@ const handleEnter = (event: KeyboardEvent): void => {
       @keydown.esc="close"
     />
     <ul
-      v-if="isOpen && filteredSuggestions.length"
+      v-if="hasVisibleSuggestions"
       :id="listboxId"
       role="listbox"
       class="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg"
@@ -96,6 +106,7 @@ const handleEnter = (event: KeyboardEvent): void => {
       >
         <button
           type="button"
+          tabindex="-1"
           class="block w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
           :class="index === highlightedIndex ? 'bg-gray-50' : ''"
           @mousedown.prevent="pick(suggestion)"
