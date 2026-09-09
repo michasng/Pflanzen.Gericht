@@ -2,13 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import {
-  fetchProductDetail,
-  fetchProductReferences,
-  getImageUrl,
-  type ProductDetail,
-  type ProductReferences,
-} from '@/services/catalog'
+import { fetchProductDetail, getImageUrl, type ProductDetail } from '@/services/catalog'
 import { upsertPriceReport, deletePriceReport } from '@/services/prices'
 import { deleteProduct } from '@/services/products'
 import { formatEuroCents } from '@/lib/price'
@@ -35,8 +29,6 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const product = ref<ProductDetail | null>(null)
-const references = ref<ProductReferences | null>(null)
-const referenceError = ref<string | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 const notFound = ref(false)
@@ -151,16 +143,7 @@ onMounted(async () => {
   try {
     const data = await fetchProductDetail(id)
     if (!data) notFound.value = true
-    else {
-      product.value = data
-      references.value = null
-      referenceError.value = null
-      try {
-        references.value = await fetchProductReferences(id)
-      } catch {
-        referenceError.value = 'Vorbild-Bezüge konnten nicht geladen werden.'
-      }
-    }
+    else product.value = data
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Produkt konnte nicht geladen werden.'
   } finally {
@@ -315,59 +298,6 @@ onMounted(async () => {
             </div>
           </div>
         </template>
-      </div>
-
-      <AlertMessage v-if="referenceError" :message="referenceError" class="mb-4" />
-
-      <div
-        v-if="references && (references.imitates.length || references.imitatedBy.length)"
-        class="mb-4 bg-white rounded-2xl border border-gray-100 p-4"
-      >
-        <h2 class="text-base font-bold text-gray-900 mb-3">Vorbild</h2>
-        <div v-if="references.imitates.length" class="mb-3">
-          <p class="text-xs text-gray-400 mb-2">Ahmt vermutlich nach</p>
-          <ul class="space-y-2">
-            <li v-for="ref in references.imitates" :key="ref.product.id">
-              <RouterLink
-                :to="{ name: 'product-detail', params: { id: ref.product.id } }"
-                class="flex items-center gap-2 hover:text-primary-600 transition-colors"
-              >
-                <div class="w-9 h-9 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                  <img
-                    v-if="ref.product.image"
-                    :src="getImageUrl('product-images', ref.product.image.storage_path)"
-                    alt=""
-                    class="w-full h-full object-cover"
-                  />
-                </div>
-                <span class="text-sm text-gray-800 truncate flex-1">{{ ref.product.name }}</span>
-                <span class="text-xs text-gray-400 shrink-0"> {{ ref.mentionCount }}× </span>
-              </RouterLink>
-            </li>
-          </ul>
-        </div>
-        <div v-if="references.imitatedBy.length">
-          <p class="text-xs text-gray-400 mb-2">Wird vermutlich nachgeahmt von</p>
-          <ul class="space-y-2">
-            <li v-for="ref in references.imitatedBy" :key="ref.product.id">
-              <RouterLink
-                :to="{ name: 'product-detail', params: { id: ref.product.id } }"
-                class="flex items-center gap-2 hover:text-primary-600 transition-colors"
-              >
-                <div class="w-9 h-9 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                  <img
-                    v-if="ref.product.image"
-                    :src="getImageUrl('product-images', ref.product.image.storage_path)"
-                    alt=""
-                    class="w-full h-full object-cover"
-                  />
-                </div>
-                <span class="text-sm text-gray-800 truncate flex-1">{{ ref.product.name }}</span>
-                <span class="text-xs text-gray-400 shrink-0"> {{ ref.mentionCount }}× </span>
-              </RouterLink>
-            </li>
-          </ul>
-        </div>
       </div>
 
       <div class="mb-4 bg-white rounded-2xl border border-gray-100 p-4">

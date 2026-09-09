@@ -8,7 +8,6 @@ import type {
   RatingImage,
 } from '@/types'
 import { fetchPriceReports, type PriceReportWithProfile } from '@/services/prices'
-import { fetchProductSummariesWithImage, type OriginalProductCandidate } from '@/services/products'
 import type { SortOption } from '@/config/sortOptions'
 
 export type { SortOption }
@@ -41,7 +40,6 @@ export type RatingWithDetails = Rating & {
   profile: { username: string; display_name: string | null }
   tags: string[]
   images: RatingImage[]
-  original_product: OriginalProductCandidate | null
 }
 
 export type ProductDetail = Product & {
@@ -142,11 +140,6 @@ export const fetchProductDetail = async (id: string): Promise<ProductDetail | nu
   if (rErr) throw rErr
   if (!p) return null
 
-  const originalProductIds = [
-    ...new Set((rawRatings ?? []).map((r) => r.original_product_id).filter((x) => x !== null)),
-  ]
-  const originalProductsById = await fetchProductSummariesWithImage(originalProductIds)
-
   return {
     ...p,
     images: (p.images as ProductImage[] | null) ?? [],
@@ -157,9 +150,6 @@ export const fetchProductDetail = async (id: string): Promise<ProductDetail | nu
       profile: r.profile as { username: string; display_name: string | null },
       tags: ((r.tags ?? []) as { tag: string }[]).map((t) => t.tag),
       images: (r.images as RatingImage[] | null) ?? [],
-      original_product: r.original_product_id
-        ? (originalProductsById.get(r.original_product_id) ?? null)
-        : null,
     })),
     priceReports,
   }
@@ -168,78 +158,4 @@ export const fetchProductDetail = async (id: string): Promise<ProductDetail | nu
 export const getImageUrl = (bucket: string, path: string): string => {
   const { data } = supabase.storage.from(bucket).getPublicUrl(path)
   return data.publicUrl
-}
-
-export interface ProductReference {
-  product: OriginalProductCandidate
-  mentionCount: number
-}
-
-export interface ProductReferences {
-  imitates: ProductReference[]
-  imitatedBy: ProductReference[]
-}
-
-const countByKey = <T extends Record<string, unknown>>(
-  rows: T[],
-  key: keyof T,
-): Map<string, number> => {
-  const counts = new Map<string, number>()
-  for (const row of rows) {
-    const value = row[key]
-    if (typeof value !== 'string') continue
-    counts.set(value, (counts.get(value) ?? 0) + 1)
-  }
-  return counts
-}
-
-const toSortedProductReferences = (
-  mentionCountByProductId: Map<string, number>,
-  productsById: Map<string, OriginalProductCandidate>,
-): ProductReference[] =>
-  [...mentionCountByProductId.entries()]
-    .map(([productId, mentionCount]) => {
-      const product = productsById.get(productId)
-      return product ? { product, mentionCount } : null
-    })
-    .filter((reference): reference is ProductReference => reference !== null)
-    .sort((a, b) => b.mentionCount - a.mentionCount)
-
-export const fetchProductReferences = async (productId: string): Promise<ProductReferences> => {
-  const [
-    { data: imitatesRows, error: imitatesError },
-    { data: imitatedByRows, error: imitatedByError },
-  ] = await Promise.all([
-    supabase
-      .from('rating')
-      .select('original_product_id')
-      .eq('product_id', productId)
-      .eq('is_current', true)
-      .not('original_product_id', 'is', null),
-    supabase
-      .from('rating')
-      .select('product_id')
-      .eq('original_product_id', productId)
-      .eq('is_current', true),
-  ])
-  if (imitatesError) throw imitatesError
-  if (imitatedByError) throw imitatedByError
-
-  const imitatesCounts = countByKey(
-    (imitatesRows ?? []) as { original_product_id: string }[],
-    'original_product_id',
-  )
-  const imitatedByCounts = countByKey(
-    (imitatedByRows ?? []) as { product_id: string }[],
-    'product_id',
-  )
-
-  const productsById = await fetchProductSummariesWithImage([
-    ...new Set([...imitatesCounts.keys(), ...imitatedByCounts.keys()]),
-  ])
-
-  return {
-    imitates: toSortedProductReferences(imitatesCounts, productsById),
-    imitatedBy: toSortedProductReferences(imitatedByCounts, productsById),
-  }
 }
