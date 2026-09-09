@@ -18,7 +18,13 @@ export const OPEN_FOOD_FACTS_NUTRIENT_FIELD_TO_NAME: Record<string, string> = {
   'saturated-fat_100g': 'Gesättigte Fettsäuren',
   carbohydrates_100g: 'Kohlenhydrate',
   sugars_100g: 'Zucker',
+  'added-sugars_100g': 'Zugesetzter Zucker',
   fiber_100g: 'Ballaststoffe',
   proteins_100g: 'Eiweiß',
   salt_100g: 'Salz',
 }
+
+export const OPEN_FOOD_FACTS_ESTIMATE_NUTRIMENT_SEGMENT = 'estimate'
+
+export const isOpenFoodFactsEstimatedNutrimentField = (field: string): boolean =>
+  field.split(/[-_]/).includes(OPEN_FOOD_FACTS_ESTIMATE_NUTRIMENT_SEGMENT)

@@ -6,9 +6,11 @@ import {
   OPEN_FOOD_FACTS_ENERGY_NUTRIMENT_FIELD,
   OPEN_FOOD_FACTS_NUTRIENT_FIELD_TO_NAME,
   OPEN_FOOD_FACTS_ORGANIC_LABEL_TAG,
+  isOpenFoodFactsEstimatedNutrimentField,
 } from '@/config/openFoodFacts'
 import type { Allergen } from '@/config/taxonomy'
 import { BASIS_POINTS_PER_PERCENT } from '@/lib/basisPoints'
+import { sortNutrientsByHierarchy } from '@/lib/sortNutrientsByHierarchy'
 import type { ProductFormValues } from '@/types/productForm'
 import type { OpenFoodFactsProduct } from '@/types/openFoodFacts'
 
@@ -86,6 +88,7 @@ const mapNutrients = (
       ([field, amount]) =>
         field.endsWith(NUTRIMENT_FIELD_SUFFIX) &&
         !field.startsWith('energy-') &&
+        !isOpenFoodFactsEstimatedNutrimentField(field) &&
         typeof amount === 'number',
     )
     .map(([field, amount]) => {
@@ -112,7 +115,7 @@ const mapNutrients = (
       name: nutrient.name,
       amountMicrograms: Math.round(nutrient.amount * MICROGRAMS_PER_UNIT[nutrient.unit]),
     }))
-  return nutrients.length ? nutrients : undefined
+  return nutrients.length ? sortNutrientsByHierarchy(nutrients) : undefined
 }
 
 export const mapOpenFoodFactsProductToFormValues = (

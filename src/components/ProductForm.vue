@@ -30,6 +30,7 @@ import { parsePercentInputToBasisPoints } from '@/lib/parsePercentInputToBasisPo
 import { formatFractionBasisPointsAsPercent } from '@/lib/formatFractionBasisPointsAsPercent'
 import { parseNutrientAmountInputToMicrograms } from '@/lib/parseNutrientAmountInputToMicrograms'
 import { chooseNutrientDisplayUnit, formatNutrientAmountValue } from '@/lib/formatNutrientAmount'
+import { sortNutrientsByHierarchy } from '@/lib/sortNutrientsByHierarchy'
 import { hasDuplicateNames } from '@/lib/hasDuplicateNames'
 import { parseEnergyInputToJoules } from '@/lib/parseEnergyInputToJoules'
 import { useNameSuggestions } from '@/composables/useNameSuggestions'
@@ -172,7 +173,9 @@ const toNutrientRow = (nutrient: ProductFormNutrient): NutrientRow => {
   }
 }
 
-const nutrientRows = ref<NutrientRow[]>((props.initial?.nutrients ?? []).map(toNutrientRow))
+const nutrientRows = ref<NutrientRow[]>(
+  sortNutrientsByHierarchy(props.initial?.nutrients ?? []).map(toNutrientRow),
+)
 const { suggestions: nutrientSuggestions } = useNameSuggestions(fetchNutrientNameSuggestions)
 
 const addNutrientRow = (): void => {
@@ -259,7 +262,8 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
   if (values.allergens !== undefined) allergens.value = [...values.allergens]
   if (values.isOrganic !== undefined) isOrganic.value = values.isOrganic
   if (values.ingredients !== undefined) ingredientRows.value = values.ingredients.map(toRow)
-  if (values.nutrients !== undefined) nutrientRows.value = values.nutrients.map(toNutrientRow)
+  if (values.nutrients !== undefined)
+    nutrientRows.value = sortNutrientsByHierarchy(values.nutrients).map(toNutrientRow)
 }
 </script>
 
