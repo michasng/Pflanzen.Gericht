@@ -128,12 +128,8 @@ const handleSubmit = (): void => {
     </div>
 
     <div>
-      <p class="text-sm font-medium text-gray-700 mb-2">
-        Original <span class="text-gray-400 font-normal">(optional)</span>
-      </p>
-      <p class="text-xs text-gray-400 mb-2">
-        Welches Produkt ahmt dieses Produkt deiner Meinung nach nach?
-      </p>
+      <p class="text-sm font-medium text-gray-700 mb-2">Original</p>
+      <p class="text-xs text-gray-400 mb-2">Ahmt dieses Produkt ein anderes Produkt nach?</p>
       <OriginalProductPicker
         v-model="originalProduct"
         :product-id="productId"

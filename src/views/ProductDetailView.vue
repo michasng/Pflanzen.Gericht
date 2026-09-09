@@ -34,6 +34,7 @@ const authStore = useAuthStore()
 
 const product = ref<ProductDetail | null>(null)
 const references = ref<ProductReferences | null>(null)
+const referenceError = ref<string | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 const notFound = ref(false)
@@ -150,7 +151,13 @@ onMounted(async () => {
     if (!data) notFound.value = true
     else {
       product.value = data
-      references.value = await fetchProductReferences(id)
+      references.value = null
+      referenceError.value = null
+      try {
+        references.value = await fetchProductReferences(id)
+      } catch {
+        referenceError.value = 'Vorbild-Bezüge konnten nicht geladen werden.'
+      }
     }
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Produkt konnte nicht geladen werden.'
@@ -307,6 +314,8 @@ onMounted(async () => {
           </div>
         </template>
       </div>
+
+      <AlertMessage v-if="referenceError" :message="referenceError" class="mb-4" />
 
       <div
         v-if="references && (references.imitates.length || references.imitatedBy.length)"

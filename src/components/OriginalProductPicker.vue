@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onBeforeUnmount, ref, watch } from 'vue'
 import { searchOriginalProductCandidates, type OriginalProductCandidate } from '@/services/products'
 import { getImageUrl } from '@/services/catalog'
 
@@ -13,30 +13,62 @@ const emit = defineEmits<{
   'update:modelValue': [product: OriginalProductCandidate | null]
 }>()
 
+const MIN_QUERY_LENGTH = 2
+const SEARCH_DEBOUNCE_MS = 400
+const SEARCH_ERROR_MESSAGE = 'Originale konnten nicht geladen werden.'
+
 const query = ref('')
 const results = ref<OriginalProductCandidate[]>([])
+const searchError = ref<string | null>(null)
 let searchTimer: ReturnType<typeof setTimeout> | undefined
+let latestSearchId = 0
+
+const search = async (value: string, searchId: number): Promise<void> => {
+  try {
+    const nextResults = await searchOriginalProductCandidates(
+      value,
+      props.category,
+      props.productId,
+    )
+    if (searchId !== latestSearchId) return
+    results.value = nextResults
+  } catch {
+    if (searchId !== latestSearchId) return
+    results.value = []
+    searchError.value = SEARCH_ERROR_MESSAGE
+  }
+}
 
 watch(query, (value) => {
   clearTimeout(searchTimer)
-  if (value.trim().length < 2) {
+  const trimmedValue = value.trim()
+  latestSearchId += 1
+  searchError.value = null
+  if (trimmedValue.length < MIN_QUERY_LENGTH) {
     results.value = []
     return
   }
-  searchTimer = setTimeout(async () => {
-    results.value = await searchOriginalProductCandidates(value, props.category, props.productId)
-  }, 400)
+  const searchId = latestSearchId
+  searchTimer = setTimeout(() => {
+    void search(trimmedValue, searchId)
+  }, SEARCH_DEBOUNCE_MS)
 })
 
 const select = (product: OriginalProductCandidate): void => {
   query.value = ''
   results.value = []
+  searchError.value = null
   emit('update:modelValue', product)
 }
 
 const clear = (): void => {
+  searchError.value = null
   emit('update:modelValue', null)
 }
+
+onBeforeUnmount(() => {
+  clearTimeout(searchTimer)
+})
 </script>
 
 <template>
@@ -96,6 +128,7 @@ const clear = (): void => {
           </button>
         </li>
       </ul>
+      <p v-if="searchError" class="mt-2 text-xs text-red-500">{{ searchError }}</p>
     </div>
   </div>
 </template>
