@@ -4,6 +4,8 @@ import StarDisplay from '@/components/StarDisplay.vue'
 import TagList from '@/components/TagList.vue'
 import CardComponent from '@/components/primitives/CardComponent.vue'
 import ChipComponent from '@/components/primitives/ChipComponent.vue'
+import { ChipSize } from '@/components/primitives/ChipSize'
+import { ChipTone } from '@/components/primitives/ChipTone'
 import ProgressBar from '@/components/primitives/ProgressBar.vue'
 import { ProgressBarColor } from '@/components/primitives/ProgressBarColor'
 import type { RatingWithDetails } from '@/services/catalog'
@@ -41,7 +43,14 @@ const filledCriteria = computed(() => {
         </RouterLink>
         <span class="text-xs text-gray-400 ml-2">{{ formatDate(rating.created_at) }}</span>
       </div>
-      <ChipComponent v-if="!rating.is_current" class="shrink-0">Veraltet</ChipComponent>
+      <ChipComponent
+        v-if="!rating.is_current"
+        class="shrink-0"
+        :size="ChipSize.Compact"
+        :tone="ChipTone.Muted"
+      >
+        Veraltet
+      </ChipComponent>
     </div>
 
     <div class="flex items-center gap-2 mb-3">

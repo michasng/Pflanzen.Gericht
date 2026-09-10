@@ -351,13 +351,15 @@ const priceRangeLabel = computed(() => {
       </GridComponent>
 
       <div v-if="catalogStore.hasMore" class="mt-6 text-center">
-        <button
+        <ButtonComponent
+          ariaLabel="Mehr laden"
+          :variant="ButtonVariant.Outlined"
+          class="!px-8 !py-2.5 !rounded-xl text-sm font-medium transition-colors"
           :disabled="catalogStore.loading"
-          class="px-8 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-60 transition-colors"
           @click="catalogStore.load()"
         >
           {{ catalogStore.loading ? 'Lädt …' : 'Mehr laden' }}
-        </button>
+        </ButtonComponent>
       </div>
     </template>
 

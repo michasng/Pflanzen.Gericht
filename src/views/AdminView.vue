@@ -17,8 +17,12 @@ import type { ProductListItem } from '@/services/catalog'
 import StarDisplay from '@/components/StarDisplay.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
+import ButtonComponent from '@/components/primitives/ButtonComponent.vue'
+import { ButtonVariant } from '@/components/primitives/ButtonVariant'
 import CardComponent from '@/components/primitives/CardComponent.vue'
 import ChipComponent from '@/components/primitives/ChipComponent.vue'
+import { ChipSize } from '@/components/primitives/ChipSize'
+import { ChipTone } from '@/components/primitives/ChipTone'
 import { formatDate } from '@/lib/date'
 
 const activeTab = ref<'products' | 'ratings'>('products')
@@ -111,28 +115,32 @@ const handleDeleteRating = async (id: string): Promise<void> => {
 
     <template v-else>
       <div class="flex border-b border-gray-200 mb-4">
-        <button
-          class="flex-1 py-2.5 text-sm font-medium transition-colors"
+        <ButtonComponent
+          ariaLabel="Produkte"
+          :variant="ButtonVariant.Text"
+          class="!flex-1 !rounded-none !px-0 !py-2.5 !gap-0 text-sm font-medium transition-colors"
           :class="
             activeTab === 'products'
-              ? 'text-primary-600 border-b-2 border-primary-600 -mb-px'
-              : 'text-gray-500 hover:text-gray-700'
+              ? '!text-primary-600 border-b-2 border-primary-600 -mb-px'
+              : '!text-gray-500 hover:!text-gray-700'
           "
           @click="activeTab = 'products'"
         >
           Produkte ({{ products.length }})
-        </button>
-        <button
-          class="flex-1 py-2.5 text-sm font-medium transition-colors"
+        </ButtonComponent>
+        <ButtonComponent
+          ariaLabel="Bewertungen"
+          :variant="ButtonVariant.Text"
+          class="!flex-1 !rounded-none !px-0 !py-2.5 !gap-0 text-sm font-medium transition-colors"
           :class="
             activeTab === 'ratings'
-              ? 'text-primary-600 border-b-2 border-primary-600 -mb-px'
-              : 'text-gray-500 hover:text-gray-700'
+              ? '!text-primary-600 border-b-2 border-primary-600 -mb-px'
+              : '!text-gray-500 hover:!text-gray-700'
           "
           @click="activeTab = 'ratings'"
         >
           Bewertungen ({{ ratings.length }})
-        </button>
+        </ButtonComponent>
       </div>
 
       <template v-if="activeTab === 'products'">
@@ -165,26 +173,30 @@ const handleDeleteRating = async (id: string): Promise<void> => {
                   >
                     Bearbeiten
                   </RouterLink>
-                  <button
-                    class="text-xs text-red-500 font-medium hover:text-red-600 transition-colors disabled:opacity-50"
+                  <ButtonComponent
+                    ariaLabel="Produkt löschen"
+                    :variant="ButtonVariant.Text"
+                    class="!px-0 !py-0 !text-xs !text-red-500 font-medium transition-colors hover:!text-red-600"
                     :disabled="deletingId === product.id"
                     @click="handleDeleteProduct(product.id)"
                   >
                     {{ deletingId === product.id ? 'Löscht …' : 'Löschen' }}
-                  </button>
+                  </ButtonComponent>
                 </div>
               </div>
             </CardComponent>
           </li>
         </ul>
         <div v-if="productHasMore" class="mt-4 text-center">
-          <button
+          <ButtonComponent
+            ariaLabel="Mehr Produkte laden"
+            :variant="ButtonVariant.Outlined"
+            class="!px-6 !py-2 text-sm font-medium transition-colors"
             :disabled="loadingMore"
-            class="px-6 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-60 transition-colors"
             @click="loadMoreProducts"
           >
             {{ loadingMore ? 'Lädt …' : 'Mehr laden' }}
-          </button>
+          </ButtonComponent>
         </div>
       </template>
 
@@ -211,32 +223,43 @@ const handleDeleteRating = async (id: string): Promise<void> => {
                     >
                       {{ rating.profile.username }}
                     </RouterLink>
-                    <ChipComponent v-if="!rating.is_current" class="ml-2">Veraltet</ChipComponent>
+                    <ChipComponent
+                      v-if="!rating.is_current"
+                      class="ml-2 !px-1.5"
+                      :size="ChipSize.Compact"
+                      :tone="ChipTone.Muted"
+                    >
+                      Veraltet
+                    </ChipComponent>
                   </p>
                   <div class="flex items-center gap-2 mt-1">
                     <StarDisplay :value="rating.overall" />
                     <span class="text-xs text-gray-400">{{ formatDate(rating.created_at) }}</span>
                   </div>
                 </div>
-                <button
-                  class="shrink-0 text-xs text-red-500 font-medium hover:text-red-600 transition-colors disabled:opacity-50"
+                <ButtonComponent
+                  ariaLabel="Bewertung löschen"
+                  :variant="ButtonVariant.Text"
+                  class="shrink-0 !px-0 !py-0 !text-xs !text-red-500 font-medium transition-colors hover:!text-red-600"
                   :disabled="deletingId === rating.id"
                   @click="handleDeleteRating(rating.id)"
                 >
                   {{ deletingId === rating.id ? 'Löscht …' : 'Löschen' }}
-                </button>
+                </ButtonComponent>
               </div>
             </CardComponent>
           </li>
         </ul>
         <div v-if="ratingHasMore" class="mt-4 text-center">
-          <button
+          <ButtonComponent
+            ariaLabel="Mehr Bewertungen laden"
+            :variant="ButtonVariant.Outlined"
+            class="!px-6 !py-2 text-sm font-medium transition-colors"
             :disabled="loadingMore"
-            class="px-6 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-60 transition-colors"
             @click="loadMoreRatings"
           >
             {{ loadingMore ? 'Lädt …' : 'Mehr laden' }}
-          </button>
+          </ButtonComponent>
         </div>
       </template>
     </template>

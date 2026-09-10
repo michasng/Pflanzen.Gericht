@@ -3,6 +3,8 @@ import { ref, watch, computed, type Ref } from 'vue'
 import { useCatalogStore } from '@/stores/catalog'
 import StarRatingInput from '@/components/StarRatingInput.vue'
 import SuggestionTextInput from '@/components/SuggestionTextInput.vue'
+import ButtonComponent from '@/components/primitives/ButtonComponent.vue'
+import { ButtonVariant } from '@/components/primitives/ButtonVariant'
 import ChipComponent from '@/components/primitives/ChipComponent.vue'
 import { ChipTone } from '@/components/primitives/ChipTone'
 import { BASES, baseToLabel } from '@/config/bases'
@@ -191,12 +193,13 @@ const reset = (): void => {
 <template>
   <Teleport to="body">
     <div v-if="open">
-      <button
+      <ButtonComponent
         type="button"
-        class="fixed inset-0 z-40 bg-black/30"
-        aria-label="Filter schließen"
+        ariaLabel="Filter schließen"
+        :variant="ButtonVariant.Text"
+        class="!fixed !inset-0 !z-40 !rounded-none !bg-black/30 !p-0 !text-transparent hover:!bg-black/30 hover:!text-transparent"
         @click="emit('close')"
-      ></button>
+      />
 
       <div
         role="dialog"
@@ -208,14 +211,16 @@ const reset = (): void => {
           class="sticky top-0 z-10 flex items-center justify-between bg-white px-4 py-3 border-b border-gray-100"
         >
           <h2 class="text-base font-semibold text-gray-900">Filter</h2>
-          <button
+          <ButtonComponent
             type="button"
-            class="text-sm text-primary-600 font-medium"
+            ariaLabel="Zurücksetzen"
+            :variant="ButtonVariant.Text"
+            class="!px-0 !py-0 !text-sm font-medium"
             :disabled="!hasChanges && !catalogStore.activeFilterCount"
             @click="reset"
           >
             Zurücksetzen
-          </button>
+          </ButtonComponent>
         </div>
 
         <div class="px-4 py-4 space-y-6">
@@ -298,13 +303,15 @@ const reset = (): void => {
                 class="flex-1"
                 @enter="addIncludeIngredient"
               />
-              <button
+              <ButtonComponent
                 type="button"
-                class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                ariaLabel="Zutat hinzufügen"
+                :variant="ButtonVariant.Outlined"
+                class="!border-0 !bg-gray-100 !px-3 !py-2 text-sm font-medium transition-colors hover:!bg-gray-200"
                 @click="addIncludeIngredient"
               >
                 +
-              </button>
+              </ButtonComponent>
             </div>
             <div v-if="draftIncludeIngredients.length" class="flex flex-wrap gap-2">
               <ChipComponent
@@ -330,13 +337,15 @@ const reset = (): void => {
                 class="flex-1"
                 @enter="addExcludeIngredient"
               />
-              <button
+              <ButtonComponent
                 type="button"
-                class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                ariaLabel="Ausschlusszutat hinzufügen"
+                :variant="ButtonVariant.Outlined"
+                class="!border-0 !bg-gray-100 !px-3 !py-2 text-sm font-medium transition-colors hover:!bg-gray-200"
                 @click="addExcludeIngredient"
               >
                 +
-              </button>
+              </ButtonComponent>
             </div>
             <div v-if="draftExcludeIngredients.length" class="flex flex-wrap gap-2">
               <ChipComponent
@@ -407,13 +416,15 @@ const reset = (): void => {
         </div>
 
         <div class="sticky bottom-0 bg-white border-t border-gray-100 px-4 py-3">
-          <button
+          <ButtonComponent
             type="button"
-            class="w-full py-3 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors"
+            ariaLabel="Anwenden"
+            :variant="ButtonVariant.Filled"
+            class="!w-full !py-3 !rounded-xl text-sm font-semibold transition-colors"
             @click="apply"
           >
             Anwenden
-          </button>
+          </ButtonComponent>
         </div>
       </div>
     </div>
