@@ -70,7 +70,7 @@ const staticSizeClass = computed(() => {
         class="h-3 w-3"
         fill="none"
         stroke="currentColor"
-        stroke-width="1.5"
+        stroke-width="2"
         viewBox="0 0 24 24"
         aria-hidden="true"
       >

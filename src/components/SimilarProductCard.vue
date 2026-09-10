@@ -46,7 +46,7 @@ const voteLabel = computed(
       </div>
 
       <div class="mt-auto">
-        <ProgressBar class="mb-1.5" :percent="agreementPercent" />
+        <ProgressBar class="mb-1.5 h-2" :percent="agreementPercent" />
         <div class="flex items-center justify-between gap-2 text-xs text-gray-500">
           <span>{{ agreementPercent }} % Zustimmung</span>
           <span>{{ voteLabel }}</span>
