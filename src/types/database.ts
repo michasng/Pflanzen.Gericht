@@ -457,7 +457,12 @@ export type Database = {
           agree_count: number
           agreement_rate: number
           allergens: string[]
+          avg_appearance: number | null
+          avg_consistency: number | null
+          avg_nutrition: number | null
           avg_overall: number | null
+          avg_taste: number | null
+          avg_value: number | null
           base: string | null
           brand: string | null
           category: string

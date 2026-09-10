@@ -68,6 +68,11 @@ RETURNS TABLE (
   is_organic     boolean,
   allergens      text[],
   avg_overall    numeric,
+  avg_taste      numeric,
+  avg_consistency numeric,
+  avg_appearance numeric,
+  avg_nutrition  numeric,
+  avg_value      numeric,
   ratings_count  integer,
   storage_path   text,
   agree_count    bigint,
@@ -110,6 +115,11 @@ AS $$
     p.is_organic,
     p.allergens,
     p.avg_overall,
+    rating_averages.avg_taste,
+    rating_averages.avg_consistency,
+    rating_averages.avg_appearance,
+    rating_averages.avg_nutrition,
+    rating_averages.avg_value,
     p.ratings_count,
     (
       SELECT pi.storage_path
@@ -136,6 +146,16 @@ AS $$
     ) AS my_vote
   FROM pair_totals
   JOIN public.product p ON p.id = pair_totals.similar_product_id
+  LEFT JOIN LATERAL (
+    SELECT
+      avg(r.taste) AS avg_taste,
+      avg(r.consistency) AS avg_consistency,
+      avg(r.appearance) AS avg_appearance,
+      avg(r.nutrition) AS avg_nutrition,
+      avg(r.value) AS avg_value
+    FROM public.rating r
+    WHERE r.product_id = p.id AND r.is_current = true
+  ) AS rating_averages ON true
   ORDER BY agreement_rate DESC, pair_totals.total_count DESC, pair_totals.first_created_at ASC;
 $$;
 

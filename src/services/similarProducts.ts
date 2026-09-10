@@ -10,6 +10,11 @@ export interface SimilarProduct {
   is_organic: boolean
   allergens: string[]
   avg_overall: number | null
+  avg_taste: number | null
+  avg_consistency: number | null
+  avg_appearance: number | null
+  avg_nutrition: number | null
+  avg_value: number | null
   ratings_count: number
   storage_path: string | null
   agree_count: number
@@ -30,7 +35,12 @@ interface SimilarProductRow {
   agree_count: number
   agreement_rate: number
   allergens: string[] | null
+  avg_appearance: number | null
+  avg_consistency: number | null
+  avg_nutrition: number | null
   avg_overall: number | null
+  avg_taste: number | null
+  avg_value: number | null
   base: string | null
   brand: string | null
   category: string
@@ -77,7 +87,12 @@ export const createSimilarProductsService = (dependencies: SimilarProductsDepend
     return (data ?? []).map((row) => ({
       ...row,
       allergens: row.allergens ?? [],
+      avg_appearance: row.avg_appearance ?? null,
+      avg_consistency: row.avg_consistency ?? null,
+      avg_nutrition: row.avg_nutrition ?? null,
       avg_overall: row.avg_overall ?? null,
+      avg_taste: row.avg_taste ?? null,
+      avg_value: row.avg_value ?? null,
       base: row.base ?? null,
       brand: row.brand ?? null,
       my_vote: row.my_vote ?? null,
@@ -173,7 +188,12 @@ const getDefaultService = async (): Promise<ReturnType<typeof createSimilarProdu
           agree_count: row.agree_count,
           agreement_rate: row.agreement_rate,
           allergens: row.allergens,
+          avg_appearance: row.avg_appearance,
+          avg_consistency: row.avg_consistency,
+          avg_nutrition: row.avg_nutrition,
           avg_overall: row.avg_overall,
+          avg_taste: row.avg_taste,
+          avg_value: row.avg_value,
           base: row.base,
           brand: row.brand,
           category: row.category,

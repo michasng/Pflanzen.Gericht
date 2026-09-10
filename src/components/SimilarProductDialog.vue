@@ -33,6 +33,17 @@ const voteLabel = computed(() => {
   const voteCount = props.product?.total_count ?? 0
   return `${voteCount} Stimme${voteCount === 1 ? '' : 'n'}`
 })
+const criteriaAverages = computed(() => {
+  if (!props.product) return []
+
+  return [
+    { label: 'Geschmack', value: props.product.avg_taste },
+    { label: 'Konsistenz', value: props.product.avg_consistency },
+    { label: 'Aussehen', value: props.product.avg_appearance },
+    { label: 'Nährwerte', value: props.product.avg_nutrition },
+    { label: 'Preis-Leistung', value: props.product.avg_value },
+  ].filter((criterion): criterion is { label: string; value: number } => criterion.value !== null)
+})
 </script>
 
 <template>
@@ -102,6 +113,24 @@ const voteLabel = computed(() => {
                     {{ product.ratings_count }}
                     Bewertung{{ product.ratings_count === 1 ? '' : 'en' }}
                   </p>
+                </div>
+              </div>
+              <div v-if="criteriaAverages.length" class="mt-3 space-y-2">
+                <div
+                  v-for="criterion in criteriaAverages"
+                  :key="criterion.label"
+                  class="flex items-center gap-3"
+                >
+                  <span class="w-28 shrink-0 text-xs text-gray-500">{{ criterion.label }}</span>
+                  <div class="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
+                    <div
+                      class="h-full rounded-full bg-amber-400 transition-all"
+                      :style="{ width: `${(criterion.value / 5) * 100}%` }"
+                    />
+                  </div>
+                  <span class="w-6 text-right text-xs font-medium tabular-nums text-gray-600">
+                    {{ criterion.value.toFixed(1) }}
+                  </span>
                 </div>
               </div>
             </template>

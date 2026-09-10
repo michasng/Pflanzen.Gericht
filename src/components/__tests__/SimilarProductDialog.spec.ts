@@ -12,7 +12,12 @@ const similarProduct: SimilarProduct = {
   agree_count: 4,
   agreement_rate: 0.8,
   allergens: ['soy'],
+  avg_appearance: 3.8,
+  avg_consistency: 4.0,
+  avg_nutrition: 3.6,
   avg_overall: 4.2,
+  avg_taste: 4.4,
+  avg_value: 4.1,
   base: 'soy',
   brand: 'Marke',
   category: 'drink',
@@ -73,6 +78,33 @@ describe('SimilarProductDialog', () => {
       await wrapper.get('[aria-label="Daumen runter"]').trigger('click')
 
       expect(wrapper.emitted('vote')).toEqual([[true], [false]])
+    })
+  })
+
+  describe('given dimension averages are available', () => {
+    it('renders the aggregated dimension scores', () => {
+      const wrapper = mount(SimilarProductDialog, {
+        props: {
+          errorMessage: null,
+          isAdmin: false,
+          isBusy: false,
+          isLoggedIn: true,
+          loginRedirectPath: '/product/1',
+          product: similarProduct,
+        },
+        global: {
+          stubs: {
+            RouterLink: true,
+            Teleport: true,
+          },
+        },
+      })
+
+      expect(wrapper.text()).toContain('Geschmack')
+      expect(wrapper.text()).toContain('Konsistenz')
+      expect(wrapper.text()).toContain('Aussehen')
+      expect(wrapper.text()).toContain('Nährwerte')
+      expect(wrapper.text()).toContain('Preis-Leistung')
     })
   })
 

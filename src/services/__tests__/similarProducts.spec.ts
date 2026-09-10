@@ -23,6 +23,11 @@ const createService = () => {
     agreement_rate: number
     allergens: string[] | null
     avg_overall: number | null
+    avg_taste: number | null
+    avg_consistency: number | null
+    avg_appearance: number | null
+    avg_nutrition: number | null
+    avg_value: number | null
     base: string | null
     brand: string | null
     category: string
@@ -78,6 +83,11 @@ describe('createSimilarProductsService', () => {
         agreement_rate: 0.6,
         allergens: null,
         avg_overall: null,
+        avg_taste: null,
+        avg_consistency: null,
+        avg_appearance: null,
+        avg_nutrition: null,
+        avg_value: null,
         base: null,
         brand: null,
         category: 'Milchalternative',
@@ -100,6 +110,11 @@ describe('createSimilarProductsService', () => {
         agreement_rate: 0.6,
         allergens: [],
         avg_overall: null,
+        avg_taste: null,
+        avg_consistency: null,
+        avg_appearance: null,
+        avg_nutrition: null,
+        avg_value: null,
         base: null,
         brand: null,
         category: 'Milchalternative',
