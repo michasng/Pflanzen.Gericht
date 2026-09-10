@@ -134,6 +134,7 @@ const priceRangeLabel = computed(() => {
     <!-- Category pills -->
     <div class="flex gap-2 overflow-x-auto pb-2 mb-3 -mx-4 px-4 scrollbar-none">
       <ChipComponent
+        class="!px-4"
         interactive
         :selected="catalogStore.category === null"
         @click="selectCategory(null)"
@@ -143,6 +144,7 @@ const priceRangeLabel = computed(() => {
       <ChipComponent
         v-for="cat in CATEGORIES"
         :key="cat"
+        class="!px-4"
         interactive
         :selected="catalogStore.category === cat"
         @click="selectCategory(cat)"

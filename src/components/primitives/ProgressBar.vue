@@ -19,7 +19,13 @@ const colorClass = computed(() => COLOR_CLASSES[props.color])
 </script>
 
 <template>
-  <div class="h-1.5 overflow-hidden rounded-full bg-gray-100">
+  <div
+    class="h-1.5 overflow-hidden rounded-full bg-gray-100"
+    role="progressbar"
+    :aria-valuenow="clampedPercent"
+    :aria-valuemin="MIN_PERCENT"
+    :aria-valuemax="MAX_PERCENT"
+  >
     <div
       class="h-full rounded-full transition-all"
       :class="colorClass"

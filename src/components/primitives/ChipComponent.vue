@@ -64,9 +64,18 @@ const staticSizeClass = computed(() => {
       type="button"
       class="text-current opacity-70 hover:opacity-100"
       :aria-label="removeLabel"
-      @click="$emit('remove')"
+      @click.stop="$emit('remove')"
     >
-      ✕
+      <svg
+        class="h-3 w-3"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
     </button>
   </span>
 </template>
