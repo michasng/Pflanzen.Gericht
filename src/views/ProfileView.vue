@@ -16,6 +16,8 @@ import StarDisplay from '@/components/StarDisplay.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
 import TagList from '@/components/TagList.vue'
+import CardComponent from '@/components/ui/CardComponent.vue'
+import ChipComponent from '@/components/ui/ChipComponent.vue'
 import { categoryToLabel } from '@/config/categories'
 import { formatDate } from '@/lib/date'
 
@@ -247,61 +249,54 @@ onMounted(async () => {
         Noch keine Bewertungen abgegeben.
       </p>
       <ul v-else class="space-y-3">
-        <li
-          v-for="rating in ratings"
-          :key="rating.id"
-          class="bg-white rounded-xl border border-gray-100 p-4"
-        >
-          <div class="flex items-start justify-between gap-2 mb-2">
-            <RouterLink
-              :to="{ name: 'product-detail', params: { id: rating.product.id } }"
-              class="font-semibold text-gray-900 hover:text-primary-600 transition-colors leading-tight"
-            >
-              {{ rating.product.name }}
-            </RouterLink>
-            <span
-              class="shrink-0 text-xs px-2 py-0.5 rounded-full font-medium"
-              :class="
-                rating.is_current ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-400'
-              "
-            >
-              {{ rating.is_current ? 'Aktuell' : 'Veraltet' }}
-            </span>
-          </div>
+        <li v-for="rating in ratings" :key="rating.id">
+          <CardComponent>
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <RouterLink
+                :to="{ name: 'product-detail', params: { id: rating.product.id } }"
+                class="font-semibold text-gray-900 hover:text-primary-600 transition-colors leading-tight"
+              >
+                {{ rating.product.name }}
+              </RouterLink>
+              <ChipComponent class="shrink-0" :selected="rating.is_current">
+                {{ rating.is_current ? 'Aktuell' : 'Veraltet' }}
+              </ChipComponent>
+            </div>
 
-          <div class="flex items-center gap-2 mb-2">
-            <StarDisplay :value="rating.overall" />
-            <span class="text-xs text-gray-400">{{ formatDate(rating.created_at) }}</span>
-          </div>
+            <div class="flex items-center gap-2 mb-2">
+              <StarDisplay :value="rating.overall" />
+              <span class="text-xs text-gray-400">{{ formatDate(rating.created_at) }}</span>
+            </div>
 
-          <TagList :tags="rating.tags" class="mb-2" />
+            <TagList :tags="rating.tags" class="mb-2" />
 
-          <p v-if="rating.comment" class="text-sm text-gray-600 mb-2 line-clamp-2">
-            {{ rating.comment }}
-          </p>
+            <p v-if="rating.comment" class="text-sm text-gray-600 mb-2 line-clamp-2">
+              {{ rating.comment }}
+            </p>
 
-          <div class="flex gap-3 pt-2 border-t border-gray-50">
-            <RouterLink
-              v-if="rating.is_current"
-              :to="{ name: 'rating-edit', params: { ratingId: rating.id } }"
-              class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
-            >
-              Bearbeiten
-            </RouterLink>
-            <RouterLink
-              :to="{ name: 'rating-new', params: { id: rating.product.id } }"
-              class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
-            >
-              Neu bewerten
-            </RouterLink>
-            <button
-              class="text-xs text-red-500 font-medium hover:text-red-600 transition-colors disabled:opacity-50"
-              :disabled="deletingId === rating.id"
-              @click="handleDeleteRating(rating.id)"
-            >
-              {{ deletingId === rating.id ? 'Löscht …' : 'Löschen' }}
-            </button>
-          </div>
+            <div class="flex gap-3 pt-2 border-t border-gray-50">
+              <RouterLink
+                v-if="rating.is_current"
+                :to="{ name: 'rating-edit', params: { ratingId: rating.id } }"
+                class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
+              >
+                Bearbeiten
+              </RouterLink>
+              <RouterLink
+                :to="{ name: 'rating-new', params: { id: rating.product.id } }"
+                class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
+              >
+                Neu bewerten
+              </RouterLink>
+              <button
+                class="text-xs text-red-500 font-medium hover:text-red-600 transition-colors disabled:opacity-50"
+                :disabled="deletingId === rating.id"
+                @click="handleDeleteRating(rating.id)"
+              >
+                {{ deletingId === rating.id ? 'Löscht …' : 'Löschen' }}
+              </button>
+            </div>
+          </CardComponent>
         </li>
       </ul>
     </template>
@@ -311,37 +306,35 @@ onMounted(async () => {
         Noch keine Produkte hinzugefügt.
       </p>
       <ul v-else class="space-y-2">
-        <li
-          v-for="product in products"
-          :key="product.id"
-          class="bg-white rounded-xl border border-gray-100 p-4"
-        >
-          <RouterLink
-            :to="{ name: 'product-detail', params: { id: product.id } }"
-            class="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
-          >
-            {{ product.name }}
-          </RouterLink>
-          <p class="text-sm text-gray-500 mt-0.5">
-            {{ categoryToLabel(product.category) }}
-            <span v-if="product.brand"> · {{ product.brand }}</span>
-          </p>
-          <p class="text-xs text-gray-400 mt-1">{{ formatDate(product.created_at) }}</p>
-          <div class="flex gap-3 pt-2 border-t border-gray-50 mt-2">
+        <li v-for="product in products" :key="product.id">
+          <CardComponent>
             <RouterLink
-              :to="{ name: 'product-edit', params: { id: product.id } }"
-              class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
+              :to="{ name: 'product-detail', params: { id: product.id } }"
+              class="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
             >
-              Bearbeiten
+              {{ product.name }}
             </RouterLink>
-            <button
-              class="text-xs text-red-500 font-medium hover:text-red-600 transition-colors disabled:opacity-50"
-              :disabled="deletingProductId === product.id"
-              @click="handleDeleteProduct(product.id)"
-            >
-              {{ deletingProductId === product.id ? 'Löscht …' : 'Löschen' }}
-            </button>
-          </div>
+            <p class="text-sm text-gray-500 mt-0.5">
+              {{ categoryToLabel(product.category) }}
+              <span v-if="product.brand"> · {{ product.brand }}</span>
+            </p>
+            <p class="text-xs text-gray-400 mt-1">{{ formatDate(product.created_at) }}</p>
+            <div class="flex gap-3 pt-2 border-t border-gray-50 mt-2">
+              <RouterLink
+                :to="{ name: 'product-edit', params: { id: product.id } }"
+                class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
+              >
+                Bearbeiten
+              </RouterLink>
+              <button
+                class="text-xs text-red-500 font-medium hover:text-red-600 transition-colors disabled:opacity-50"
+                :disabled="deletingProductId === product.id"
+                @click="handleDeleteProduct(product.id)"
+              >
+                {{ deletingProductId === product.id ? 'Löscht …' : 'Löschen' }}
+              </button>
+            </div>
+          </CardComponent>
         </li>
       </ul>
     </template>

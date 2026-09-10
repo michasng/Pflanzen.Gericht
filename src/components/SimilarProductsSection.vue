@@ -5,6 +5,7 @@ import AlertMessage from '@/components/AlertMessage.vue'
 import AppLogo from '@/components/AppLogo.vue'
 import SimilarProductCard from '@/components/SimilarProductCard.vue'
 import SimilarProductDialog from '@/components/SimilarProductDialog.vue'
+import GridComponent from '@/components/ui/GridComponent.vue'
 import { getImageUrl } from '@/services/catalog'
 import {
   adminRemoveSimilarity,
@@ -349,17 +350,14 @@ onUnmounted(() => {
         </template>
       </p>
 
-      <div
-        v-else-if="similarProducts.length"
-        class="grid grid-cols-2 gap-3 transition-opacity duration-150 md:grid-cols-3 lg:grid-cols-4"
-      >
+      <GridComponent v-else-if="similarProducts.length" class="transition-opacity duration-150">
         <SimilarProductCard
           v-for="similarProduct in similarProducts"
           :key="similarProduct.id"
           :product="similarProduct"
           @select="activeSimilarProductId = similarProduct.id"
         />
-      </div>
+      </GridComponent>
     </div>
 
     <SimilarProductDialog
