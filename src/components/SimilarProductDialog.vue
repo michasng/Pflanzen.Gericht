@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppLogo from '@/components/AppLogo.vue'
+import ReviewScoreDimensions from '@/components/ReviewScoreDimensions.vue'
 import StarDisplay from '@/components/StarDisplay.vue'
 import { allergenToLabel } from '@/config/allergens'
 import { baseToLabel } from '@/config/bases'
@@ -115,24 +116,11 @@ const criteriaAverages = computed(() => {
                   </p>
                 </div>
               </div>
-              <div v-if="criteriaAverages.length" class="mt-3 space-y-2">
-                <div
-                  v-for="criterion in criteriaAverages"
-                  :key="criterion.label"
-                  class="flex items-center gap-3"
-                >
-                  <span class="w-28 shrink-0 text-xs text-gray-500">{{ criterion.label }}</span>
-                  <div class="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
-                    <div
-                      class="h-full rounded-full bg-amber-400 transition-all"
-                      :style="{ width: `${(criterion.value / 5) * 100}%` }"
-                    />
-                  </div>
-                  <span class="w-6 text-right text-xs font-medium tabular-nums text-gray-600">
-                    {{ criterion.value.toFixed(1) }}
-                  </span>
-                </div>
-              </div>
+              <ReviewScoreDimensions
+                v-if="criteriaAverages.length"
+                class="mt-3"
+                :scores="criteriaAverages"
+              />
             </template>
             <p v-else class="text-sm text-gray-400">Noch keine Bewertungen vorhanden.</p>
           </div>
