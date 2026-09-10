@@ -20,6 +20,24 @@ CREATE TRIGGER product_similarity_vote_updated_at
   BEFORE UPDATE ON public.product_similarity_vote
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
+CREATE FUNCTION public.product_similarity_vote_prevent_pair_change()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+BEGIN
+  IF NEW.product_id_a <> OLD.product_id_a OR NEW.product_id_b <> OLD.product_id_b THEN
+    RAISE EXCEPTION 'product similarity pair cannot be changed';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER product_similarity_vote_prevent_pair_change
+  BEFORE UPDATE ON public.product_similarity_vote
+  FOR EACH ROW EXECUTE FUNCTION public.product_similarity_vote_prevent_pair_change();
+
 CREATE FUNCTION public.product_similarity_cleanup_pair()
 RETURNS trigger
 LANGUAGE plpgsql
