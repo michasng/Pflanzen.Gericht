@@ -301,6 +301,8 @@ onMounted(async () => {
         </template>
       </div>
 
+      <SimilarProductsSection :product-id="product.id" />
+
       <div class="mb-4 bg-white rounded-2xl border border-gray-100 p-4">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-base font-bold text-gray-900">
@@ -376,8 +378,6 @@ onMounted(async () => {
           </li>
         </ul>
       </div>
-
-      <SimilarProductsSection :product-id="product.id" />
 
       <div class="mb-6 flex flex-col gap-2">
         <RouterLink
