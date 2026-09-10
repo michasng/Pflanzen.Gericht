@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import ChipComponent from '../ChipComponent.vue'
+import { ChipSize } from '../ChipSize'
+import { ChipTone } from '../ChipTone'
 
 describe('ChipComponent', () => {
   it('renders a span when not interactive', () => {
@@ -11,6 +13,11 @@ describe('ChipComponent', () => {
   it('renders a button when interactive', () => {
     const wrapper = mount(ChipComponent, { props: { interactive: true } })
     expect(wrapper.element.tagName).toBe('BUTTON')
+  })
+
+  it('exposes aria-pressed for interactive chips', () => {
+    const wrapper = mount(ChipComponent, { props: { interactive: true, selected: true } })
+    expect(wrapper.attributes('aria-pressed')).toBe('true')
   })
 
   it('applies the selected style when selected', () => {
@@ -31,6 +38,16 @@ describe('ChipComponent', () => {
   it('does not show a remove button by default', () => {
     const wrapper = mount(ChipComponent)
     expect(wrapper.find('button').exists()).toBe(false)
+  })
+
+  it('applies the danger tone style when set', () => {
+    const wrapper = mount(ChipComponent, { props: { tone: ChipTone.Danger } })
+    expect(wrapper.classes()).toContain('bg-red-50')
+  })
+
+  it('applies compact spacing when set', () => {
+    const wrapper = mount(ChipComponent, { props: { size: ChipSize.Compact } })
+    expect(wrapper.classes()).toContain('px-2')
   })
 
   it('emits remove when the remove button is clicked', async () => {

@@ -4,6 +4,7 @@ import { useCatalogStore } from '@/stores/catalog'
 import StarRatingInput from '@/components/StarRatingInput.vue'
 import SuggestionTextInput from '@/components/SuggestionTextInput.vue'
 import ChipComponent from '@/components/ui/ChipComponent.vue'
+import { ChipTone } from '@/components/ui/ChipTone'
 import { BASES, baseToLabel } from '@/config/bases'
 import { STORE_SUGGESTIONS } from '@/config/storeSuggestions'
 import { TAG_GROUPS } from '@/config/reviewTags'
@@ -341,6 +342,7 @@ const reset = (): void => {
               <ChipComponent
                 v-for="ingredientName in draftExcludeIngredients"
                 :key="ingredientName"
+                :tone="ChipTone.Danger"
                 removable
                 :remove-label="`${ingredientName} entfernen`"
                 @remove="removeExcludeIngredient(ingredientName)"

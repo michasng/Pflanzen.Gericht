@@ -4,10 +4,11 @@ import { useCatalogStore } from '@/stores/catalog'
 import { useCatalogUrlSync } from '@/composables/useCatalogUrlSync'
 import ProductCard from '@/components/ProductCard.vue'
 import CatalogFilterSheet from '@/components/CatalogFilterSheet.vue'
+import EmptyState from '@/components/EmptyState.vue'
 import ChipComponent from '@/components/ui/ChipComponent.vue'
 import BadgeComponent from '@/components/ui/BadgeComponent.vue'
-import EmptyState from '@/components/ui/EmptyState.vue'
 import GridComponent from '@/components/ui/GridComponent.vue'
+import { ChipTone } from '@/components/ui/ChipTone'
 import { CATEGORIES, categoryToLabel } from '@/config/categories'
 import { tagToLabel } from '@/config/reviewTags'
 import { allergenToLabel } from '@/config/allergens'
@@ -223,6 +224,7 @@ const priceRangeLabel = computed(() => {
       <ChipComponent
         v-for="ingredientName in catalogStore.excludeIngredients"
         :key="`exclude-${ingredientName}`"
+        :tone="ChipTone.Danger"
         removable
         :remove-label="`ohne ${ingredientName} entfernen`"
         @remove="removeExcludeIngredient(ingredientName)"
@@ -232,6 +234,7 @@ const priceRangeLabel = computed(() => {
       <ChipComponent
         v-for="allergen in catalogStore.excludeAllergens"
         :key="`allergen-${allergen}`"
+        :tone="ChipTone.Danger"
         removable
         :remove-label="`ohne ${allergenToLabel(allergen)} entfernen`"
         @remove="removeExcludeAllergen(allergen)"

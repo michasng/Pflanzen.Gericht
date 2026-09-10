@@ -18,6 +18,8 @@ import LoadingText from '@/components/LoadingText.vue'
 import TagList from '@/components/TagList.vue'
 import CardComponent from '@/components/ui/CardComponent.vue'
 import ChipComponent from '@/components/ui/ChipComponent.vue'
+import { ChipSize } from '@/components/ui/ChipSize'
+import { ChipTone } from '@/components/ui/ChipTone'
 import { categoryToLabel } from '@/config/categories'
 import { formatDate } from '@/lib/date'
 
@@ -258,7 +260,11 @@ onMounted(async () => {
               >
                 {{ rating.product.name }}
               </RouterLink>
-              <ChipComponent class="shrink-0" :selected="rating.is_current">
+              <ChipComponent
+                class="shrink-0"
+                :size="ChipSize.Compact"
+                :tone="rating.is_current ? ChipTone.Success : ChipTone.Muted"
+              >
                 {{ rating.is_current ? 'Aktuell' : 'Veraltet' }}
               </ChipComponent>
             </div>

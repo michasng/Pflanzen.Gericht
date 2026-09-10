@@ -7,13 +7,12 @@ const props = withDefaults(
     variant?: ButtonVariant
     type?: 'button' | 'submit'
     disabled?: boolean
-    ariaLabel?: string
+    ariaLabel: string
   }>(),
   {
     variant: ButtonVariant.Filled,
     type: 'button',
     disabled: false,
-    ariaLabel: undefined,
   },
 )
 
