@@ -5,9 +5,11 @@ import { useCatalogUrlSync } from '@/composables/useCatalogUrlSync'
 import ProductCard from '@/components/ProductCard.vue'
 import CatalogFilterSheet from '@/components/CatalogFilterSheet.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import ButtonComponent from '@/components/primitives/ButtonComponent.vue'
 import ChipComponent from '@/components/primitives/ChipComponent.vue'
 import BadgeComponent from '@/components/primitives/BadgeComponent.vue'
 import GridComponent from '@/components/primitives/GridComponent.vue'
+import { ButtonVariant } from '@/components/primitives/ButtonVariant'
 import { ChipTone } from '@/components/primitives/ChipTone'
 import { CATEGORIES, categoryToLabel } from '@/config/categories'
 import { tagToLabel } from '@/config/reviewTags'
@@ -155,9 +157,10 @@ const priceRangeLabel = computed(() => {
 
     <!-- Filter button + sort -->
     <div class="flex items-center gap-2 mb-3">
-      <button
-        type="button"
-        class="relative flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-primary-300 transition-colors"
+      <ButtonComponent
+        ariaLabel="Filter"
+        :variant="ButtonVariant.Outlined"
+        class="relative !px-3"
         @click="filterSheetOpen = true"
       >
         <svg
@@ -179,7 +182,7 @@ const priceRangeLabel = computed(() => {
           :count="catalogStore.activeFilterCount"
           class="absolute -top-1.5 -right-1.5"
         />
-      </button>
+      </ButtonComponent>
 
       <select
         class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
