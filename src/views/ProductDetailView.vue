@@ -8,10 +8,12 @@ import { deleteProduct } from '@/services/products'
 import { formatEuroCents } from '@/lib/price'
 import { toErrorMessage } from '@/lib/error'
 import StarDisplay from '@/components/StarDisplay.vue'
+import ReviewScoreDimensions from '@/components/ReviewScoreDimensions.vue'
 import RatingCard from '@/components/RatingCard.vue'
 import PriceReportForm, { type PriceReportFormValues } from '@/components/PriceReportForm.vue'
 import AppLogo from '@/components/AppLogo.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
+import SimilarProductsSection from '@/components/SimilarProductsSection.vue'
 import { categoryToLabel } from '@/config/categories'
 import { baseToLabel } from '@/config/bases'
 import { allergenToLabel } from '@/config/allergens'
@@ -283,22 +285,11 @@ onMounted(async () => {
             </div>
           </div>
 
-          <div v-if="criteriaAverages.length" class="space-y-2">
-            <div v-for="c in criteriaAverages" :key="c.label" class="flex items-center gap-3">
-              <span class="text-xs text-gray-500 w-28 shrink-0">{{ c.label }}</span>
-              <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  class="h-full bg-amber-400 rounded-full transition-all"
-                  :style="{ width: `${(c.value / 5) * 100}%` }"
-                />
-              </div>
-              <span class="text-xs font-medium text-gray-600 w-6 text-right tabular-nums">
-                {{ c.value.toFixed(1) }}
-              </span>
-            </div>
-          </div>
+          <ReviewScoreDimensions v-if="criteriaAverages.length" :scores="criteriaAverages" />
         </template>
       </div>
+
+      <SimilarProductsSection :product-id="product.id" />
 
       <div class="mb-4 bg-white rounded-2xl border border-gray-100 p-4">
         <div class="flex items-center justify-between mb-3">
