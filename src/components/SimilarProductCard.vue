@@ -11,10 +11,13 @@ const props = defineProps<{ product: SimilarProduct }>()
 
 defineEmits<{ select: [] }>()
 
+const AGREEMENT_ARIA_LABEL = 'Zustimmung'
+
 const coverUrl = computed(() =>
   props.product.storage_path ? getImageUrl('product-images', props.product.storage_path) : null,
 )
 const agreementPercent = computed(() => Math.round(props.product.agreement_rate * 100))
+const agreementValueText = computed(() => `${agreementPercent.value} % Zustimmung`)
 </script>
 
 <template>
@@ -46,7 +49,12 @@ const agreementPercent = computed(() => Math.round(props.product.agreement_rate 
       </div>
 
       <div class="mt-auto">
-        <ProgressBar class="h-2" :percent="agreementPercent" />
+        <ProgressBar
+          :aria-label="AGREEMENT_ARIA_LABEL"
+          :aria-valuetext="agreementValueText"
+          class="h-2"
+          :percent="agreementPercent"
+        />
       </div>
     </div>
   </ButtonComponent>
