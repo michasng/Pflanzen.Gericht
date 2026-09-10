@@ -5,7 +5,7 @@ import AlertMessage from '@/components/AlertMessage.vue'
 import AppLogo from '@/components/AppLogo.vue'
 import SimilarProductCard from '@/components/SimilarProductCard.vue'
 import SimilarProductDialog from '@/components/SimilarProductDialog.vue'
-import GridComponent from '@/components/ui/GridComponent.vue'
+import GridComponent from '@/components/primitives/GridComponent.vue'
 import { getImageUrl } from '@/services/catalog'
 import {
   adminRemoveSimilarity,

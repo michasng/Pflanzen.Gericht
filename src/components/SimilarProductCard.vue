@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import AppLogo from '@/components/AppLogo.vue'
-import ProgressBar from '@/components/ui/ProgressBar.vue'
+import ProgressBar from '@/components/primitives/ProgressBar.vue'
 import { getImageUrl } from '@/services/catalog'
 import type { SimilarProduct } from '@/services/similarProducts'
 

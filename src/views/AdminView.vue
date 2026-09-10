@@ -17,8 +17,8 @@ import type { ProductListItem } from '@/services/catalog'
 import StarDisplay from '@/components/StarDisplay.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
-import CardComponent from '@/components/ui/CardComponent.vue'
-import ChipComponent from '@/components/ui/ChipComponent.vue'
+import CardComponent from '@/components/primitives/CardComponent.vue'
+import ChipComponent from '@/components/primitives/ChipComponent.vue'
 import { formatDate } from '@/lib/date'
 
 const activeTab = ref<'products' | 'ratings'>('products')

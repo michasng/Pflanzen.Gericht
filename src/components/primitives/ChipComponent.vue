@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ChipSize } from '@/components/ui/ChipSize'
-import { ChipTone } from '@/components/ui/ChipTone'
+import { ChipSize } from '@/components/primitives/ChipSize'
+import { ChipTone } from '@/components/primitives/ChipTone'
 
 const props = withDefaults(
   defineProps<{

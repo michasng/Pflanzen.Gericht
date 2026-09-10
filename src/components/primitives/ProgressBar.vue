@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ProgressBarColor } from '@/components/ui/ProgressBarColor'
+import { ProgressBarColor } from '@/components/primitives/ProgressBarColor'
 
 const MIN_PERCENT = 0
 const MAX_PERCENT = 100

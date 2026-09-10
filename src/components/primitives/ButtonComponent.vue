@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ButtonVariant } from '@/components/ui/ButtonVariant'
+import { ButtonVariant } from '@/components/primitives/ButtonVariant'
 
 const props = withDefaults(
   defineProps<{

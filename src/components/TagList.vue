@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import ChipComponent from '@/components/ui/ChipComponent.vue'
-import { ChipSize } from '@/components/ui/ChipSize'
+import ChipComponent from '@/components/primitives/ChipComponent.vue'
+import { ChipSize } from '@/components/primitives/ChipSize'
 import { tagToLabel } from '@/config/reviewTags'
 
 defineProps<{ tags: string[] }>()
