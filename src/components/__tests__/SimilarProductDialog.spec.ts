@@ -108,6 +108,31 @@ describe('SimilarProductDialog', () => {
     })
   })
 
+  describe('given the product link is clicked', () => {
+    it('does not close the dialog', async () => {
+      const wrapper = mount(SimilarProductDialog, {
+        props: {
+          errorMessage: null,
+          isAdmin: false,
+          isBusy: false,
+          isLoggedIn: true,
+          loginRedirectPath: '/product/1',
+          product: similarProduct,
+        },
+        global: {
+          stubs: {
+            RouterLink: true,
+            Teleport: true,
+          },
+        },
+      })
+
+      await wrapper.find('router-link-stub').trigger('click')
+
+      expect(wrapper.emitted('close')).toBeUndefined()
+    })
+  })
+
   describe('given the admin controls are visible', () => {
     it('emits remove when the similarity is deleted', async () => {
       const wrapper = mount(SimilarProductDialog, {

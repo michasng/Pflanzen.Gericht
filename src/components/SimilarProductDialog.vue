@@ -80,7 +80,6 @@ const criteriaAverages = computed(() => {
           <RouterLink
             :to="{ name: 'product-detail', params: { id: product.id } }"
             class="flex items-center gap-3 rounded-xl border border-gray-100 p-3 hover:bg-gray-50"
-            @click="$emit('close')"
           >
             <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-gray-50">
               <img
