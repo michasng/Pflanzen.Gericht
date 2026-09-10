@@ -1,14 +1,18 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useCatalogStore } from '@/stores/catalog'
 import { useCatalogUrlSync } from '@/composables/useCatalogUrlSync'
 import ProductCard from '@/components/ProductCard.vue'
 import CatalogFilterSheet from '@/components/CatalogFilterSheet.vue'
-import AppLogo from '@/components/AppLogo.vue'
+import ChipComponent from '@/components/ui/ChipComponent.vue'
+import BadgeComponent from '@/components/ui/BadgeComponent.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
+import GridComponent from '@/components/ui/GridComponent.vue'
 import { CATEGORIES, categoryToLabel } from '@/config/categories'
 import { tagToLabel } from '@/config/reviewTags'
 import { allergenToLabel } from '@/config/allergens'
 import { SORT_OPTIONS, SORT_OPTION_LABELS, type SortOption } from '@/config/sortOptions'
+import { formatEuroCents } from '@/lib/price'
 
 const catalogStore = useCatalogStore()
 useCatalogUrlSync()
@@ -88,6 +92,16 @@ const clearPrice = (): void => {
   catalogStore.setMaxPriceCents(null)
   catalogStore.load(true)
 }
+
+const priceRangeLabel = computed(() => {
+  const { minPriceCents, maxPriceCents } = catalogStore
+  if (minPriceCents != null && maxPriceCents != null) {
+    return `${formatEuroCents(minPriceCents)} – ${formatEuroCents(maxPriceCents)}`
+  }
+  if (minPriceCents != null) return `ab ${formatEuroCents(minPriceCents)}`
+  if (maxPriceCents != null) return `bis ${formatEuroCents(maxPriceCents)}`
+  return null
+})
 </script>
 
 <template>
@@ -118,30 +132,22 @@ const clearPrice = (): void => {
 
     <!-- Category pills -->
     <div class="flex gap-2 overflow-x-auto pb-2 mb-3 -mx-4 px-4 scrollbar-none">
-      <button
-        class="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
-        :class="
-          catalogStore.category === null
-            ? 'bg-primary-600 text-white'
-            : 'bg-white border border-gray-200 text-gray-600 hover:border-primary-300'
-        "
+      <ChipComponent
+        interactive
+        :selected="catalogStore.category === null"
         @click="selectCategory(null)"
       >
         Alle
-      </button>
-      <button
+      </ChipComponent>
+      <ChipComponent
         v-for="cat in CATEGORIES"
         :key="cat"
-        class="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
-        :class="
-          catalogStore.category === cat
-            ? 'bg-primary-600 text-white'
-            : 'bg-white border border-gray-200 text-gray-600 hover:border-primary-300'
-        "
+        interactive
+        :selected="catalogStore.category === cat"
         @click="selectCategory(cat)"
       >
         {{ categoryToLabel(cat) }}
-      </button>
+      </ChipComponent>
     </div>
 
     <!-- Filter button + sort -->
@@ -166,11 +172,10 @@ const clearPrice = (): void => {
           />
         </svg>
         Filter
-        <span
-          v-if="catalogStore.activeFilterCount > 0"
-          class="absolute -top-1.5 -right-1.5 min-w-[1.1rem] h-[1.1rem] flex items-center justify-center rounded-full bg-primary-600 text-white text-[10px] font-bold px-0.5"
-          >{{ catalogStore.activeFilterCount }}</span
-        >
+        <BadgeComponent
+          :count="catalogStore.activeFilterCount"
+          class="absolute -top-1.5 -right-1.5"
+        />
       </button>
 
       <select
@@ -186,190 +191,89 @@ const clearPrice = (): void => {
 
     <!-- Active filter chips -->
     <div v-if="catalogStore.activeFilterCount > 0" class="flex flex-wrap gap-2 mb-3">
-      <span
+      <ChipComponent
         v-if="catalogStore.minRating"
-        class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
+        selected
+        removable
+        remove-label="Min-Bewertung entfernen"
+        @remove="clearMinRating"
       >
-        ≥ {{ catalogStore.minRating }} ★
-        <button type="button" aria-label="Min-Bewertung entfernen" @click="clearMinRating">
-          <svg
-            class="w-3 h-3"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </span>
-      <span
+        &ge; {{ catalogStore.minRating }} &#9733;
+      </ChipComponent>
+      <ChipComponent
         v-for="tag in catalogStore.tags"
         :key="tag"
-        class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
+        selected
+        removable
+        :remove-label="`${tagToLabel(tag)} entfernen`"
+        @remove="removeTag(tag)"
       >
         {{ tagToLabel(tag) }}
-        <button type="button" :aria-label="`${tagToLabel(tag)} entfernen`" @click="removeTag(tag)">
-          <svg
-            class="w-3 h-3"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </span>
-      <span
+      </ChipComponent>
+      <ChipComponent
         v-for="ingredientName in catalogStore.includeIngredients"
         :key="`include-${ingredientName}`"
-        class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
+        selected
+        removable
+        :remove-label="`${ingredientName} entfernen`"
+        @remove="removeIncludeIngredient(ingredientName)"
       >
         {{ ingredientName }}
-        <button
-          type="button"
-          :aria-label="`${ingredientName} entfernen`"
-          @click="removeIncludeIngredient(ingredientName)"
-        >
-          <svg
-            class="w-3 h-3"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </span>
-      <span
+      </ChipComponent>
+      <ChipComponent
         v-for="ingredientName in catalogStore.excludeIngredients"
         :key="`exclude-${ingredientName}`"
-        class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full"
+        removable
+        :remove-label="`ohne ${ingredientName} entfernen`"
+        @remove="removeExcludeIngredient(ingredientName)"
       >
         ohne {{ ingredientName }}
-        <button
-          type="button"
-          :aria-label="`ohne ${ingredientName} entfernen`"
-          @click="removeExcludeIngredient(ingredientName)"
-        >
-          <svg
-            class="w-3 h-3"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </span>
-      <span
+      </ChipComponent>
+      <ChipComponent
         v-for="allergen in catalogStore.excludeAllergens"
         :key="`allergen-${allergen}`"
-        class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full"
+        removable
+        :remove-label="`ohne ${allergenToLabel(allergen)} entfernen`"
+        @remove="removeExcludeAllergen(allergen)"
       >
         ohne {{ allergenToLabel(allergen) }}
-        <button
-          type="button"
-          :aria-label="`ohne ${allergenToLabel(allergen)} entfernen`"
-          @click="removeExcludeAllergen(allergen)"
-        >
-          <svg
-            class="w-3 h-3"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </span>
-      <span
+      </ChipComponent>
+      <ChipComponent
         v-if="catalogStore.organic"
-        class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
+        selected
+        removable
+        remove-label="Bio-Filter entfernen"
+        @remove="clearOrganic"
       >
         Bio
-        <button type="button" aria-label="Bio-Filter entfernen" @click="clearOrganic">
-          <svg
-            class="w-3 h-3"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </span>
-      <span
+      </ChipComponent>
+      <ChipComponent
         v-if="catalogStore.base"
-        class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
+        selected
+        removable
+        remove-label="Basis entfernen"
+        @remove="clearBase"
       >
         {{ catalogStore.base }}
-        <button type="button" aria-label="Basis entfernen" @click="clearBase">
-          <svg
-            class="w-3 h-3"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </span>
-      <span
+      </ChipComponent>
+      <ChipComponent
         v-if="catalogStore.store"
-        class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
+        selected
+        removable
+        remove-label="Geschäft entfernen"
+        @remove="clearStore"
       >
         {{ catalogStore.store }}{{ catalogStore.city ? ` · ${catalogStore.city}` : '' }}
-        <button type="button" aria-label="Geschäft entfernen" @click="clearStore">
-          <svg
-            class="w-3 h-3"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </span>
-      <span
-        v-if="catalogStore.minPriceCents != null || catalogStore.maxPriceCents != null"
-        class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
+      </ChipComponent>
+      <ChipComponent
+        v-if="priceRangeLabel"
+        selected
+        removable
+        remove-label="Preisfilter entfernen"
+        @remove="clearPrice"
       >
-        {{
-          catalogStore.minPriceCents != null && catalogStore.maxPriceCents != null
-            ? `${(catalogStore.minPriceCents / 100).toFixed(2).replace('.', ',')} – ${(catalogStore.maxPriceCents / 100).toFixed(2).replace('.', ',')} €`
-            : catalogStore.minPriceCents != null
-              ? `ab ${(catalogStore.minPriceCents / 100).toFixed(2).replace('.', ',')} €`
-              : `bis ${(catalogStore.maxPriceCents! / 100).toFixed(2).replace('.', ',')} €`
-        }}
-        <button type="button" aria-label="Preisfilter entfernen" @click="clearPrice">
-          <svg
-            class="w-3 h-3"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </span>
+        {{ priceRangeLabel }}
+      </ChipComponent>
     </div>
 
     <!-- Result count -->
@@ -396,39 +300,39 @@ const clearPrice = (): void => {
     </div>
 
     <template v-else-if="catalogStore.products.length === 0 && !catalogStore.loading">
-      <div class="flex flex-col items-center justify-center py-20 text-center">
-        <AppLogo class="w-20 h-20 text-gray-200 mb-4" />
-        <p class="text-gray-600 font-semibold text-lg mb-1">Keine Produkte gefunden</p>
-        <p class="text-gray-400 text-sm mb-6">
-          {{
-            catalogStore.search || catalogStore.category || catalogStore.activeFilterCount
-              ? 'Versuche einen anderen Filter.'
-              : 'Sei der Erste und füge ein veganes Produkt hinzu!'
-          }}
-        </p>
-        <RouterLink
-          v-if="!catalogStore.search && !catalogStore.category && !catalogStore.activeFilterCount"
-          :to="{ name: 'product-new' }"
-          class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors"
-        >
-          <svg
-            class="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
+      <EmptyState
+        title="Keine Produkte gefunden"
+        :description="
+          catalogStore.search || catalogStore.category || catalogStore.activeFilterCount
+            ? 'Versuche einen anderen Filter.'
+            : 'Sei der Erste und füge ein veganes Produkt hinzu!'
+        "
+      >
+        <template #action>
+          <RouterLink
+            v-if="!catalogStore.search && !catalogStore.category && !catalogStore.activeFilterCount"
+            :to="{ name: 'product-new' }"
+            class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors"
           >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Produkt hinzufügen
-        </RouterLink>
-      </div>
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Produkt hinzufügen
+          </RouterLink>
+        </template>
+      </EmptyState>
     </template>
 
     <template v-else>
-      <div
-        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 transition-opacity duration-150"
+      <GridComponent
+        class="transition-opacity duration-150"
         :class="{ 'opacity-50 pointer-events-none': catalogStore.loading }"
       >
         <ProductCard
@@ -436,7 +340,7 @@ const clearPrice = (): void => {
           :key="product.id"
           :product="product"
         />
-      </div>
+      </GridComponent>
 
       <div v-if="catalogStore.hasMore" class="mt-6 text-center">
         <button

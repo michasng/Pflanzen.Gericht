@@ -135,12 +135,11 @@ describe('fetchOpenFoodFactsProductImage', () => {
   })
 
   it('given the image request succeeds, returns a file named after the url path', async () => {
-    const imageBlob = new Blob(['data'], { type: 'image/jpeg' })
     vi.stubGlobal(
       'fetch',
       vi.fn<typeof fetch>(() =>
         Promise.resolve(
-          new Response(imageBlob, {
+          new Response(new TextEncoder().encode('data'), {
             status: 200,
             headers: { 'Content-Type': 'image/jpeg' },
           }),

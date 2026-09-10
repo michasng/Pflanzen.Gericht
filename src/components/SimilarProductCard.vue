@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import AppLogo from '@/components/AppLogo.vue'
+import ProgressBar from '@/components/ui/ProgressBar.vue'
 import { getImageUrl } from '@/services/catalog'
 import type { SimilarProduct } from '@/services/similarProducts'
 
@@ -45,12 +46,7 @@ const voteLabel = computed(
       </div>
 
       <div class="mt-auto">
-        <div class="mb-1.5 h-2 overflow-hidden rounded-full bg-gray-100">
-          <div
-            class="h-full rounded-full bg-primary-500 transition-all"
-            :style="{ width: `${agreementPercent}%` }"
-          />
-        </div>
+        <ProgressBar class="mb-1.5" :percent="agreementPercent" />
         <div class="flex items-center justify-between gap-2 text-xs text-gray-500">
           <span>{{ agreementPercent }} % Zustimmung</span>
           <span>{{ voteLabel }}</span>

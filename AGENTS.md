@@ -40,6 +40,8 @@ Write out their names when discussing their trade-offs.
 - Vue 3 `<script setup>` with the Composition API and typed props/emits
 - Naming: PascalCase components, `use`-prefixed composables, `@/` import alias
 - Formatting and lint enforced by oxfmt/oxlint/eslint
+- Prefer reusable primitive components (`src/components/ui/`, e.g. buttons, cards, chips) over inlining native elements; encapsulate styling in the component, expose configuration via props/slots
+- Non-native Vue components require more than one word in the name; a one-word component name must be postfixed with "Component" (e.g. `CardComponent.vue`). Multi-word names don't need the suffix (e.g. `ProgressBar.vue`)
 
 ## Architecture
 

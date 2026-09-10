@@ -3,6 +3,7 @@ import { ref, watch, computed, type Ref } from 'vue'
 import { useCatalogStore } from '@/stores/catalog'
 import StarRatingInput from '@/components/StarRatingInput.vue'
 import SuggestionTextInput from '@/components/SuggestionTextInput.vue'
+import ChipComponent from '@/components/ui/ChipComponent.vue'
 import { BASES, baseToLabel } from '@/config/bases'
 import { STORE_SUGGESTIONS } from '@/config/storeSuggestions'
 import { TAG_GROUPS } from '@/config/reviewTags'
@@ -234,20 +235,15 @@ const reset = (): void => {
             <div v-for="group in TAG_GROUPS" :key="group.label" class="mb-3 last:mb-0">
               <h4 class="text-xs font-medium text-gray-500 mb-1.5">{{ group.label }}</h4>
               <div class="flex flex-wrap gap-2">
-                <button
+                <ChipComponent
                   v-for="(tagLabel, tag) in group.tags"
                   :key="tag"
-                  type="button"
-                  class="px-3 py-1.5 rounded-full text-sm font-medium border transition-colors"
-                  :class="
-                    draftTags.includes(tag)
-                      ? 'bg-primary-600 text-white border-primary-600'
-                      : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300'
-                  "
+                  interactive
+                  :selected="draftTags.includes(tag)"
                   @click="toggleTag(tag)"
                 >
                   {{ tagLabel }}
-                </button>
+                </ChipComponent>
               </div>
             </div>
           </section>
@@ -278,20 +274,15 @@ const reset = (): void => {
           <section>
             <h3 class="text-sm font-medium text-gray-700 mb-2">Allergene ausschließen</h3>
             <div class="flex flex-wrap gap-2">
-              <button
+              <ChipComponent
                 v-for="allergen in ALLERGENS"
                 :key="allergen"
-                type="button"
-                class="px-3 py-1.5 rounded-full text-sm font-medium border transition-colors"
-                :class="
-                  draftExcludeAllergens.includes(allergen)
-                    ? 'bg-primary-600 text-white border-primary-600'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300'
-                "
+                interactive
+                :selected="draftExcludeAllergens.includes(allergen)"
                 @click="toggleAllergen(allergen)"
               >
                 {{ allergenToLabel(allergen) }}
-              </button>
+              </ChipComponent>
             </div>
           </section>
 
@@ -315,20 +306,16 @@ const reset = (): void => {
               </button>
             </div>
             <div v-if="draftIncludeIngredients.length" class="flex flex-wrap gap-2">
-              <span
+              <ChipComponent
                 v-for="ingredientName in draftIncludeIngredients"
                 :key="ingredientName"
-                class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full"
+                selected
+                removable
+                :remove-label="`${ingredientName} entfernen`"
+                @remove="removeIncludeIngredient(ingredientName)"
               >
                 {{ ingredientName }}
-                <button
-                  type="button"
-                  :aria-label="`${ingredientName} entfernen`"
-                  @click="removeIncludeIngredient(ingredientName)"
-                >
-                  ✕
-                </button>
-              </span>
+              </ChipComponent>
             </div>
           </section>
 
@@ -351,20 +338,15 @@ const reset = (): void => {
               </button>
             </div>
             <div v-if="draftExcludeIngredients.length" class="flex flex-wrap gap-2">
-              <span
+              <ChipComponent
                 v-for="ingredientName in draftExcludeIngredients"
                 :key="ingredientName"
-                class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full"
+                removable
+                :remove-label="`${ingredientName} entfernen`"
+                @remove="removeExcludeIngredient(ingredientName)"
               >
                 {{ ingredientName }}
-                <button
-                  type="button"
-                  :aria-label="`${ingredientName} entfernen`"
-                  @click="removeExcludeIngredient(ingredientName)"
-                >
-                  ✕
-                </button>
-              </span>
+              </ChipComponent>
             </div>
           </section>
 
