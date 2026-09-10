@@ -12,8 +12,7 @@ import type { Product } from '@/types'
 import StarDisplay from '@/components/StarDisplay.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import TagList from '@/components/TagList.vue'
-import ButtonComponent from '@/components/primitives/ButtonComponent.vue'
-import { ButtonVariant } from '@/components/primitives/ButtonVariant'
+import TabButton from '@/components/primitives/TabButton.vue'
 import CardComponent from '@/components/primitives/CardComponent.vue'
 import { categoryToLabel } from '@/config/categories'
 import { toErrorMessage } from '@/lib/error'
@@ -100,32 +99,20 @@ onMounted(async () => {
       </div>
 
       <div class="flex border-b border-gray-200 -mx-4 px-4">
-        <ButtonComponent
+        <TabButton
           ariaLabel="Bewertungen"
-          :variant="ButtonVariant.Text"
-          class="!flex-1 !rounded-none !px-0 !py-2.5 !gap-0 text-sm font-medium transition-colors"
-          :class="
-            activeTab === 'ratings'
-              ? '!text-primary-600 border-b-2 border-primary-600 -mb-px'
-              : '!text-gray-500 hover:!text-gray-700'
-          "
+          :active="activeTab === 'ratings'"
           @click="activeTab = 'ratings'"
         >
           Bewertungen
-        </ButtonComponent>
-        <ButtonComponent
+        </TabButton>
+        <TabButton
           ariaLabel="Produkte"
-          :variant="ButtonVariant.Text"
-          class="!flex-1 !rounded-none !px-0 !py-2.5 !gap-0 text-sm font-medium transition-colors"
-          :class="
-            activeTab === 'products'
-              ? '!text-primary-600 border-b-2 border-primary-600 -mb-px'
-              : '!text-gray-500 hover:!text-gray-700'
-          "
+          :active="activeTab === 'products'"
           @click="activeTab = 'products'"
         >
           Produkte
-        </ButtonComponent>
+        </TabButton>
       </div>
 
       <template v-if="activeTab === 'ratings'">

@@ -50,6 +50,13 @@ describe('ChipComponent', () => {
     expect(wrapper.classes()).toContain('px-2')
   })
 
+  it('applies a wider spacing to interactive chips when set', () => {
+    const wrapper = mount(ChipComponent, {
+      props: { interactive: true, size: ChipSize.Wide },
+    })
+    expect(wrapper.classes()).toContain('px-4')
+  })
+
   it('emits remove when the remove button is clicked', async () => {
     const wrapper = mount(ChipComponent, { props: { removable: true } })
     await wrapper.find('button').trigger('click')

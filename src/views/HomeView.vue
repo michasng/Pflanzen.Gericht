@@ -5,11 +5,13 @@ import { useCatalogUrlSync } from '@/composables/useCatalogUrlSync'
 import ProductCard from '@/components/ProductCard.vue'
 import CatalogFilterSheet from '@/components/CatalogFilterSheet.vue'
 import EmptyState from '@/components/EmptyState.vue'
-import ButtonComponent from '@/components/primitives/ButtonComponent.vue'
+import Button from '@/components/primitives/ButtonComponent.vue'
 import ChipComponent from '@/components/primitives/ChipComponent.vue'
 import BadgeComponent from '@/components/primitives/BadgeComponent.vue'
 import GridComponent from '@/components/primitives/GridComponent.vue'
 import { ButtonVariant } from '@/components/primitives/ButtonVariant'
+import { ButtonSize } from '@/components/primitives/ButtonSize'
+import { ChipSize } from '@/components/primitives/ChipSize'
 import { ChipTone } from '@/components/primitives/ChipTone'
 import { CATEGORIES, categoryToLabel } from '@/config/categories'
 import { tagToLabel } from '@/config/reviewTags'
@@ -136,7 +138,7 @@ const priceRangeLabel = computed(() => {
     <!-- Category pills -->
     <div class="flex gap-2 overflow-x-auto pb-2 mb-3 -mx-4 px-4 scrollbar-none">
       <ChipComponent
-        class="!px-4"
+        :size="ChipSize.Wide"
         interactive
         :selected="catalogStore.category === null"
         @click="selectCategory(null)"
@@ -146,7 +148,7 @@ const priceRangeLabel = computed(() => {
       <ChipComponent
         v-for="cat in CATEGORIES"
         :key="cat"
-        class="!px-4"
+        :size="ChipSize.Wide"
         interactive
         :selected="catalogStore.category === cat"
         @click="selectCategory(cat)"
@@ -157,10 +159,11 @@ const priceRangeLabel = computed(() => {
 
     <!-- Filter button + sort -->
     <div class="flex items-center gap-2 mb-3">
-      <ButtonComponent
+      <Button
         ariaLabel="Filter"
         :variant="ButtonVariant.Outlined"
-        class="relative !px-3"
+        :size="ButtonSize.Compact"
+        class="relative"
         @click="filterSheetOpen = true"
       >
         <svg
@@ -182,7 +185,7 @@ const priceRangeLabel = computed(() => {
           :count="catalogStore.activeFilterCount"
           class="absolute -top-1.5 -right-1.5"
         />
-      </ButtonComponent>
+      </Button>
 
       <select
         class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -351,15 +354,15 @@ const priceRangeLabel = computed(() => {
       </GridComponent>
 
       <div v-if="catalogStore.hasMore" class="mt-6 text-center">
-        <ButtonComponent
+        <Button
           ariaLabel="Mehr laden"
           :variant="ButtonVariant.Outlined"
-          class="!px-8 !py-2.5 !rounded-xl text-sm font-medium transition-colors"
+          :size="ButtonSize.Large"
           :disabled="catalogStore.loading"
           @click="catalogStore.load()"
         >
           {{ catalogStore.loading ? 'Lädt …' : 'Mehr laden' }}
-        </ButtonComponent>
+        </Button>
       </div>
     </template>
 

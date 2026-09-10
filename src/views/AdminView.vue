@@ -17,8 +17,11 @@ import type { ProductListItem } from '@/services/catalog'
 import StarDisplay from '@/components/StarDisplay.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
-import ButtonComponent from '@/components/primitives/ButtonComponent.vue'
+import Button from '@/components/primitives/ButtonComponent.vue'
 import { ButtonVariant } from '@/components/primitives/ButtonVariant'
+import { ButtonSize } from '@/components/primitives/ButtonSize'
+import { ButtonTone } from '@/components/primitives/ButtonTone'
+import TabButton from '@/components/primitives/TabButton.vue'
 import CardComponent from '@/components/primitives/CardComponent.vue'
 import ChipComponent from '@/components/primitives/ChipComponent.vue'
 import { ChipSize } from '@/components/primitives/ChipSize'
@@ -115,32 +118,20 @@ const handleDeleteRating = async (id: string): Promise<void> => {
 
     <template v-else>
       <div class="flex border-b border-gray-200 mb-4">
-        <ButtonComponent
+        <TabButton
           ariaLabel="Produkte"
-          :variant="ButtonVariant.Text"
-          class="!flex-1 !rounded-none !px-0 !py-2.5 !gap-0 text-sm font-medium transition-colors"
-          :class="
-            activeTab === 'products'
-              ? '!text-primary-600 border-b-2 border-primary-600 -mb-px'
-              : '!text-gray-500 hover:!text-gray-700'
-          "
+          :active="activeTab === 'products'"
           @click="activeTab = 'products'"
         >
           Produkte ({{ products.length }})
-        </ButtonComponent>
-        <ButtonComponent
+        </TabButton>
+        <TabButton
           ariaLabel="Bewertungen"
-          :variant="ButtonVariant.Text"
-          class="!flex-1 !rounded-none !px-0 !py-2.5 !gap-0 text-sm font-medium transition-colors"
-          :class="
-            activeTab === 'ratings'
-              ? '!text-primary-600 border-b-2 border-primary-600 -mb-px'
-              : '!text-gray-500 hover:!text-gray-700'
-          "
+          :active="activeTab === 'ratings'"
           @click="activeTab = 'ratings'"
         >
           Bewertungen ({{ ratings.length }})
-        </ButtonComponent>
+        </TabButton>
       </div>
 
       <template v-if="activeTab === 'products'">
@@ -173,30 +164,31 @@ const handleDeleteRating = async (id: string): Promise<void> => {
                   >
                     Bearbeiten
                   </RouterLink>
-                  <ButtonComponent
+                  <Button
                     ariaLabel="Produkt löschen"
                     :variant="ButtonVariant.Text"
-                    class="!px-0 !py-0 !text-xs !text-red-500 font-medium transition-colors hover:!text-red-600"
+                    :size="ButtonSize.Small"
+                    :tone="ButtonTone.Danger"
                     :disabled="deletingId === product.id"
                     @click="handleDeleteProduct(product.id)"
                   >
                     {{ deletingId === product.id ? 'Löscht …' : 'Löschen' }}
-                  </ButtonComponent>
+                  </Button>
                 </div>
               </div>
             </CardComponent>
           </li>
         </ul>
         <div v-if="productHasMore" class="mt-4 text-center">
-          <ButtonComponent
+          <Button
             ariaLabel="Mehr Produkte laden"
             :variant="ButtonVariant.Outlined"
-            class="!px-6 !py-2 text-sm font-medium transition-colors"
+            :size="ButtonSize.Comfortable"
             :disabled="loadingMore"
             @click="loadMoreProducts"
           >
             {{ loadingMore ? 'Lädt …' : 'Mehr laden' }}
-          </ButtonComponent>
+          </Button>
         </div>
       </template>
 
@@ -225,8 +217,8 @@ const handleDeleteRating = async (id: string): Promise<void> => {
                     </RouterLink>
                     <ChipComponent
                       v-if="!rating.is_current"
-                      class="ml-2 !px-1.5"
-                      :size="ChipSize.Compact"
+                      class="ml-2"
+                      :size="ChipSize.Tight"
                       :tone="ChipTone.Muted"
                     >
                       Veraltet
@@ -237,29 +229,31 @@ const handleDeleteRating = async (id: string): Promise<void> => {
                     <span class="text-xs text-gray-400">{{ formatDate(rating.created_at) }}</span>
                   </div>
                 </div>
-                <ButtonComponent
+                <Button
                   ariaLabel="Bewertung löschen"
                   :variant="ButtonVariant.Text"
-                  class="shrink-0 !px-0 !py-0 !text-xs !text-red-500 font-medium transition-colors hover:!text-red-600"
+                  :size="ButtonSize.Small"
+                  :tone="ButtonTone.Danger"
+                  class="shrink-0"
                   :disabled="deletingId === rating.id"
                   @click="handleDeleteRating(rating.id)"
                 >
                   {{ deletingId === rating.id ? 'Löscht …' : 'Löschen' }}
-                </ButtonComponent>
+                </Button>
               </div>
             </CardComponent>
           </li>
         </ul>
         <div v-if="ratingHasMore" class="mt-4 text-center">
-          <ButtonComponent
+          <Button
             ariaLabel="Mehr Bewertungen laden"
             :variant="ButtonVariant.Outlined"
-            class="!px-6 !py-2 text-sm font-medium transition-colors"
+            :size="ButtonSize.Comfortable"
             :disabled="loadingMore"
             @click="loadMoreRatings"
           >
             {{ loadingMore ? 'Lädt …' : 'Mehr laden' }}
-          </ButtonComponent>
+          </Button>
         </div>
       </template>
     </template>
