@@ -5,6 +5,9 @@ import AlertMessage from '@/components/AlertMessage.vue'
 import AppLogo from '@/components/AppLogo.vue'
 import SimilarProductCard from '@/components/SimilarProductCard.vue'
 import SimilarProductDialog from '@/components/SimilarProductDialog.vue'
+import ButtonComponent from '@/components/primitives/ButtonComponent.vue'
+import { ButtonVariant } from '@/components/primitives/ButtonVariant'
+import GridComponent from '@/components/primitives/GridComponent.vue'
 import { getImageUrl } from '@/services/catalog'
 import {
   adminRemoveSimilarity,
@@ -247,14 +250,15 @@ onUnmounted(() => {
           ({{ similarProducts.length }})
         </span>
       </h2>
-      <button
+      <ButtonComponent
         v-if="authStore.isLoggedIn && !showSuggestionSearch"
-        type="button"
-        class="text-xs font-medium text-primary-600 transition-colors hover:text-primary-700"
+        ariaLabel="Vorschlag hinzufügen"
+        :variant="ButtonVariant.Text"
+        class="!px-0 !py-0 !text-xs font-medium transition-colors"
         @click="showSuggestionSearch = true"
       >
         + Vorschlag hinzufügen
-      </button>
+      </ButtonComponent>
     </div>
 
     <AlertMessage v-if="error" :message="error" />
@@ -292,10 +296,11 @@ onUnmounted(() => {
               role="option"
               :aria-selected="index === highlightedSuggestionIndex"
             >
-              <button
-                type="button"
-                class="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-gray-50"
-                :class="index === highlightedSuggestionIndex ? 'bg-gray-50' : ''"
+              <ButtonComponent
+                :ariaLabel="candidate.name"
+                :variant="ButtonVariant.Text"
+                class="!flex !w-full !justify-start !gap-3 !rounded-none !px-3 !py-2 !font-normal !text-left !text-gray-800 text-sm hover:!bg-gray-50 hover:!text-gray-800"
+                :class="index === highlightedSuggestionIndex ? '!bg-gray-50' : ''"
                 :disabled="actionPending"
                 @mousedown.prevent="selectCandidate(candidate.id)"
               >
@@ -316,7 +321,7 @@ onUnmounted(() => {
                     {{ candidate.brand }}
                   </p>
                 </div>
-              </button>
+              </ButtonComponent>
             </li>
           </ul>
         </div>
@@ -349,17 +354,14 @@ onUnmounted(() => {
         </template>
       </p>
 
-      <div
-        v-else-if="similarProducts.length"
-        class="grid grid-cols-2 gap-3 transition-opacity duration-150 md:grid-cols-3 lg:grid-cols-4"
-      >
+      <GridComponent v-else-if="similarProducts.length" class="transition-opacity duration-150">
         <SimilarProductCard
           v-for="similarProduct in similarProducts"
           :key="similarProduct.id"
           :product="similarProduct"
           @select="activeSimilarProductId = similarProduct.id"
         />
-      </div>
+      </GridComponent>
     </div>
 
     <SimilarProductDialog

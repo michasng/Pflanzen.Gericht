@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import AppLogo from '@/components/AppLogo.vue'
+import ButtonComponent from '@/components/primitives/ButtonComponent.vue'
+import { ButtonVariant } from '@/components/primitives/ButtonVariant'
+import ProgressBar from '@/components/primitives/ProgressBar.vue'
 import { getImageUrl } from '@/services/catalog'
 import type { SimilarProduct } from '@/services/similarProducts'
 
@@ -18,9 +21,10 @@ const voteLabel = computed(
 </script>
 
 <template>
-  <button
-    type="button"
-    class="group flex w-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white text-left transition-shadow hover:shadow-md"
+  <ButtonComponent
+    :ariaLabel="product.name"
+    :variant="ButtonVariant.Outlined"
+    class="group !flex !w-full !flex-col !items-stretch !justify-start !gap-0 !overflow-hidden !rounded-2xl !border-gray-100 !p-0 !text-left hover:!border-gray-100 hover:!shadow-md"
     @click="$emit('select')"
   >
     <div class="aspect-square overflow-hidden bg-gray-50">
@@ -45,17 +49,12 @@ const voteLabel = computed(
       </div>
 
       <div class="mt-auto">
-        <div class="mb-1.5 h-2 overflow-hidden rounded-full bg-gray-100">
-          <div
-            class="h-full rounded-full bg-primary-500 transition-all"
-            :style="{ width: `${agreementPercent}%` }"
-          />
-        </div>
+        <ProgressBar class="mb-1.5 h-2" :percent="agreementPercent" />
         <div class="flex items-center justify-between gap-2 text-xs text-gray-500">
           <span>{{ agreementPercent }} % Zustimmung</span>
           <span>{{ voteLabel }}</span>
         </div>
       </div>
     </div>
-  </button>
+  </ButtonComponent>
 </template>

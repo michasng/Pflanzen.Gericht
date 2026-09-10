@@ -12,6 +12,9 @@ import type { Product } from '@/types'
 import StarDisplay from '@/components/StarDisplay.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import TagList from '@/components/TagList.vue'
+import ButtonComponent from '@/components/primitives/ButtonComponent.vue'
+import { ButtonVariant } from '@/components/primitives/ButtonVariant'
+import CardComponent from '@/components/primitives/CardComponent.vue'
 import { categoryToLabel } from '@/config/categories'
 import { toErrorMessage } from '@/lib/error'
 import { formatDate } from '@/lib/date'
@@ -97,28 +100,32 @@ onMounted(async () => {
       </div>
 
       <div class="flex border-b border-gray-200 -mx-4 px-4">
-        <button
-          class="flex-1 py-2.5 text-sm font-medium transition-colors"
+        <ButtonComponent
+          ariaLabel="Bewertungen"
+          :variant="ButtonVariant.Text"
+          class="!flex-1 !rounded-none !px-0 !py-2.5 !gap-0 text-sm font-medium transition-colors"
           :class="
             activeTab === 'ratings'
-              ? 'text-primary-600 border-b-2 border-primary-600 -mb-px'
-              : 'text-gray-500 hover:text-gray-700'
+              ? '!text-primary-600 border-b-2 border-primary-600 -mb-px'
+              : '!text-gray-500 hover:!text-gray-700'
           "
           @click="activeTab = 'ratings'"
         >
           Bewertungen
-        </button>
-        <button
-          class="flex-1 py-2.5 text-sm font-medium transition-colors"
+        </ButtonComponent>
+        <ButtonComponent
+          ariaLabel="Produkte"
+          :variant="ButtonVariant.Text"
+          class="!flex-1 !rounded-none !px-0 !py-2.5 !gap-0 text-sm font-medium transition-colors"
           :class="
             activeTab === 'products'
-              ? 'text-primary-600 border-b-2 border-primary-600 -mb-px'
-              : 'text-gray-500 hover:text-gray-700'
+              ? '!text-primary-600 border-b-2 border-primary-600 -mb-px'
+              : '!text-gray-500 hover:!text-gray-700'
           "
           @click="activeTab = 'products'"
         >
           Produkte
-        </button>
+        </ButtonComponent>
       </div>
 
       <template v-if="activeTab === 'ratings'">
@@ -126,28 +133,26 @@ onMounted(async () => {
           Noch keine Bewertungen.
         </p>
         <ul v-else class="space-y-3">
-          <li
-            v-for="rating in ratings"
-            :key="rating.id"
-            class="bg-white rounded-xl border border-gray-100 p-4"
-          >
-            <RouterLink
-              :to="{ name: 'product-detail', params: { id: rating.product.id } }"
-              class="font-semibold text-gray-900 hover:text-primary-600 transition-colors leading-tight block mb-2"
-            >
-              {{ rating.product.name }}
-            </RouterLink>
+          <li v-for="rating in ratings" :key="rating.id">
+            <CardComponent>
+              <RouterLink
+                :to="{ name: 'product-detail', params: { id: rating.product.id } }"
+                class="font-semibold text-gray-900 hover:text-primary-600 transition-colors leading-tight block mb-2"
+              >
+                {{ rating.product.name }}
+              </RouterLink>
 
-            <div class="flex items-center gap-2 mb-2">
-              <StarDisplay :value="rating.overall" />
-              <span class="text-xs text-gray-400">{{ formatDate(rating.created_at) }}</span>
-            </div>
+              <div class="flex items-center gap-2 mb-2">
+                <StarDisplay :value="rating.overall" />
+                <span class="text-xs text-gray-400">{{ formatDate(rating.created_at) }}</span>
+              </div>
 
-            <TagList :tags="rating.tags" class="mb-2" />
+              <TagList :tags="rating.tags" class="mb-2" />
 
-            <p v-if="rating.comment" class="text-sm text-gray-600 mb-2 line-clamp-2">
-              {{ rating.comment }}
-            </p>
+              <p v-if="rating.comment" class="text-sm text-gray-600 mb-2 line-clamp-2">
+                {{ rating.comment }}
+              </p>
+            </CardComponent>
           </li>
         </ul>
       </template>
@@ -157,21 +162,19 @@ onMounted(async () => {
           Noch keine Produkte hinzugefügt.
         </p>
         <ul v-else class="space-y-2">
-          <li
-            v-for="product in products"
-            :key="product.id"
-            class="bg-white rounded-xl border border-gray-100 p-4"
-          >
-            <RouterLink
-              :to="{ name: 'product-detail', params: { id: product.id } }"
-              class="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
-            >
-              {{ product.name }}
-            </RouterLink>
-            <p class="text-sm text-gray-500 mt-0.5">
-              {{ categoryToLabel(product.category) }}
-              <span v-if="product.brand"> · {{ product.brand }}</span>
-            </p>
+          <li v-for="product in products" :key="product.id">
+            <CardComponent>
+              <RouterLink
+                :to="{ name: 'product-detail', params: { id: product.id } }"
+                class="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
+              >
+                {{ product.name }}
+              </RouterLink>
+              <p class="text-sm text-gray-500 mt-0.5">
+                {{ categoryToLabel(product.category) }}
+                <span v-if="product.brand"> · {{ product.brand }}</span>
+              </p>
+            </CardComponent>
           </li>
         </ul>
       </template>

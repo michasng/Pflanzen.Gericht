@@ -16,6 +16,12 @@ import StarDisplay from '@/components/StarDisplay.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
 import TagList from '@/components/TagList.vue'
+import ButtonComponent from '@/components/primitives/ButtonComponent.vue'
+import { ButtonVariant } from '@/components/primitives/ButtonVariant'
+import CardComponent from '@/components/primitives/CardComponent.vue'
+import ChipComponent from '@/components/primitives/ChipComponent.vue'
+import { ChipSize } from '@/components/primitives/ChipSize'
+import { ChipTone } from '@/components/primitives/ChipTone'
 import { categoryToLabel } from '@/config/categories'
 import { formatDate } from '@/lib/date'
 
@@ -171,36 +177,44 @@ onMounted(async () => {
       </div>
       <AlertMessage :message="saveError" />
       <div class="flex gap-2">
-        <button
+        <ButtonComponent
+          ariaLabel="Speichern"
           type="submit"
+          :variant="ButtonVariant.Filled"
+          class="!flex-1"
           :disabled="saving"
-          class="flex-1 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-60 transition-colors"
         >
           {{ saving ? 'Speichert …' : 'Speichern' }}
-        </button>
-        <button
+        </ButtonComponent>
+        <ButtonComponent
+          ariaLabel="Abbrechen"
+          :variant="ButtonVariant.Outlined"
+          class="!flex-1 text-sm font-medium transition-colors"
           type="button"
-          class="flex-1 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
           @click="cancelEdit"
         >
           Abbrechen
-        </button>
+        </ButtonComponent>
       </div>
     </form>
 
     <div v-else class="flex gap-2">
-      <button
-        class="flex-1 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+      <ButtonComponent
+        ariaLabel="Profil bearbeiten"
+        :variant="ButtonVariant.Outlined"
+        class="!flex-1 text-sm font-medium transition-colors"
         @click="startEdit"
       >
         Profil bearbeiten
-      </button>
-      <button
-        class="flex-1 py-2 border border-red-100 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors"
+      </ButtonComponent>
+      <ButtonComponent
+        ariaLabel="Abmelden"
+        :variant="ButtonVariant.Outlined"
+        class="!flex-1 !border-red-100 !text-red-600 text-sm font-medium transition-colors hover:!border-red-100 hover:!bg-red-50"
         @click="handleSignOut"
       >
         Abmelden
-      </button>
+      </ButtonComponent>
     </div>
 
     <div class="flex gap-6 py-3 border-t border-b border-gray-100">
@@ -215,28 +229,32 @@ onMounted(async () => {
     </div>
 
     <div class="flex border-b border-gray-200 -mx-4 px-4">
-      <button
-        class="flex-1 py-2.5 text-sm font-medium transition-colors"
+      <ButtonComponent
+        ariaLabel="Meine Bewertungen"
+        :variant="ButtonVariant.Text"
+        class="!flex-1 !rounded-none !px-0 !py-2.5 !gap-0 text-sm font-medium transition-colors"
         :class="
           activeTab === 'ratings'
-            ? 'text-primary-600 border-b-2 border-primary-600 -mb-px'
-            : 'text-gray-500 hover:text-gray-700'
+            ? '!text-primary-600 border-b-2 border-primary-600 -mb-px'
+            : '!text-gray-500 hover:!text-gray-700'
         "
         @click="activeTab = 'ratings'"
       >
         Meine Bewertungen
-      </button>
-      <button
-        class="flex-1 py-2.5 text-sm font-medium transition-colors"
+      </ButtonComponent>
+      <ButtonComponent
+        ariaLabel="Meine Produkte"
+        :variant="ButtonVariant.Text"
+        class="!flex-1 !rounded-none !px-0 !py-2.5 !gap-0 text-sm font-medium transition-colors"
         :class="
           activeTab === 'products'
-            ? 'text-primary-600 border-b-2 border-primary-600 -mb-px'
-            : 'text-gray-500 hover:text-gray-700'
+            ? '!text-primary-600 border-b-2 border-primary-600 -mb-px'
+            : '!text-gray-500 hover:!text-gray-700'
         "
         @click="activeTab = 'products'"
       >
         Meine Produkte
-      </button>
+      </ButtonComponent>
     </div>
 
     <LoadingText v-if="loading" />
@@ -247,61 +265,60 @@ onMounted(async () => {
         Noch keine Bewertungen abgegeben.
       </p>
       <ul v-else class="space-y-3">
-        <li
-          v-for="rating in ratings"
-          :key="rating.id"
-          class="bg-white rounded-xl border border-gray-100 p-4"
-        >
-          <div class="flex items-start justify-between gap-2 mb-2">
-            <RouterLink
-              :to="{ name: 'product-detail', params: { id: rating.product.id } }"
-              class="font-semibold text-gray-900 hover:text-primary-600 transition-colors leading-tight"
-            >
-              {{ rating.product.name }}
-            </RouterLink>
-            <span
-              class="shrink-0 text-xs px-2 py-0.5 rounded-full font-medium"
-              :class="
-                rating.is_current ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-400'
-              "
-            >
-              {{ rating.is_current ? 'Aktuell' : 'Veraltet' }}
-            </span>
-          </div>
+        <li v-for="rating in ratings" :key="rating.id">
+          <CardComponent>
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <RouterLink
+                :to="{ name: 'product-detail', params: { id: rating.product.id } }"
+                class="font-semibold text-gray-900 hover:text-primary-600 transition-colors leading-tight"
+              >
+                {{ rating.product.name }}
+              </RouterLink>
+              <ChipComponent
+                class="shrink-0"
+                :size="ChipSize.Compact"
+                :tone="rating.is_current ? ChipTone.Success : ChipTone.Muted"
+              >
+                {{ rating.is_current ? 'Aktuell' : 'Veraltet' }}
+              </ChipComponent>
+            </div>
 
-          <div class="flex items-center gap-2 mb-2">
-            <StarDisplay :value="rating.overall" />
-            <span class="text-xs text-gray-400">{{ formatDate(rating.created_at) }}</span>
-          </div>
+            <div class="flex items-center gap-2 mb-2">
+              <StarDisplay :value="rating.overall" />
+              <span class="text-xs text-gray-400">{{ formatDate(rating.created_at) }}</span>
+            </div>
 
-          <TagList :tags="rating.tags" class="mb-2" />
+            <TagList :tags="rating.tags" class="mb-2" />
 
-          <p v-if="rating.comment" class="text-sm text-gray-600 mb-2 line-clamp-2">
-            {{ rating.comment }}
-          </p>
+            <p v-if="rating.comment" class="text-sm text-gray-600 mb-2 line-clamp-2">
+              {{ rating.comment }}
+            </p>
 
-          <div class="flex gap-3 pt-2 border-t border-gray-50">
-            <RouterLink
-              v-if="rating.is_current"
-              :to="{ name: 'rating-edit', params: { ratingId: rating.id } }"
-              class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
-            >
-              Bearbeiten
-            </RouterLink>
-            <RouterLink
-              :to="{ name: 'rating-new', params: { id: rating.product.id } }"
-              class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
-            >
-              Neu bewerten
-            </RouterLink>
-            <button
-              class="text-xs text-red-500 font-medium hover:text-red-600 transition-colors disabled:opacity-50"
-              :disabled="deletingId === rating.id"
-              @click="handleDeleteRating(rating.id)"
-            >
-              {{ deletingId === rating.id ? 'Löscht …' : 'Löschen' }}
-            </button>
-          </div>
+            <div class="flex gap-3 pt-2 border-t border-gray-50">
+              <RouterLink
+                v-if="rating.is_current"
+                :to="{ name: 'rating-edit', params: { ratingId: rating.id } }"
+                class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
+              >
+                Bearbeiten
+              </RouterLink>
+              <RouterLink
+                :to="{ name: 'rating-new', params: { id: rating.product.id } }"
+                class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
+              >
+                Neu bewerten
+              </RouterLink>
+              <ButtonComponent
+                ariaLabel="Bewertung löschen"
+                :variant="ButtonVariant.Text"
+                class="!px-0 !py-0 !text-xs !text-red-500 font-medium transition-colors hover:!text-red-600"
+                :disabled="deletingId === rating.id"
+                @click="handleDeleteRating(rating.id)"
+              >
+                {{ deletingId === rating.id ? 'Löscht …' : 'Löschen' }}
+              </ButtonComponent>
+            </div>
+          </CardComponent>
         </li>
       </ul>
     </template>
@@ -311,37 +328,37 @@ onMounted(async () => {
         Noch keine Produkte hinzugefügt.
       </p>
       <ul v-else class="space-y-2">
-        <li
-          v-for="product in products"
-          :key="product.id"
-          class="bg-white rounded-xl border border-gray-100 p-4"
-        >
-          <RouterLink
-            :to="{ name: 'product-detail', params: { id: product.id } }"
-            class="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
-          >
-            {{ product.name }}
-          </RouterLink>
-          <p class="text-sm text-gray-500 mt-0.5">
-            {{ categoryToLabel(product.category) }}
-            <span v-if="product.brand"> · {{ product.brand }}</span>
-          </p>
-          <p class="text-xs text-gray-400 mt-1">{{ formatDate(product.created_at) }}</p>
-          <div class="flex gap-3 pt-2 border-t border-gray-50 mt-2">
+        <li v-for="product in products" :key="product.id">
+          <CardComponent>
             <RouterLink
-              :to="{ name: 'product-edit', params: { id: product.id } }"
-              class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
+              :to="{ name: 'product-detail', params: { id: product.id } }"
+              class="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
             >
-              Bearbeiten
+              {{ product.name }}
             </RouterLink>
-            <button
-              class="text-xs text-red-500 font-medium hover:text-red-600 transition-colors disabled:opacity-50"
-              :disabled="deletingProductId === product.id"
-              @click="handleDeleteProduct(product.id)"
-            >
-              {{ deletingProductId === product.id ? 'Löscht …' : 'Löschen' }}
-            </button>
-          </div>
+            <p class="text-sm text-gray-500 mt-0.5">
+              {{ categoryToLabel(product.category) }}
+              <span v-if="product.brand"> · {{ product.brand }}</span>
+            </p>
+            <p class="text-xs text-gray-400 mt-1">{{ formatDate(product.created_at) }}</p>
+            <div class="flex gap-3 pt-2 border-t border-gray-50 mt-2">
+              <RouterLink
+                :to="{ name: 'product-edit', params: { id: product.id } }"
+                class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
+              >
+                Bearbeiten
+              </RouterLink>
+              <ButtonComponent
+                ariaLabel="Produkt löschen"
+                :variant="ButtonVariant.Text"
+                class="!px-0 !py-0 !text-xs !text-red-500 font-medium transition-colors hover:!text-red-600"
+                :disabled="deletingProductId === product.id"
+                @click="handleDeleteProduct(product.id)"
+              >
+                {{ deletingProductId === product.id ? 'Löscht …' : 'Löschen' }}
+              </ButtonComponent>
+            </div>
+          </CardComponent>
         </li>
       </ul>
     </template>

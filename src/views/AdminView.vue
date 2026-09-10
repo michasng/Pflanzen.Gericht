@@ -17,6 +17,12 @@ import type { ProductListItem } from '@/services/catalog'
 import StarDisplay from '@/components/StarDisplay.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
+import ButtonComponent from '@/components/primitives/ButtonComponent.vue'
+import { ButtonVariant } from '@/components/primitives/ButtonVariant'
+import CardComponent from '@/components/primitives/CardComponent.vue'
+import ChipComponent from '@/components/primitives/ChipComponent.vue'
+import { ChipSize } from '@/components/primitives/ChipSize'
+import { ChipTone } from '@/components/primitives/ChipTone'
 import { formatDate } from '@/lib/date'
 
 const activeTab = ref<'products' | 'ratings'>('products')
@@ -109,28 +115,32 @@ const handleDeleteRating = async (id: string): Promise<void> => {
 
     <template v-else>
       <div class="flex border-b border-gray-200 mb-4">
-        <button
-          class="flex-1 py-2.5 text-sm font-medium transition-colors"
+        <ButtonComponent
+          ariaLabel="Produkte"
+          :variant="ButtonVariant.Text"
+          class="!flex-1 !rounded-none !px-0 !py-2.5 !gap-0 text-sm font-medium transition-colors"
           :class="
             activeTab === 'products'
-              ? 'text-primary-600 border-b-2 border-primary-600 -mb-px'
-              : 'text-gray-500 hover:text-gray-700'
+              ? '!text-primary-600 border-b-2 border-primary-600 -mb-px'
+              : '!text-gray-500 hover:!text-gray-700'
           "
           @click="activeTab = 'products'"
         >
           Produkte ({{ products.length }})
-        </button>
-        <button
-          class="flex-1 py-2.5 text-sm font-medium transition-colors"
+        </ButtonComponent>
+        <ButtonComponent
+          ariaLabel="Bewertungen"
+          :variant="ButtonVariant.Text"
+          class="!flex-1 !rounded-none !px-0 !py-2.5 !gap-0 text-sm font-medium transition-colors"
           :class="
             activeTab === 'ratings'
-              ? 'text-primary-600 border-b-2 border-primary-600 -mb-px'
-              : 'text-gray-500 hover:text-gray-700'
+              ? '!text-primary-600 border-b-2 border-primary-600 -mb-px'
+              : '!text-gray-500 hover:!text-gray-700'
           "
           @click="activeTab = 'ratings'"
         >
           Bewertungen ({{ ratings.length }})
-        </button>
+        </ButtonComponent>
       </div>
 
       <template v-if="activeTab === 'products'">
@@ -138,53 +148,55 @@ const handleDeleteRating = async (id: string): Promise<void> => {
           Keine Produkte vorhanden.
         </p>
         <ul v-else class="space-y-2">
-          <li
-            v-for="product in products"
-            :key="product.id"
-            class="bg-white rounded-xl border border-gray-100 p-4"
-          >
-            <div class="flex items-start justify-between gap-2">
-              <div class="min-w-0">
-                <RouterLink
-                  :to="{ name: 'product-detail', params: { id: product.id } }"
-                  class="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
-                >
-                  {{ product.name }}
-                </RouterLink>
-                <p class="text-sm text-gray-500 mt-0.5">
-                  {{ categoryToLabel(product.category) }}
-                  <span v-if="product.brand"> · {{ product.brand }}</span>
-                </p>
-                <p class="text-xs text-gray-400 mt-0.5">
-                  {{ product.ratings_count }} Bewertungen · {{ formatDate(product.created_at) }}
-                </p>
+          <li v-for="product in products" :key="product.id">
+            <CardComponent>
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <RouterLink
+                    :to="{ name: 'product-detail', params: { id: product.id } }"
+                    class="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
+                  >
+                    {{ product.name }}
+                  </RouterLink>
+                  <p class="text-sm text-gray-500 mt-0.5">
+                    {{ categoryToLabel(product.category) }}
+                    <span v-if="product.brand"> · {{ product.brand }}</span>
+                  </p>
+                  <p class="text-xs text-gray-400 mt-0.5">
+                    {{ product.ratings_count }} Bewertungen · {{ formatDate(product.created_at) }}
+                  </p>
+                </div>
+                <div class="flex gap-2 shrink-0">
+                  <RouterLink
+                    :to="{ name: 'product-edit', params: { id: product.id } }"
+                    class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
+                  >
+                    Bearbeiten
+                  </RouterLink>
+                  <ButtonComponent
+                    ariaLabel="Produkt löschen"
+                    :variant="ButtonVariant.Text"
+                    class="!px-0 !py-0 !text-xs !text-red-500 font-medium transition-colors hover:!text-red-600"
+                    :disabled="deletingId === product.id"
+                    @click="handleDeleteProduct(product.id)"
+                  >
+                    {{ deletingId === product.id ? 'Löscht …' : 'Löschen' }}
+                  </ButtonComponent>
+                </div>
               </div>
-              <div class="flex gap-2 shrink-0">
-                <RouterLink
-                  :to="{ name: 'product-edit', params: { id: product.id } }"
-                  class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
-                >
-                  Bearbeiten
-                </RouterLink>
-                <button
-                  class="text-xs text-red-500 font-medium hover:text-red-600 transition-colors disabled:opacity-50"
-                  :disabled="deletingId === product.id"
-                  @click="handleDeleteProduct(product.id)"
-                >
-                  {{ deletingId === product.id ? 'Löscht …' : 'Löschen' }}
-                </button>
-              </div>
-            </div>
+            </CardComponent>
           </li>
         </ul>
         <div v-if="productHasMore" class="mt-4 text-center">
-          <button
+          <ButtonComponent
+            ariaLabel="Mehr Produkte laden"
+            :variant="ButtonVariant.Outlined"
+            class="!px-6 !py-2 text-sm font-medium transition-colors"
             :disabled="loadingMore"
-            class="px-6 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-60 transition-colors"
             @click="loadMoreProducts"
           >
             {{ loadingMore ? 'Lädt …' : 'Mehr laden' }}
-          </button>
+          </ButtonComponent>
         </div>
       </template>
 
@@ -193,57 +205,61 @@ const handleDeleteRating = async (id: string): Promise<void> => {
           Keine Bewertungen vorhanden.
         </p>
         <ul v-else class="space-y-2">
-          <li
-            v-for="rating in ratings"
-            :key="rating.id"
-            class="bg-white rounded-xl border border-gray-100 p-4"
-          >
-            <div class="flex items-start justify-between gap-2">
-              <div class="min-w-0">
-                <RouterLink
-                  :to="{ name: 'product-detail', params: { id: rating.product.id } }"
-                  class="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
-                >
-                  {{ rating.product.name }}
-                </RouterLink>
-                <p class="text-sm text-gray-500 mt-0.5">
-                  von
+          <li v-for="rating in ratings" :key="rating.id">
+            <CardComponent>
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
                   <RouterLink
-                    :to="{ name: 'profile-public', params: { id: rating.user_id } }"
-                    class="hover:text-primary-600 transition-colors"
+                    :to="{ name: 'product-detail', params: { id: rating.product.id } }"
+                    class="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
                   >
-                    {{ rating.profile.username }}
+                    {{ rating.product.name }}
                   </RouterLink>
-                  <span
-                    v-if="!rating.is_current"
-                    class="ml-2 text-xs bg-gray-100 text-gray-400 rounded-full px-1.5 py-0.5"
-                  >
-                    Veraltet
-                  </span>
-                </p>
-                <div class="flex items-center gap-2 mt-1">
-                  <StarDisplay :value="rating.overall" />
-                  <span class="text-xs text-gray-400">{{ formatDate(rating.created_at) }}</span>
+                  <p class="text-sm text-gray-500 mt-0.5">
+                    von
+                    <RouterLink
+                      :to="{ name: 'profile-public', params: { id: rating.user_id } }"
+                      class="hover:text-primary-600 transition-colors"
+                    >
+                      {{ rating.profile.username }}
+                    </RouterLink>
+                    <ChipComponent
+                      v-if="!rating.is_current"
+                      class="ml-2 !px-1.5"
+                      :size="ChipSize.Compact"
+                      :tone="ChipTone.Muted"
+                    >
+                      Veraltet
+                    </ChipComponent>
+                  </p>
+                  <div class="flex items-center gap-2 mt-1">
+                    <StarDisplay :value="rating.overall" />
+                    <span class="text-xs text-gray-400">{{ formatDate(rating.created_at) }}</span>
+                  </div>
                 </div>
+                <ButtonComponent
+                  ariaLabel="Bewertung löschen"
+                  :variant="ButtonVariant.Text"
+                  class="shrink-0 !px-0 !py-0 !text-xs !text-red-500 font-medium transition-colors hover:!text-red-600"
+                  :disabled="deletingId === rating.id"
+                  @click="handleDeleteRating(rating.id)"
+                >
+                  {{ deletingId === rating.id ? 'Löscht …' : 'Löschen' }}
+                </ButtonComponent>
               </div>
-              <button
-                class="shrink-0 text-xs text-red-500 font-medium hover:text-red-600 transition-colors disabled:opacity-50"
-                :disabled="deletingId === rating.id"
-                @click="handleDeleteRating(rating.id)"
-              >
-                {{ deletingId === rating.id ? 'Löscht …' : 'Löschen' }}
-              </button>
-            </div>
+            </CardComponent>
           </li>
         </ul>
         <div v-if="ratingHasMore" class="mt-4 text-center">
-          <button
+          <ButtonComponent
+            ariaLabel="Mehr Bewertungen laden"
+            :variant="ButtonVariant.Outlined"
+            class="!px-6 !py-2 text-sm font-medium transition-colors"
             :disabled="loadingMore"
-            class="px-6 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-60 transition-colors"
             @click="loadMoreRatings"
           >
             {{ loadingMore ? 'Lädt …' : 'Mehr laden' }}
-          </button>
+          </ButtonComponent>
         </div>
       </template>
     </template>

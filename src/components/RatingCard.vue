@@ -2,8 +2,16 @@
 import { computed } from 'vue'
 import StarDisplay from '@/components/StarDisplay.vue'
 import TagList from '@/components/TagList.vue'
+import CardComponent from '@/components/primitives/CardComponent.vue'
+import ChipComponent from '@/components/primitives/ChipComponent.vue'
+import { ChipSize } from '@/components/primitives/ChipSize'
+import { ChipTone } from '@/components/primitives/ChipTone'
+import ProgressBar from '@/components/primitives/ProgressBar.vue'
+import { ProgressBarColor } from '@/components/primitives/ProgressBarColor'
 import type { RatingWithDetails } from '@/services/catalog'
 import { formatDate } from '@/lib/date'
+
+const MAX_CRITERION_VALUE = 5
 
 const props = defineProps<{ rating: RatingWithDetails; editable?: boolean }>()
 
@@ -24,7 +32,7 @@ const filledCriteria = computed(() => {
 </script>
 
 <template>
-  <div class="bg-white rounded-xl border border-gray-100 p-4">
+  <CardComponent>
     <div class="flex items-start justify-between gap-2 mb-3">
       <div>
         <RouterLink
@@ -35,12 +43,14 @@ const filledCriteria = computed(() => {
         </RouterLink>
         <span class="text-xs text-gray-400 ml-2">{{ formatDate(rating.created_at) }}</span>
       </div>
-      <span
+      <ChipComponent
         v-if="!rating.is_current"
-        class="shrink-0 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 font-medium"
+        class="shrink-0"
+        :size="ChipSize.Compact"
+        :tone="ChipTone.Muted"
       >
         Veraltet
-      </span>
+      </ChipComponent>
     </div>
 
     <div class="flex items-center gap-2 mb-3">
@@ -51,9 +61,11 @@ const filledCriteria = computed(() => {
     <div v-if="filledCriteria.length" class="grid grid-cols-1 gap-1.5 mb-3">
       <div v-for="[label, val] in filledCriteria" :key="label" class="flex items-center gap-2">
         <span class="text-xs text-gray-500 w-28 shrink-0">{{ label }}</span>
-        <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-          <div class="h-full bg-amber-400 rounded-full" :style="{ width: `${(val / 5) * 100}%` }" />
-        </div>
+        <ProgressBar
+          class="flex-1"
+          :percent="(val / MAX_CRITERION_VALUE) * 100"
+          :color="ProgressBarColor.Amber"
+        />
         <span class="text-xs text-gray-500 w-4 text-right">{{ val }}</span>
       </div>
     </div>
@@ -70,5 +82,5 @@ const filledCriteria = computed(() => {
         Bearbeiten
       </RouterLink>
     </div>
-  </div>
+  </CardComponent>
 </template>
