@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { deleteImageVariants } from '@/lib/imageVariantStorage'
-import type { Product, Rating } from '@/types'
+import type { Product, Review } from '@/types'
 
 export type PublicProfile = {
   id: string
@@ -10,18 +10,18 @@ export type PublicProfile = {
   created_at: string
 }
 
-export type RatingWithMeta = Rating & {
+export type ReviewWithMeta = Review & {
   product: Pick<Product, 'id' | 'name' | 'category'>
   tags: string[]
 }
 
-export const fetchUserRatings = async (
+export const fetchUserReviews = async (
   userId: string,
   onlyCurrent = false,
-): Promise<RatingWithMeta[]> => {
+): Promise<ReviewWithMeta[]> => {
   let query = supabase
-    .from('rating')
-    .select('*, product:product_id(id, name, category), tags:rating_tag(tag)')
+    .from('review')
+    .select('*, product:product_id(id, name, category), tags:review_tag(tag)')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
   if (onlyCurrent) query = query.eq('is_current', true)
@@ -52,14 +52,14 @@ export const updateProfile = async (
   if (error) throw error
 }
 
-export const deleteRating = async (ratingId: string): Promise<void> => {
-  const { data: ratingImages, error: ratingImagesError } = await supabase
-    .from('rating_image')
+export const deleteReview = async (reviewId: string): Promise<void> => {
+  const { data: reviewImages, error: reviewImagesError } = await supabase
+    .from('review_image')
     .select('storage_path')
-    .eq('rating_id', ratingId)
-  if (ratingImagesError) throw ratingImagesError
+    .eq('review_id', reviewId)
+  if (reviewImagesError) throw reviewImagesError
 
-  if (ratingImages?.length) {
+  if (reviewImages?.length) {
     await deleteImageVariants(
       {
         removeVariants: async (paths) => {
@@ -67,11 +67,11 @@ export const deleteRating = async (ratingId: string): Promise<void> => {
           if (removeError) throw removeError
         },
       },
-      ratingImages.map((ratingImage) => ratingImage.storage_path),
+      reviewImages.map((reviewImage) => reviewImage.storage_path),
     )
   }
 
-  const { error } = await supabase.from('rating').delete().eq('id', ratingId)
+  const { error } = await supabase.from('review').delete().eq('id', reviewId)
   if (error) throw error
 }
 

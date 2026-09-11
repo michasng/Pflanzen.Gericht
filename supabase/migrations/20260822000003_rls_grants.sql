@@ -3,9 +3,9 @@ ALTER TABLE public.product           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product_image     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product_ingredient ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product_nutrient  ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.rating            ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.rating_tag        ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.rating_image      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.review            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.review_tag        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.review_image      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.price_report      ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "profiles: publicly readable"
@@ -102,64 +102,64 @@ CREATE POLICY "product_nutrients: product owner delete"
     )
   );
 
-CREATE POLICY "ratings: publicly readable"
-  ON public.rating FOR SELECT USING (true);
+CREATE POLICY "reviews: publicly readable"
+  ON public.review FOR SELECT USING (true);
 
-CREATE POLICY "ratings: create when authenticated"
-  ON public.rating FOR INSERT
+CREATE POLICY "reviews: create when authenticated"
+  ON public.review FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "ratings: edit own or admin"
-  ON public.rating FOR UPDATE
+CREATE POLICY "reviews: edit own or admin"
+  ON public.review FOR UPDATE
   USING (user_id = auth.uid() OR public.is_admin())
   WITH CHECK (user_id = auth.uid() OR public.is_admin());
 
-CREATE POLICY "ratings: delete own or admin"
-  ON public.rating FOR DELETE
+CREATE POLICY "reviews: delete own or admin"
+  ON public.review FOR DELETE
   USING (user_id = auth.uid() OR public.is_admin());
 
-CREATE POLICY "rating_tags: publicly readable"
-  ON public.rating_tag FOR SELECT USING (true);
+CREATE POLICY "review_tags: publicly readable"
+  ON public.review_tag FOR SELECT USING (true);
 
-CREATE POLICY "rating_tags: rating owner add"
-  ON public.rating_tag FOR INSERT
+CREATE POLICY "review_tags: review owner add"
+  ON public.review_tag FOR INSERT
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM public.rating
-      WHERE id = rating_id
+      SELECT 1 FROM public.review
+      WHERE id = review_id
         AND (user_id = auth.uid() OR public.is_admin())
     )
   );
 
-CREATE POLICY "rating_tags: rating owner delete"
-  ON public.rating_tag FOR DELETE
+CREATE POLICY "review_tags: review owner delete"
+  ON public.review_tag FOR DELETE
   USING (
     EXISTS (
-      SELECT 1 FROM public.rating
-      WHERE id = rating_id
+      SELECT 1 FROM public.review
+      WHERE id = review_id
         AND (user_id = auth.uid() OR public.is_admin())
     )
   );
 
-CREATE POLICY "rating_images: publicly readable"
-  ON public.rating_image FOR SELECT USING (true);
+CREATE POLICY "review_images: publicly readable"
+  ON public.review_image FOR SELECT USING (true);
 
-CREATE POLICY "rating_images: rating owner add"
-  ON public.rating_image FOR INSERT
+CREATE POLICY "review_images: review owner add"
+  ON public.review_image FOR INSERT
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM public.rating
-      WHERE id = rating_id
+      SELECT 1 FROM public.review
+      WHERE id = review_id
         AND (user_id = auth.uid() OR public.is_admin())
     )
   );
 
-CREATE POLICY "rating_images: rating owner delete"
-  ON public.rating_image FOR DELETE
+CREATE POLICY "review_images: review owner delete"
+  ON public.review_image FOR DELETE
   USING (
     EXISTS (
-      SELECT 1 FROM public.rating
-      WHERE id = rating_id
+      SELECT 1 FROM public.review
+      WHERE id = review_id
         AND (user_id = auth.uid() OR public.is_admin())
     )
   );
@@ -188,9 +188,9 @@ GRANT SELECT ON
   public.product_image,
   public.product_ingredient,
   public.product_nutrient,
-  public.rating,
-  public.rating_tag,
-  public.rating_image,
+  public.review,
+  public.review_tag,
+  public.review_image,
   public.price_report
 TO anon, authenticated;
 
@@ -207,12 +207,12 @@ GRANT INSERT, DELETE ON
 TO authenticated;
 
 GRANT INSERT, UPDATE, DELETE ON
-  public.rating,
-  public.rating_image
+  public.review,
+  public.review_image
 TO authenticated;
 
--- rating_tag rows are inserted/deleted with their parent rating, never updated
-GRANT INSERT, DELETE ON public.rating_tag TO authenticated;
+-- review_tag rows are inserted/deleted with their parent review, never updated
+GRANT INSERT, DELETE ON public.review_tag TO authenticated;
 
 GRANT INSERT, UPDATE, DELETE ON public.price_report TO authenticated;
 

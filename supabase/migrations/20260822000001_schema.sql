@@ -23,7 +23,7 @@ CREATE TABLE public.product (
   created_by      uuid        NOT NULL REFERENCES public.profile(id),
   normalized_name text        GENERATED ALWAYS AS (lower(trim(name))) STORED,
   avg_overall          numeric(3, 2),
-  ratings_count        integer     NOT NULL DEFAULT 0,
+  reviews_count        integer     NOT NULL DEFAULT 0,
   min_price_euro_cents integer,
   tags                 text[]      NOT NULL DEFAULT '{}',
   created_at      timestamptz NOT NULL DEFAULT now(),
@@ -55,7 +55,7 @@ CREATE TABLE public.product_nutrient (
   created_at        timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TABLE public.rating (
+CREATE TABLE public.review (
   id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id  uuid        NOT NULL REFERENCES public.product(id) ON DELETE CASCADE,
   user_id     uuid        NOT NULL REFERENCES public.profile(id),
@@ -70,15 +70,15 @@ CREATE TABLE public.rating (
   created_at  timestamptz NOT NULL DEFAULT now(),
   updated_at  timestamptz NOT NULL DEFAULT now()
 );
-CREATE TABLE public.rating_tag (
-  rating_id uuid NOT NULL REFERENCES public.rating(id) ON DELETE CASCADE,
+CREATE TABLE public.review_tag (
+  review_id uuid NOT NULL REFERENCES public.review(id) ON DELETE CASCADE,
   tag       text NOT NULL,
-  PRIMARY KEY (rating_id, tag)
+  PRIMARY KEY (review_id, tag)
 );
 
-CREATE TABLE public.rating_image (
+CREATE TABLE public.review_image (
   id           uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  rating_id    uuid        NOT NULL REFERENCES public.rating(id) ON DELETE CASCADE,
+  review_id    uuid        NOT NULL REFERENCES public.review(id) ON DELETE CASCADE,
   storage_path text        NOT NULL,
   sort_order   smallint    NOT NULL DEFAULT 0,
   created_at   timestamptz NOT NULL DEFAULT now()
@@ -102,7 +102,7 @@ CREATE INDEX product_base_idx            ON public.product (base);
 CREATE INDEX product_created_by_idx      ON public.product (created_by);
 CREATE INDEX product_created_at_idx      ON public.product (created_at DESC);
 CREATE INDEX product_avg_overall_idx     ON public.product (avg_overall DESC NULLS LAST);
-CREATE INDEX product_ratings_count_idx   ON public.product (ratings_count DESC);
+CREATE INDEX product_reviews_count_idx   ON public.product (reviews_count DESC);
 CREATE INDEX product_min_price_idx       ON public.product (min_price_euro_cents ASC NULLS LAST);
 CREATE INDEX product_allergens_gin_idx   ON public.product USING gin (allergens);
 CREATE INDEX product_is_organic_idx      ON public.product (is_organic) WHERE is_organic = true;
@@ -121,13 +121,13 @@ CREATE INDEX product_nutrient_name_trgm_idx  ON public.product_nutrient USING gi
 CREATE UNIQUE INDEX product_nutrient_dedupe_idx
   ON public.product_nutrient (product_id, lower(trim(name)));
 
-CREATE INDEX rating_product_id_idx ON public.rating (product_id);
-CREATE INDEX rating_user_id_idx    ON public.rating (user_id);
-CREATE INDEX rating_created_at_idx ON public.rating (created_at DESC);
-CREATE INDEX rating_current_idx    ON public.rating (product_id, is_current)
+CREATE INDEX review_product_id_idx ON public.review (product_id);
+CREATE INDEX review_user_id_idx    ON public.review (user_id);
+CREATE INDEX review_created_at_idx ON public.review (created_at DESC);
+CREATE INDEX review_current_idx    ON public.review (product_id, is_current)
   WHERE is_current = true;
-CREATE UNIQUE INDEX rating_one_current_per_user_idx
-  ON public.rating (product_id, user_id)
+CREATE UNIQUE INDEX review_one_current_per_user_idx
+  ON public.review (product_id, user_id)
   WHERE is_current = true;
 
 CREATE UNIQUE INDEX price_report_user_store_city_idx

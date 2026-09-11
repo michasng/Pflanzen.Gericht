@@ -21,14 +21,14 @@ export type ProductSimilarityVote = Tables<'product_similarity_vote'>
 export type ProductSimilarityVoteInsert = TablesInsert<'product_similarity_vote'>
 export type ProductSimilarityVoteUpdate = TablesUpdate<'product_similarity_vote'>
 
-export type Rating = Tables<'rating'>
-export type RatingInsert = TablesInsert<'rating'>
-export type RatingUpdate = TablesUpdate<'rating'>
+export type Review = Tables<'review'>
+export type ReviewInsert = TablesInsert<'review'>
+export type ReviewUpdate = TablesUpdate<'review'>
 
-export type RatingImage = Tables<'rating_image'>
-export type RatingImageInsert = TablesInsert<'rating_image'>
+export type ReviewImage = Tables<'review_image'>
+export type ReviewImageInsert = TablesInsert<'review_image'>
 
-export type RatingTag = Tables<'rating_tag'>
+export type ReviewTag = Tables<'review_tag'>
 
 export type PriceReport = Tables<'price_report'>
 export type PriceReportInsert = TablesInsert<'price_report'>

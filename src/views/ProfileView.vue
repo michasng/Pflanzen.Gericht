@@ -4,11 +4,11 @@ import { useRouter } from 'vue-router'
 import { toErrorMessage } from '@/lib/error'
 import { useAuthStore } from '@/stores/auth'
 import {
-  fetchUserRatings,
+  fetchUserReviews,
   fetchUserProducts,
   updateProfile,
-  deleteRating,
-  type RatingWithMeta,
+  deleteReview,
+  type ReviewWithMeta,
 } from '@/services/profile'
 import { deleteProduct } from '@/services/products'
 import type { Product } from '@/types'
@@ -31,11 +31,11 @@ import { formatDate } from '@/lib/date'
 const router = useRouter()
 const authStore = useAuthStore()
 
-const ratings = ref<RatingWithMeta[]>([])
+const reviews = ref<ReviewWithMeta[]>([])
 const products = ref<Product[]>([])
 const loading = ref(true)
 const loadError = ref<string | null>(null)
-const activeTab = ref<'ratings' | 'products'>('ratings')
+const activeTab = ref<'reviews' | 'products'>('reviews')
 
 const isEditing = ref(false)
 const displayName = ref('')
@@ -46,7 +46,7 @@ const saveError = ref<string | null>(null)
 const deletingId = ref<string | null>(null)
 const deletingProductId = ref<string | null>(null)
 
-const currentRatingsCount = computed(() => ratings.value.filter((r) => r.is_current).length)
+const currentReviewsCount = computed(() => reviews.value.filter((r) => r.is_current).length)
 const initials = computed(() => authStore.profile?.username?.charAt(0).toUpperCase() ?? '?')
 
 const startEdit = (): void => {
@@ -97,14 +97,14 @@ const handleDeleteProduct = async (id: string): Promise<void> => {
   }
 }
 
-const handleDeleteRating = async (id: string): Promise<void> => {
+const handleDeleteReview = async (id: string): Promise<void> => {
   if (!confirm('Bewertung wirklich löschen?')) return
   const user = authStore.user
   if (!user) return
   deletingId.value = id
   try {
-    await deleteRating(id)
-    ratings.value = await fetchUserRatings(user.id)
+    await deleteReview(id)
+    reviews.value = await fetchUserReviews(user.id)
   } catch (err) {
     alert(toErrorMessage(err))
   } finally {
@@ -116,10 +116,10 @@ onMounted(async () => {
   if (!authStore.user) return
   try {
     const [r, p] = await Promise.all([
-      fetchUserRatings(authStore.user.id),
+      fetchUserReviews(authStore.user.id),
       fetchUserProducts(authStore.user.id),
     ])
-    ratings.value = r
+    reviews.value = r
     products.value = p
   } catch (err) {
     loadError.value = toErrorMessage(err)
@@ -223,7 +223,7 @@ onMounted(async () => {
 
     <div class="flex gap-6 py-3 border-t border-b border-gray-100">
       <div class="text-center">
-        <p class="text-xl font-bold text-gray-900">{{ currentRatingsCount }}</p>
+        <p class="text-xl font-bold text-gray-900">{{ currentReviewsCount }}</p>
         <p class="text-xs text-gray-500">Bewertungen</p>
       </div>
       <div class="text-center">
@@ -235,8 +235,8 @@ onMounted(async () => {
     <div role="tablist" class="flex border-b border-gray-200 -mx-4 px-4">
       <TabButton
         ariaLabel="Meine Bewertungen"
-        :active="activeTab === 'ratings'"
-        @click="activeTab = 'ratings'"
+        :active="activeTab === 'reviews'"
+        @click="activeTab = 'reviews'"
       >
         Meine Bewertungen
       </TabButton>
@@ -252,50 +252,50 @@ onMounted(async () => {
     <LoadingText v-if="loading" />
     <AlertMessage v-else-if="loadError" :message="loadError" />
 
-    <template v-else-if="activeTab === 'ratings'">
-      <p v-if="ratings.length === 0" class="py-12 text-center text-gray-400 text-sm">
+    <template v-else-if="activeTab === 'reviews'">
+      <p v-if="reviews.length === 0" class="py-12 text-center text-gray-400 text-sm">
         Noch keine Bewertungen abgegeben.
       </p>
       <ul v-else class="space-y-3">
-        <li v-for="rating in ratings" :key="rating.id">
+        <li v-for="review in reviews" :key="review.id">
           <Card>
             <div class="flex items-start justify-between gap-2 mb-2">
               <RouterLink
-                :to="{ name: 'product-detail', params: { id: rating.product.id } }"
+                :to="{ name: 'product-detail', params: { id: review.product.id } }"
                 class="font-semibold text-gray-900 hover:text-primary-600 transition-colors leading-tight"
               >
-                {{ rating.product.name }}
+                {{ review.product.name }}
               </RouterLink>
               <Chip
                 class="shrink-0"
                 :size="ChipSize.Compact"
-                :tone="rating.is_current ? ChipTone.Success : ChipTone.Muted"
+                :tone="review.is_current ? ChipTone.Success : ChipTone.Muted"
               >
-                {{ rating.is_current ? 'Aktuell' : 'Veraltet' }}
+                {{ review.is_current ? 'Aktuell' : 'Veraltet' }}
               </Chip>
             </div>
 
             <div class="flex items-center gap-2 mb-2">
-              <StarDisplay :value="rating.overall" />
-              <span class="text-xs text-gray-400">{{ formatDate(rating.created_at) }}</span>
+              <StarDisplay :value="review.overall" />
+              <span class="text-xs text-gray-400">{{ formatDate(review.created_at) }}</span>
             </div>
 
-            <TagList :tags="rating.tags" class="mb-2" />
+            <TagList :tags="review.tags" class="mb-2" />
 
-            <p v-if="rating.comment" class="text-sm text-gray-600 mb-2 line-clamp-2">
-              {{ rating.comment }}
+            <p v-if="review.comment" class="text-sm text-gray-600 mb-2 line-clamp-2">
+              {{ review.comment }}
             </p>
 
             <div class="flex gap-3 pt-2 border-t border-gray-50">
               <RouterLink
-                v-if="rating.is_current"
-                :to="{ name: 'rating-edit', params: { ratingId: rating.id } }"
+                v-if="review.is_current"
+                :to="{ name: 'review-edit', params: { reviewId: review.id } }"
                 class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
               >
                 Bearbeiten
               </RouterLink>
               <RouterLink
-                :to="{ name: 'rating-new', params: { id: rating.product.id } }"
+                :to="{ name: 'review-new', params: { id: review.product.id } }"
                 class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
               >
                 Neu bewerten
@@ -305,10 +305,10 @@ onMounted(async () => {
                 :variant="ButtonVariant.Text"
                 :size="ButtonSize.Small"
                 :tone="ButtonTone.Danger"
-                :disabled="deletingId === rating.id"
-                @click="handleDeleteRating(rating.id)"
+                :disabled="deletingId === review.id"
+                @click="handleDeleteReview(review.id)"
               >
-                {{ deletingId === rating.id ? 'Löscht …' : 'Löschen' }}
+                {{ deletingId === review.id ? 'Löscht …' : 'Löschen' }}
               </Button>
             </div>
           </Card>

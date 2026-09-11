@@ -6,11 +6,11 @@ import {
   ADMIN_PAGE_SIZE as PRODUCT_PAGE_SIZE,
 } from '@/services/products'
 import {
-  fetchAllRatingsForAdmin,
-  type AdminRatingItem,
-  ADMIN_PAGE_SIZE as RATING_PAGE_SIZE,
-} from '@/services/ratings'
-import { deleteRating } from '@/services/profile'
+  fetchAllReviewsForAdmin,
+  type AdminReviewItem,
+  ADMIN_PAGE_SIZE as REVIEW_PAGE_SIZE,
+} from '@/services/reviews'
+import { deleteReview } from '@/services/profile'
 import { toErrorMessage } from '@/lib/error'
 import { categoryToLabel } from '@/config/categories'
 import type { ProductListItem } from '@/services/catalog'
@@ -28,25 +28,25 @@ import { ChipSize } from '@/components/primitives/ChipSize'
 import { ChipTone } from '@/components/primitives/ChipTone'
 import { formatDate } from '@/lib/date'
 
-const activeTab = ref<'products' | 'ratings'>('products')
+const activeTab = ref<'products' | 'reviews'>('products')
 const products = ref<ProductListItem[]>([])
-const ratings = ref<AdminRatingItem[]>([])
+const reviews = ref<AdminReviewItem[]>([])
 const loading = ref(true)
 const loadError = ref<string | null>(null)
 const deletingId = ref<string | null>(null)
 const productPage = ref(0)
 const productHasMore = ref(true)
-const ratingPage = ref(0)
-const ratingHasMore = ref(true)
+const reviewPage = ref(0)
+const reviewHasMore = ref(true)
 const loadingMore = ref(false)
 
 onMounted(async () => {
   try {
-    const [p, r] = await Promise.all([fetchAllProductsForAdmin(), fetchAllRatingsForAdmin()])
+    const [p, r] = await Promise.all([fetchAllProductsForAdmin(), fetchAllReviewsForAdmin()])
     products.value = p
     productHasMore.value = p.length === PRODUCT_PAGE_SIZE
-    ratings.value = r
-    ratingHasMore.value = r.length === RATING_PAGE_SIZE
+    reviews.value = r
+    reviewHasMore.value = r.length === REVIEW_PAGE_SIZE
   } catch (err) {
     loadError.value = toErrorMessage(err)
   } finally {
@@ -68,13 +68,13 @@ const loadMoreProducts = async (): Promise<void> => {
   }
 }
 
-const loadMoreRatings = async (): Promise<void> => {
+const loadMoreReviews = async (): Promise<void> => {
   loadingMore.value = true
   try {
-    ratingPage.value++
-    const more = await fetchAllRatingsForAdmin(ratingPage.value)
-    ratings.value.push(...more)
-    ratingHasMore.value = more.length === RATING_PAGE_SIZE
+    reviewPage.value++
+    const more = await fetchAllReviewsForAdmin(reviewPage.value)
+    reviews.value.push(...more)
+    reviewHasMore.value = more.length === REVIEW_PAGE_SIZE
   } catch (err) {
     alert(toErrorMessage(err))
   } finally {
@@ -95,12 +95,12 @@ const handleDeleteProduct = async (id: string): Promise<void> => {
   }
 }
 
-const handleDeleteRating = async (id: string): Promise<void> => {
+const handleDeleteReview = async (id: string): Promise<void> => {
   if (!confirm('Bewertung unwiderruflich löschen?')) return
   deletingId.value = id
   try {
-    await deleteRating(id)
-    ratings.value = ratings.value.filter((r) => r.id !== id)
+    await deleteReview(id)
+    reviews.value = reviews.value.filter((r) => r.id !== id)
   } catch (err) {
     alert(toErrorMessage(err))
   } finally {
@@ -127,10 +127,10 @@ const handleDeleteRating = async (id: string): Promise<void> => {
         </TabButton>
         <TabButton
           ariaLabel="Bewertungen"
-          :active="activeTab === 'ratings'"
-          @click="activeTab = 'ratings'"
+          :active="activeTab === 'reviews'"
+          @click="activeTab = 'reviews'"
         >
-          Bewertungen ({{ ratings.length }})
+          Bewertungen ({{ reviews.length }})
         </TabButton>
       </div>
 
@@ -154,7 +154,7 @@ const handleDeleteRating = async (id: string): Promise<void> => {
                     <span v-if="product.brand"> · {{ product.brand }}</span>
                   </p>
                   <p class="text-xs text-gray-400 mt-0.5">
-                    {{ product.ratings_count }} Bewertungen · {{ formatDate(product.created_at) }}
+                    {{ product.reviews_count }} Bewertungen · {{ formatDate(product.created_at) }}
                   </p>
                 </div>
                 <div class="flex gap-2 shrink-0">
@@ -193,30 +193,30 @@ const handleDeleteRating = async (id: string): Promise<void> => {
       </template>
 
       <template v-else>
-        <p v-if="ratings.length === 0" class="py-12 text-center text-gray-400 text-sm">
+        <p v-if="reviews.length === 0" class="py-12 text-center text-gray-400 text-sm">
           Keine Bewertungen vorhanden.
         </p>
         <ul v-else class="space-y-2">
-          <li v-for="rating in ratings" :key="rating.id">
+          <li v-for="review in reviews" :key="review.id">
             <Card>
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <RouterLink
-                    :to="{ name: 'product-detail', params: { id: rating.product.id } }"
+                    :to="{ name: 'product-detail', params: { id: review.product.id } }"
                     class="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
                   >
-                    {{ rating.product.name }}
+                    {{ review.product.name }}
                   </RouterLink>
                   <p class="text-sm text-gray-500 mt-0.5">
                     von
                     <RouterLink
-                      :to="{ name: 'profile-public', params: { id: rating.user_id } }"
+                      :to="{ name: 'profile-public', params: { id: review.user_id } }"
                       class="hover:text-primary-600 transition-colors"
                     >
-                      {{ rating.profile.username }}
+                      {{ review.profile.username }}
                     </RouterLink>
                     <Chip
-                      v-if="!rating.is_current"
+                      v-if="!review.is_current"
                       class="ml-2"
                       :size="ChipSize.Tight"
                       :tone="ChipTone.Muted"
@@ -225,8 +225,8 @@ const handleDeleteRating = async (id: string): Promise<void> => {
                     </Chip>
                   </p>
                   <div class="flex items-center gap-2 mt-1">
-                    <StarDisplay :value="rating.overall" />
-                    <span class="text-xs text-gray-400">{{ formatDate(rating.created_at) }}</span>
+                    <StarDisplay :value="review.overall" />
+                    <span class="text-xs text-gray-400">{{ formatDate(review.created_at) }}</span>
                   </div>
                 </div>
                 <Button
@@ -235,22 +235,22 @@ const handleDeleteRating = async (id: string): Promise<void> => {
                   :size="ButtonSize.Small"
                   :tone="ButtonTone.Danger"
                   class="shrink-0"
-                  :disabled="deletingId === rating.id"
-                  @click="handleDeleteRating(rating.id)"
+                  :disabled="deletingId === review.id"
+                  @click="handleDeleteReview(review.id)"
                 >
-                  {{ deletingId === rating.id ? 'Löscht …' : 'Löschen' }}
+                  {{ deletingId === review.id ? 'Löscht …' : 'Löschen' }}
                 </Button>
               </div>
             </Card>
           </li>
         </ul>
-        <div v-if="ratingHasMore" class="mt-4 text-center">
+        <div v-if="reviewHasMore" class="mt-4 text-center">
           <Button
             ariaLabel="Mehr Bewertungen laden"
             :variant="ButtonVariant.Outlined"
             :size="ButtonSize.Comfortable"
             :disabled="loadingMore"
-            @click="loadMoreRatings"
+            @click="loadMoreReviews"
           >
             {{ loadingMore ? 'Lädt …' : 'Mehr laden' }}
           </Button>

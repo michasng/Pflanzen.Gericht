@@ -15,7 +15,7 @@ export interface SimilarProduct {
   avg_appearance: number | null
   avg_nutrition: number | null
   avg_value: number | null
-  ratings_count: number
+  reviews_count: number
   storage_path: string | null
   agree_count: number
   total_count: number
@@ -48,7 +48,7 @@ interface SimilarProductRow {
   is_organic: boolean
   my_vote: boolean | null
   name: string
-  ratings_count: number
+  reviews_count: number
   storage_path: string | null
   total_count: number
 }
@@ -201,7 +201,7 @@ const getDefaultService = async (): Promise<ReturnType<typeof createSimilarProdu
           is_organic: row.is_organic,
           my_vote: row.my_vote,
           name: row.name,
-          ratings_count: row.ratings_count,
+          reviews_count: row.reviews_count,
           storage_path: row.storage_path,
           total_count: row.total_count,
         })),

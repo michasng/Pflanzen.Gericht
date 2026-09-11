@@ -1,28 +1,28 @@
 import { supabase } from '@/lib/supabase'
 import { generateSquareImageVariants } from '@/lib/generateSquareImageVariants'
 import { deleteImageVariants, persistImageVariants } from '@/lib/imageVariantStorage'
-import type { Rating, RatingInsert, RatingImage } from '@/types'
+import type { Review, ReviewInsert, ReviewImage } from '@/types'
 
 export const ADMIN_PAGE_SIZE = 50
 
-export type AdminRatingItem = Rating & {
+export type AdminReviewItem = Review & {
   profile: { username: string }
   product: { id: string; name: string }
 }
 
-export type RatingFields = Pick<
-  RatingInsert,
+export type ReviewFields = Pick<
+  ReviewInsert,
   'overall' | 'taste' | 'consistency' | 'appearance' | 'nutrition' | 'value' | 'comment'
 >
 
-export const createRating = async (
+export const createReview = async (
   productId: string,
   userId: string,
-  fields: RatingFields,
+  fields: ReviewFields,
   tags: string[],
-): Promise<Rating> => {
+): Promise<Review> => {
   const { data, error } = await supabase
-    .from('rating')
+    .from('review')
     .insert({ ...fields, product_id: productId, user_id: userId })
     .select()
     .single()
@@ -30,22 +30,22 @@ export const createRating = async (
 
   if (tags.length) {
     const { error: tagError } = await supabase
-      .from('rating_tag')
-      .insert(tags.map((tag) => ({ rating_id: data.id, tag })))
+      .from('review_tag')
+      .insert(tags.map((tag) => ({ review_id: data.id, tag })))
     if (tagError) throw tagError
   }
 
   return data
 }
 
-export const uploadRatingImage = async (
-  ratingId: string,
+export const uploadReviewImage = async (
+  reviewId: string,
   userId: string,
   file: File,
   sortOrder: number,
-): Promise<RatingImage> => {
+): Promise<ReviewImage> => {
   const bucket = supabase.storage.from('review-images')
-  const storagePath = `${userId}/${ratingId}/${crypto.randomUUID()}`
+  const storagePath = `${userId}/${reviewId}/${crypto.randomUUID()}`
   const variants = await generateSquareImageVariants(file)
   return persistImageVariants(
     {
@@ -62,8 +62,8 @@ export const uploadRatingImage = async (
     variants,
     async () => {
       const { data, error } = await supabase
-        .from('rating_image')
-        .insert({ rating_id: ratingId, storage_path: storagePath, sort_order: sortOrder })
+        .from('review_image')
+        .insert({ review_id: reviewId, storage_path: storagePath, sort_order: sortOrder })
         .select()
         .single()
       if (error) throw error
@@ -72,44 +72,44 @@ export const uploadRatingImage = async (
   )
 }
 
-export const fetchRatingForEdit = async (
-  ratingId: string,
-): Promise<(Rating & { tags: string[]; images: RatingImage[] }) | null> => {
+export const fetchReviewForEdit = async (
+  reviewId: string,
+): Promise<(Review & { tags: string[]; images: ReviewImage[] }) | null> => {
   const { data, error } = await supabase
-    .from('rating')
-    .select('*, tags:rating_tag(tag), images:rating_image(id, storage_path, sort_order)')
-    .eq('id', ratingId)
+    .from('review')
+    .select('*, tags:review_tag(tag), images:review_image(id, storage_path, sort_order)')
+    .eq('id', reviewId)
     .single()
   if (error?.code === 'PGRST116') return null
   if (error) throw error
   return {
     ...data,
     tags: ((data.tags ?? []) as { tag: string }[]).map((t) => t.tag),
-    images: (data.images as RatingImage[] | null) ?? [],
+    images: (data.images as ReviewImage[] | null) ?? [],
   }
 }
 
-export const updateRating = async (
-  ratingId: string,
-  fields: RatingFields,
+export const updateReview = async (
+  reviewId: string,
+  fields: ReviewFields,
   tags: string[],
 ): Promise<void> => {
-  const { error } = await supabase.from('rating').update(fields).eq('id', ratingId)
+  const { error } = await supabase.from('review').update(fields).eq('id', reviewId)
   if (error) throw error
 
-  const { error: delErr } = await supabase.from('rating_tag').delete().eq('rating_id', ratingId)
+  const { error: delErr } = await supabase.from('review_tag').delete().eq('review_id', reviewId)
   if (delErr) throw delErr
 
   if (tags.length) {
     const { error: tagErr } = await supabase
-      .from('rating_tag')
-      .insert(tags.map((tag) => ({ rating_id: ratingId, tag })))
+      .from('review_tag')
+      .insert(tags.map((tag) => ({ review_id: reviewId, tag })))
     if (tagErr) throw tagErr
   }
 }
 
-export const deleteRatingImage = async (id: string, storagePath: string): Promise<void> => {
-  const { error } = await supabase.from('rating_image').delete().eq('id', id)
+export const deleteReviewImage = async (id: string, storagePath: string): Promise<void> => {
+  const { error } = await supabase.from('review_image').delete().eq('id', id)
   if (error) throw error
   await deleteImageVariants(
     {
@@ -122,9 +122,9 @@ export const deleteRatingImage = async (id: string, storagePath: string): Promis
   )
 }
 
-export const fetchAllRatingsForAdmin = async (page = 0): Promise<AdminRatingItem[]> => {
+export const fetchAllReviewsForAdmin = async (page = 0): Promise<AdminReviewItem[]> => {
   const { data, error } = await supabase
-    .from('rating')
+    .from('review')
     .select('*, profile:user_id(username), product:product_id(id, name)')
     .order('created_at', { ascending: false })
     .range(page * ADMIN_PAGE_SIZE, (page + 1) * ADMIN_PAGE_SIZE - 1)

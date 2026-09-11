@@ -3,10 +3,10 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   fetchPublicProfile,
-  fetchUserRatings,
+  fetchUserReviews,
   fetchUserProducts,
   type PublicProfile,
-  type RatingWithMeta,
+  type ReviewWithMeta,
 } from '@/services/profile'
 import type { Product } from '@/types'
 import StarDisplay from '@/components/StarDisplay.vue'
@@ -21,12 +21,12 @@ import { formatDate } from '@/lib/date'
 const route = useRoute()
 
 const profile = ref<PublicProfile | null>(null)
-const ratings = ref<RatingWithMeta[]>([])
+const reviews = ref<ReviewWithMeta[]>([])
 const products = ref<Product[]>([])
 const loading = ref(true)
 const notFound = ref(false)
 const error = ref<string | null>(null)
-const activeTab = ref<'ratings' | 'products'>('ratings')
+const activeTab = ref<'reviews' | 'products'>('reviews')
 
 onMounted(async () => {
   const userId = route.params.id as string
@@ -38,10 +38,10 @@ onMounted(async () => {
     }
     profile.value = p
     const [r, prods] = await Promise.all([
-      fetchUserRatings(userId, true),
+      fetchUserReviews(userId, true),
       fetchUserProducts(userId),
     ])
-    ratings.value = r
+    reviews.value = r
     products.value = prods
   } catch (err) {
     error.value = toErrorMessage(err)
@@ -89,7 +89,7 @@ onMounted(async () => {
 
       <div class="flex gap-6 py-3 border-t border-b border-gray-100">
         <div class="text-center">
-          <p class="text-xl font-bold text-gray-900">{{ ratings.length }}</p>
+          <p class="text-xl font-bold text-gray-900">{{ reviews.length }}</p>
           <p class="text-xs text-gray-500">Bewertungen</p>
         </div>
         <div class="text-center">
@@ -101,8 +101,8 @@ onMounted(async () => {
       <div role="tablist" class="flex border-b border-gray-200 -mx-4 px-4">
         <TabButton
           ariaLabel="Bewertungen"
-          :active="activeTab === 'ratings'"
-          @click="activeTab = 'ratings'"
+          :active="activeTab === 'reviews'"
+          @click="activeTab = 'reviews'"
         >
           Bewertungen
         </TabButton>
@@ -115,29 +115,29 @@ onMounted(async () => {
         </TabButton>
       </div>
 
-      <template v-if="activeTab === 'ratings'">
-        <p v-if="ratings.length === 0" class="py-12 text-center text-gray-400 text-sm">
+      <template v-if="activeTab === 'reviews'">
+        <p v-if="reviews.length === 0" class="py-12 text-center text-gray-400 text-sm">
           Noch keine Bewertungen.
         </p>
         <ul v-else class="space-y-3">
-          <li v-for="rating in ratings" :key="rating.id">
+          <li v-for="review in reviews" :key="review.id">
             <Card>
               <RouterLink
-                :to="{ name: 'product-detail', params: { id: rating.product.id } }"
+                :to="{ name: 'product-detail', params: { id: review.product.id } }"
                 class="font-semibold text-gray-900 hover:text-primary-600 transition-colors leading-tight block mb-2"
               >
-                {{ rating.product.name }}
+                {{ review.product.name }}
               </RouterLink>
 
               <div class="flex items-center gap-2 mb-2">
-                <StarDisplay :value="rating.overall" />
-                <span class="text-xs text-gray-400">{{ formatDate(rating.created_at) }}</span>
+                <StarDisplay :value="review.overall" />
+                <span class="text-xs text-gray-400">{{ formatDate(review.created_at) }}</span>
               </div>
 
-              <TagList :tags="rating.tags" class="mb-2" />
+              <TagList :tags="review.tags" class="mb-2" />
 
-              <p v-if="rating.comment" class="text-sm text-gray-600 mb-2 line-clamp-2">
-                {{ rating.comment }}
+              <p v-if="review.comment" class="text-sm text-gray-600 mb-2 line-clamp-2">
+                {{ review.comment }}
               </p>
             </Card>
           </li>

@@ -1,5 +1,5 @@
 <script lang="ts">
-export interface RatingFormValues {
+export interface ReviewFormValues {
   overall: number
   taste: number | null
   consistency: number | null
@@ -18,7 +18,7 @@ import ImageUpload from '@/components/ImageUpload.vue'
 import Image from '@/components/primitives/ImageComponent.vue'
 import { TAG_GROUPS } from '@/config/reviewTags'
 import { ImageSize } from '@/config/imageSizes'
-import type { RatingImage } from '@/types'
+import type { ReviewImage } from '@/types'
 import { getImageUrl } from '@/services/catalog'
 
 const CRITERIA_KEYS = ['taste', 'consistency', 'appearance', 'nutrition', 'value'] as const
@@ -33,17 +33,17 @@ const CRITERIA_LABELS: Record<CriteriaKey, string> = {
 
 const props = withDefaults(
   defineProps<{
-    initial?: Partial<RatingFormValues>
-    existingImages?: RatingImage[]
+    initial?: Partial<ReviewFormValues>
+    existingImages?: ReviewImage[]
     submitting?: boolean
   }>(),
   { existingImages: () => [] },
 )
 
 const emit = defineEmits<{
-  submit: [values: RatingFormValues]
+  submit: [values: ReviewFormValues]
   filesChanged: [files: File[]]
-  deleteImage: [image: RatingImage]
+  deleteImage: [image: ReviewImage]
 }>()
 
 const overall = ref<number | null>(props.initial?.overall ?? null)

@@ -33,14 +33,14 @@ const router = createRouter({
         },
         {
           path: 'product/:id/rate',
-          name: 'rating-new',
-          component: () => import('@/views/RatingNewView.vue'),
+          name: 'review-new',
+          component: () => import('@/views/ReviewNewView.vue'),
           meta: { requiresAuth: true },
         },
         {
-          path: 'rating/:ratingId/edit',
-          name: 'rating-edit',
-          component: () => import('@/views/RatingEditView.vue'),
+          path: 'review/:reviewId/edit',
+          name: 'review-edit',
+          component: () => import('@/views/ReviewEditView.vue'),
           meta: { requiresAuth: true },
         },
         {
