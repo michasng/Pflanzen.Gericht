@@ -15,6 +15,7 @@ const PRODUCT_IMAGE_BUCKET = 'product-images'
 const REVIEW_IMAGE_BUCKET = 'review-images'
 const DELETE_PRODUCT_PAGE_SIZE = 1000
 const PRODUCT_DELETE_FAILED_ERROR = 'Product could not be deleted'
+const PRODUCT_DELETE_IN_PROGRESS_ERROR = 'Product deletion is already in progress'
 
 type IngredientWrite = {
   name: string
@@ -315,9 +316,10 @@ const fetchReviewImagePaths = async (productId: string): Promise<string[]> => {
 }
 
 const startProductDeletion = async (id: string): Promise<void> => {
-  const { error } = await supabase
-    .from('pending_product_deletion')
-    .upsert({ product_id: id }, { onConflict: 'product_id', ignoreDuplicates: true })
+  const { error } = await supabase.from('pending_product_deletion').insert({ product_id: id })
+  if (error?.code === '23505') {
+    throw new Error(PRODUCT_DELETE_IN_PROGRESS_ERROR)
+  }
   if (error) throw error
 }
 

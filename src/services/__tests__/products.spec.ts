@@ -5,7 +5,7 @@ const {
   from,
   pendingDelete,
   pendingDeleteEq,
-  pendingUpsert,
+  pendingInsert,
   productDelete,
   productDeleteEq,
   productDeleteSelect,
@@ -33,13 +33,8 @@ const {
   const pendingDelete = vi.fn<() => { eq: typeof pendingDeleteEq }>(() => ({
     eq: pendingDeleteEq,
   }))
-  const pendingUpsert =
-    vi.fn<
-      (
-        values: { product_id: string },
-        options: { ignoreDuplicates: boolean; onConflict: string },
-      ) => Promise<{ error: Error | null }>
-    >()
+  const pendingInsert =
+    vi.fn<(values: { product_id: string }) => Promise<{ error: Error | null; code?: string }>>()
   const productDeleteSelect =
     vi.fn<
       (
@@ -120,7 +115,7 @@ const {
     if (table === 'pending_product_deletion') {
       return {
         delete: pendingDelete,
-        upsert: pendingUpsert,
+        insert: pendingInsert,
       }
     }
 
@@ -161,7 +156,7 @@ const {
     from,
     pendingDelete,
     pendingDeleteEq,
-    pendingUpsert,
+    pendingInsert,
     productDelete,
     productDeleteEq,
     productDeleteSelect,
@@ -226,8 +221,8 @@ describe('deleteProduct', () => {
     pendingDelete.mockClear()
     pendingDeleteEq.mockReset()
     pendingDeleteEq.mockResolvedValue({ error: null })
-    pendingUpsert.mockReset()
-    pendingUpsert.mockResolvedValue({ error: null })
+    pendingInsert.mockReset()
+    pendingInsert.mockResolvedValue({ error: null })
     productDelete.mockClear()
     productDeleteEq.mockClear()
     productDeleteSelect.mockReset()
@@ -263,10 +258,7 @@ describe('deleteProduct', () => {
 
       await deleteProductService('product-1')
 
-      expect(pendingUpsert).toHaveBeenCalledWith(
-        { product_id: 'product-1' },
-        { ignoreDuplicates: true, onConflict: 'product_id' },
-      )
+      expect(pendingInsert).toHaveBeenCalledWith({ product_id: 'product-1' })
       expect(productImageEq).toHaveBeenCalledWith('product_id', 'product-1')
       expect(productImageRange).toHaveBeenCalledWith('product_id', 'product-1', 0, 999)
       expect(productImageRange).toHaveBeenCalledWith('product_id', 'product-1', 1000, 1999)
@@ -325,10 +317,7 @@ describe('deleteProduct', () => {
 
       await deleteProductService('product-1')
 
-      expect(pendingUpsert).toHaveBeenCalledWith(
-        { product_id: 'product-1' },
-        { ignoreDuplicates: true, onConflict: 'product_id' },
-      )
+      expect(pendingInsert).toHaveBeenCalledWith({ product_id: 'product-1' })
       expect(deleteImageVariants).not.toHaveBeenCalled()
       expect(productDeleteEq).toHaveBeenCalledWith('id', 'product-1')
       expect(productDeleteSelect).toHaveBeenCalledWith('id', 'product-1', 'id')
@@ -336,19 +325,21 @@ describe('deleteProduct', () => {
     })
   })
 
-  describe('given deletion lock acquisition must ignore duplicates', () => {
-    it('when deleting a product then it uses an idempotent upsert before continuing the delete flow', async () => {
+  describe('given deletion lock acquisition collides with another delete attempt', () => {
+    it('when deleting a product then it throws a deletion in progress error without clearing another attempt lock', async () => {
       setProductImagePage('product-1', 0, 999, [])
       setReviewImagePage('product-1', 0, 999, [])
+      pendingInsert.mockResolvedValueOnce({
+        error: Object.assign(new Error('duplicate key'), { code: '23505' }),
+      })
 
-      await deleteProductService('product-1')
-
-      expect(pendingUpsert).toHaveBeenCalledWith(
-        { product_id: 'product-1' },
-        { ignoreDuplicates: true, onConflict: 'product_id' },
+      await expect(deleteProductService('product-1')).rejects.toThrow(
+        'Product deletion is already in progress',
       )
-      expect(productDeleteEq).toHaveBeenCalledWith('id', 'product-1')
-      expect(productDeleteSelect).toHaveBeenCalledWith('id', 'product-1', 'id')
+
+      expect(pendingInsert).toHaveBeenCalledWith({ product_id: 'product-1' })
+      expect(productDeleteEq).not.toHaveBeenCalled()
+      expect(productDeleteSelect).not.toHaveBeenCalled()
       expect(pendingDeleteEq).not.toHaveBeenCalled()
     })
   })
