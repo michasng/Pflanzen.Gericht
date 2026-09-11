@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { fetchProductDetail, getImageUrl, type ProductDetail } from '@/services/catalog'
@@ -140,18 +140,37 @@ const removePriceReport = async (id: string): Promise<void> => {
   }
 }
 
-onMounted(async () => {
-  const id = route.params.id as string
-  try {
-    const data = await fetchProductDetail(id)
-    if (!data) notFound.value = true
-    else product.value = data
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Produkt konnte nicht geladen werden.'
-  } finally {
-    loading.value = false
-  }
-})
+watch(
+  () => route.params.id as string,
+  async (id, _previousId, onCleanup) => {
+    let isCurrentRequest = true
+    onCleanup(() => {
+      isCurrentRequest = false
+    })
+
+    loading.value = true
+    error.value = null
+    notFound.value = false
+    product.value = null
+    activeImageIndex.value = 0
+    try {
+      const data = await fetchProductDetail(id)
+      if (isCurrentRequest) {
+        if (!data) notFound.value = true
+        else product.value = data
+      }
+    } catch (err) {
+      if (isCurrentRequest) {
+        error.value = err instanceof Error ? err.message : 'Produkt konnte nicht geladen werden.'
+      }
+    } finally {
+      if (isCurrentRequest) {
+        loading.value = false
+      }
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
