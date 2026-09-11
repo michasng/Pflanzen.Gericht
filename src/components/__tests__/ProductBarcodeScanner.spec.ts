@@ -127,8 +127,9 @@ describe('ProductBarcodeScanner', () => {
     })
 
     await wrapper.get('[data-test="toggle-manual-entry"]').trigger('click')
-    await wrapper.get('input#pbs-manual-barcode').setValue('4006381333931')
-    await wrapper.get('form').trigger('submit')
+    const barcodeInput = wrapper.get('input#pbs-manual-barcode')
+    await barcodeInput.setValue('4006381333931')
+    await barcodeInput.trigger('keydown.enter')
     await dependencies.fetchProduct.mock.results[0]?.value
 
     expect(dependencies.fetchProduct).toHaveBeenCalledWith('4006381333931')
@@ -164,7 +165,7 @@ describe('ProductBarcodeScanner', () => {
 
     await wrapper.get('[data-test="toggle-manual-entry"]').trigger('click')
     await wrapper.get('input#pbs-manual-barcode').setValue('not-a-barcode')
-    await wrapper.get('form').trigger('submit')
+    await wrapper.get('button[aria-label="Barcode prüfen"]').trigger('click')
 
     expect(dependencies.fetchProduct).not.toHaveBeenCalled()
     expect(wrapper.get('[role="alert"]').text()).toBe('Dieser Barcode hat kein gültiges Format.')

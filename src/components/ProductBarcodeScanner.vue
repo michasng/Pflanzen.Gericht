@@ -112,27 +112,28 @@ const handleManualSubmit = async (): Promise<void> => {
     >
       {{ showManualEntry ? 'Manuelle Eingabe ausblenden' : 'Barcode manuell eingeben' }}
     </Button>
-    <form v-if="showManualEntry" class="mt-2 flex gap-2" @submit.prevent="handleManualSubmit">
+    <div v-if="showManualEntry" class="mt-2 flex gap-2">
       <label class="sr-only" for="pbs-manual-barcode">Barcode</label>
       <input
         id="pbs-manual-barcode"
         v-model="manualBarcode"
         type="text"
         inputmode="numeric"
-        pattern="\d*"
         placeholder="Barcode eingeben"
         :disabled="loadingProduct"
         class="flex-1 min-w-0 py-2 px-3 border border-gray-200 rounded-lg text-sm disabled:opacity-60"
+        @keydown.enter.prevent="handleManualSubmit"
       />
       <Button
-        type="submit"
+        type="button"
         ariaLabel="Barcode prüfen"
         :disabled="loadingProduct || !manualBarcode.trim()"
         :variant="ButtonVariant.Outlined"
+        @click="handleManualSubmit"
       >
         Prüfen
       </Button>
-    </form>
+    </div>
     <p class="mt-2 text-xs text-gray-600">
       Produktdaten von
       <a
