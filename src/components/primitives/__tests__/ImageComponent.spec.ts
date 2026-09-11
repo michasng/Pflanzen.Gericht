@@ -20,4 +20,11 @@ describe('ImageComponent', () => {
     expect(wrapper.classes()).toContain('aspect-square')
     expect(wrapper.classes()).toContain('bg-white')
   })
+
+  it('forwards loading when provided', () => {
+    const wrapper = mount(ImageComponent, {
+      props: { src: '/photo.jpg', alt: 'A photo', loading: 'lazy' },
+    })
+    expect(wrapper.find('img').attributes('loading')).toBe('lazy')
+  })
 })

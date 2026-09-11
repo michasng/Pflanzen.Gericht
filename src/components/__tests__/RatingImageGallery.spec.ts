@@ -41,6 +41,20 @@ describe('RatingImageGallery', () => {
       expect(wrapper.findAll('img')).toHaveLength(2)
     })
 
+    it('sorts previews by sort order', () => {
+      const wrapper = mount(RatingImageGallery, {
+        props: { images: [...images].reverse() },
+      })
+
+      const previewImages = wrapper.findAll('img')
+      expect(previewImages[0]?.attributes('src')).toBe(
+        'https://cdn.test/review-images/photo-1.webp',
+      )
+      expect(previewImages[1]?.attributes('src')).toBe(
+        'https://cdn.test/review-images/photo-2.webp',
+      )
+    })
+
     it('does not show the enlarged dialog initially', () => {
       const wrapper = mount(RatingImageGallery, { props: { images } })
 

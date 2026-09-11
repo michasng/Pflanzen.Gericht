@@ -1,12 +1,18 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import Image from '@/components/primitives/ImageComponent.vue'
 import { getImageUrl } from '@/services/catalog'
 import type { RatingImage } from '@/types'
 
 const REVIEW_IMAGE_BUCKET = 'review-images'
 
-defineProps<{ images: RatingImage[] }>()
+const props = defineProps<{ images: RatingImage[] }>()
+
+const sortedImages = computed(() =>
+  [...props.images].sort(
+    (firstImage, secondImage) => firstImage.sort_order - secondImage.sort_order,
+  ),
+)
 
 const selectedImage = ref<RatingImage | null>(null)
 
@@ -16,9 +22,9 @@ const closeDialog = (): void => {
 </script>
 
 <template>
-  <div v-if="images.length" class="grid grid-cols-4 gap-2">
+  <div v-if="sortedImages.length" class="grid grid-cols-4 gap-2">
     <button
-      v-for="(image, index) in images"
+      v-for="(image, index) in sortedImages"
       :key="image.id"
       type="button"
       class="overflow-hidden rounded-lg border border-gray-100"

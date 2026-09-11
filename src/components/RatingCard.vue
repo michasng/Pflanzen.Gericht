@@ -75,7 +75,9 @@ const filledCriteria = computed(() => {
 
     <p v-if="rating.comment" class="text-sm text-gray-600 mb-3">{{ rating.comment }}</p>
 
-    <RatingImageGallery :images="rating.images" class="mb-3" />
+    <div class="mb-3">
+      <RatingImageGallery :images="rating.images" />
+    </div>
 
     <div v-if="editable" class="mt-3 pt-2 border-t border-gray-50">
       <RouterLink
