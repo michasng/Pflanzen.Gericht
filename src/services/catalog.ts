@@ -101,6 +101,7 @@ export const fetchProducts = async (filter: CatalogFilter, page = 0): Promise<Pr
     items: rows.map((r) => ({
       ...r,
       avg_overall: r.avg_overall ?? null,
+      barcode: null,
       brand: r.brand ?? null,
       base: r.base ?? null,
       description: r.description ?? null,

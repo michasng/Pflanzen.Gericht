@@ -51,7 +51,7 @@ export const useProductBarcodeScanner = (
     loadingProduct.value = true
     try {
       const product = await dependencies.fetchProduct(barcode)
-      const values = dependencies.mapProductToFormValues(product)
+      const values = { ...dependencies.mapProductToFormValues(product), barcode }
       const imageFile = product.image_url
         ? await dependencies.fetchProductImage(product.image_url).catch(() => null)
         : null

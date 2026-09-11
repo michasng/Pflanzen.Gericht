@@ -67,6 +67,7 @@ const createDeferred = <T>(): Deferred<T> => {
 const createProductDetail = (id: string, name: string): ProductDetail => ({
   allergens: [],
   avg_overall: 4.2,
+  barcode: null,
   base: null,
   brand: null,
   category: 'drink',

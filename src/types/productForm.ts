@@ -21,6 +21,7 @@ export interface ProductFormValues {
   energyJoules: number | null
   allergens: Allergen[]
   isOrganic: boolean
+  barcode: string | null
   ingredients: ProductFormIngredient[]
   nutrients: ProductFormNutrient[]
 }
