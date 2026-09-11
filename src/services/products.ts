@@ -266,6 +266,53 @@ export const deleteProductImage = async (id: string, storagePath: string): Promi
 }
 
 export const deleteProduct = async (id: string): Promise<void> => {
+  const { data: productImages, error: productImagesError } = await supabase
+    .from('product_image')
+    .select('storage_path')
+    .eq('product_id', id)
+  if (productImagesError) throw productImagesError
+
+  const { data: reviews, error: reviewsError } = await supabase
+    .from('review')
+    .select('id')
+    .eq('product_id', id)
+  if (reviewsError) throw reviewsError
+
+  const reviewIds = (reviews ?? []).map((review) => review.id)
+  let reviewImages: { storage_path: string }[] = []
+  if (reviewIds.length) {
+    const { data, error: reviewImagesError } = await supabase
+      .from('review_image')
+      .select('storage_path')
+      .in('review_id', reviewIds)
+    if (reviewImagesError) throw reviewImagesError
+    reviewImages = data ?? []
+  }
+
+  if (productImages?.length) {
+    await deleteImageVariants(
+      {
+        removeVariants: async (paths) => {
+          const { error: removeError } = await supabase.storage.from('product-images').remove(paths)
+          if (removeError) throw removeError
+        },
+      },
+      productImages.map((image) => image.storage_path),
+    )
+  }
+
+  if (reviewImages.length) {
+    await deleteImageVariants(
+      {
+        removeVariants: async (paths) => {
+          const { error: removeError } = await supabase.storage.from('review-images').remove(paths)
+          if (removeError) throw removeError
+        },
+      },
+      reviewImages.map((image) => image.storage_path),
+    )
+  }
+
   const { error } = await supabase.from('product').delete().eq('id', id)
   if (error) throw error
 }
