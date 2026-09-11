@@ -50,7 +50,8 @@ export const uploadRatingImage = async (
   return persistImageVariants(
     {
       removeVariants: async (paths) => {
-        await bucket.remove(paths)
+        const { error } = await bucket.remove(paths)
+        if (error) throw error
       },
       uploadVariant: async (path, variantFile) => {
         const { error } = await bucket.upload(path, variantFile, { contentType: 'image/webp' })
@@ -113,7 +114,8 @@ export const deleteRatingImage = async (id: string, storagePath: string): Promis
   await deleteImageVariants(
     {
       removeVariants: async (paths) => {
-        await supabase.storage.from('review-images').remove(paths)
+        const { error: removeError } = await supabase.storage.from('review-images').remove(paths)
+        if (removeError) throw removeError
       },
     },
     [storagePath],

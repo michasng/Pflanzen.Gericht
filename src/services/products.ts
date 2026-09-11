@@ -229,7 +229,8 @@ export const uploadProductImage = async (
   return persistImageVariants(
     {
       removeVariants: async (paths) => {
-        await bucket.remove(paths)
+        const { error } = await bucket.remove(paths)
+        if (error) throw error
       },
       uploadVariant: async (path, variantFile) => {
         const { error } = await bucket.upload(path, variantFile, { contentType: 'image/webp' })
@@ -256,7 +257,8 @@ export const deleteProductImage = async (id: string, storagePath: string): Promi
   await deleteImageVariants(
     {
       removeVariants: async (paths) => {
-        await supabase.storage.from('product-images').remove(paths)
+        const { error: removeError } = await supabase.storage.from('product-images').remove(paths)
+        if (removeError) throw removeError
       },
     },
     [storagePath],

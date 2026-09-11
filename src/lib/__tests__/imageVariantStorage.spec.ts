@@ -73,6 +73,27 @@ describe('imageVariantStorage', () => {
     })
   })
 
+  describe('given all uploads and persistence succeed', () => {
+    it('when persisting variants, returns the stored value without cleanup', async () => {
+      const removeVariants = vi
+        .fn<(paths: string[]) => Promise<void>>()
+        .mockResolvedValue(undefined)
+      const uploadVariant = vi
+        .fn<(path: string, file: File) => Promise<{ error: Error | null }>>()
+        .mockResolvedValue({ error: null })
+
+      const result = await persistImageVariants(
+        { removeVariants, uploadVariant },
+        'user/entity/file',
+        createVariants(),
+        async () => 'stored',
+      )
+
+      expect(result).toBe('stored')
+      expect(removeVariants).not.toHaveBeenCalled()
+    })
+  })
+
   describe('given stored image directories', () => {
     it('when deleting variants, expands each directory to all image sizes', async () => {
       const removeVariants = vi
