@@ -9,6 +9,7 @@ import Button from '@/components/primitives/ButtonComponent.vue'
 import { ButtonVariant } from '@/components/primitives/ButtonVariant'
 import { ButtonSize } from '@/components/primitives/ButtonSize'
 import Grid from '@/components/primitives/GridComponent.vue'
+import { ImageSize } from '@/config/imageSizes'
 import { getImageUrl } from '@/services/catalog'
 import {
   adminRemoveSimilarity,
@@ -171,7 +172,9 @@ const handleAdminRemove = async (): Promise<void> => {
 }
 
 const suggestionImageUrl = (candidate: SimilarityCandidate): string | null =>
-  candidate.storage_path ? getImageUrl('product-images', candidate.storage_path) : null
+  candidate.storage_path
+    ? getImageUrl('product-images', candidate.storage_path, ImageSize.Thumbnail)
+    : null
 
 const selectHighlightedSuggestion = (event: KeyboardEvent): void => {
   const highlightedSuggestion = suggestions.value[highlightedSuggestionIndex.value]

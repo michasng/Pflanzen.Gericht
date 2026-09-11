@@ -1,4 +1,6 @@
 import { supabase } from '@/lib/supabase'
+import { generateSquareImageVariants } from '@/lib/generateSquareImageVariants'
+import { deleteImageVariants, persistImageVariants } from '@/lib/imageVariantStorage'
 import type {
   Product,
   ProductInsert,
@@ -221,25 +223,46 @@ export const uploadProductImage = async (
   file: File,
   sortOrder: number,
 ): Promise<ProductImage> => {
-  const path = `${userId}/${productId}/${crypto.randomUUID()}.webp`
-  const { error: uploadError } = await supabase.storage
-    .from('product-images')
-    .upload(path, file, { contentType: 'image/webp' })
-  if (uploadError) throw uploadError
-
-  const { data, error } = await supabase
-    .from('product_image')
-    .insert({ product_id: productId, storage_path: path, sort_order: sortOrder })
-    .select()
-    .single()
-  if (error) throw error
-  return data
+  const bucket = supabase.storage.from('product-images')
+  const storagePath = `${userId}/${productId}/${crypto.randomUUID()}`
+  const variants = await generateSquareImageVariants(file)
+  return persistImageVariants(
+    {
+      removeVariants: async (paths) => {
+        const { error } = await bucket.remove(paths)
+        if (error) throw error
+      },
+      uploadVariant: async (path, variantFile) => {
+        const { error } = await bucket.upload(path, variantFile, { contentType: 'image/webp' })
+        return { error }
+      },
+    },
+    storagePath,
+    variants,
+    async () => {
+      const { data, error } = await supabase
+        .from('product_image')
+        .insert({ product_id: productId, storage_path: storagePath, sort_order: sortOrder })
+        .select()
+        .single()
+      if (error) throw error
+      return data
+    },
+  )
 }
 
 export const deleteProductImage = async (id: string, storagePath: string): Promise<void> => {
   const { error } = await supabase.from('product_image').delete().eq('id', id)
   if (error) throw error
-  await supabase.storage.from('product-images').remove([storagePath])
+  await deleteImageVariants(
+    {
+      removeVariants: async (paths) => {
+        const { error: removeError } = await supabase.storage.from('product-images').remove(paths)
+        if (removeError) throw removeError
+      },
+    },
+    [storagePath],
+  )
 }
 
 export const deleteProduct = async (id: string): Promise<void> => {

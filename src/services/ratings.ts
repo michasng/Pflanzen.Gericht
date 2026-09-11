@@ -1,4 +1,6 @@
 import { supabase } from '@/lib/supabase'
+import { generateSquareImageVariants } from '@/lib/generateSquareImageVariants'
+import { deleteImageVariants, persistImageVariants } from '@/lib/imageVariantStorage'
 import type { Rating, RatingInsert, RatingImage } from '@/types'
 
 export const ADMIN_PAGE_SIZE = 50
@@ -42,19 +44,32 @@ export const uploadRatingImage = async (
   file: File,
   sortOrder: number,
 ): Promise<RatingImage> => {
-  const path = `${userId}/${ratingId}/${crypto.randomUUID()}.webp`
-  const { error: uploadError } = await supabase.storage
-    .from('review-images')
-    .upload(path, file, { contentType: 'image/webp' })
-  if (uploadError) throw uploadError
-
-  const { data, error } = await supabase
-    .from('rating_image')
-    .insert({ rating_id: ratingId, storage_path: path, sort_order: sortOrder })
-    .select()
-    .single()
-  if (error) throw error
-  return data
+  const bucket = supabase.storage.from('review-images')
+  const storagePath = `${userId}/${ratingId}/${crypto.randomUUID()}`
+  const variants = await generateSquareImageVariants(file)
+  return persistImageVariants(
+    {
+      removeVariants: async (paths) => {
+        const { error } = await bucket.remove(paths)
+        if (error) throw error
+      },
+      uploadVariant: async (path, variantFile) => {
+        const { error } = await bucket.upload(path, variantFile, { contentType: 'image/webp' })
+        return { error }
+      },
+    },
+    storagePath,
+    variants,
+    async () => {
+      const { data, error } = await supabase
+        .from('rating_image')
+        .insert({ rating_id: ratingId, storage_path: storagePath, sort_order: sortOrder })
+        .select()
+        .single()
+      if (error) throw error
+      return data
+    },
+  )
 }
 
 export const fetchRatingForEdit = async (
@@ -96,7 +111,15 @@ export const updateRating = async (
 export const deleteRatingImage = async (id: string, storagePath: string): Promise<void> => {
   const { error } = await supabase.from('rating_image').delete().eq('id', id)
   if (error) throw error
-  await supabase.storage.from('review-images').remove([storagePath])
+  await deleteImageVariants(
+    {
+      removeVariants: async (paths) => {
+        const { error: removeError } = await supabase.storage.from('review-images').remove(paths)
+        if (removeError) throw removeError
+      },
+    },
+    [storagePath],
+  )
 }
 
 export const fetchAllRatingsForAdmin = async (page = 0): Promise<AdminRatingItem[]> => {

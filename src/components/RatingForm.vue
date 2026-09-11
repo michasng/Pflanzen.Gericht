@@ -17,6 +17,7 @@ import StarRatingInput from '@/components/StarRatingInput.vue'
 import ImageUpload from '@/components/ImageUpload.vue'
 import Image from '@/components/primitives/ImageComponent.vue'
 import { TAG_GROUPS } from '@/config/reviewTags'
+import { ImageSize } from '@/config/imageSizes'
 import type { RatingImage } from '@/types'
 import { getImageUrl } from '@/services/catalog'
 
@@ -144,7 +145,10 @@ const handleSubmit = (): void => {
           :key="img.id"
           class="relative rounded-lg overflow-hidden bg-gray-100"
         >
-          <Image :src="getImageUrl('review-images', img.storage_path)" alt="" />
+          <Image
+            :src="getImageUrl('review-images', img.storage_path, ImageSize.Thumbnail)"
+            alt=""
+          />
           <button
             type="button"
             class="absolute top-1 right-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"

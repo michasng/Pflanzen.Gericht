@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import Image from '@/components/primitives/ImageComponent.vue'
+import { ImageSize } from '@/config/imageSizes'
 import { getImageUrl } from '@/services/catalog'
 import type { RatingImage } from '@/types'
 
@@ -32,7 +33,7 @@ const closeDialog = (): void => {
       @click="selectedImage = image"
     >
       <Image
-        :src="getImageUrl(REVIEW_IMAGE_BUCKET, image.storage_path)"
+        :src="getImageUrl(REVIEW_IMAGE_BUCKET, image.storage_path, ImageSize.Thumbnail)"
         :alt="`Foto ${index + 1}`"
       />
     </button>
@@ -54,7 +55,7 @@ const closeDialog = (): void => {
         class="fixed inset-x-4 top-1/2 z-50 -translate-y-1/2 sm:mx-auto sm:max-w-md"
       >
         <Image
-          :src="getImageUrl(REVIEW_IMAGE_BUCKET, selectedImage.storage_path)"
+          :src="getImageUrl(REVIEW_IMAGE_BUCKET, selectedImage.storage_path, ImageSize.Large)"
           alt="Foto in voller Größe"
           class="rounded-2xl"
         />

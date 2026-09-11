@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { deleteImageVariants } from '@/lib/imageVariantStorage'
 import type { Product, Rating } from '@/types'
 
 export type PublicProfile = {
@@ -52,17 +53,26 @@ export const updateProfile = async (
 }
 
 export const deleteRating = async (ratingId: string): Promise<void> => {
-  const { data: images } = await supabase
+  const { data: ratingImages, error: ratingImagesError } = await supabase
     .from('rating_image')
     .select('storage_path')
     .eq('rating_id', ratingId)
+  if (ratingImagesError) throw ratingImagesError
+
+  if (ratingImages?.length) {
+    await deleteImageVariants(
+      {
+        removeVariants: async (paths) => {
+          const { error: removeError } = await supabase.storage.from('review-images').remove(paths)
+          if (removeError) throw removeError
+        },
+      },
+      ratingImages.map((ratingImage) => ratingImage.storage_path),
+    )
+  }
 
   const { error } = await supabase.from('rating').delete().eq('id', ratingId)
   if (error) throw error
-
-  if (images?.length) {
-    await supabase.storage.from('review-images').remove(images.map((img) => img.storage_path))
-  }
 }
 
 export const isUsernameAvailable = async (username: string): Promise<boolean> => {

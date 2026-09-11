@@ -9,6 +9,7 @@ import type {
 } from '@/types'
 import { fetchPriceReports, type PriceReportWithProfile } from '@/services/prices'
 import type { SortOption } from '@/config/sortOptions'
+import { ImageSize } from '@/config/imageSizes'
 
 export type { SortOption }
 
@@ -156,7 +157,7 @@ export const fetchProductDetail = async (id: string): Promise<ProductDetail | nu
   }
 }
 
-export const getImageUrl = (bucket: string, path: string): string => {
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path)
+export const getImageUrl = (bucket: string, storagePath: string, size: ImageSize): string => {
+  const { data } = supabase.storage.from(bucket).getPublicUrl(`${storagePath}/${size}.webp`)
   return data.publicUrl
 }

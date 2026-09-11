@@ -7,6 +7,7 @@ import ReviewScoreDimensions from '@/components/ReviewScoreDimensions.vue'
 import StarDisplay from '@/components/StarDisplay.vue'
 import { allergenToLabel } from '@/config/allergens'
 import { baseToLabel } from '@/config/bases'
+import { ImageSize } from '@/config/imageSizes'
 import { getImageUrl } from '@/services/catalog'
 import type { SimilarProduct } from '@/services/similarProducts'
 
@@ -26,7 +27,9 @@ defineEmits<{
 }>()
 
 const coverUrl = computed(() =>
-  props.product?.storage_path ? getImageUrl('product-images', props.product.storage_path) : null,
+  props.product?.storage_path
+    ? getImageUrl('product-images', props.product.storage_path, ImageSize.Preview)
+    : null,
 )
 const agreementPercent = computed(() =>
   props.product ? Math.round(props.product.agreement_rate * 100) : 0,
