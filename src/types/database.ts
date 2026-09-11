@@ -252,29 +252,6 @@ export type Database = {
           },
         ]
       }
-      pending_product_deletion: {
-        Row: {
-          created_at: string
-          product_id: string
-        }
-        Insert: {
-          created_at?: string
-          product_id: string
-        }
-        Update: {
-          created_at?: string
-          product_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'pending_product_deletion_product_id_fkey'
-            columns: ['product_id']
-            isOneToOne: false
-            referencedRelation: 'product'
-            referencedColumns: ['id']
-          },
-        ]
-      }
       product_similarity_vote: {
         Row: {
           agreed: boolean

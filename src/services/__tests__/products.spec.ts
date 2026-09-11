@@ -3,9 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const {
   deleteImageVariants,
   from,
-  pendingDelete,
-  pendingDeleteEq,
-  pendingInsert,
   productDelete,
   productDeleteEq,
   productDeleteSelect,
@@ -28,13 +25,6 @@ const {
     { error: Error | null; rows: { storage_path: string }[] }
   >()
 
-  const pendingDeleteEq =
-    vi.fn<(column: string, value: string) => Promise<{ error: Error | null }>>()
-  const pendingDelete = vi.fn<() => { eq: typeof pendingDeleteEq }>(() => ({
-    eq: pendingDeleteEq,
-  }))
-  const pendingInsert =
-    vi.fn<(values: { product_id: string }) => Promise<{ error: Error | null; code?: string }>>()
   const productDeleteSelect =
     vi.fn<
       (
@@ -112,13 +102,6 @@ const {
     throw new Error(`Unexpected bucket: ${bucket}`)
   })
   const from = vi.fn<(table: string) => unknown>((table) => {
-    if (table === 'pending_product_deletion') {
-      return {
-        delete: pendingDelete,
-        insert: pendingInsert,
-      }
-    }
-
     if (table === 'product') {
       return {
         delete: productDelete,
@@ -154,9 +137,6 @@ const {
   return {
     deleteImageVariants,
     from,
-    pendingDelete,
-    pendingDeleteEq,
-    pendingInsert,
     productDelete,
     productDeleteEq,
     productDeleteSelect,
@@ -218,11 +198,6 @@ describe('deleteProduct', () => {
     deleteImageVariants.mockReset()
     deleteImageVariants.mockResolvedValue(undefined)
     from.mockClear()
-    pendingDelete.mockClear()
-    pendingDeleteEq.mockReset()
-    pendingDeleteEq.mockResolvedValue({ error: null })
-    pendingInsert.mockReset()
-    pendingInsert.mockResolvedValue({ error: null })
     productDelete.mockClear()
     productDeleteEq.mockClear()
     productDeleteSelect.mockReset()
@@ -258,7 +233,6 @@ describe('deleteProduct', () => {
 
       await deleteProductService('product-1')
 
-      expect(pendingInsert).toHaveBeenCalledWith({ product_id: 'product-1' })
       expect(productImageEq).toHaveBeenCalledWith('product_id', 'product-1')
       expect(productImageRange).toHaveBeenCalledWith('product_id', 'product-1', 0, 999)
       expect(productImageRange).toHaveBeenCalledWith('product_id', 'product-1', 1000, 1999)
@@ -290,7 +264,6 @@ describe('deleteProduct', () => {
       if (productDeleteCallOrder === undefined)
         throw new Error('Expected product delete call order')
       expect(lastCleanupCallOrder).toBeLessThan(productDeleteCallOrder)
-      expect(pendingDeleteEq).not.toHaveBeenCalled()
 
       const productCleanupDependencies = deleteImageVariants.mock.calls[0]?.[0]
       const reviewCleanupDependencies = deleteImageVariants.mock.calls[1]?.[0]
@@ -311,41 +284,20 @@ describe('deleteProduct', () => {
   })
 
   describe('given no dependent storage images exist', () => {
-    it('when deleting a product then it deletes only the product row after starting the deletion state', async () => {
+    it('when deleting a product then it deletes only the product row', async () => {
       setProductImagePage('product-1', 0, 999, [])
       setReviewImagePage('product-1', 0, 999, [])
 
       await deleteProductService('product-1')
 
-      expect(pendingInsert).toHaveBeenCalledWith({ product_id: 'product-1' })
       expect(deleteImageVariants).not.toHaveBeenCalled()
       expect(productDeleteEq).toHaveBeenCalledWith('id', 'product-1')
       expect(productDeleteSelect).toHaveBeenCalledWith('id', 'product-1', 'id')
-      expect(pendingDeleteEq).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('given deletion lock acquisition collides with another delete attempt', () => {
-    it('when deleting a product then it throws a deletion in progress error without clearing another attempt lock', async () => {
-      setProductImagePage('product-1', 0, 999, [])
-      setReviewImagePage('product-1', 0, 999, [])
-      pendingInsert.mockResolvedValueOnce({
-        error: Object.assign(new Error('duplicate key'), { code: '23505' }),
-      })
-
-      await expect(deleteProductService('product-1')).rejects.toThrow(
-        'Product deletion is already in progress',
-      )
-
-      expect(pendingInsert).toHaveBeenCalledWith({ product_id: 'product-1' })
-      expect(productDeleteEq).not.toHaveBeenCalled()
-      expect(productDeleteSelect).not.toHaveBeenCalled()
-      expect(pendingDeleteEq).not.toHaveBeenCalled()
     })
   })
 
   describe('given loading product images fails', () => {
-    it('when deleting a product then it clears the deletion state and rethrows the error', async () => {
+    it('when deleting a product then it rethrows the error', async () => {
       const error = new Error('load product images failed')
       setProductImagePage('product-1', 0, 999, [], error)
       setReviewImagePage('product-1', 0, 999, [])
@@ -355,40 +307,36 @@ describe('deleteProduct', () => {
       expect(deleteImageVariants).not.toHaveBeenCalled()
       expect(productDeleteEq).not.toHaveBeenCalled()
       expect(productDeleteSelect).not.toHaveBeenCalled()
-      expect(pendingDeleteEq).toHaveBeenCalledWith('product_id', 'product-1')
     })
   })
 
   describe('given removing image variants fails', () => {
-    it('when deleting a product then it clears the deletion state and rethrows the error', async () => {
+    it('when deleting a product then it rethrows the error', async () => {
       const error = new Error('remove variants failed')
       setProductImagePage('product-1', 0, 999, [{ storage_path: 'product-image-1' }])
       setReviewImagePage('product-1', 0, 999, [])
       deleteImageVariants.mockRejectedValueOnce(error)
 
       await expect(deleteProductService('product-1')).rejects.toThrow(error)
-
       expect(productDeleteEq).not.toHaveBeenCalled()
       expect(productDeleteSelect).not.toHaveBeenCalled()
-      expect(pendingDeleteEq).toHaveBeenCalledWith('product_id', 'product-1')
+      expect(productDeleteSelect).not.toHaveBeenCalled()
     })
   })
 
   describe('given deleting the product row fails', () => {
-    it('when deleting a product then it clears the deletion state and rethrows the database error', async () => {
+    it('when deleting a product then it rethrows the database error', async () => {
       const error = new Error('delete failed')
       setProductImagePage('product-1', 0, 999, [])
       setReviewImagePage('product-1', 0, 999, [])
       productDeleteSelect.mockResolvedValueOnce({ data: null, error })
 
       await expect(deleteProductService('product-1')).rejects.toThrow(error)
-
-      expect(pendingDeleteEq).toHaveBeenCalledWith('product_id', 'product-1')
     })
   })
 
   describe('given the product row is not deleted', () => {
-    it('when deleting a product then it clears the deletion state and throws a delete failure error', async () => {
+    it('when deleting a product then it throws a delete failure error', async () => {
       setProductImagePage('product-1', 0, 999, [])
       setReviewImagePage('product-1', 0, 999, [])
       productDeleteSelect.mockResolvedValueOnce({ data: [], error: null })
@@ -396,8 +344,6 @@ describe('deleteProduct', () => {
       await expect(deleteProductService('product-1')).rejects.toThrow(
         'Product could not be deleted',
       )
-
-      expect(pendingDeleteEq).toHaveBeenCalledWith('product_id', 'product-1')
     })
   })
 })

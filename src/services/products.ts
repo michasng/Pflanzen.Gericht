@@ -15,7 +15,6 @@ const PRODUCT_IMAGE_BUCKET = 'product-images'
 const REVIEW_IMAGE_BUCKET = 'review-images'
 const DELETE_PRODUCT_PAGE_SIZE = 1000
 const PRODUCT_DELETE_FAILED_ERROR = 'Product could not be deleted'
-const PRODUCT_DELETE_IN_PROGRESS_ERROR = 'Product deletion is already in progress'
 
 type IngredientWrite = {
   name: string
@@ -315,68 +314,48 @@ const fetchReviewImagePaths = async (productId: string): Promise<string[]> => {
   return reviewImages.map((reviewImage) => reviewImage.storage_path)
 }
 
-const startProductDeletion = async (id: string): Promise<void> => {
-  const { error } = await supabase.from('pending_product_deletion').insert({ product_id: id })
-  if (error?.code === '23505') {
-    throw new Error(PRODUCT_DELETE_IN_PROGRESS_ERROR)
-  }
-  if (error) throw error
-}
-
-const clearProductDeletion = async (id: string): Promise<void> => {
-  const { error } = await supabase.from('pending_product_deletion').delete().eq('product_id', id)
-  if (error) throw error
-}
-
 export const deleteProduct = async (id: string): Promise<void> => {
-  await startProductDeletion(id)
+  const [productImagePaths, reviewImagePaths] = await Promise.all([
+    fetchProductImagePaths(id),
+    fetchReviewImagePaths(id),
+  ])
 
-  try {
-    const [productImagePaths, reviewImagePaths] = await Promise.all([
-      fetchProductImagePaths(id),
-      fetchReviewImagePaths(id),
-    ])
-
-    if (productImagePaths.length) {
-      await deleteImageVariants(
-        {
-          removeVariants: async (paths) => {
-            const { error: removeError } = await supabase.storage
-              .from(PRODUCT_IMAGE_BUCKET)
-              .remove(paths)
-            if (removeError) throw removeError
-          },
+  if (productImagePaths.length) {
+    await deleteImageVariants(
+      {
+        removeVariants: async (paths) => {
+          const { error: removeError } = await supabase.storage
+            .from(PRODUCT_IMAGE_BUCKET)
+            .remove(paths)
+          if (removeError) throw removeError
         },
-        productImagePaths,
-      )
-    }
+      },
+      productImagePaths,
+    )
+  }
 
-    if (reviewImagePaths.length) {
-      await deleteImageVariants(
-        {
-          removeVariants: async (paths) => {
-            const { error: removeError } = await supabase.storage
-              .from(REVIEW_IMAGE_BUCKET)
-              .remove(paths)
-            if (removeError) throw removeError
-          },
+  if (reviewImagePaths.length) {
+    await deleteImageVariants(
+      {
+        removeVariants: async (paths) => {
+          const { error: removeError } = await supabase.storage
+            .from(REVIEW_IMAGE_BUCKET)
+            .remove(paths)
+          if (removeError) throw removeError
         },
-        reviewImagePaths,
-      )
-    }
+      },
+      reviewImagePaths,
+    )
+  }
 
-    const { data: deletedProducts, error } = await supabase
-      .from('product')
-      .delete()
-      .eq('id', id)
-      .select('id')
-    if (error) throw error
-    if (deletedProducts?.length !== 1) {
-      throw new Error(PRODUCT_DELETE_FAILED_ERROR)
-    }
-  } catch (error) {
-    await clearProductDeletion(id).catch(() => undefined)
-    throw error
+  const { data: deletedProducts, error } = await supabase
+    .from('product')
+    .delete()
+    .eq('id', id)
+    .select('id')
+  if (error) throw error
+  if (deletedProducts?.length !== 1) {
+    throw new Error(PRODUCT_DELETE_FAILED_ERROR)
   }
 }
 
