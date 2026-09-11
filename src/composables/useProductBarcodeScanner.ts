@@ -8,11 +8,14 @@ export interface ScannedProductData {
 }
 
 export interface ProductBarcodeScannerDependencies {
+  isPlausibleBarcode: (barcode: string) => boolean
   fetchProduct: (barcode: string) => Promise<OpenFoodFactsProduct>
   mapProductToFormValues: (product: OpenFoodFactsProduct) => Partial<ProductFormValues>
   fetchProductImage: (imageUrl: string) => Promise<File>
   toErrorMessage: (error: unknown) => string
 }
+
+const IMPLAUSIBLE_BARCODE_ERROR_MESSAGE = 'Dieser Barcode hat kein gültiges Format.'
 
 export const useProductBarcodeScanner = (
   dependencies: ProductBarcodeScannerDependencies,
@@ -38,9 +41,14 @@ export const useProductBarcodeScanner = (
 
   const populateFromBarcode = async (barcode: string): Promise<ScannedProductData | null> => {
     closeScanner()
-    loadingProduct.value = true
     scanErrorMessage.value = null
 
+    if (!dependencies.isPlausibleBarcode(barcode)) {
+      scanErrorMessage.value = IMPLAUSIBLE_BARCODE_ERROR_MESSAGE
+      return null
+    }
+
+    loadingProduct.value = true
     try {
       const product = await dependencies.fetchProduct(barcode)
       const values = dependencies.mapProductToFormValues(product)

@@ -8,6 +8,7 @@ const noopFetchProductImage = (): Promise<File> => Promise.reject(new Error('unu
 describe('useProductBarcodeScanner', () => {
   it('given the scanner is opened and closed, toggles the dialog state', () => {
     const scanner = useProductBarcodeScanner({
+      isPlausibleBarcode: () => true,
       fetchProduct: () => Promise.resolve({}),
       mapProductToFormValues: () => ({}),
       fetchProductImage: noopFetchProductImage,
@@ -31,6 +32,7 @@ describe('useProductBarcodeScanner', () => {
       (product: OpenFoodFactsProduct) => Partial<ProductFormValues>
     >(() => mappedValues)
     const scanner = useProductBarcodeScanner({
+      isPlausibleBarcode: () => true,
       fetchProduct,
       mapProductToFormValues,
       fetchProductImage: noopFetchProductImage,
@@ -60,6 +62,7 @@ describe('useProductBarcodeScanner', () => {
       Promise.resolve(imageFile),
     )
     const scanner = useProductBarcodeScanner({
+      isPlausibleBarcode: () => true,
       fetchProduct: () => Promise.resolve(product),
       mapProductToFormValues: () => ({ name: 'Soja Drink' }),
       fetchProductImage,
@@ -78,6 +81,7 @@ describe('useProductBarcodeScanner', () => {
       image_url: 'https://example.com/soja-drink.jpg',
     }
     const scanner = useProductBarcodeScanner({
+      isPlausibleBarcode: () => true,
       fetchProduct: () => Promise.resolve(product),
       mapProductToFormValues: () => ({ name: 'Soja Drink' }),
       fetchProductImage: () => Promise.reject(new Error('network')),
@@ -93,6 +97,7 @@ describe('useProductBarcodeScanner', () => {
   it('given loading product data fails, exposes a user-facing error and returns null', async () => {
     const error = new Error('network')
     const scanner = useProductBarcodeScanner({
+      isPlausibleBarcode: () => true,
       fetchProduct: () => Promise.reject(error),
       mapProductToFormValues: () => ({}),
       fetchProductImage: noopFetchProductImage,
@@ -102,5 +107,24 @@ describe('useProductBarcodeScanner', () => {
     await expect(scanner.populateFromBarcode('4006381333931')).resolves.toBeNull()
     expect(scanner.loadingProduct.value).toBe(false)
     expect(scanner.scanErrorMessage.value).toBe('Benutzerfreundlicher Fehler')
+  })
+
+  it('given the barcode has an implausible format, exposes an error without fetching the product', async () => {
+    const fetchProduct = vi.fn<(barcode: string) => Promise<OpenFoodFactsProduct>>(() =>
+      Promise.reject(new Error('unused')),
+    )
+    const scanner = useProductBarcodeScanner({
+      isPlausibleBarcode: () => false,
+      fetchProduct,
+      mapProductToFormValues: () => ({}),
+      fetchProductImage: noopFetchProductImage,
+      toErrorMessage: () => 'ignored',
+    })
+
+    await expect(scanner.populateFromBarcode('not-a-barcode')).resolves.toBeNull()
+
+    expect(fetchProduct).not.toHaveBeenCalled()
+    expect(scanner.loadingProduct.value).toBe(false)
+    expect(scanner.scanErrorMessage.value).toBe('Dieser Barcode hat kein gültiges Format.')
   })
 })
