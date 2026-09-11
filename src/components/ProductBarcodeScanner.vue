@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import BarcodeScannerDialog from '@/components/BarcodeScannerDialog.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import {
@@ -8,6 +9,7 @@ import {
 import type { BarcodeReader } from '@/composables/useBarcodeScanner'
 import { createZxingBarcodeReader } from '@/lib/createZxingBarcodeReader'
 import { toErrorMessage } from '@/lib/error'
+import { isPlausibleBarcode } from '@/lib/isPlausibleBarcode'
 import { mapOpenFoodFactsProductToFormValues } from '@/lib/mapOpenFoodFactsProductToFormValues'
 import { fetchOpenFoodFactsProduct, fetchOpenFoodFactsProductImage } from '@/services/openFoodFacts'
 import type { ProductFormValues } from '@/types/productForm'
@@ -18,6 +20,7 @@ interface ProductBarcodeScannerComponentDependencies extends ProductBarcodeScann
 
 const createDefaultDependencies = (): ProductBarcodeScannerComponentDependencies => ({
   createReader: createZxingBarcodeReader,
+  isPlausibleBarcode,
   fetchProduct: fetchOpenFoodFactsProduct,
   mapProductToFormValues: mapOpenFoodFactsProductToFormValues,
   fetchProductImage: fetchOpenFoodFactsProductImage,
@@ -49,6 +52,21 @@ const handleDecoded = async (barcode: string): Promise<void> => {
   emit('scanned', result.values)
   if (result.imageFile) emit('scannedImage', result.imageFile)
 }
+
+const showManualEntry = ref(false)
+const manualBarcode = ref('')
+
+const toggleManualEntry = (): void => {
+  showManualEntry.value = !showManualEntry.value
+  manualBarcode.value = ''
+}
+
+const handleManualSubmit = async (): Promise<void> => {
+  const barcode = manualBarcode.value.trim()
+  if (!barcode) return
+  await handleDecoded(barcode)
+  manualBarcode.value = ''
+}
 </script>
 
 <template>
@@ -75,6 +93,35 @@ const handleDecoded = async (barcode: string): Promise<void> => {
       </svg>
       {{ loadingProduct ? 'Produkt wird geladen …' : 'Barcode scannen' }}
     </button>
+    <button
+      type="button"
+      data-test="toggle-manual-entry"
+      :disabled="loadingProduct"
+      class="mt-2 w-full text-xs font-medium text-gray-600 hover:text-gray-900 disabled:opacity-60 transition-colors"
+      @click="toggleManualEntry"
+    >
+      {{ showManualEntry ? 'Manuelle Eingabe ausblenden' : 'Barcode manuell eingeben' }}
+    </button>
+    <form v-if="showManualEntry" class="mt-2 flex gap-2" @submit.prevent="handleManualSubmit">
+      <label class="sr-only" for="pbs-manual-barcode">Barcode</label>
+      <input
+        id="pbs-manual-barcode"
+        v-model="manualBarcode"
+        type="text"
+        inputmode="numeric"
+        pattern="\d*"
+        placeholder="Barcode eingeben"
+        :disabled="loadingProduct"
+        class="flex-1 min-w-0 py-2 px-3 border border-gray-200 rounded-lg text-sm disabled:opacity-60"
+      />
+      <button
+        type="submit"
+        :disabled="loadingProduct || !manualBarcode.trim()"
+        class="py-2 px-4 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60 transition-colors"
+      >
+        Prüfen
+      </button>
+    </form>
     <p class="mt-2 text-xs text-gray-600">
       Produktdaten von
       <a

@@ -26,6 +26,7 @@ describe('ProductBarcodeScanner', () => {
       createReader: (): BarcodeReader => ({
         decodeFromVideoDevice: () => Promise.reject(new Error('unused')),
       }),
+      isPlausibleBarcode: (): boolean => true,
       fetchProduct: vi.fn<(barcode: string) => Promise<OpenFoodFactsProduct>>(() =>
         Promise.resolve(product),
       ),
@@ -66,6 +67,7 @@ describe('ProductBarcodeScanner', () => {
       createReader: (): BarcodeReader => ({
         decodeFromVideoDevice: () => Promise.reject(new Error('unused')),
       }),
+      isPlausibleBarcode: (): boolean => true,
       fetchProduct: vi.fn<(barcode: string) => Promise<OpenFoodFactsProduct>>(() =>
         Promise.resolve(product),
       ),
@@ -93,5 +95,78 @@ describe('ProductBarcodeScanner', () => {
     await dependencies.fetchProductImage.mock.results[0]?.value
 
     expect(wrapper.emitted('scannedImage')).toEqual([[imageFile]])
+  })
+
+  it('given a barcode was entered manually, emits mapped form values', async () => {
+    const product: OpenFoodFactsProduct = { product_name: 'Soja Drink' }
+    const mappedValues: Partial<ProductFormValues> = { name: 'Soja Drink' }
+    const dependencies = {
+      createReader: (): BarcodeReader => ({
+        decodeFromVideoDevice: () => Promise.reject(new Error('unused')),
+      }),
+      isPlausibleBarcode: (): boolean => true,
+      fetchProduct: vi.fn<(barcode: string) => Promise<OpenFoodFactsProduct>>(() =>
+        Promise.resolve(product),
+      ),
+      mapProductToFormValues: vi.fn<(product: OpenFoodFactsProduct) => Partial<ProductFormValues>>(
+        () => mappedValues,
+      ),
+      fetchProductImage: vi.fn<(imageUrl: string) => Promise<File>>(() =>
+        Promise.reject(new Error('unused')),
+      ),
+      toErrorMessage: vi.fn<(error: unknown) => string>(() => 'ignored'),
+    }
+
+    const wrapper = mount(ProductBarcodeScanner, {
+      props: { dependencies },
+      global: {
+        stubs: {
+          BarcodeScannerDialog: BarcodeScannerDialogStub,
+        },
+      },
+    })
+
+    await wrapper.get('[data-test="toggle-manual-entry"]').trigger('click')
+    await wrapper.get('input#pbs-manual-barcode').setValue('4006381333931')
+    await wrapper.get('form').trigger('submit')
+    await dependencies.fetchProduct.mock.results[0]?.value
+
+    expect(dependencies.fetchProduct).toHaveBeenCalledWith('4006381333931')
+    expect(wrapper.emitted('scanned')).toEqual([[mappedValues]])
+  })
+
+  it('given a manually entered barcode has an implausible format, shows an error without fetching the product', async () => {
+    const dependencies = {
+      createReader: (): BarcodeReader => ({
+        decodeFromVideoDevice: () => Promise.reject(new Error('unused')),
+      }),
+      isPlausibleBarcode: (): boolean => false,
+      fetchProduct: vi.fn<(barcode: string) => Promise<OpenFoodFactsProduct>>(() =>
+        Promise.reject(new Error('unused')),
+      ),
+      mapProductToFormValues: vi.fn<(product: OpenFoodFactsProduct) => Partial<ProductFormValues>>(
+        () => ({}),
+      ),
+      fetchProductImage: vi.fn<(imageUrl: string) => Promise<File>>(() =>
+        Promise.reject(new Error('unused')),
+      ),
+      toErrorMessage: vi.fn<(error: unknown) => string>(() => 'ignored'),
+    }
+
+    const wrapper = mount(ProductBarcodeScanner, {
+      props: { dependencies },
+      global: {
+        stubs: {
+          BarcodeScannerDialog: BarcodeScannerDialogStub,
+        },
+      },
+    })
+
+    await wrapper.get('[data-test="toggle-manual-entry"]').trigger('click')
+    await wrapper.get('input#pbs-manual-barcode').setValue('not-a-barcode')
+    await wrapper.get('form').trigger('submit')
+
+    expect(dependencies.fetchProduct).not.toHaveBeenCalled()
+    expect(wrapper.get('[role="alert"]').text()).toBe('Dieser Barcode hat kein gültiges Format.')
   })
 })
