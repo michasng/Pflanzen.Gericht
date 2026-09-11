@@ -1,4 +1,6 @@
 import { supabase } from '@/lib/supabase'
+import { ImageSize } from '@/config/imageSizes'
+import { generateSquareImageVariants } from '@/lib/generateSquareImageVariants'
 import type {
   Product,
   ProductInsert,
@@ -219,15 +221,21 @@ export const uploadProductImage = async (
   file: File,
   sortOrder: number,
 ): Promise<ProductImage> => {
-  const path = `${userId}/${productId}/${crypto.randomUUID()}.webp`
-  const { error: uploadError } = await supabase.storage
-    .from('product-images')
-    .upload(path, file, { contentType: 'image/webp' })
+  const storagePath = `${userId}/${productId}/${crypto.randomUUID()}`
+  const variants = await generateSquareImageVariants(file)
+  const uploadResults = await Promise.all(
+    Object.entries(variants).map(([size, variantFile]) =>
+      supabase.storage
+        .from('product-images')
+        .upload(`${storagePath}/${size}.webp`, variantFile, { contentType: 'image/webp' }),
+    ),
+  )
+  const uploadError = uploadResults.find((result) => result.error)?.error
   if (uploadError) throw uploadError
 
   const { data, error } = await supabase
     .from('product_image')
-    .insert({ product_id: productId, storage_path: path, sort_order: sortOrder })
+    .insert({ product_id: productId, storage_path: storagePath, sort_order: sortOrder })
     .select()
     .single()
   if (error) throw error
@@ -237,7 +245,9 @@ export const uploadProductImage = async (
 export const deleteProductImage = async (id: string, storagePath: string): Promise<void> => {
   const { error } = await supabase.from('product_image').delete().eq('id', id)
   if (error) throw error
-  await supabase.storage.from('product-images').remove([storagePath])
+  await supabase.storage
+    .from('product-images')
+    .remove(Object.values(ImageSize).map((size) => `${storagePath}/${size}.webp`))
 }
 
 export const deleteProduct = async (id: string): Promise<void> => {

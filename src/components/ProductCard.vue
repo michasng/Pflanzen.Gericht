@@ -5,13 +5,14 @@ import StarDisplay from '@/components/StarDisplay.vue'
 import AppLogo from '@/components/AppLogo.vue'
 import Image from '@/components/primitives/ImageComponent.vue'
 import { categoryToLabel } from '@/config/categories'
+import { ImageSize } from '@/config/imageSizes'
 import { getImageUrl, type ProductListItem } from '@/services/catalog'
 
 const props = defineProps<{ product: ProductListItem }>()
 
 const coverUrl = computed(() => {
   const sorted = [...props.product.images].sort((a, b) => a.sort_order - b.sort_order)
-  return sorted[0] ? getImageUrl('product-images', sorted[0].storage_path) : null
+  return sorted[0] ? getImageUrl('product-images', sorted[0].storage_path, ImageSize.Preview) : null
 })
 
 const categoryLabel = computed(() => categoryToLabel(props.product.category))

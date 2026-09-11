@@ -1,4 +1,6 @@
 import { supabase } from '@/lib/supabase'
+import { ImageSize } from '@/config/imageSizes'
+import { generateSquareImageVariants } from '@/lib/generateSquareImageVariants'
 import type { Rating, RatingInsert, RatingImage } from '@/types'
 
 export const ADMIN_PAGE_SIZE = 50
@@ -42,15 +44,21 @@ export const uploadRatingImage = async (
   file: File,
   sortOrder: number,
 ): Promise<RatingImage> => {
-  const path = `${userId}/${ratingId}/${crypto.randomUUID()}.webp`
-  const { error: uploadError } = await supabase.storage
-    .from('review-images')
-    .upload(path, file, { contentType: 'image/webp' })
+  const storagePath = `${userId}/${ratingId}/${crypto.randomUUID()}`
+  const variants = await generateSquareImageVariants(file)
+  const uploadResults = await Promise.all(
+    Object.entries(variants).map(([size, variantFile]) =>
+      supabase.storage
+        .from('review-images')
+        .upload(`${storagePath}/${size}.webp`, variantFile, { contentType: 'image/webp' }),
+    ),
+  )
+  const uploadError = uploadResults.find((result) => result.error)?.error
   if (uploadError) throw uploadError
 
   const { data, error } = await supabase
     .from('rating_image')
-    .insert({ rating_id: ratingId, storage_path: path, sort_order: sortOrder })
+    .insert({ rating_id: ratingId, storage_path: storagePath, sort_order: sortOrder })
     .select()
     .single()
   if (error) throw error
@@ -96,7 +104,9 @@ export const updateRating = async (
 export const deleteRatingImage = async (id: string, storagePath: string): Promise<void> => {
   const { error } = await supabase.from('rating_image').delete().eq('id', id)
   if (error) throw error
-  await supabase.storage.from('review-images').remove([storagePath])
+  await supabase.storage
+    .from('review-images')
+    .remove(Object.values(ImageSize).map((size) => `${storagePath}/${size}.webp`))
 }
 
 export const fetchAllRatingsForAdmin = async (page = 0): Promise<AdminRatingItem[]> => {

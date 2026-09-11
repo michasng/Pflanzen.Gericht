@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { fetchProductDetail, getImageUrl, type ProductDetail } from '@/services/catalog'
+import { ImageSize } from '@/config/imageSizes'
 import { upsertPriceReport, deletePriceReport } from '@/services/prices'
 import { deleteProduct } from '@/services/products'
 import { formatEuroCents } from '@/lib/price'
@@ -192,7 +193,7 @@ watch(
         <div class="aspect-square bg-gray-100">
           <Image
             v-if="activeImage"
-            :src="getImageUrl('product-images', activeImage.storage_path)"
+            :src="getImageUrl('product-images', activeImage.storage_path, ImageSize.Large)"
             :alt="product.name"
           />
           <div v-else class="w-full h-full flex items-center justify-center">
@@ -207,7 +208,10 @@ watch(
             :class="activeImageIndex === i ? 'border-primary-500' : 'border-transparent'"
             @click="activeImageIndex = i"
           >
-            <Image :src="getImageUrl('product-images', img.storage_path)" :alt="`Bild ${i + 1}`" />
+            <Image
+              :src="getImageUrl('product-images', img.storage_path, ImageSize.Thumbnail)"
+              :alt="`Bild ${i + 1}`"
+            />
           </button>
         </div>
       </div>

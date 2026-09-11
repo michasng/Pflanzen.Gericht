@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { DOMWrapper, mount } from '@vue/test-utils'
 
 vi.mock('@/services/catalog', () => ({
-  getImageUrl: (bucket: string, path: string) => `https://cdn.test/${bucket}/${path}`,
+  getImageUrl: (bucket: string, path: string, size: string) =>
+    `https://cdn.test/${bucket}/${path}/${size}.webp`,
 }))
 
 import RatingImageGallery from '@/components/RatingImageGallery.vue'
@@ -48,10 +49,10 @@ describe('RatingImageGallery', () => {
 
       const previewImages = wrapper.findAll('img')
       expect(previewImages[0]?.attributes('src')).toBe(
-        'https://cdn.test/review-images/photo-1.webp',
+        'https://cdn.test/review-images/photo-1.webp/thumbnail.webp',
       )
       expect(previewImages[1]?.attributes('src')).toBe(
-        'https://cdn.test/review-images/photo-2.webp',
+        'https://cdn.test/review-images/photo-2.webp/thumbnail.webp',
       )
     })
 
@@ -70,7 +71,7 @@ describe('RatingImageGallery', () => {
         const dialog = new DOMWrapper(document.body).find('[role="dialog"]')
         expect(dialog.exists()).toBe(true)
         expect(dialog.find('img').attributes('src')).toBe(
-          'https://cdn.test/review-images/photo-1.webp',
+          'https://cdn.test/review-images/photo-1.webp/large.webp',
         )
 
         wrapper.unmount()

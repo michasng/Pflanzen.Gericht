@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import AppLogo from '@/components/AppLogo.vue'
 import Image from '@/components/primitives/ImageComponent.vue'
 import ProgressBar from '@/components/primitives/ProgressBar.vue'
+import { ImageSize } from '@/config/imageSizes'
 import { getImageUrl } from '@/services/catalog'
 import type { SimilarProduct } from '@/services/similarProducts'
 
@@ -13,7 +14,9 @@ defineEmits<{ select: [] }>()
 const AGREEMENT_ARIA_LABEL = 'Zustimmung'
 
 const coverUrl = computed(() =>
-  props.product.storage_path ? getImageUrl('product-images', props.product.storage_path) : null,
+  props.product.storage_path
+    ? getImageUrl('product-images', props.product.storage_path, ImageSize.Preview)
+    : null,
 )
 const agreementPercent = computed(() => Math.round(props.product.agreement_rate * 100))
 const agreementValueText = computed(() => `${agreementPercent.value} % Zustimmung`)
