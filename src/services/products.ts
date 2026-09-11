@@ -14,6 +14,7 @@ import type { ProductListItem } from '@/services/catalog'
 const PRODUCT_IMAGE_BUCKET = 'product-images'
 const REVIEW_IMAGE_BUCKET = 'review-images'
 const DELETE_PRODUCT_PAGE_SIZE = 1000
+const PENDING_PRODUCT_DELETION_PRIMARY_KEY = 'pending_product_deletion_pkey'
 
 type IngredientWrite = {
   name: string
@@ -315,7 +316,9 @@ const fetchReviewImagePaths = async (productId: string): Promise<string[]> => {
 
 const startProductDeletion = async (id: string): Promise<void> => {
   const { error } = await supabase.from('pending_product_deletion').insert({ product_id: id })
-  if (error?.code === '23505') return
+  if (error?.code === '23505' && error.message.includes(PENDING_PRODUCT_DELETION_PRIMARY_KEY)) {
+    return
+  }
   if (error) throw error
 }
 

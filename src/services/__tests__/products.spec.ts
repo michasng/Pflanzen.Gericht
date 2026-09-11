@@ -8,12 +8,15 @@ const {
   pendingInsert,
   productDelete,
   productDeleteEq,
+  productStorageRemove,
   productImageEq,
   productImagePages,
   productImageRange,
   reviewImageEq,
   reviewImagePages,
   reviewImageRange,
+  reviewStorageRemove,
+  storageFrom,
 } = vi.hoisted(() => {
   const productImagePages = new Map<
     string,
@@ -36,6 +39,7 @@ const {
   const productDelete = vi.fn<() => { eq: typeof productDeleteEq }>(() => ({
     eq: productDeleteEq,
   }))
+  const productStorageRemove = vi.fn<(paths: string[]) => Promise<{ error: Error | null }>>()
   const productImageRange = vi.fn<
     (
       column: string,
@@ -58,6 +62,7 @@ const {
     const page = reviewImagePages.get(`${column}|${value}|${fromIndex}|${toIndex}`)
     return Promise.resolve({ data: page?.rows ?? [], error: page?.error ?? null })
   })
+  const reviewStorageRemove = vi.fn<(paths: string[]) => Promise<{ error: Error | null }>>()
   const productImageEq = vi.fn<
     (
       column: string,
@@ -74,6 +79,23 @@ const {
   >((column, value) => ({
     range: (fromIndex, toIndex) => reviewImageRange(column, value, fromIndex, toIndex),
   }))
+  const storageFrom = vi.fn<
+    (bucket: string) => { remove: (paths: string[]) => Promise<{ error: Error | null }> }
+  >((bucket) => {
+    if (bucket === 'product-images') {
+      return {
+        remove: productStorageRemove,
+      }
+    }
+
+    if (bucket === 'review-images') {
+      return {
+        remove: reviewStorageRemove,
+      }
+    }
+
+    throw new Error(`Unexpected bucket: ${bucket}`)
+  })
   const from = vi.fn<(table: string) => unknown>((table) => {
     if (table === 'pending_product_deletion') {
       return {
@@ -122,12 +144,15 @@ const {
     pendingInsert,
     productDelete,
     productDeleteEq,
+    productStorageRemove,
     productImageEq,
     productImagePages,
     productImageRange,
     reviewImageEq,
     reviewImagePages,
     reviewImageRange,
+    reviewStorageRemove,
+    storageFrom,
   }
 })
 
@@ -140,9 +165,7 @@ vi.mock('@/lib/supabase', () => ({
   supabase: {
     from,
     storage: {
-      from: vi.fn<
-        (bucket: string) => { remove: (paths: string[]) => Promise<{ error: Error | null }> }
-      >(),
+      from: storageFrom,
     },
   },
 }))
@@ -187,12 +210,17 @@ describe('deleteProduct', () => {
     productDelete.mockClear()
     productDeleteEq.mockReset()
     productDeleteEq.mockResolvedValue({ error: null })
+    productStorageRemove.mockReset()
+    productStorageRemove.mockResolvedValue({ error: null })
     productImageEq.mockClear()
     productImagePages.clear()
     productImageRange.mockClear()
     reviewImageEq.mockClear()
     reviewImagePages.clear()
     reviewImageRange.mockClear()
+    reviewStorageRemove.mockReset()
+    reviewStorageRemove.mockResolvedValue({ error: null })
+    storageFrom.mockClear()
   })
 
   describe('given dependent storage images exist across multiple pages', () => {
@@ -245,6 +273,22 @@ describe('deleteProduct', () => {
         throw new Error('Expected product delete call order')
       expect(lastCleanupCallOrder).toBeLessThan(productDeleteCallOrder)
       expect(pendingDeleteEq).not.toHaveBeenCalled()
+
+      const productCleanupDependencies = deleteImageVariants.mock.calls[0]?.[0]
+      const reviewCleanupDependencies = deleteImageVariants.mock.calls[1]?.[0]
+      expect(productCleanupDependencies).toBeDefined()
+      expect(reviewCleanupDependencies).toBeDefined()
+      if (productCleanupDependencies === undefined || reviewCleanupDependencies === undefined) {
+        throw new Error('Expected cleanup dependencies')
+      }
+
+      await productCleanupDependencies.removeVariants(['product-path'])
+      await reviewCleanupDependencies.removeVariants(['review-path'])
+
+      expect(storageFrom).toHaveBeenCalledWith('product-images')
+      expect(storageFrom).toHaveBeenCalledWith('review-images')
+      expect(productStorageRemove).toHaveBeenCalledWith(['product-path'])
+      expect(reviewStorageRemove).toHaveBeenCalledWith(['review-path'])
     })
   })
 
@@ -264,7 +308,10 @@ describe('deleteProduct', () => {
 
   describe('given a previous delete attempt already created the deletion lock', () => {
     it('when deleting the same product again then it continues the cleanup and delete flow', async () => {
-      const duplicateLockError = Object.assign(new Error('duplicate key'), { code: '23505' })
+      const duplicateLockError = Object.assign(
+        new Error('duplicate key value violates unique constraint "pending_product_deletion_pkey"'),
+        { code: '23505' },
+      )
       pendingInsert.mockResolvedValueOnce({ error: duplicateLockError })
       setProductImagePage('product-1', 0, 999, [])
       setReviewImagePage('product-1', 0, 999, [])
