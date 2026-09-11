@@ -42,6 +42,9 @@ Write out their names when discussing their trade-offs.
 - Formatting and lint enforced by oxfmt/oxlint/eslint
 - Prefer reusable primitive components (`src/components/primitives/`, e.g. buttons, cards, chips) over inlining native elements; encapsulate styling in the component, expose configuration via props/slots
 - Non-native Vue components require more than one word in the name; a one-word component name must be postfixed with "Component" (e.g. `CardComponent.vue`). Multi-word names don't need the suffix (e.g. `ProgressBar.vue`)
+- Never use `!important` styles or Tailwind `!...` classes; extend the component's props (e.g. `size`, `tone`, `variant`) instead of overriding its classes from the outside
+- A component styles itself visually; the parent only controls layout (spacing, sizing in context) via props such as `fullWidth`, never by passing classes that fight the component's own look
+- When importing `...Component` files, alias by dropping the `Component` postfix for template use (e.g. `import Button from '@/components/primitives/ButtonComponent.vue'` used as `<Button>`).
 
 ## Architecture
 

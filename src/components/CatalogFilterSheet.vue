@@ -3,9 +3,11 @@ import { ref, watch, computed, type Ref } from 'vue'
 import { useCatalogStore } from '@/stores/catalog'
 import StarRatingInput from '@/components/StarRatingInput.vue'
 import SuggestionTextInput from '@/components/SuggestionTextInput.vue'
-import ButtonComponent from '@/components/primitives/ButtonComponent.vue'
+import Button from '@/components/primitives/ButtonComponent.vue'
 import { ButtonVariant } from '@/components/primitives/ButtonVariant'
-import ChipComponent from '@/components/primitives/ChipComponent.vue'
+import { ButtonSize } from '@/components/primitives/ButtonSize'
+import { ButtonTone } from '@/components/primitives/ButtonTone'
+import Chip from '@/components/primitives/ChipComponent.vue'
 import { ChipTone } from '@/components/primitives/ChipTone'
 import { BASES, baseToLabel } from '@/config/bases'
 import { STORE_SUGGESTIONS } from '@/config/storeSuggestions'
@@ -193,11 +195,10 @@ const reset = (): void => {
 <template>
   <Teleport to="body">
     <div v-if="open">
-      <ButtonComponent
+      <button
         type="button"
-        ariaLabel="Filter schließen"
-        :variant="ButtonVariant.Text"
-        class="!fixed !inset-0 !z-40 !rounded-none !bg-black/30 !p-0 !text-transparent hover:!bg-black/30 hover:!text-transparent"
+        aria-label="Filter schließen"
+        class="fixed inset-0 z-40 bg-black/30"
         @click="emit('close')"
       />
 
@@ -211,16 +212,16 @@ const reset = (): void => {
           class="sticky top-0 z-10 flex items-center justify-between bg-white px-4 py-3 border-b border-gray-100"
         >
           <h2 class="text-base font-semibold text-gray-900">Filter</h2>
-          <ButtonComponent
+          <Button
             type="button"
             ariaLabel="Zurücksetzen"
             :variant="ButtonVariant.Text"
-            class="!px-0 !py-0 !text-sm font-medium"
+            :size="ButtonSize.Compact"
             :disabled="!hasChanges && !catalogStore.activeFilterCount"
             @click="reset"
           >
             Zurücksetzen
-          </ButtonComponent>
+          </Button>
         </div>
 
         <div class="px-4 py-4 space-y-6">
@@ -241,7 +242,7 @@ const reset = (): void => {
             <div v-for="group in TAG_GROUPS" :key="group.label" class="mb-3 last:mb-0">
               <h4 class="text-xs font-medium text-gray-500 mb-1.5">{{ group.label }}</h4>
               <div class="flex flex-wrap gap-2">
-                <ChipComponent
+                <Chip
                   v-for="(tagLabel, tag) in group.tags"
                   :key="tag"
                   interactive
@@ -249,7 +250,7 @@ const reset = (): void => {
                   @click="toggleTag(tag)"
                 >
                   {{ tagLabel }}
-                </ChipComponent>
+                </Chip>
               </div>
             </div>
           </section>
@@ -280,7 +281,7 @@ const reset = (): void => {
           <section>
             <h3 class="text-sm font-medium text-gray-700 mb-2">Allergene ausschließen</h3>
             <div class="flex flex-wrap gap-2">
-              <ChipComponent
+              <Chip
                 v-for="allergen in ALLERGENS"
                 :key="allergen"
                 interactive
@@ -288,7 +289,7 @@ const reset = (): void => {
                 @click="toggleAllergen(allergen)"
               >
                 {{ allergenToLabel(allergen) }}
-              </ChipComponent>
+              </Chip>
             </div>
           </section>
 
@@ -303,18 +304,19 @@ const reset = (): void => {
                 class="flex-1"
                 @enter="addIncludeIngredient"
               />
-              <ButtonComponent
+              <Button
                 type="button"
                 ariaLabel="Zutat hinzufügen"
                 :variant="ButtonVariant.Outlined"
-                class="!border-0 !bg-gray-100 !px-3 !py-2 text-sm font-medium transition-colors hover:!bg-gray-200"
+                :tone="ButtonTone.Muted"
+                :size="ButtonSize.Compact"
                 @click="addIncludeIngredient"
               >
                 +
-              </ButtonComponent>
+              </Button>
             </div>
             <div v-if="draftIncludeIngredients.length" class="flex flex-wrap gap-2">
-              <ChipComponent
+              <Chip
                 v-for="ingredientName in draftIncludeIngredients"
                 :key="ingredientName"
                 selected
@@ -323,7 +325,7 @@ const reset = (): void => {
                 @remove="removeIncludeIngredient(ingredientName)"
               >
                 {{ ingredientName }}
-              </ChipComponent>
+              </Chip>
             </div>
           </section>
 
@@ -337,18 +339,19 @@ const reset = (): void => {
                 class="flex-1"
                 @enter="addExcludeIngredient"
               />
-              <ButtonComponent
+              <Button
                 type="button"
                 ariaLabel="Ausschlusszutat hinzufügen"
                 :variant="ButtonVariant.Outlined"
-                class="!border-0 !bg-gray-100 !px-3 !py-2 text-sm font-medium transition-colors hover:!bg-gray-200"
+                :tone="ButtonTone.Muted"
+                :size="ButtonSize.Compact"
                 @click="addExcludeIngredient"
               >
                 +
-              </ButtonComponent>
+              </Button>
             </div>
             <div v-if="draftExcludeIngredients.length" class="flex flex-wrap gap-2">
-              <ChipComponent
+              <Chip
                 v-for="ingredientName in draftExcludeIngredients"
                 :key="ingredientName"
                 :tone="ChipTone.Danger"
@@ -357,7 +360,7 @@ const reset = (): void => {
                 @remove="removeExcludeIngredient(ingredientName)"
               >
                 {{ ingredientName }}
-              </ChipComponent>
+              </Chip>
             </div>
           </section>
 
@@ -416,15 +419,16 @@ const reset = (): void => {
         </div>
 
         <div class="sticky bottom-0 bg-white border-t border-gray-100 px-4 py-3">
-          <ButtonComponent
+          <Button
             type="button"
             ariaLabel="Anwenden"
             :variant="ButtonVariant.Filled"
-            class="!w-full !py-3 !rounded-xl text-sm font-semibold transition-colors"
+            :size="ButtonSize.Large"
+            full-width
             @click="apply"
           >
             Anwenden
-          </ButtonComponent>
+          </Button>
         </div>
       </div>
     </div>

@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import AppLogo from '@/components/AppLogo.vue'
-import ButtonComponent from '@/components/primitives/ButtonComponent.vue'
-import { ButtonVariant } from '@/components/primitives/ButtonVariant'
 import ProgressBar from '@/components/primitives/ProgressBar.vue'
 import { getImageUrl } from '@/services/catalog'
 import type { SimilarProduct } from '@/services/similarProducts'
@@ -21,10 +19,10 @@ const agreementValueText = computed(() => `${agreementPercent.value} % Zustimmun
 </script>
 
 <template>
-  <ButtonComponent
-    :ariaLabel="product.name"
-    :variant="ButtonVariant.Outlined"
-    class="group !flex !w-full !flex-col !items-stretch !justify-start !gap-0 !overflow-hidden !rounded-2xl !border-gray-100 !p-0 !text-left hover:!border-gray-100 hover:!shadow-md"
+  <button
+    type="button"
+    :aria-label="product.name"
+    class="group flex w-full flex-col items-stretch justify-start overflow-hidden rounded-2xl border border-gray-100 bg-white text-left font-medium transition-colors hover:shadow-md"
     @click="$emit('select')"
   >
     <div class="aspect-square overflow-hidden bg-gray-50">
@@ -57,5 +55,5 @@ const agreementValueText = computed(() => `${agreementPercent.value} % Zustimmun
         />
       </div>
     </div>
-  </ButtonComponent>
+  </button>
 </template>

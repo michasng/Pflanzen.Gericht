@@ -37,10 +37,23 @@ const staticToneClass = computed(() => {
   return 'bg-gray-100 text-gray-600'
 })
 
-const staticSizeClass = computed(() => {
-  if (props.size === ChipSize.Compact) return 'px-2 py-0.5'
-  return 'px-2.5 py-1'
-})
+const INTERACTIVE_SIZE_CLASSES: Partial<Record<ChipSize, string>> = {
+  [ChipSize.Default]: 'px-3 py-1.5',
+  [ChipSize.Wide]: 'px-4 py-1.5',
+}
+
+const STATIC_SIZE_CLASSES: Partial<Record<ChipSize, string>> = {
+  [ChipSize.Default]: 'px-2.5 py-1',
+  [ChipSize.Compact]: 'px-2 py-0.5',
+  [ChipSize.Tight]: 'px-1.5 py-0.5',
+}
+
+const interactiveSizeClass = computed(
+  () => INTERACTIVE_SIZE_CLASSES[props.size] ?? INTERACTIVE_SIZE_CLASSES[ChipSize.Default],
+)
+const staticSizeClass = computed(
+  () => STATIC_SIZE_CLASSES[props.size] ?? STATIC_SIZE_CLASSES[ChipSize.Default],
+)
 </script>
 
 <template>
@@ -48,8 +61,8 @@ const staticSizeClass = computed(() => {
     v-if="interactive"
     type="button"
     :aria-pressed="selected"
-    class="inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors"
-    :class="interactiveToneClass"
+    class="inline-flex shrink-0 items-center gap-1 rounded-full border text-sm font-medium transition-colors"
+    :class="[interactiveToneClass, interactiveSizeClass]"
   >
     <slot />
   </button>

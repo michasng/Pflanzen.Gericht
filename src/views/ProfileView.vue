@@ -16,10 +16,13 @@ import StarDisplay from '@/components/StarDisplay.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
 import TagList from '@/components/TagList.vue'
-import ButtonComponent from '@/components/primitives/ButtonComponent.vue'
+import Button from '@/components/primitives/ButtonComponent.vue'
 import { ButtonVariant } from '@/components/primitives/ButtonVariant'
-import CardComponent from '@/components/primitives/CardComponent.vue'
-import ChipComponent from '@/components/primitives/ChipComponent.vue'
+import { ButtonSize } from '@/components/primitives/ButtonSize'
+import { ButtonTone } from '@/components/primitives/ButtonTone'
+import TabButton from '@/components/primitives/TabButton.vue'
+import Card from '@/components/primitives/CardComponent.vue'
+import Chip from '@/components/primitives/ChipComponent.vue'
 import { ChipSize } from '@/components/primitives/ChipSize'
 import { ChipTone } from '@/components/primitives/ChipTone'
 import { categoryToLabel } from '@/config/categories'
@@ -177,44 +180,45 @@ onMounted(async () => {
       </div>
       <AlertMessage :message="saveError" />
       <div class="flex gap-2">
-        <ButtonComponent
+        <Button
           ariaLabel="Speichern"
           type="submit"
           :variant="ButtonVariant.Filled"
-          class="!flex-1"
+          full-width
           :disabled="saving"
         >
           {{ saving ? 'Speichert …' : 'Speichern' }}
-        </ButtonComponent>
-        <ButtonComponent
+        </Button>
+        <Button
           ariaLabel="Abbrechen"
           :variant="ButtonVariant.Outlined"
-          class="!flex-1 text-sm font-medium transition-colors"
+          full-width
           type="button"
           @click="cancelEdit"
         >
           Abbrechen
-        </ButtonComponent>
+        </Button>
       </div>
     </form>
 
     <div v-else class="flex gap-2">
-      <ButtonComponent
+      <Button
         ariaLabel="Profil bearbeiten"
         :variant="ButtonVariant.Outlined"
-        class="!flex-1 text-sm font-medium transition-colors"
+        full-width
         @click="startEdit"
       >
         Profil bearbeiten
-      </ButtonComponent>
-      <ButtonComponent
+      </Button>
+      <Button
         ariaLabel="Abmelden"
         :variant="ButtonVariant.Outlined"
-        class="!flex-1 !border-red-100 !text-red-600 text-sm font-medium transition-colors hover:!border-red-100 hover:!bg-red-50"
+        :tone="ButtonTone.Danger"
+        full-width
         @click="handleSignOut"
       >
         Abmelden
-      </ButtonComponent>
+      </Button>
     </div>
 
     <div class="flex gap-6 py-3 border-t border-b border-gray-100">
@@ -228,33 +232,21 @@ onMounted(async () => {
       </div>
     </div>
 
-    <div class="flex border-b border-gray-200 -mx-4 px-4">
-      <ButtonComponent
+    <div role="tablist" class="flex border-b border-gray-200 -mx-4 px-4">
+      <TabButton
         ariaLabel="Meine Bewertungen"
-        :variant="ButtonVariant.Text"
-        class="!flex-1 !rounded-none !px-0 !py-2.5 !gap-0 text-sm font-medium transition-colors"
-        :class="
-          activeTab === 'ratings'
-            ? '!text-primary-600 border-b-2 border-primary-600 -mb-px'
-            : '!text-gray-500 hover:!text-gray-700'
-        "
+        :active="activeTab === 'ratings'"
         @click="activeTab = 'ratings'"
       >
         Meine Bewertungen
-      </ButtonComponent>
-      <ButtonComponent
+      </TabButton>
+      <TabButton
         ariaLabel="Meine Produkte"
-        :variant="ButtonVariant.Text"
-        class="!flex-1 !rounded-none !px-0 !py-2.5 !gap-0 text-sm font-medium transition-colors"
-        :class="
-          activeTab === 'products'
-            ? '!text-primary-600 border-b-2 border-primary-600 -mb-px'
-            : '!text-gray-500 hover:!text-gray-700'
-        "
+        :active="activeTab === 'products'"
         @click="activeTab = 'products'"
       >
         Meine Produkte
-      </ButtonComponent>
+      </TabButton>
     </div>
 
     <LoadingText v-if="loading" />
@@ -266,7 +258,7 @@ onMounted(async () => {
       </p>
       <ul v-else class="space-y-3">
         <li v-for="rating in ratings" :key="rating.id">
-          <CardComponent>
+          <Card>
             <div class="flex items-start justify-between gap-2 mb-2">
               <RouterLink
                 :to="{ name: 'product-detail', params: { id: rating.product.id } }"
@@ -274,13 +266,13 @@ onMounted(async () => {
               >
                 {{ rating.product.name }}
               </RouterLink>
-              <ChipComponent
+              <Chip
                 class="shrink-0"
                 :size="ChipSize.Compact"
                 :tone="rating.is_current ? ChipTone.Success : ChipTone.Muted"
               >
                 {{ rating.is_current ? 'Aktuell' : 'Veraltet' }}
-              </ChipComponent>
+              </Chip>
             </div>
 
             <div class="flex items-center gap-2 mb-2">
@@ -308,17 +300,18 @@ onMounted(async () => {
               >
                 Neu bewerten
               </RouterLink>
-              <ButtonComponent
+              <Button
                 ariaLabel="Bewertung löschen"
                 :variant="ButtonVariant.Text"
-                class="!px-0 !py-0 !text-xs !text-red-500 font-medium transition-colors hover:!text-red-600"
+                :size="ButtonSize.Small"
+                :tone="ButtonTone.Danger"
                 :disabled="deletingId === rating.id"
                 @click="handleDeleteRating(rating.id)"
               >
                 {{ deletingId === rating.id ? 'Löscht …' : 'Löschen' }}
-              </ButtonComponent>
+              </Button>
             </div>
-          </CardComponent>
+          </Card>
         </li>
       </ul>
     </template>
@@ -329,7 +322,7 @@ onMounted(async () => {
       </p>
       <ul v-else class="space-y-2">
         <li v-for="product in products" :key="product.id">
-          <CardComponent>
+          <Card>
             <RouterLink
               :to="{ name: 'product-detail', params: { id: product.id } }"
               class="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
@@ -348,17 +341,18 @@ onMounted(async () => {
               >
                 Bearbeiten
               </RouterLink>
-              <ButtonComponent
+              <Button
                 ariaLabel="Produkt löschen"
                 :variant="ButtonVariant.Text"
-                class="!px-0 !py-0 !text-xs !text-red-500 font-medium transition-colors hover:!text-red-600"
+                :size="ButtonSize.Small"
+                :tone="ButtonTone.Danger"
                 :disabled="deletingProductId === product.id"
                 @click="handleDeleteProduct(product.id)"
               >
                 {{ deletingProductId === product.id ? 'Löscht …' : 'Löschen' }}
-              </ButtonComponent>
+              </Button>
             </div>
-          </CardComponent>
+          </Card>
         </li>
       </ul>
     </template>

@@ -5,11 +5,13 @@ import { useCatalogUrlSync } from '@/composables/useCatalogUrlSync'
 import ProductCard from '@/components/ProductCard.vue'
 import CatalogFilterSheet from '@/components/CatalogFilterSheet.vue'
 import EmptyState from '@/components/EmptyState.vue'
-import ButtonComponent from '@/components/primitives/ButtonComponent.vue'
-import ChipComponent from '@/components/primitives/ChipComponent.vue'
-import BadgeComponent from '@/components/primitives/BadgeComponent.vue'
-import GridComponent from '@/components/primitives/GridComponent.vue'
+import Button from '@/components/primitives/ButtonComponent.vue'
+import Chip from '@/components/primitives/ChipComponent.vue'
+import Badge from '@/components/primitives/BadgeComponent.vue'
+import Grid from '@/components/primitives/GridComponent.vue'
 import { ButtonVariant } from '@/components/primitives/ButtonVariant'
+import { ButtonSize } from '@/components/primitives/ButtonSize'
+import { ChipSize } from '@/components/primitives/ChipSize'
 import { ChipTone } from '@/components/primitives/ChipTone'
 import { CATEGORIES, categoryToLabel } from '@/config/categories'
 import { tagToLabel } from '@/config/reviewTags'
@@ -135,32 +137,33 @@ const priceRangeLabel = computed(() => {
 
     <!-- Category pills -->
     <div class="flex gap-2 overflow-x-auto pb-2 mb-3 -mx-4 px-4 scrollbar-none">
-      <ChipComponent
-        class="!px-4"
+      <Chip
+        :size="ChipSize.Wide"
         interactive
         :selected="catalogStore.category === null"
         @click="selectCategory(null)"
       >
         Alle
-      </ChipComponent>
-      <ChipComponent
+      </Chip>
+      <Chip
         v-for="cat in CATEGORIES"
         :key="cat"
-        class="!px-4"
+        :size="ChipSize.Wide"
         interactive
         :selected="catalogStore.category === cat"
         @click="selectCategory(cat)"
       >
         {{ categoryToLabel(cat) }}
-      </ChipComponent>
+      </Chip>
     </div>
 
     <!-- Filter button + sort -->
     <div class="flex items-center gap-2 mb-3">
-      <ButtonComponent
+      <Button
         ariaLabel="Filter"
         :variant="ButtonVariant.Outlined"
-        class="relative !px-3"
+        :size="ButtonSize.Compact"
+        class="relative"
         @click="filterSheetOpen = true"
       >
         <svg
@@ -178,11 +181,8 @@ const priceRangeLabel = computed(() => {
           />
         </svg>
         Filter
-        <BadgeComponent
-          :count="catalogStore.activeFilterCount"
-          class="absolute -top-1.5 -right-1.5"
-        />
-      </ButtonComponent>
+        <Badge :count="catalogStore.activeFilterCount" class="absolute -top-1.5 -right-1.5" />
+      </Button>
 
       <select
         class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -197,7 +197,7 @@ const priceRangeLabel = computed(() => {
 
     <!-- Active filter chips -->
     <div v-if="catalogStore.activeFilterCount > 0" class="flex flex-wrap gap-2 mb-3">
-      <ChipComponent
+      <Chip
         v-if="catalogStore.minRating"
         selected
         removable
@@ -205,8 +205,8 @@ const priceRangeLabel = computed(() => {
         @remove="clearMinRating"
       >
         &ge; {{ catalogStore.minRating }} &#9733;
-      </ChipComponent>
-      <ChipComponent
+      </Chip>
+      <Chip
         v-for="tag in catalogStore.tags"
         :key="tag"
         selected
@@ -215,8 +215,8 @@ const priceRangeLabel = computed(() => {
         @remove="removeTag(tag)"
       >
         {{ tagToLabel(tag) }}
-      </ChipComponent>
-      <ChipComponent
+      </Chip>
+      <Chip
         v-for="ingredientName in catalogStore.includeIngredients"
         :key="`include-${ingredientName}`"
         selected
@@ -225,8 +225,8 @@ const priceRangeLabel = computed(() => {
         @remove="removeIncludeIngredient(ingredientName)"
       >
         {{ ingredientName }}
-      </ChipComponent>
-      <ChipComponent
+      </Chip>
+      <Chip
         v-for="ingredientName in catalogStore.excludeIngredients"
         :key="`exclude-${ingredientName}`"
         :tone="ChipTone.Danger"
@@ -235,8 +235,8 @@ const priceRangeLabel = computed(() => {
         @remove="removeExcludeIngredient(ingredientName)"
       >
         ohne {{ ingredientName }}
-      </ChipComponent>
-      <ChipComponent
+      </Chip>
+      <Chip
         v-for="allergen in catalogStore.excludeAllergens"
         :key="`allergen-${allergen}`"
         :tone="ChipTone.Danger"
@@ -245,8 +245,8 @@ const priceRangeLabel = computed(() => {
         @remove="removeExcludeAllergen(allergen)"
       >
         ohne {{ allergenToLabel(allergen) }}
-      </ChipComponent>
-      <ChipComponent
+      </Chip>
+      <Chip
         v-if="catalogStore.organic"
         selected
         removable
@@ -254,8 +254,8 @@ const priceRangeLabel = computed(() => {
         @remove="clearOrganic"
       >
         Bio
-      </ChipComponent>
-      <ChipComponent
+      </Chip>
+      <Chip
         v-if="catalogStore.base"
         selected
         removable
@@ -263,8 +263,8 @@ const priceRangeLabel = computed(() => {
         @remove="clearBase"
       >
         {{ catalogStore.base }}
-      </ChipComponent>
-      <ChipComponent
+      </Chip>
+      <Chip
         v-if="catalogStore.store"
         selected
         removable
@@ -272,8 +272,8 @@ const priceRangeLabel = computed(() => {
         @remove="clearStore"
       >
         {{ catalogStore.store }}{{ catalogStore.city ? ` · ${catalogStore.city}` : '' }}
-      </ChipComponent>
-      <ChipComponent
+      </Chip>
+      <Chip
         v-if="priceRangeLabel"
         selected
         removable
@@ -281,7 +281,7 @@ const priceRangeLabel = computed(() => {
         @remove="clearPrice"
       >
         {{ priceRangeLabel }}
-      </ChipComponent>
+      </Chip>
     </div>
 
     <!-- Result count -->
@@ -339,7 +339,7 @@ const priceRangeLabel = computed(() => {
     </template>
 
     <template v-else>
-      <GridComponent
+      <Grid
         class="transition-opacity duration-150"
         :class="{ 'opacity-50 pointer-events-none': catalogStore.loading }"
       >
@@ -348,18 +348,18 @@ const priceRangeLabel = computed(() => {
           :key="product.id"
           :product="product"
         />
-      </GridComponent>
+      </Grid>
 
       <div v-if="catalogStore.hasMore" class="mt-6 text-center">
-        <ButtonComponent
+        <Button
           ariaLabel="Mehr laden"
           :variant="ButtonVariant.Outlined"
-          class="!px-8 !py-2.5 !rounded-xl text-sm font-medium transition-colors"
+          :size="ButtonSize.Large"
           :disabled="catalogStore.loading"
           @click="catalogStore.load()"
         >
           {{ catalogStore.loading ? 'Lädt …' : 'Mehr laden' }}
-        </ButtonComponent>
+        </Button>
       </div>
     </template>
 
