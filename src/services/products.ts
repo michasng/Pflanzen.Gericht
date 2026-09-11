@@ -251,21 +251,52 @@ export const uploadProductImage = async (
   )
 }
 
-export const deleteProductImage = async (id: string, storagePath: string): Promise<void> => {
-  const { error } = await supabase.from('product_image').delete().eq('id', id)
-  if (error) throw error
+const removeStorageObjects = async (bucket: string, storagePaths: string[]): Promise<void> => {
   await deleteImageVariants(
     {
       removeVariants: async (paths) => {
-        const { error: removeError } = await supabase.storage.from('product-images').remove(paths)
-        if (removeError) throw removeError
+        const { error } = await supabase.storage.from(bucket).remove(paths)
+        if (error) throw error
       },
     },
-    [storagePath],
+    storagePaths,
   )
 }
 
+export const deleteProductImage = async (id: string, storagePath: string): Promise<void> => {
+  const { error } = await supabase.from('product_image').delete().eq('id', id)
+  if (error) throw error
+  await removeStorageObjects('product-images', [storagePath])
+}
+
 export const deleteProduct = async (id: string): Promise<void> => {
+  const { data: productImages, error: productImagesError } = await supabase
+    .from('product_image')
+    .select('storage_path')
+    .eq('product_id', id)
+  if (productImagesError) throw productImagesError
+
+  const { data: reviews, error: reviewsError } = await supabase
+    .from('review')
+    .select('id')
+    .eq('product_id', id)
+  if (reviewsError) throw reviewsError
+
+  const reviewIds = (reviews ?? []).map((review) => review.id)
+  const { data: reviewImages, error: reviewImagesError } = reviewIds.length
+    ? await supabase.from('review_image').select('storage_path').in('review_id', reviewIds)
+    : { data: [], error: null }
+  if (reviewImagesError) throw reviewImagesError
+
+  await removeStorageObjects(
+    'product-images',
+    (productImages ?? []).map((image) => image.storage_path),
+  )
+  await removeStorageObjects(
+    'review-images',
+    (reviewImages ?? []).map((image) => image.storage_path),
+  )
+
   const { error } = await supabase.from('product').delete().eq('id', id)
   if (error) throw error
 }
