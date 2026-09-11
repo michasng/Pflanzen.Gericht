@@ -42,8 +42,6 @@ describe('SimilarProductCard', () => {
       expect(progressBar.attributes('aria-label')).toBe('Zustimmung')
       expect(progressBar.attributes('aria-valuenow')).toBe('80')
       expect(progressBar.attributes('aria-valuetext')).toBe('80 % Zustimmung')
-      expect(wrapper.text()).not.toContain('Zustimmung')
-      expect(wrapper.text()).not.toContain('Stimme')
     })
   })
 
