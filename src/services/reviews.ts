@@ -109,8 +109,6 @@ export const updateReview = async (
 }
 
 export const deleteReviewImage = async (id: string, storagePath: string): Promise<void> => {
-  const { error } = await supabase.from('review_image').delete().eq('id', id)
-  if (error) throw error
   await deleteImageVariants(
     {
       removeVariants: async (paths) => {
@@ -120,6 +118,8 @@ export const deleteReviewImage = async (id: string, storagePath: string): Promis
     },
     [storagePath],
   )
+  const { error } = await supabase.from('review_image').delete().eq('id', id)
+  if (error) throw error
 }
 
 export const fetchAllReviewsForAdmin = async (page = 0): Promise<AdminReviewItem[]> => {

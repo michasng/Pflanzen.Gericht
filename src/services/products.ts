@@ -257,8 +257,6 @@ export const uploadProductImage = async (
 }
 
 export const deleteProductImage = async (id: string, storagePath: string): Promise<void> => {
-  const { error } = await supabase.from('product_image').delete().eq('id', id)
-  if (error) throw error
   await deleteImageVariants(
     {
       removeVariants: async (paths) => {
@@ -270,6 +268,8 @@ export const deleteProductImage = async (id: string, storagePath: string): Promi
     },
     [storagePath],
   )
+  const { error } = await supabase.from('product_image').delete().eq('id', id)
+  if (error) throw error
 }
 
 const fetchAllPagedRows = async <TRow>(
