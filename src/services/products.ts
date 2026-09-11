@@ -14,6 +14,7 @@ import type { ProductListItem } from '@/services/catalog'
 const PRODUCT_IMAGE_BUCKET = 'product-images'
 const REVIEW_IMAGE_BUCKET = 'review-images'
 const DELETE_PRODUCT_PAGE_SIZE = 1000
+const PRODUCT_DELETE_FAILED_ERROR = 'Product could not be deleted'
 
 type IngredientWrite = {
   name: string
@@ -362,9 +363,15 @@ export const deleteProduct = async (id: string): Promise<void> => {
       )
     }
 
-    const { error } = await supabase.from('product').delete().eq('id', id)
+    const { data: deletedProducts, error } = await supabase
+      .from('product')
+      .delete()
+      .eq('id', id)
+      .select('id')
     if (error) throw error
-    await clearProductDeletion(id)
+    if (deletedProducts?.length !== 1) {
+      throw new Error(PRODUCT_DELETE_FAILED_ERROR)
+    }
   } catch (error) {
     await clearProductDeletion(id).catch(() => undefined)
     throw error
