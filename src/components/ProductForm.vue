@@ -65,6 +65,7 @@ const brand = ref(props.initial?.brand ?? '')
 const description = ref(props.initial?.description ?? '')
 const allergens = ref<Allergen[]>(props.initial?.allergens ? [...props.initial.allergens] : [])
 const isOrganic = ref(props.initial?.isOrganic ?? false)
+const barcode = ref(props.initial?.barcode ?? '')
 
 const toggleAllergen = (allergen: Allergen): void => {
   const idx = allergens.value.indexOf(allergen)
@@ -240,6 +241,7 @@ const handleSubmit = (): void => {
     energyJoules: parsedEnergyJoules.value,
     allergens: allergens.value,
     isOrganic: isOrganic.value,
+    barcode: barcode.value.trim() || null,
     ingredients: parsedIngredients.value,
     nutrients: parsedNutrients.value,
   })
@@ -257,6 +259,7 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
   }
   if (values.allergens !== undefined) allergens.value = [...values.allergens]
   if (values.isOrganic !== undefined) isOrganic.value = values.isOrganic
+  if (typeof values.barcode === 'string') barcode.value = values.barcode
   if (values.ingredients !== undefined) ingredientRows.value = values.ingredients.map(toRow)
   if (values.nutrients !== undefined)
     nutrientRows.value = sortNutrientsByHierarchy(values.nutrients).map(toNutrientRow)
@@ -269,6 +272,29 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
       @scanned="applyScannedValues"
       @scanned-image="(file) => imageUploadRef?.addFile(file)"
     />
+
+    <div v-if="barcode">
+      <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-barcode">
+        Barcode
+      </label>
+      <div class="flex gap-2">
+        <input
+          id="pf-barcode"
+          v-model="barcode"
+          type="text"
+          inputmode="numeric"
+          class="flex-1 min-w-0 px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+        <button
+          type="button"
+          class="px-3 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+          aria-label="Barcode entfernen"
+          @click="barcode = ''"
+        >
+          Entfernen
+        </button>
+      </div>
+    </div>
 
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-name">

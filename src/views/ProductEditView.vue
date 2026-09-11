@@ -122,6 +122,7 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
       product.value.description !== fields.description ||
       product.value.energy_joules !== energyJoules ||
       product.value.is_organic !== isOrganic ||
+      product.value.barcode !== fields.barcode ||
       product.value.allergens.length !== fields.allergens.length ||
       product.value.allergens.some((allergen) => !submittedAllergens.has(allergen))
     if (shouldUpdateProductFields) {
@@ -179,6 +180,7 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
           energyJoules: product.energy_joules,
           allergens: product.allergens.filter(isKnownAllergen),
           isOrganic: product.is_organic,
+          barcode: product.barcode,
           ingredients: initialIngredients,
           nutrients: initialNutrients,
         }"

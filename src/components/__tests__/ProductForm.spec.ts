@@ -18,7 +18,7 @@ import ProductForm from '../ProductForm.vue'
 const ProductBarcodeScannerStub = defineComponent({
   emits: ['scanned'],
   template:
-    '<button type="button" data-test="scan-product" @click="$emit(\'scanned\', { energyJoules: 250000 })"></button>',
+    '<button type="button" data-test="scan-product" @click="$emit(\'scanned\', { energyJoules: 250000, barcode: \'4006381333931\' })"></button>',
 })
 
 describe('ProductForm', () => {
@@ -52,5 +52,52 @@ describe('ProductForm', () => {
     expect(energyInput.value).toBe('250')
     expect(energySelectElement.value).toBe(DEFAULT_ENERGY_UNIT)
     expect(wrapper.text()).not.toContain('Bitte gib für die Energie einen gültigen Wert ein.')
+  })
+
+  it('given a barcode was scanned, displays it and submits it with the form', async () => {
+    const wrapper = mount(ProductForm, {
+      global: {
+        stubs: {
+          ImageUpload: true,
+          ProductBarcodeScanner: ProductBarcodeScannerStub,
+          RouterLink: true,
+        },
+      },
+    })
+
+    await wrapper.get('[data-test="scan-product"]').trigger('click')
+
+    const barcodeInput = wrapper.get('#pf-barcode').element
+    if (!(barcodeInput instanceof HTMLInputElement)) throw new Error('Barcode input not found.')
+    expect(barcodeInput.value).toBe('4006381333931')
+
+    await wrapper.get('#pf-name').setValue('Soja Drink')
+    await wrapper.get('#pf-category').setValue('drink')
+    await wrapper.get('form').trigger('submit')
+
+    const emittedValues = wrapper.emitted('submit')?.[0]?.[0] as { barcode: string | null }
+    expect(emittedValues.barcode).toBe('4006381333931')
+  })
+
+  it('given a scanned barcode, removes it when the remove button is clicked', async () => {
+    const wrapper = mount(ProductForm, {
+      global: {
+        stubs: {
+          ImageUpload: true,
+          ProductBarcodeScanner: ProductBarcodeScannerStub,
+          RouterLink: true,
+        },
+      },
+    })
+
+    await wrapper.get('[data-test="scan-product"]').trigger('click')
+    await wrapper.get('[aria-label="Barcode entfernen"]').trigger('click')
+    await wrapper.get('#pf-name').setValue('Soja Drink')
+    await wrapper.get('#pf-category').setValue('drink')
+    await wrapper.get('form').trigger('submit')
+
+    expect(wrapper.find('#pf-barcode').exists()).toBe(false)
+    const emittedValues = wrapper.emitted('submit')?.[0]?.[0] as { barcode: string | null }
+    expect(emittedValues.barcode).toBeNull()
   })
 })

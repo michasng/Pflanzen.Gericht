@@ -54,7 +54,7 @@ describe('ProductBarcodeScanner', () => {
 
     expect(dependencies.fetchProduct).toHaveBeenCalledWith('4006381333931')
     expect(dependencies.mapProductToFormValues).toHaveBeenCalledWith(product)
-    expect(wrapper.emitted('scanned')).toEqual([[mappedValues]])
+    expect(wrapper.emitted('scanned')).toEqual([[{ ...mappedValues, barcode: '4006381333931' }]])
   })
 
   it('given a scanned product has an image, emits the image file', async () => {
@@ -133,7 +133,7 @@ describe('ProductBarcodeScanner', () => {
     await dependencies.fetchProduct.mock.results[0]?.value
 
     expect(dependencies.fetchProduct).toHaveBeenCalledWith('4006381333931')
-    expect(wrapper.emitted('scanned')).toEqual([[mappedValues]])
+    expect(wrapper.emitted('scanned')).toEqual([[{ ...mappedValues, barcode: '4006381333931' }]])
   })
 
   it('given a manually entered barcode has an implausible format, shows an error without fetching the product', async () => {
