@@ -142,7 +142,12 @@ const removePriceReport = async (id: string): Promise<void> => {
 
 watch(
   () => route.params.id as string,
-  async (id) => {
+  async (id, _previousId, onCleanup) => {
+    let isCurrentRequest = true
+    onCleanup(() => {
+      isCurrentRequest = false
+    })
+
     loading.value = true
     error.value = null
     notFound.value = false
@@ -150,12 +155,18 @@ watch(
     activeImageIndex.value = 0
     try {
       const data = await fetchProductDetail(id)
-      if (!data) notFound.value = true
-      else product.value = data
+      if (isCurrentRequest) {
+        if (!data) notFound.value = true
+        else product.value = data
+      }
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Produkt konnte nicht geladen werden.'
+      if (isCurrentRequest) {
+        error.value = err instanceof Error ? err.message : 'Produkt konnte nicht geladen werden.'
+      }
     } finally {
-      loading.value = false
+      if (isCurrentRequest) {
+        loading.value = false
+      }
     }
   },
   { immediate: true },
