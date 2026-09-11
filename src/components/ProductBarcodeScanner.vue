@@ -2,6 +2,9 @@
 import { ref } from 'vue'
 import BarcodeScannerDialog from '@/components/BarcodeScannerDialog.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
+import Button from '@/components/primitives/ButtonComponent.vue'
+import { ButtonSize } from '@/components/primitives/ButtonSize'
+import { ButtonVariant } from '@/components/primitives/ButtonVariant'
 import {
   useProductBarcodeScanner,
   type ProductBarcodeScannerDependencies,
@@ -71,10 +74,13 @@ const handleManualSubmit = async (): Promise<void> => {
 
 <template>
   <div>
-    <button
+    <Button
       type="button"
+      ariaLabel="Barcode scannen"
       :disabled="loadingProduct"
-      class="w-full py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+      :variant="ButtonVariant.Outlined"
+      :size="ButtonSize.Large"
+      full-width
       @click="openScanner"
     >
       <svg
@@ -92,16 +98,20 @@ const handleManualSubmit = async (): Promise<void> => {
         />
       </svg>
       {{ loadingProduct ? 'Produkt wird geladen …' : 'Barcode scannen' }}
-    </button>
-    <button
+    </Button>
+    <Button
       type="button"
+      ariaLabel="Barcode manuell eingeben"
       data-test="toggle-manual-entry"
       :disabled="loadingProduct"
-      class="mt-2 w-full text-xs font-medium text-gray-600 hover:text-gray-900 disabled:opacity-60 transition-colors"
+      :variant="ButtonVariant.Text"
+      :size="ButtonSize.Small"
+      class="mt-2"
+      full-width
       @click="toggleManualEntry"
     >
       {{ showManualEntry ? 'Manuelle Eingabe ausblenden' : 'Barcode manuell eingeben' }}
-    </button>
+    </Button>
     <form v-if="showManualEntry" class="mt-2 flex gap-2" @submit.prevent="handleManualSubmit">
       <label class="sr-only" for="pbs-manual-barcode">Barcode</label>
       <input
@@ -114,13 +124,14 @@ const handleManualSubmit = async (): Promise<void> => {
         :disabled="loadingProduct"
         class="flex-1 min-w-0 py-2 px-3 border border-gray-200 rounded-lg text-sm disabled:opacity-60"
       />
-      <button
+      <Button
         type="submit"
+        ariaLabel="Barcode prüfen"
         :disabled="loadingProduct || !manualBarcode.trim()"
-        class="py-2 px-4 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60 transition-colors"
+        :variant="ButtonVariant.Outlined"
       >
         Prüfen
-      </button>
+      </Button>
     </form>
     <p class="mt-2 text-xs text-gray-600">
       Produktdaten von
