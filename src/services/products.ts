@@ -315,6 +315,7 @@ const fetchReviewImagePaths = async (productId: string): Promise<string[]> => {
 
 const startProductDeletion = async (id: string): Promise<void> => {
   const { error } = await supabase.from('pending_product_deletion').insert({ product_id: id })
+  if (error?.code === '23505') return
   if (error) throw error
 }
 

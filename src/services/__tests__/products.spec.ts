@@ -262,6 +262,21 @@ describe('deleteProduct', () => {
     })
   })
 
+  describe('given a previous delete attempt already created the deletion lock', () => {
+    it('when deleting the same product again then it continues the cleanup and delete flow', async () => {
+      const duplicateLockError = Object.assign(new Error('duplicate key'), { code: '23505' })
+      pendingInsert.mockResolvedValueOnce({ error: duplicateLockError })
+      setProductImagePage('product-1', 0, 999, [])
+      setReviewImagePage('product-1', 0, 999, [])
+
+      await deleteProductService('product-1')
+
+      expect(pendingInsert).toHaveBeenCalledWith({ product_id: 'product-1' })
+      expect(productDeleteEq).toHaveBeenCalledWith('id', 'product-1')
+      expect(pendingDeleteEq).not.toHaveBeenCalled()
+    })
+  })
+
   describe('given loading product images fails', () => {
     it('when deleting a product then it clears the deletion state and rethrows the error', async () => {
       const error = new Error('load product images failed')
