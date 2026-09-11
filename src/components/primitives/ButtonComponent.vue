@@ -53,7 +53,7 @@ const TONE_CLASSES: Record<ButtonVariant, Partial<Record<ButtonTone, string>>> =
     [ButtonTone.Default]: 'bg-white border border-gray-200 text-gray-600 hover:border-primary-300',
     [ButtonTone.Danger]:
       'bg-white border border-red-100 text-red-600 hover:border-red-100 hover:bg-red-50',
-    [ButtonTone.Muted]: 'border-0 bg-gray-100 hover:bg-gray-200',
+    [ButtonTone.Muted]: 'border-0 bg-gray-100 text-gray-600 hover:bg-gray-200',
   },
   [ButtonVariant.Text]: {
     [ButtonTone.Default]: 'text-primary-600 hover:text-primary-700',

@@ -22,7 +22,7 @@ const voteLabel = computed(
   <button
     type="button"
     :aria-label="product.name"
-    class="group flex w-full flex-col items-stretch justify-start overflow-hidden rounded-2xl border border-gray-100 bg-white text-left transition-colors hover:shadow-md"
+    class="group flex w-full flex-col items-stretch justify-start overflow-hidden rounded-2xl border border-gray-100 bg-white text-left font-medium transition-colors hover:shadow-md"
     @click="$emit('select')"
   >
     <div class="aspect-square overflow-hidden bg-gray-50">

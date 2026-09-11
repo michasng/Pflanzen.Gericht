@@ -232,7 +232,7 @@ onMounted(async () => {
       </div>
     </div>
 
-    <div class="flex border-b border-gray-200 -mx-4 px-4">
+    <div role="tablist" class="flex border-b border-gray-200 -mx-4 px-4">
       <TabButton
         ariaLabel="Meine Bewertungen"
         :active="activeTab === 'ratings'"

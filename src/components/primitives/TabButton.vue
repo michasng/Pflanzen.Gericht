@@ -15,8 +15,10 @@ defineEmits<{ click: [] }>()
 <template>
   <button
     type="button"
+    role="tab"
+    :aria-selected="active"
     :aria-label="ariaLabel"
-    class="flex-1 rounded-none px-0 py-2.5 text-sm font-medium transition-colors"
+    class="flex flex-1 items-center justify-center rounded-none px-0 py-2.5 text-sm font-medium transition-colors"
     :class="
       active
         ? 'text-primary-600 border-b-2 border-primary-600 -mb-px'

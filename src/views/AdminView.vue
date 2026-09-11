@@ -117,7 +117,7 @@ const handleDeleteRating = async (id: string): Promise<void> => {
     <AlertMessage v-else-if="loadError" :message="loadError" />
 
     <template v-else>
-      <div class="flex border-b border-gray-200 mb-4">
+      <div role="tablist" class="flex border-b border-gray-200 mb-4">
         <TabButton
           ariaLabel="Produkte"
           :active="activeTab === 'products'"
