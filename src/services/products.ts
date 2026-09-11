@@ -270,6 +270,7 @@ export const deleteProductImage = async (id: string, storagePath: string): Promi
 }
 
 export const deleteProduct = async (id: string): Promise<void> => {
+  // Limitation: these dependent-row reads are unpaginated, so cleanup is capped by PostgREST api.max_rows (currently 1,000).
   const { data: productImages, error: productImagesError } = await supabase
     .from('product_image')
     .select('storage_path')
