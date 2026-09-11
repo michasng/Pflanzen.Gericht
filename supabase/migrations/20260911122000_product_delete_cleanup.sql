@@ -85,7 +85,7 @@ CREATE POLICY "product-images: delete product image variants"
       SELECT 1
       FROM public.product_image AS pi
       JOIN public.product AS p ON p.id = pi.product_id
-      WHERE name LIKE pi.storage_path || '/%'
+      WHERE (name = pi.storage_path OR name LIKE pi.storage_path || '/%')
         AND (p.created_by = auth.uid() OR public.is_admin())
     )
   );
@@ -99,7 +99,7 @@ CREATE POLICY "review-images: delete authorized image variants"
       FROM public.review_image AS ri
       JOIN public.review AS r ON r.id = ri.review_id
       JOIN public.product AS p ON p.id = r.product_id
-      WHERE name LIKE ri.storage_path || '/%'
+      WHERE (name = ri.storage_path OR name LIKE ri.storage_path || '/%')
         AND (r.user_id = auth.uid() OR p.created_by = auth.uid() OR public.is_admin())
     )
   );

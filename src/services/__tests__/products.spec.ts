@@ -5,7 +5,7 @@ const {
   from,
   pendingDelete,
   pendingDeleteEq,
-  pendingInsert,
+  pendingUpsert,
   productDelete,
   productDeleteEq,
   productStorageRemove,
@@ -32,8 +32,13 @@ const {
   const pendingDelete = vi.fn<() => { eq: typeof pendingDeleteEq }>(() => ({
     eq: pendingDeleteEq,
   }))
-  const pendingInsert =
-    vi.fn<(values: { product_id: string }) => Promise<{ error: Error | null }>>()
+  const pendingUpsert =
+    vi.fn<
+      (
+        values: { product_id: string },
+        options: { ignoreDuplicates: boolean; onConflict: string },
+      ) => Promise<{ error: Error | null }>
+    >()
   const productDeleteEq =
     vi.fn<(column: string, value: string) => Promise<{ error: Error | null }>>()
   const productDelete = vi.fn<() => { eq: typeof productDeleteEq }>(() => ({
@@ -100,7 +105,7 @@ const {
     if (table === 'pending_product_deletion') {
       return {
         delete: pendingDelete,
-        insert: pendingInsert,
+        upsert: pendingUpsert,
       }
     }
 
@@ -141,7 +146,7 @@ const {
     from,
     pendingDelete,
     pendingDeleteEq,
-    pendingInsert,
+    pendingUpsert,
     productDelete,
     productDeleteEq,
     productStorageRemove,
@@ -205,8 +210,8 @@ describe('deleteProduct', () => {
     pendingDelete.mockClear()
     pendingDeleteEq.mockReset()
     pendingDeleteEq.mockResolvedValue({ error: null })
-    pendingInsert.mockReset()
-    pendingInsert.mockResolvedValue({ error: null })
+    pendingUpsert.mockReset()
+    pendingUpsert.mockResolvedValue({ error: null })
     productDelete.mockClear()
     productDeleteEq.mockReset()
     productDeleteEq.mockResolvedValue({ error: null })
@@ -241,7 +246,10 @@ describe('deleteProduct', () => {
 
       await deleteProductService('product-1')
 
-      expect(pendingInsert).toHaveBeenCalledWith({ product_id: 'product-1' })
+      expect(pendingUpsert).toHaveBeenCalledWith(
+        { product_id: 'product-1' },
+        { ignoreDuplicates: true, onConflict: 'product_id' },
+      )
       expect(productImageEq).toHaveBeenCalledWith('product_id', 'product-1')
       expect(productImageRange).toHaveBeenCalledWith('product_id', 'product-1', 0, 999)
       expect(productImageRange).toHaveBeenCalledWith('product_id', 'product-1', 1000, 1999)
@@ -299,7 +307,10 @@ describe('deleteProduct', () => {
 
       await deleteProductService('product-1')
 
-      expect(pendingInsert).toHaveBeenCalledWith({ product_id: 'product-1' })
+      expect(pendingUpsert).toHaveBeenCalledWith(
+        { product_id: 'product-1' },
+        { ignoreDuplicates: true, onConflict: 'product_id' },
+      )
       expect(deleteImageVariants).not.toHaveBeenCalled()
       expect(productDeleteEq).toHaveBeenCalledWith('id', 'product-1')
       expect(pendingDeleteEq).not.toHaveBeenCalled()
@@ -308,17 +319,15 @@ describe('deleteProduct', () => {
 
   describe('given a previous delete attempt already created the deletion lock', () => {
     it('when deleting the same product again then it continues the cleanup and delete flow', async () => {
-      const duplicateLockError = Object.assign(
-        new Error('duplicate key value violates unique constraint "pending_product_deletion_pkey"'),
-        { code: '23505' },
-      )
-      pendingInsert.mockResolvedValueOnce({ error: duplicateLockError })
       setProductImagePage('product-1', 0, 999, [])
       setReviewImagePage('product-1', 0, 999, [])
 
       await deleteProductService('product-1')
 
-      expect(pendingInsert).toHaveBeenCalledWith({ product_id: 'product-1' })
+      expect(pendingUpsert).toHaveBeenCalledWith(
+        { product_id: 'product-1' },
+        { ignoreDuplicates: true, onConflict: 'product_id' },
+      )
       expect(productDeleteEq).toHaveBeenCalledWith('id', 'product-1')
       expect(pendingDeleteEq).not.toHaveBeenCalled()
     })
