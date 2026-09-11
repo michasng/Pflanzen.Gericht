@@ -53,7 +53,7 @@ export const updateProfile = async (
 }
 
 export const deleteRating = async (ratingId: string): Promise<void> => {
-  const { data: images } = await supabase
+  const { data: ratingImages } = await supabase
     .from('rating_image')
     .select('storage_path')
     .eq('rating_id', ratingId)
@@ -61,14 +61,14 @@ export const deleteRating = async (ratingId: string): Promise<void> => {
   const { error } = await supabase.from('rating').delete().eq('id', ratingId)
   if (error) throw error
 
-  if (images?.length) {
+  if (ratingImages?.length) {
     await deleteImageVariants(
       {
         removeVariants: async (paths) => {
           await supabase.storage.from('review-images').remove(paths)
         },
       },
-      images.map((img) => img.storage_path),
+      ratingImages.map((ratingImage) => ratingImage.storage_path),
     )
   }
 }
