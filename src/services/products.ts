@@ -11,6 +11,10 @@ import type {
 } from '@/types'
 import type { ProductListItem } from '@/services/catalog'
 
+const PRODUCT_IMAGE_BUCKET = 'product-images'
+const REVIEW_IMAGE_BUCKET = 'review-images'
+const DELETE_PRODUCT_PAGE_SIZE = 1000
+
 type IngredientWrite = {
   name: string
   fraction_basis_points: number | null
@@ -257,7 +261,9 @@ export const deleteProductImage = async (id: string, storagePath: string): Promi
   await deleteImageVariants(
     {
       removeVariants: async (paths) => {
-        const { error: removeError } = await supabase.storage.from('product-images').remove(paths)
+        const { error: removeError } = await supabase.storage
+          .from(PRODUCT_IMAGE_BUCKET)
+          .remove(paths)
         if (removeError) throw removeError
       },
     },
@@ -265,9 +271,101 @@ export const deleteProductImage = async (id: string, storagePath: string): Promi
   )
 }
 
-export const deleteProduct = async (id: string): Promise<void> => {
-  const { error } = await supabase.from('product').delete().eq('id', id)
+const fetchAllPagedRows = async <TRow>(
+  fetchPage: (from: number, to: number) => Promise<TRow[]>,
+): Promise<TRow[]> => {
+  const rows: TRow[] = []
+
+  for (let pageIndex = 0; ; pageIndex += 1) {
+    const from = pageIndex * DELETE_PRODUCT_PAGE_SIZE
+    const to = from + DELETE_PRODUCT_PAGE_SIZE - 1
+    const page = await fetchPage(from, to)
+    rows.push(...page)
+    if (page.length < DELETE_PRODUCT_PAGE_SIZE) return rows
+  }
+}
+
+const fetchProductImagePaths = async (productId: string): Promise<string[]> => {
+  const productImages = await fetchAllPagedRows(async (from, to) => {
+    const { data, error } = await supabase
+      .from('product_image')
+      .select('storage_path')
+      .eq('product_id', productId)
+      .range(from, to)
+    if (error) throw error
+    return data ?? []
+  })
+
+  return productImages.map((productImage) => productImage.storage_path)
+}
+
+const fetchReviewImagePaths = async (productId: string): Promise<string[]> => {
+  const reviewImages = await fetchAllPagedRows(async (from, to) => {
+    const { data, error } = await supabase
+      .from('review_image')
+      .select('storage_path, review!inner(product_id)')
+      .eq('review.product_id', productId)
+      .range(from, to)
+    if (error) throw error
+    return data ?? []
+  })
+
+  return reviewImages.map((reviewImage) => reviewImage.storage_path)
+}
+
+const startProductDeletion = async (id: string): Promise<void> => {
+  const { error } = await supabase.from('pending_product_deletion').insert({ product_id: id })
   if (error) throw error
+}
+
+const clearProductDeletion = async (id: string): Promise<void> => {
+  const { error } = await supabase.from('pending_product_deletion').delete().eq('product_id', id)
+  if (error) throw error
+}
+
+export const deleteProduct = async (id: string): Promise<void> => {
+  await startProductDeletion(id)
+
+  try {
+    const [productImagePaths, reviewImagePaths] = await Promise.all([
+      fetchProductImagePaths(id),
+      fetchReviewImagePaths(id),
+    ])
+
+    if (productImagePaths.length) {
+      await deleteImageVariants(
+        {
+          removeVariants: async (paths) => {
+            const { error: removeError } = await supabase.storage
+              .from(PRODUCT_IMAGE_BUCKET)
+              .remove(paths)
+            if (removeError) throw removeError
+          },
+        },
+        productImagePaths,
+      )
+    }
+
+    if (reviewImagePaths.length) {
+      await deleteImageVariants(
+        {
+          removeVariants: async (paths) => {
+            const { error: removeError } = await supabase.storage
+              .from(REVIEW_IMAGE_BUCKET)
+              .remove(paths)
+            if (removeError) throw removeError
+          },
+        },
+        reviewImagePaths,
+      )
+    }
+
+    const { error } = await supabase.from('product').delete().eq('id', id)
+    if (error) throw error
+  } catch (error) {
+    await clearProductDeletion(id).catch(() => undefined)
+    throw error
+  }
 }
 
 export const ADMIN_PAGE_SIZE = 50
