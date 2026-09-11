@@ -107,6 +107,7 @@ export const createProduct = async (
     | 'energy_joules'
     | 'allergens'
     | 'is_organic'
+    | 'barcode'
   >,
   userId: string,
 ): Promise<Product> => {
@@ -131,6 +132,7 @@ export const updateProduct = async (
     | 'energy_joules'
     | 'allergens'
     | 'is_organic'
+    | 'barcode'
   >,
 ): Promise<void> => {
   const { error } = await supabase.from('product').update(updates).eq('id', id)

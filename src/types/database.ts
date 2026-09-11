@@ -86,6 +86,7 @@ export type Database = {
         Row: {
           allergens: string[]
           avg_overall: number | null
+          barcode: string | null
           base: string | null
           brand: string | null
           category: string
@@ -105,6 +106,7 @@ export type Database = {
         Insert: {
           allergens?: string[]
           avg_overall?: number | null
+          barcode?: string | null
           base?: string | null
           brand?: string | null
           category: string
@@ -124,6 +126,7 @@ export type Database = {
         Update: {
           allergens?: string[]
           avg_overall?: number | null
+          barcode?: string | null
           base?: string | null
           brand?: string | null
           category?: string

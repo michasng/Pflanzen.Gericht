@@ -45,7 +45,10 @@ describe('useProductBarcodeScanner', () => {
     expect(scanner.showScanner.value).toBe(false)
     expect(scanner.loadingProduct.value).toBe(true)
 
-    await expect(resultPromise).resolves.toEqual({ values: mappedValues, imageFile: null })
+    await expect(resultPromise).resolves.toEqual({
+      values: { ...mappedValues, barcode: '4006381333931' },
+      imageFile: null,
+    })
     expect(fetchProduct).toHaveBeenCalledWith('4006381333931')
     expect(mapProductToFormValues).toHaveBeenCalledWith(product)
     expect(scanner.loadingProduct.value).toBe(false)
@@ -90,7 +93,10 @@ describe('useProductBarcodeScanner', () => {
 
     const result = await scanner.populateFromBarcode('4006381333931')
 
-    expect(result).toEqual({ values: { name: 'Soja Drink' }, imageFile: null })
+    expect(result).toEqual({
+      values: { name: 'Soja Drink', barcode: '4006381333931' },
+      imageFile: null,
+    })
     expect(scanner.scanErrorMessage.value).toBeNull()
   })
 
