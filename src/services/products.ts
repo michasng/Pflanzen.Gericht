@@ -364,6 +364,7 @@ export const deleteProduct = async (id: string): Promise<void> => {
 
     const { error } = await supabase.from('product').delete().eq('id', id)
     if (error) throw error
+    await clearProductDeletion(id)
   } catch (error) {
     await clearProductDeletion(id).catch(() => undefined)
     throw error

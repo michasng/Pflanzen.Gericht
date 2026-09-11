@@ -280,7 +280,7 @@ describe('deleteProduct', () => {
       if (productDeleteCallOrder === undefined)
         throw new Error('Expected product delete call order')
       expect(lastCleanupCallOrder).toBeLessThan(productDeleteCallOrder)
-      expect(pendingDeleteEq).not.toHaveBeenCalled()
+      expect(pendingDeleteEq).toHaveBeenCalledWith('product_id', 'product-1')
 
       const productCleanupDependencies = deleteImageVariants.mock.calls[0]?.[0]
       const reviewCleanupDependencies = deleteImageVariants.mock.calls[1]?.[0]
@@ -313,12 +313,12 @@ describe('deleteProduct', () => {
       )
       expect(deleteImageVariants).not.toHaveBeenCalled()
       expect(productDeleteEq).toHaveBeenCalledWith('id', 'product-1')
-      expect(pendingDeleteEq).not.toHaveBeenCalled()
+      expect(pendingDeleteEq).toHaveBeenCalledWith('product_id', 'product-1')
     })
   })
 
-  describe('given a previous delete attempt already created the deletion lock', () => {
-    it('when deleting the same product again then it continues the cleanup and delete flow', async () => {
+  describe('given deletion lock acquisition must ignore duplicates', () => {
+    it('when deleting a product then it uses an idempotent upsert before continuing the delete flow', async () => {
       setProductImagePage('product-1', 0, 999, [])
       setReviewImagePage('product-1', 0, 999, [])
 
@@ -329,7 +329,7 @@ describe('deleteProduct', () => {
         { ignoreDuplicates: true, onConflict: 'product_id' },
       )
       expect(productDeleteEq).toHaveBeenCalledWith('id', 'product-1')
-      expect(pendingDeleteEq).not.toHaveBeenCalled()
+      expect(pendingDeleteEq).toHaveBeenCalledWith('product_id', 'product-1')
     })
   })
 
