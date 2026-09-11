@@ -4,47 +4,47 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { fetchProduct } from '@/services/products'
 import {
-  fetchRatingForEdit,
-  updateRating,
-  uploadRatingImage,
-  deleteRatingImage,
-} from '@/services/ratings'
+  fetchReviewForEdit,
+  updateReview,
+  uploadReviewImage,
+  deleteReviewImage,
+} from '@/services/reviews'
 import { toErrorMessage } from '@/lib/error'
 import { useImageUpload } from '@/composables/useImageUpload'
-import RatingForm from '@/components/RatingForm.vue'
+import ReviewForm from '@/components/ReviewForm.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
-import type { RatingFormValues } from '@/components/RatingForm.vue'
-import type { Product, Rating, RatingImage } from '@/types'
+import type { ReviewFormValues } from '@/components/ReviewForm.vue'
+import type { Product, Review, ReviewImage } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-type RatingWithMeta = Rating & {
+type ReviewWithMeta = Review & {
   tags: string[]
-  images: RatingImage[]
+  images: ReviewImage[]
 }
 
-const rating = ref<RatingWithMeta | null>(null)
+const review = ref<ReviewWithMeta | null>(null)
 const product = ref<Product | null>(null)
 const loading = ref(true)
 const loadError = ref<string | null>(null)
 const submitting = ref(false)
 const submitError = ref<string | null>(null)
 const { pendingFiles, existingImages, handleDeleteImage, commitImageChanges } =
-  useImageUpload<RatingImage>(
+  useImageUpload<ReviewImage>(
     (file, sortOrder) => {
-      if (!rating.value || !authStore.user) return Promise.resolve()
-      return uploadRatingImage(rating.value.id, authStore.user.id, file, sortOrder)
+      if (!review.value || !authStore.user) return Promise.resolve()
+      return uploadReviewImage(review.value.id, authStore.user.id, file, sortOrder)
     },
-    (img) => deleteRatingImage(img.id, img.storage_path),
+    (img) => deleteReviewImage(img.id, img.storage_path),
   )
 
 onMounted(async () => {
-  const ratingId = route.params.ratingId as string
+  const reviewId = route.params.reviewId as string
   try {
-    const r = await fetchRatingForEdit(ratingId)
+    const r = await fetchReviewForEdit(reviewId)
     if (!r) {
       loadError.value = 'Bewertung nicht gefunden.'
       return
@@ -58,7 +58,7 @@ onMounted(async () => {
       loadError.value = 'Produkt nicht gefunden.'
       return
     }
-    rating.value = r
+    review.value = r
     product.value = p
     existingImages.value = [...r.images].sort((a, b) => a.sort_order - b.sort_order)
   } catch (err) {
@@ -68,15 +68,15 @@ onMounted(async () => {
   }
 })
 
-const handleSubmit = async (values: RatingFormValues): Promise<void> => {
-  if (!rating.value || !authStore.user) return
+const handleSubmit = async (values: ReviewFormValues): Promise<void> => {
+  if (!review.value || !authStore.user) return
   submitting.value = true
   submitError.value = null
   try {
     const { tags, ...fields } = values
-    await updateRating(rating.value.id, fields, tags)
+    await updateReview(review.value.id, fields, tags)
     await commitImageChanges()
-    await router.push({ name: 'product-detail', params: { id: rating.value.product_id } })
+    await router.push({ name: 'product-detail', params: { id: review.value.product_id } })
   } catch (err) {
     submitError.value = toErrorMessage(err)
     submitting.value = false
@@ -88,7 +88,7 @@ const handleSubmit = async (values: RatingFormValues): Promise<void> => {
   <div class="max-w-lg mx-auto">
     <LoadingText v-if="loading" />
     <AlertMessage v-else-if="loadError" :message="loadError" />
-    <template v-else-if="rating && product">
+    <template v-else-if="review && product">
       <div class="mb-6">
         <p class="text-sm text-gray-500 mb-1">Bewertung bearbeiten für</p>
         <h1 class="text-xl font-bold text-gray-900 leading-tight">{{ product.name }}</h1>
@@ -97,16 +97,16 @@ const handleSubmit = async (values: RatingFormValues): Promise<void> => {
 
       <AlertMessage :message="submitError" class="mb-4" />
 
-      <RatingForm
+      <ReviewForm
         :initial="{
-          overall: rating.overall,
-          taste: rating.taste,
-          consistency: rating.consistency,
-          appearance: rating.appearance,
-          nutrition: rating.nutrition,
-          value: rating.value,
-          comment: rating.comment,
-          tags: rating.tags,
+          overall: review.overall,
+          taste: review.taste,
+          consistency: review.consistency,
+          appearance: review.appearance,
+          nutrition: review.nutrition,
+          value: review.value,
+          comment: review.comment,
+          tags: review.tags,
         }"
         :existing-images="existingImages"
         :submitting="submitting"

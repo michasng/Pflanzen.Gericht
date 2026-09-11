@@ -39,7 +39,7 @@ const categoryLabel = computed(() => categoryToLabel(props.product.category))
       <div class="flex items-center gap-1.5 mt-0.5">
         <StarDisplay :value="product.avg_overall" />
         <span class="text-xs text-gray-400">
-          {{ product.ratings_count > 0 ? `(${product.ratings_count})` : 'Neu' }}
+          {{ product.reviews_count > 0 ? `(${product.reviews_count})` : 'Neu' }}
         </span>
       </div>
       <p v-if="product.min_price_euro_cents != null" class="text-xs font-medium text-gray-600">

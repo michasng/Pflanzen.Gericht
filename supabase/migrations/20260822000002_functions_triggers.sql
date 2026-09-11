@@ -11,8 +11,8 @@ CREATE TRIGGER product_updated_at
   BEFORE UPDATE ON public.product
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
-CREATE TRIGGER rating_updated_at
-  BEFORE UPDATE ON public.rating
+CREATE TRIGGER review_updated_at
+  BEFORE UPDATE ON public.review
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 CREATE FUNCTION public.handle_new_user()
@@ -58,11 +58,11 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Must fire BEFORE INSERT so the unique index (one current per user) is not violated
-CREATE FUNCTION public.supersede_previous_rating()
+CREATE FUNCTION public.supersede_previous_review()
 RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
-  UPDATE public.rating
+  UPDATE public.review
   SET    is_current = false
   WHERE  product_id = NEW.product_id
     AND  user_id    = NEW.user_id
@@ -71,9 +71,9 @@ BEGIN
 END;
 $$;
 
-CREATE TRIGGER rating_supersede_previous
-  BEFORE INSERT ON public.rating
-  FOR EACH ROW EXECUTE FUNCTION public.supersede_previous_rating();
+CREATE TRIGGER review_supersede_previous
+  BEFORE INSERT ON public.review
+  FOR EACH ROW EXECUTE FUNCTION public.supersede_previous_review();
 
 CREATE FUNCTION public.update_product_aggregates()
 RETURNS trigger
@@ -87,12 +87,12 @@ BEGIN
   SET
     avg_overall   = (
       SELECT round(avg(overall)::numeric, 2)
-      FROM   public.rating
+      FROM   public.review
       WHERE  product_id = v_product_id AND is_current = true
     ),
-    ratings_count = (
+    reviews_count = (
       SELECT count(*)
-      FROM   public.rating
+      FROM   public.review
       WHERE  product_id = v_product_id AND is_current = true
     )
   WHERE id = v_product_id;
@@ -101,21 +101,21 @@ BEGIN
 END;
 $$;
 
-CREATE TRIGGER rating_update_aggregates
-  AFTER INSERT OR UPDATE OR DELETE ON public.rating
+CREATE TRIGGER review_update_aggregates
+  AFTER INSERT OR UPDATE OR DELETE ON public.review
   FOR EACH ROW EXECUTE FUNCTION public.update_product_aggregates();
 
--- Promote the most recent superseded rating when the current one is deleted
-CREATE FUNCTION public.restore_previous_rating()
+-- Promote the most recent superseded review when the current one is deleted
+CREATE FUNCTION public.restore_previous_review()
 RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
   IF OLD.is_current THEN
-    UPDATE public.rating
+    UPDATE public.review
     SET    is_current = true
     WHERE  id = (
       SELECT id
-      FROM   public.rating
+      FROM   public.review
       WHERE  product_id = OLD.product_id
         AND  user_id    = OLD.user_id
         AND  is_current = false
@@ -127,9 +127,9 @@ BEGIN
 END;
 $$;
 
-CREATE TRIGGER rating_restore_previous
-  AFTER DELETE ON public.rating
-  FOR EACH ROW EXECUTE FUNCTION public.restore_previous_rating();
+CREATE TRIGGER review_restore_previous
+  AFTER DELETE ON public.review
+  FOR EACH ROW EXECUTE FUNCTION public.restore_previous_review();
 
 CREATE FUNCTION public.recompute_product_tags(p_product_id uuid)
 RETURNS void
@@ -138,8 +138,8 @@ BEGIN
   UPDATE public.product
   SET tags = (
     SELECT coalesce(array_agg(DISTINCT rt.tag ORDER BY rt.tag), '{}')
-    FROM   public.rating_tag rt
-    JOIN   public.rating r ON r.id = rt.rating_id
+    FROM   public.review_tag rt
+    JOIN   public.review r ON r.id = rt.review_id
     WHERE  r.product_id = p_product_id
       AND  r.is_current = true
   )
@@ -147,16 +147,16 @@ BEGIN
 END;
 $$;
 
--- Fires when a tag row is inserted or deleted on a current rating
-CREATE FUNCTION public.handle_rating_tag_change()
+-- Fires when a tag row is inserted or deleted on a current review
+CREATE FUNCTION public.handle_review_tag_change()
 RETURNS trigger
 LANGUAGE plpgsql AS $$
 DECLARE
   v_product_id uuid;
 BEGIN
   SELECT product_id INTO v_product_id
-  FROM   public.rating
-  WHERE  id = COALESCE(NEW.rating_id, OLD.rating_id);
+  FROM   public.review
+  WHERE  id = COALESCE(NEW.review_id, OLD.review_id);
 
   IF v_product_id IS NOT NULL THEN
     PERFORM public.recompute_product_tags(v_product_id);
@@ -165,12 +165,12 @@ BEGIN
 END;
 $$;
 
-CREATE TRIGGER rating_tag_sync_product_tags
-  AFTER INSERT OR DELETE ON public.rating_tag
-  FOR EACH ROW EXECUTE FUNCTION public.handle_rating_tag_change();
+CREATE TRIGGER review_tag_sync_product_tags
+  AFTER INSERT OR DELETE ON public.review_tag
+  FOR EACH ROW EXECUTE FUNCTION public.handle_review_tag_change();
 
--- Fires when is_current changes or the rating is deleted (tags from superseded ratings must be removed)
-CREATE FUNCTION public.handle_rating_currency_change()
+-- Fires when is_current changes or the review is deleted (tags from superseded reviews must be removed)
+CREATE FUNCTION public.handle_review_currency_change()
 RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -179,9 +179,9 @@ BEGIN
 END;
 $$;
 
-CREATE TRIGGER rating_currency_sync_product_tags
-  AFTER UPDATE OF is_current OR DELETE ON public.rating
-  FOR EACH ROW EXECUTE FUNCTION public.handle_rating_currency_change();
+CREATE TRIGGER review_currency_sync_product_tags
+  AFTER UPDATE OF is_current OR DELETE ON public.review
+  FOR EACH ROW EXECUTE FUNCTION public.handle_review_currency_change();
 
 CREATE FUNCTION public.update_product_min_price()
 RETURNS trigger
@@ -246,7 +246,7 @@ RETURNS TABLE (
   created_by           uuid,
   normalized_name      text,
   avg_overall          numeric,
-  ratings_count        integer,
+  reviews_count        integer,
   min_price_euro_cents integer,
   energy_joules        integer,
   allergens            text[],
@@ -342,7 +342,7 @@ BEGIN
     p.created_by,
     p.normalized_name,
     p.avg_overall,
-    p.ratings_count,
+    p.reviews_count,
     p.min_price_euro_cents,
     p.energy_joules,
     p.allergens,
@@ -356,7 +356,7 @@ BEGIN
   LEFT JOIN nutrient_sort_values ON nutrient_sort_values.product_id = p.id
   ORDER BY
     CASE WHEN p_sort = 'top_rated'   THEN p.avg_overall                   END DESC NULLS LAST,
-    CASE WHEN p_sort = 'most_rated'  THEN p.ratings_count::numeric         END DESC NULLS LAST,
+    CASE WHEN p_sort = 'most_rated'  THEN p.reviews_count::numeric         END DESC NULLS LAST,
     CASE WHEN p_sort = 'price_asc'   THEN p.min_price_euro_cents::numeric  END ASC  NULLS LAST,
     CASE WHEN p_sort = 'price_desc'  THEN p.min_price_euro_cents::numeric  END DESC NULLS LAST,
     CASE WHEN p_sort = 'few_ingredients' THEN ingredient_stats.ingredient_count::numeric END ASC NULLS LAST,

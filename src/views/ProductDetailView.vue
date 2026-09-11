@@ -10,7 +10,7 @@ import { formatEuroCents } from '@/lib/price'
 import { toErrorMessage } from '@/lib/error'
 import StarDisplay from '@/components/StarDisplay.vue'
 import ReviewScoreDimensions from '@/components/ReviewScoreDimensions.vue'
-import RatingCard from '@/components/RatingCard.vue'
+import ReviewCard from '@/components/ReviewCard.vue'
 import PriceReportForm, { type PriceReportFormValues } from '@/components/PriceReportForm.vue'
 import AppLogo from '@/components/AppLogo.vue'
 import Image from '@/components/primitives/ImageComponent.vue'
@@ -65,12 +65,12 @@ const nutrientIndentClass = (name: string): string =>
 const nutrientLabel = (name: string): string =>
   NUTRIENT_PARENT_NAME.has(name) ? `davon ${name}` : name
 
-const currentRatings = computed(() => product.value?.ratings.filter((r) => r.is_current) ?? [])
+const currentReviews = computed(() => product.value?.reviews.filter((r) => r.is_current) ?? [])
 
-type RatingKey = 'taste' | 'consistency' | 'appearance' | 'nutrition' | 'value'
+type ReviewKey = 'taste' | 'consistency' | 'appearance' | 'nutrition' | 'value'
 
-const avgCriteria = (key: RatingKey): number | null => {
-  const vals = currentRatings.value.map((r) => r[key]).filter((v): v is number => v !== null)
+const avgCriteria = (key: ReviewKey): number | null => {
+  const vals = currentReviews.value.map((r) => r[key]).filter((v): v is number => v !== null)
   return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null
 }
 
@@ -82,7 +82,7 @@ const criteriaAverages = computed(() =>
       ['Aussehen', 'appearance'],
       ['Nährwerte', 'nutrition'],
       ['Preis-Leistung', 'value'],
-    ] as [string, RatingKey][]
+    ] as [string, ReviewKey][]
   )
     .map(([label, key]) => ({ label, value: avgCriteria(key) }))
     .filter((c): c is { label: string; value: number } => c.value !== null),
@@ -287,7 +287,7 @@ watch(
       </div>
 
       <div class="bg-white rounded-2xl border border-gray-100 p-4 mb-4">
-        <p v-if="product.ratings_count === 0" class="text-sm text-gray-400 text-center py-2">
+        <p v-if="product.reviews_count === 0" class="text-sm text-gray-400 text-center py-2">
           Noch keine Bewertungen — sei der Erste!
         </p>
         <template v-else>
@@ -298,8 +298,8 @@ watch(
             <div>
               <StarDisplay :value="product.avg_overall" size="md" />
               <p class="text-xs text-gray-400 mt-0.5">
-                {{ product.ratings_count }}
-                Bewertung{{ product.ratings_count !== 1 ? 'en' : '' }}
+                {{ product.reviews_count }}
+                Bewertung{{ product.reviews_count !== 1 ? 'en' : '' }}
               </p>
             </div>
           </div>
@@ -389,7 +389,7 @@ watch(
       <div class="mb-6 flex flex-col gap-2">
         <RouterLink
           v-if="authStore.isLoggedIn"
-          :to="{ name: 'rating-new', params: { id: product.id } }"
+          :to="{ name: 'review-new', params: { id: product.id } }"
           class="flex items-center justify-center gap-2 w-full py-3 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 transition-colors"
         >
           Produkt bewerten
@@ -423,17 +423,17 @@ watch(
         </div>
       </div>
 
-      <div v-if="product.ratings.length">
+      <div v-if="product.reviews.length">
         <h2 class="text-base font-bold text-gray-900 mb-3">
-          Bewertungen ({{ product.ratings.length }})
+          Bewertungen ({{ product.reviews.length }})
         </h2>
         <div class="space-y-3">
-          <RatingCard
-            v-for="rating in product.ratings"
-            :key="rating.id"
-            :rating="rating"
+          <ReviewCard
+            v-for="review in product.reviews"
+            :key="review.id"
+            :review="review"
             :editable="
-              authStore.isLoggedIn && rating.user_id === authStore.user?.id && rating.is_current
+              authStore.isLoggedIn && review.user_id === authStore.user?.id && review.is_current
             "
           />
         </div>

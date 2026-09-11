@@ -3,12 +3,12 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { fetchProduct } from '@/services/products'
-import { createRating, uploadRatingImage } from '@/services/ratings'
+import { createReview, uploadReviewImage } from '@/services/reviews'
 import { toErrorMessage } from '@/lib/error'
-import RatingForm from '@/components/RatingForm.vue'
+import ReviewForm from '@/components/ReviewForm.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
-import type { RatingFormValues } from '@/components/RatingForm.vue'
+import type { ReviewFormValues } from '@/components/ReviewForm.vue'
 import type { Product } from '@/types'
 
 const route = useRoute()
@@ -33,16 +33,16 @@ onMounted(async () => {
   }
 })
 
-const handleSubmit = async (values: RatingFormValues): Promise<void> => {
+const handleSubmit = async (values: ReviewFormValues): Promise<void> => {
   const user = authStore.user
   if (!product.value || !user) return
   submitting.value = true
   submitError.value = null
   try {
     const { tags, ...fields } = values
-    const rating = await createRating(product.value.id, user.id, fields, tags)
+    const review = await createReview(product.value.id, user.id, fields, tags)
     await Promise.all(
-      pendingFiles.value.map((file, i) => uploadRatingImage(rating.id, user.id, file, i)),
+      pendingFiles.value.map((file, i) => uploadReviewImage(review.id, user.id, file, i)),
     )
     await router.push({ name: 'product-detail', params: { id: product.value.id } })
   } catch (err) {
@@ -65,7 +65,7 @@ const handleSubmit = async (values: RatingFormValues): Promise<void> => {
 
       <AlertMessage :message="submitError" class="mb-4" />
 
-      <RatingForm
+      <ReviewForm
         :submitting="submitting"
         @submit="handleSubmit"
         @files-changed="pendingFiles = $event"

@@ -101,7 +101,7 @@ const criteriaAverages = computed(() => {
           </RouterLink>
 
           <div class="rounded-xl border border-gray-100 p-3">
-            <template v-if="product.avg_overall != null && product.ratings_count > 0">
+            <template v-if="product.avg_overall != null && product.reviews_count > 0">
               <div class="flex items-center gap-3">
                 <span class="text-3xl font-bold text-gray-900 tabular-nums">
                   {{ product.avg_overall.toFixed(1) }}
@@ -109,8 +109,8 @@ const criteriaAverages = computed(() => {
                 <div>
                   <StarDisplay :value="product.avg_overall" />
                   <p class="mt-0.5 text-xs text-gray-400">
-                    {{ product.ratings_count }}
-                    Bewertung{{ product.ratings_count === 1 ? '' : 'en' }}
+                    {{ product.reviews_count }}
+                    Bewertung{{ product.reviews_count === 1 ? '' : 'en' }}
                   </p>
                 </div>
               </div>

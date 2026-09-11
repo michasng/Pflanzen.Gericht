@@ -99,7 +99,7 @@ export type Database = {
           min_price_euro_cents: number | null
           name: string
           normalized_name: string | null
-          ratings_count: number
+          reviews_count: number
           tags: string[]
           updated_at: string
         }
@@ -119,7 +119,7 @@ export type Database = {
           min_price_euro_cents?: number | null
           name: string
           normalized_name?: string | null
-          ratings_count?: number
+          reviews_count?: number
           tags?: string[]
           updated_at?: string
         }
@@ -139,7 +139,7 @@ export type Database = {
           min_price_euro_cents?: number | null
           name?: string
           normalized_name?: string | null
-          ratings_count?: number
+          reviews_count?: number
           tags?: string[]
           updated_at?: string
         }
@@ -331,7 +331,7 @@ export type Database = {
         }
         Relationships: []
       }
-      rating: {
+      review: {
         Row: {
           appearance: number | null
           comment: string | null
@@ -379,14 +379,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'rating_product_id_fkey'
+            foreignKeyName: 'review_product_id_fkey'
             columns: ['product_id']
             isOneToOne: false
             referencedRelation: 'product'
             referencedColumns: ['id']
           },
           {
-            foreignKeyName: 'rating_user_id_fkey'
+            foreignKeyName: 'review_user_id_fkey'
             columns: ['user_id']
             isOneToOne: false
             referencedRelation: 'profile'
@@ -394,57 +394,57 @@ export type Database = {
           },
         ]
       }
-      rating_image: {
+      review_image: {
         Row: {
           created_at: string
           id: string
-          rating_id: string
+          review_id: string
           sort_order: number
           storage_path: string
         }
         Insert: {
           created_at?: string
           id?: string
-          rating_id: string
+          review_id: string
           sort_order?: number
           storage_path: string
         }
         Update: {
           created_at?: string
           id?: string
-          rating_id?: string
+          review_id?: string
           sort_order?: number
           storage_path?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'rating_image_rating_id_fkey'
-            columns: ['rating_id']
+            foreignKeyName: 'review_image_review_id_fkey'
+            columns: ['review_id']
             isOneToOne: false
-            referencedRelation: 'rating'
+            referencedRelation: 'review'
             referencedColumns: ['id']
           },
         ]
       }
-      rating_tag: {
+      review_tag: {
         Row: {
-          rating_id: string
+          review_id: string
           tag: string
         }
         Insert: {
-          rating_id: string
+          review_id: string
           tag: string
         }
         Update: {
-          rating_id?: string
+          review_id?: string
           tag?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'rating_tag_rating_id_fkey'
-            columns: ['rating_id']
+            foreignKeyName: 'review_tag_review_id_fkey'
+            columns: ['review_id']
             isOneToOne: false
-            referencedRelation: 'rating'
+            referencedRelation: 'review'
             referencedColumns: ['id']
           },
         ]
@@ -473,7 +473,7 @@ export type Database = {
           is_organic: boolean
           my_vote: boolean | null
           name: string
-          ratings_count: number
+          reviews_count: number
           storage_path: string | null
           total_count: number
         }[]
@@ -517,7 +517,7 @@ export type Database = {
           min_price_euro_cents: number
           name: string
           normalized_name: string
-          ratings_count: number
+          reviews_count: number
           tags: string[]
           total_count: number
           updated_at: string

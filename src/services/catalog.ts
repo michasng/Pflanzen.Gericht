@@ -4,8 +4,8 @@ import type {
   ProductImage,
   ProductIngredient,
   ProductNutrient,
-  Rating,
-  RatingImage,
+  Review,
+  ReviewImage,
 } from '@/types'
 import { fetchPriceReports, type PriceReportWithProfile } from '@/services/prices'
 import type { SortOption } from '@/config/sortOptions'
@@ -37,17 +37,17 @@ export interface ProductPage {
   total: number
 }
 
-export type RatingWithDetails = Rating & {
+export type ReviewWithDetails = Review & {
   profile: { username: string; display_name: string | null }
   tags: string[]
-  images: RatingImage[]
+  images: ReviewImage[]
 }
 
 export type ProductDetail = Product & {
   images: ProductImage[]
   ingredients: ProductIngredient[]
   nutrients: ProductNutrient[]
-  ratings: RatingWithDetails[]
+  reviews: ReviewWithDetails[]
   priceReports: PriceReportWithProfile[]
 }
 
@@ -117,7 +117,7 @@ export const fetchProducts = async (filter: CatalogFilter, page = 0): Promise<Pr
 }
 
 export const fetchProductDetail = async (id: string): Promise<ProductDetail | null> => {
-  const [{ data: p, error: pErr }, { data: rawRatings, error: rErr }, priceReports] =
+  const [{ data: p, error: pErr }, { data: rawReviews, error: rErr }, priceReports] =
     await Promise.all([
       supabase
         .from('product')
@@ -127,9 +127,9 @@ export const fetchProductDetail = async (id: string): Promise<ProductDetail | nu
         .eq('id', id)
         .single(),
       supabase
-        .from('rating')
+        .from('review')
         .select(
-          '*, profile:user_id(username, display_name), tags:rating_tag(tag), images:rating_image(id, storage_path, sort_order)',
+          '*, profile:user_id(username, display_name), tags:review_tag(tag), images:review_image(id, storage_path, sort_order)',
         )
         .eq('product_id', id)
         .order('is_current', { ascending: false })
@@ -147,11 +147,11 @@ export const fetchProductDetail = async (id: string): Promise<ProductDetail | nu
     images: (p.images as ProductImage[] | null) ?? [],
     ingredients: (p.ingredients as ProductIngredient[] | null) ?? [],
     nutrients: (p.nutrients as ProductNutrient[] | null) ?? [],
-    ratings: (rawRatings ?? []).map((r) => ({
+    reviews: (rawReviews ?? []).map((r) => ({
       ...r,
       profile: r.profile as { username: string; display_name: string | null },
       tags: ((r.tags ?? []) as { tag: string }[]).map((t) => t.tag),
-      images: (r.images as RatingImage[] | null) ?? [],
+      images: (r.images as ReviewImage[] | null) ?? [],
     })),
     priceReports,
   }

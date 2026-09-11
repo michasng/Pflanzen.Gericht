@@ -91,7 +91,7 @@ RETURNS TABLE (
   avg_appearance numeric,
   avg_nutrition  numeric,
   avg_value      numeric,
-  ratings_count  integer,
+  reviews_count  integer,
   storage_path   text,
   agree_count    bigint,
   total_count    bigint,
@@ -133,12 +133,12 @@ AS $$
     p.is_organic,
     p.allergens,
     p.avg_overall,
-    rating_averages.avg_taste,
-    rating_averages.avg_consistency,
-    rating_averages.avg_appearance,
-    rating_averages.avg_nutrition,
-    rating_averages.avg_value,
-    p.ratings_count,
+    review_averages.avg_taste,
+    review_averages.avg_consistency,
+    review_averages.avg_appearance,
+    review_averages.avg_nutrition,
+    review_averages.avg_value,
+    p.reviews_count,
     (
       SELECT pi.storage_path
       FROM public.product_image pi
@@ -171,9 +171,9 @@ AS $$
       avg(r.appearance) AS avg_appearance,
       avg(r.nutrition) AS avg_nutrition,
       avg(r.value) AS avg_value
-    FROM public.rating r
+    FROM public.review r
     WHERE r.product_id = p.id AND r.is_current = true
-  ) AS rating_averages ON true
+  ) AS review_averages ON true
   ORDER BY agreement_rate DESC, pair_totals.total_count DESC, pair_totals.first_created_at ASC;
 $$;
 

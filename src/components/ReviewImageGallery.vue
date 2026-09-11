@@ -3,11 +3,11 @@ import { computed, ref } from 'vue'
 import Image from '@/components/primitives/ImageComponent.vue'
 import { ImageSize } from '@/config/imageSizes'
 import { getImageUrl } from '@/services/catalog'
-import type { RatingImage } from '@/types'
+import type { ReviewImage } from '@/types'
 
 const REVIEW_IMAGE_BUCKET = 'review-images'
 
-const props = defineProps<{ images: RatingImage[] }>()
+const props = defineProps<{ images: ReviewImage[] }>()
 
 const sortedImages = computed(() =>
   [...props.images].sort(
@@ -15,7 +15,7 @@ const sortedImages = computed(() =>
   ),
 )
 
-const selectedImage = ref<RatingImage | null>(null)
+const selectedImage = ref<ReviewImage | null>(null)
 
 const closeDialog = (): void => {
   selectedImage.value = null

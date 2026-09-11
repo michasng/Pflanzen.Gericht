@@ -35,7 +35,7 @@ const createService = () => {
     is_organic: boolean
     my_vote: boolean | null
     name: string
-    ratings_count: number
+    reviews_count: number
     storage_path: string | null
     total_count: number
   }> | null = null
@@ -95,7 +95,7 @@ describe('createSimilarProductsService', () => {
         is_organic: true,
         my_vote: null,
         name: 'Sojadrink',
-        ratings_count: 12,
+        reviews_count: 12,
         storage_path: null,
         total_count: 5,
       },
@@ -122,7 +122,7 @@ describe('createSimilarProductsService', () => {
         is_organic: true,
         my_vote: null,
         name: 'Sojadrink',
-        ratings_count: 12,
+        reviews_count: 12,
         storage_path: null,
         total_count: 5,
       },

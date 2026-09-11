@@ -25,7 +25,7 @@ const similarProduct: SimilarProduct = {
   is_organic: true,
   my_vote: true,
   name: 'Soja Drink',
-  ratings_count: 12,
+  reviews_count: 12,
   storage_path: null,
   total_count: 5,
 }
