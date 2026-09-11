@@ -40,7 +40,7 @@ export const persistImageVariants = async <T>(
     return await persistRecord()
   } catch (error) {
     if (uploadedVariantPaths.length) {
-      await dependencies.removeVariants(uploadedVariantPaths)
+      await dependencies.removeVariants(uploadedVariantPaths).catch(() => undefined)
     }
     throw error
   }

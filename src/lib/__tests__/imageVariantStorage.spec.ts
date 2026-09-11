@@ -46,6 +46,27 @@ describe('imageVariantStorage', () => {
 
       expect(removeVariants).toHaveBeenCalledWith(['user/entity/file/thumbnail.webp'])
     })
+
+    it('when cleanup also fails, preserves the original upload error', async () => {
+      const uploadError = new Error('upload failed')
+      const removeVariants = vi
+        .fn<(paths: string[]) => Promise<void>>()
+        .mockRejectedValue(new Error('cleanup failed'))
+      const uploadVariant = vi
+        .fn<(path: string, file: File) => Promise<{ error: Error | null }>>()
+        .mockImplementation(async (path) => ({
+          error: path.endsWith('preview.webp') ? uploadError : null,
+        }))
+
+      await expect(
+        persistImageVariants(
+          { removeVariants, uploadVariant },
+          'user/entity/file',
+          createVariants(),
+          async () => 'stored',
+        ),
+      ).rejects.toThrow(uploadError)
+    })
   })
 
   describe('given the record insert fails after all variants upload', () => {
