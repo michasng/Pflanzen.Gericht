@@ -13,7 +13,7 @@ import StarDisplay from '@/components/StarDisplay.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import TagList from '@/components/TagList.vue'
 import TabButton from '@/components/primitives/TabButton.vue'
-import CardComponent from '@/components/primitives/CardComponent.vue'
+import Card from '@/components/primitives/CardComponent.vue'
 import { categoryToLabel } from '@/config/categories'
 import { toErrorMessage } from '@/lib/error'
 import { formatDate } from '@/lib/date'
@@ -121,7 +121,7 @@ onMounted(async () => {
         </p>
         <ul v-else class="space-y-3">
           <li v-for="rating in ratings" :key="rating.id">
-            <CardComponent>
+            <Card>
               <RouterLink
                 :to="{ name: 'product-detail', params: { id: rating.product.id } }"
                 class="font-semibold text-gray-900 hover:text-primary-600 transition-colors leading-tight block mb-2"
@@ -139,7 +139,7 @@ onMounted(async () => {
               <p v-if="rating.comment" class="text-sm text-gray-600 mb-2 line-clamp-2">
                 {{ rating.comment }}
               </p>
-            </CardComponent>
+            </Card>
           </li>
         </ul>
       </template>
@@ -150,7 +150,7 @@ onMounted(async () => {
         </p>
         <ul v-else class="space-y-2">
           <li v-for="product in products" :key="product.id">
-            <CardComponent>
+            <Card>
               <RouterLink
                 :to="{ name: 'product-detail', params: { id: product.id } }"
                 class="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
@@ -161,7 +161,7 @@ onMounted(async () => {
                 {{ categoryToLabel(product.category) }}
                 <span v-if="product.brand"> · {{ product.brand }}</span>
               </p>
-            </CardComponent>
+            </Card>
           </li>
         </ul>
       </template>

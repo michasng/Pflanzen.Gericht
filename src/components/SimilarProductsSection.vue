@@ -8,7 +8,7 @@ import SimilarProductDialog from '@/components/SimilarProductDialog.vue'
 import Button from '@/components/primitives/ButtonComponent.vue'
 import { ButtonVariant } from '@/components/primitives/ButtonVariant'
 import { ButtonSize } from '@/components/primitives/ButtonSize'
-import GridComponent from '@/components/primitives/GridComponent.vue'
+import Grid from '@/components/primitives/GridComponent.vue'
 import { getImageUrl } from '@/services/catalog'
 import {
   adminRemoveSimilarity,
@@ -355,14 +355,14 @@ onUnmounted(() => {
         </template>
       </p>
 
-      <GridComponent v-else-if="similarProducts.length" class="transition-opacity duration-150">
+      <Grid v-else-if="similarProducts.length" class="transition-opacity duration-150">
         <SimilarProductCard
           v-for="similarProduct in similarProducts"
           :key="similarProduct.id"
           :product="similarProduct"
           @select="activeSimilarProductId = similarProduct.id"
         />
-      </GridComponent>
+      </Grid>
     </div>
 
     <SimilarProductDialog

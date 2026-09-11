@@ -2,8 +2,8 @@
 import { computed } from 'vue'
 import StarDisplay from '@/components/StarDisplay.vue'
 import TagList from '@/components/TagList.vue'
-import CardComponent from '@/components/primitives/CardComponent.vue'
-import ChipComponent from '@/components/primitives/ChipComponent.vue'
+import Card from '@/components/primitives/CardComponent.vue'
+import Chip from '@/components/primitives/ChipComponent.vue'
 import { ChipSize } from '@/components/primitives/ChipSize'
 import { ChipTone } from '@/components/primitives/ChipTone'
 import ProgressBar from '@/components/primitives/ProgressBar.vue'
@@ -32,7 +32,7 @@ const filledCriteria = computed(() => {
 </script>
 
 <template>
-  <CardComponent>
+  <Card>
     <div class="flex items-start justify-between gap-2 mb-3">
       <div>
         <RouterLink
@@ -43,14 +43,14 @@ const filledCriteria = computed(() => {
         </RouterLink>
         <span class="text-xs text-gray-400 ml-2">{{ formatDate(rating.created_at) }}</span>
       </div>
-      <ChipComponent
+      <Chip
         v-if="!rating.is_current"
         class="shrink-0"
         :size="ChipSize.Compact"
         :tone="ChipTone.Muted"
       >
         Veraltet
-      </ChipComponent>
+      </Chip>
     </div>
 
     <div class="flex items-center gap-2 mb-3">
@@ -82,5 +82,5 @@ const filledCriteria = computed(() => {
         Bearbeiten
       </RouterLink>
     </div>
-  </CardComponent>
+  </Card>
 </template>

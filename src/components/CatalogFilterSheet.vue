@@ -7,7 +7,7 @@ import Button from '@/components/primitives/ButtonComponent.vue'
 import { ButtonVariant } from '@/components/primitives/ButtonVariant'
 import { ButtonSize } from '@/components/primitives/ButtonSize'
 import { ButtonTone } from '@/components/primitives/ButtonTone'
-import ChipComponent from '@/components/primitives/ChipComponent.vue'
+import Chip from '@/components/primitives/ChipComponent.vue'
 import { ChipTone } from '@/components/primitives/ChipTone'
 import { BASES, baseToLabel } from '@/config/bases'
 import { STORE_SUGGESTIONS } from '@/config/storeSuggestions'
@@ -242,7 +242,7 @@ const reset = (): void => {
             <div v-for="group in TAG_GROUPS" :key="group.label" class="mb-3 last:mb-0">
               <h4 class="text-xs font-medium text-gray-500 mb-1.5">{{ group.label }}</h4>
               <div class="flex flex-wrap gap-2">
-                <ChipComponent
+                <Chip
                   v-for="(tagLabel, tag) in group.tags"
                   :key="tag"
                   interactive
@@ -250,7 +250,7 @@ const reset = (): void => {
                   @click="toggleTag(tag)"
                 >
                   {{ tagLabel }}
-                </ChipComponent>
+                </Chip>
               </div>
             </div>
           </section>
@@ -281,7 +281,7 @@ const reset = (): void => {
           <section>
             <h3 class="text-sm font-medium text-gray-700 mb-2">Allergene ausschließen</h3>
             <div class="flex flex-wrap gap-2">
-              <ChipComponent
+              <Chip
                 v-for="allergen in ALLERGENS"
                 :key="allergen"
                 interactive
@@ -289,7 +289,7 @@ const reset = (): void => {
                 @click="toggleAllergen(allergen)"
               >
                 {{ allergenToLabel(allergen) }}
-              </ChipComponent>
+              </Chip>
             </div>
           </section>
 
@@ -316,7 +316,7 @@ const reset = (): void => {
               </Button>
             </div>
             <div v-if="draftIncludeIngredients.length" class="flex flex-wrap gap-2">
-              <ChipComponent
+              <Chip
                 v-for="ingredientName in draftIncludeIngredients"
                 :key="ingredientName"
                 selected
@@ -325,7 +325,7 @@ const reset = (): void => {
                 @remove="removeIncludeIngredient(ingredientName)"
               >
                 {{ ingredientName }}
-              </ChipComponent>
+              </Chip>
             </div>
           </section>
 
@@ -351,7 +351,7 @@ const reset = (): void => {
               </Button>
             </div>
             <div v-if="draftExcludeIngredients.length" class="flex flex-wrap gap-2">
-              <ChipComponent
+              <Chip
                 v-for="ingredientName in draftExcludeIngredients"
                 :key="ingredientName"
                 :tone="ChipTone.Danger"
@@ -360,7 +360,7 @@ const reset = (): void => {
                 @remove="removeExcludeIngredient(ingredientName)"
               >
                 {{ ingredientName }}
-              </ChipComponent>
+              </Chip>
             </div>
           </section>
 

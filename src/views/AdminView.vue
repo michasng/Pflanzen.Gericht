@@ -22,8 +22,8 @@ import { ButtonVariant } from '@/components/primitives/ButtonVariant'
 import { ButtonSize } from '@/components/primitives/ButtonSize'
 import { ButtonTone } from '@/components/primitives/ButtonTone'
 import TabButton from '@/components/primitives/TabButton.vue'
-import CardComponent from '@/components/primitives/CardComponent.vue'
-import ChipComponent from '@/components/primitives/ChipComponent.vue'
+import Card from '@/components/primitives/CardComponent.vue'
+import Chip from '@/components/primitives/ChipComponent.vue'
 import { ChipSize } from '@/components/primitives/ChipSize'
 import { ChipTone } from '@/components/primitives/ChipTone'
 import { formatDate } from '@/lib/date'
@@ -140,7 +140,7 @@ const handleDeleteRating = async (id: string): Promise<void> => {
         </p>
         <ul v-else class="space-y-2">
           <li v-for="product in products" :key="product.id">
-            <CardComponent>
+            <Card>
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <RouterLink
@@ -176,7 +176,7 @@ const handleDeleteRating = async (id: string): Promise<void> => {
                   </Button>
                 </div>
               </div>
-            </CardComponent>
+            </Card>
           </li>
         </ul>
         <div v-if="productHasMore" class="mt-4 text-center">
@@ -198,7 +198,7 @@ const handleDeleteRating = async (id: string): Promise<void> => {
         </p>
         <ul v-else class="space-y-2">
           <li v-for="rating in ratings" :key="rating.id">
-            <CardComponent>
+            <Card>
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <RouterLink
@@ -215,14 +215,14 @@ const handleDeleteRating = async (id: string): Promise<void> => {
                     >
                       {{ rating.profile.username }}
                     </RouterLink>
-                    <ChipComponent
+                    <Chip
                       v-if="!rating.is_current"
                       class="ml-2"
                       :size="ChipSize.Tight"
                       :tone="ChipTone.Muted"
                     >
                       Veraltet
-                    </ChipComponent>
+                    </Chip>
                   </p>
                   <div class="flex items-center gap-2 mt-1">
                     <StarDisplay :value="rating.overall" />
@@ -241,7 +241,7 @@ const handleDeleteRating = async (id: string): Promise<void> => {
                   {{ deletingId === rating.id ? 'Löscht …' : 'Löschen' }}
                 </Button>
               </div>
-            </CardComponent>
+            </Card>
           </li>
         </ul>
         <div v-if="ratingHasMore" class="mt-4 text-center">

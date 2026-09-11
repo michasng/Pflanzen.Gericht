@@ -21,8 +21,8 @@ import { ButtonVariant } from '@/components/primitives/ButtonVariant'
 import { ButtonSize } from '@/components/primitives/ButtonSize'
 import { ButtonTone } from '@/components/primitives/ButtonTone'
 import TabButton from '@/components/primitives/TabButton.vue'
-import CardComponent from '@/components/primitives/CardComponent.vue'
-import ChipComponent from '@/components/primitives/ChipComponent.vue'
+import Card from '@/components/primitives/CardComponent.vue'
+import Chip from '@/components/primitives/ChipComponent.vue'
 import { ChipSize } from '@/components/primitives/ChipSize'
 import { ChipTone } from '@/components/primitives/ChipTone'
 import { categoryToLabel } from '@/config/categories'
@@ -258,7 +258,7 @@ onMounted(async () => {
       </p>
       <ul v-else class="space-y-3">
         <li v-for="rating in ratings" :key="rating.id">
-          <CardComponent>
+          <Card>
             <div class="flex items-start justify-between gap-2 mb-2">
               <RouterLink
                 :to="{ name: 'product-detail', params: { id: rating.product.id } }"
@@ -266,13 +266,13 @@ onMounted(async () => {
               >
                 {{ rating.product.name }}
               </RouterLink>
-              <ChipComponent
+              <Chip
                 class="shrink-0"
                 :size="ChipSize.Compact"
                 :tone="rating.is_current ? ChipTone.Success : ChipTone.Muted"
               >
                 {{ rating.is_current ? 'Aktuell' : 'Veraltet' }}
-              </ChipComponent>
+              </Chip>
             </div>
 
             <div class="flex items-center gap-2 mb-2">
@@ -311,7 +311,7 @@ onMounted(async () => {
                 {{ deletingId === rating.id ? 'Löscht …' : 'Löschen' }}
               </Button>
             </div>
-          </CardComponent>
+          </Card>
         </li>
       </ul>
     </template>
@@ -322,7 +322,7 @@ onMounted(async () => {
       </p>
       <ul v-else class="space-y-2">
         <li v-for="product in products" :key="product.id">
-          <CardComponent>
+          <Card>
             <RouterLink
               :to="{ name: 'product-detail', params: { id: product.id } }"
               class="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
@@ -352,7 +352,7 @@ onMounted(async () => {
                 {{ deletingProductId === product.id ? 'Löscht …' : 'Löschen' }}
               </Button>
             </div>
-          </CardComponent>
+          </Card>
         </li>
       </ul>
     </template>
