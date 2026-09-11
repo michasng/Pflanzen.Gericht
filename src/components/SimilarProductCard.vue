@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import AppLogo from '@/components/AppLogo.vue'
+import Image from '@/components/primitives/ImageComponent.vue'
 import ProgressBar from '@/components/primitives/ProgressBar.vue'
 import { getImageUrl } from '@/services/catalog'
 import type { SimilarProduct } from '@/services/similarProducts'
@@ -25,14 +26,8 @@ const agreementValueText = computed(() => `${agreementPercent.value} % Zustimmun
     class="group flex w-full flex-col items-stretch justify-start overflow-hidden rounded-2xl border border-gray-100 bg-white text-left font-medium transition-colors hover:shadow-md"
     @click="$emit('select')"
   >
-    <div class="aspect-square overflow-hidden bg-gray-50">
-      <img
-        v-if="coverUrl"
-        :src="coverUrl"
-        :alt="product.name"
-        loading="lazy"
-        class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-      />
+    <div class="aspect-square bg-gray-50">
+      <Image v-if="coverUrl" :src="coverUrl" :alt="product.name" />
       <div v-else class="flex h-full w-full items-center justify-center">
         <AppLogo class="h-12 w-12 text-gray-200" />
       </div>

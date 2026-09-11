@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import StarDisplay from '@/components/StarDisplay.vue'
 import TagList from '@/components/TagList.vue'
+import RatingImageGallery from '@/components/RatingImageGallery.vue'
 import Card from '@/components/primitives/CardComponent.vue'
 import Chip from '@/components/primitives/ChipComponent.vue'
 import { ChipSize } from '@/components/primitives/ChipSize'
@@ -73,6 +74,10 @@ const filledCriteria = computed(() => {
     <TagList :tags="rating.tags" class="mb-3" />
 
     <p v-if="rating.comment" class="text-sm text-gray-600 mb-3">{{ rating.comment }}</p>
+
+    <div class="mb-3">
+      <RatingImageGallery :images="rating.images" />
+    </div>
 
     <div v-if="editable" class="mt-3 pt-2 border-t border-gray-50">
       <RouterLink

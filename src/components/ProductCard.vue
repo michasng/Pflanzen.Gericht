@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import StarDisplay from '@/components/StarDisplay.vue'
 import AppLogo from '@/components/AppLogo.vue'
+import Image from '@/components/primitives/ImageComponent.vue'
 import { categoryToLabel } from '@/config/categories'
 import { getImageUrl, type ProductListItem } from '@/services/catalog'
 
@@ -21,14 +22,8 @@ const categoryLabel = computed(() => categoryToLabel(props.product.category))
     :to="{ name: 'product-detail', params: { id: product.id } }"
     class="group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-md transition-shadow"
   >
-    <div class="aspect-square bg-gray-50 overflow-hidden">
-      <img
-        v-if="coverUrl"
-        :src="coverUrl"
-        :alt="product.name"
-        loading="lazy"
-        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-      />
+    <div class="aspect-square bg-gray-50">
+      <Image v-if="coverUrl" :src="coverUrl" :alt="product.name" />
       <div v-else class="w-full h-full flex items-center justify-center">
         <AppLogo class="w-12 h-12 text-gray-200" />
       </div>

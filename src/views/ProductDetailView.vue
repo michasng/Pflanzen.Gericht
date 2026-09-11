@@ -12,6 +12,7 @@ import ReviewScoreDimensions from '@/components/ReviewScoreDimensions.vue'
 import RatingCard from '@/components/RatingCard.vue'
 import PriceReportForm, { type PriceReportFormValues } from '@/components/PriceReportForm.vue'
 import AppLogo from '@/components/AppLogo.vue'
+import Image from '@/components/primitives/ImageComponent.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import SimilarProductsSection from '@/components/SimilarProductsSection.vue'
 import { categoryToLabel } from '@/config/categories'
@@ -188,12 +189,11 @@ watch(
 
     <template v-else-if="product">
       <div class="-mx-4 mb-4">
-        <div class="aspect-video bg-gray-100 overflow-hidden">
-          <img
+        <div class="aspect-square bg-gray-100">
+          <Image
             v-if="activeImage"
             :src="getImageUrl('product-images', activeImage.storage_path)"
             :alt="product.name"
-            class="w-full h-full object-cover"
           />
           <div v-else class="w-full h-full flex items-center justify-center">
             <AppLogo class="w-20 h-20 text-gray-200" />
@@ -207,11 +207,7 @@ watch(
             :class="activeImageIndex === i ? 'border-primary-500' : 'border-transparent'"
             @click="activeImageIndex = i"
           >
-            <img
-              :src="getImageUrl('product-images', img.storage_path)"
-              :alt="`Bild ${i + 1}`"
-              class="w-full h-full object-cover"
-            />
+            <Image :src="getImageUrl('product-images', img.storage_path)" :alt="`Bild ${i + 1}`" />
           </button>
         </div>
       </div>
