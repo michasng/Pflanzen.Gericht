@@ -435,7 +435,7 @@ watch(
         </div>
       </div>
 
-      <p v-if="product.barcode" class="mt-6 text-center text-xs text-gray-300">
+      <p v-if="product.barcode" class="mt-6 text-center text-xs text-gray-500">
         Barcode: {{ product.barcode }}
       </p>
     </template>

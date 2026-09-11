@@ -92,7 +92,12 @@ describe('ProductForm', () => {
 
     await wrapper.get('[data-test="scan-product"]').trigger('click')
     await wrapper.get('[aria-label="Barcode entfernen"]').trigger('click')
+    await wrapper.get('#pf-name').setValue('Soja Drink')
+    await wrapper.get('#pf-category').setValue('drink')
+    await wrapper.get('form').trigger('submit')
 
     expect(wrapper.find('#pf-barcode').exists()).toBe(false)
+    const emittedValues = wrapper.emitted('submit')?.[0]?.[0] as { barcode: string | null }
+    expect(emittedValues.barcode).toBeNull()
   })
 })
