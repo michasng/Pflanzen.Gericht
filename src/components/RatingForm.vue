@@ -15,6 +15,7 @@ export interface RatingFormValues {
 import { ref, reactive } from 'vue'
 import StarRatingInput from '@/components/StarRatingInput.vue'
 import ImageUpload from '@/components/ImageUpload.vue'
+import Image from '@/components/primitives/ImageComponent.vue'
 import { TAG_GROUPS } from '@/config/reviewTags'
 import type { RatingImage } from '@/types'
 import { getImageUrl } from '@/services/catalog'
@@ -141,13 +142,9 @@ const handleSubmit = (): void => {
         <div
           v-for="img in existingImages"
           :key="img.id"
-          class="relative aspect-square rounded-lg overflow-hidden bg-gray-100"
+          class="relative rounded-lg overflow-hidden bg-gray-100"
         >
-          <img
-            :src="getImageUrl('review-images', img.storage_path)"
-            alt=""
-            class="w-full h-full object-cover"
-          />
+          <Image :src="getImageUrl('review-images', img.storage_path)" alt="" />
           <button
             type="button"
             class="absolute top-1 right-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import ImageUpload from '@/components/ImageUpload.vue'
+import Image from '@/components/primitives/ImageComponent.vue'
 import ProductBarcodeScanner from '@/components/ProductBarcodeScanner.vue'
 import SuggestionTextInput from '@/components/SuggestionTextInput.vue'
 import type { IngredientComparator } from '@/config/ingredients'
@@ -568,13 +569,9 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
         <div
           v-for="img in existingImages"
           :key="img.id"
-          class="relative aspect-square rounded-lg overflow-hidden bg-gray-100"
+          class="relative rounded-lg overflow-hidden bg-gray-100"
         >
-          <img
-            :src="getImageUrl('product-images', img.storage_path)"
-            alt=""
-            class="w-full h-full object-cover"
-          />
+          <Image :src="getImageUrl('product-images', img.storage_path)" alt="" />
           <button
             type="button"
             class="absolute top-1 right-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppLogo from '@/components/AppLogo.vue'
+import Image from '@/components/primitives/ImageComponent.vue'
 import ReviewScoreDimensions from '@/components/ReviewScoreDimensions.vue'
 import StarDisplay from '@/components/StarDisplay.vue'
 import { allergenToLabel } from '@/config/allergens'
@@ -82,12 +83,7 @@ const criteriaAverages = computed(() => {
             class="flex items-center gap-3 rounded-xl border border-gray-100 p-3 hover:bg-gray-50"
           >
             <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-gray-50">
-              <img
-                v-if="coverUrl"
-                :src="coverUrl"
-                :alt="product.name"
-                class="h-full w-full object-cover"
-              />
+              <Image v-if="coverUrl" :src="coverUrl" :alt="product.name" />
               <div v-else class="flex h-full w-full items-center justify-center">
                 <AppLogo class="h-8 w-8 text-gray-200" />
               </div>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { isImageFileName } from '@/lib/isImageFileName'
+import ImagePreview from '@/components/primitives/ImageComponent.vue'
 import { ref, onUnmounted } from 'vue'
 
 const MAX_DIMENSION = 1280
@@ -140,9 +141,9 @@ onUnmounted(() => {
       <div
         v-for="(preview, i) in previews"
         :key="preview.url"
-        class="relative aspect-square rounded-lg overflow-hidden bg-gray-100"
+        class="relative rounded-lg overflow-hidden bg-gray-100"
       >
-        <img :src="preview.url" alt="" class="w-full h-full object-cover" />
+        <ImagePreview :src="preview.url" alt="" />
         <button
           type="button"
           class="absolute top-1 right-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
