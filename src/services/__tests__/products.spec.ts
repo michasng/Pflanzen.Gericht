@@ -102,4 +102,24 @@ describe('deleteProduct', () => {
     expect(removeCalls).toEqual([])
     expect(deleteCalls).toEqual([])
   })
+
+  it('allows admins to clean up storage before deleting the product row', async () => {
+    signedInUserId = 'admin-user'
+    productRow = { created_by: 'product-owner' }
+    profileRow = { is_admin: true }
+
+    await deleteProduct('product-a')
+
+    expect(removeCalls).toHaveLength(2)
+    expect(deleteCalls).toEqual([{ table: 'product', ids: ['product-a'] }])
+  })
+
+  it('returns without cleanup when the product no longer exists', async () => {
+    productRow = null
+
+    await deleteProduct('product-a')
+
+    expect(removeCalls).toEqual([])
+    expect(deleteCalls).toEqual([])
+  })
 })

@@ -265,14 +265,14 @@ const removeStorageObjects = async (bucket: string, storagePaths: string[]): Pro
   )
 }
 
-const ensureCanDeleteProduct = async (id: string): Promise<void> => {
+const ensureCanDeleteProduct = async (id: string): Promise<boolean> => {
   const { data: product, error: productError } = await supabase
     .from('product')
     .select('created_by')
     .eq('id', id)
     .maybeSingle()
   if (productError) throw productError
-  if (!product) return
+  if (!product) return false
 
   const {
     data: { user },
@@ -280,7 +280,7 @@ const ensureCanDeleteProduct = async (id: string): Promise<void> => {
   } = await supabase.auth.getUser()
   if (userError) throw userError
   if (!user) throw new Error(DELETE_PRODUCT_NOT_AUTHORIZED_ERROR_MESSAGE)
-  if (product.created_by === user.id) return
+  if (product.created_by === user.id) return true
 
   const { data: profile, error: profileError } = await supabase
     .from('profile')
@@ -289,6 +289,7 @@ const ensureCanDeleteProduct = async (id: string): Promise<void> => {
     .single()
   if (profileError) throw profileError
   if (!profile.is_admin) throw new Error(DELETE_PRODUCT_NOT_AUTHORIZED_ERROR_MESSAGE)
+  return true
 }
 
 export const deleteProductImage = async (id: string, storagePath: string): Promise<void> => {
@@ -299,7 +300,7 @@ export const deleteProductImage = async (id: string, storagePath: string): Promi
 
 export const deleteProduct = async (id: string): Promise<void> => {
   // Client-side guard: authorize before storage cleanup so an unauthorized caller cannot remove blobs and then fail the final RLS-enforced product delete.
-  await ensureCanDeleteProduct(id)
+  if (!(await ensureCanDeleteProduct(id))) return
   // Limitation: these dependent-row reads are unpaginated, so cleanup is capped by PostgREST api.max_rows (currently 1,000).
   const { data: productImages, error: productImagesError } = await supabase
     .from('product_image')
