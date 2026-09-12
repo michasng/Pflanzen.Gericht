@@ -3,22 +3,34 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 const removeCalls: { bucket: string; paths: string[] }[] = []
 const deleteCalls: { table: string; ids: string[] }[] = []
 
+const currentUser = { id: 'owner-user' }
 const productImageRows = [{ storage_path: 'user/product/image-a' }]
 const reviewRows = [{ id: 'review-a' }]
 const reviewImageRows = [{ storage_path: 'user/review-a/image-b' }]
+let productRow: { created_by: string } | null = { created_by: currentUser.id }
+let profileRow = { is_admin: false }
+let signedInUserId: string | null = currentUser.id
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     from: (table: string) => ({
       select: (_columns: string) => ({
-        eq: (_column: string, _value: string) =>
-          Promise.resolve(
-            table === 'product_image'
-              ? { data: productImageRows, error: null }
-              : table === 'review'
-                ? { data: reviewRows, error: null }
-                : { data: null, error: null },
-          ),
+        eq: (_column: string, _value: string) => {
+          if (table === 'product_image')
+            return Promise.resolve({ data: productImageRows, error: null })
+          if (table === 'review') return Promise.resolve({ data: reviewRows, error: null })
+          if (table === 'product') {
+            return {
+              maybeSingle: () => Promise.resolve({ data: productRow, error: null }),
+            }
+          }
+          if (table === 'profile') {
+            return {
+              single: () => Promise.resolve({ data: profileRow, error: null }),
+            }
+          }
+          return Promise.resolve({ data: null, error: null })
+        },
         in: (_column: string, _values: string[]) =>
           Promise.resolve({ data: reviewImageRows, error: null }),
       }),
@@ -29,6 +41,13 @@ vi.mock('@/lib/supabase', () => ({
         },
       }),
     }),
+    auth: {
+      getUser: () =>
+        Promise.resolve({
+          data: { user: signedInUserId ? { id: signedInUserId } : null },
+          error: null,
+        }),
+    },
     storage: {
       from: (bucket: string) => ({
         remove: (paths: string[]) => {
@@ -46,6 +65,9 @@ describe('deleteProduct', () => {
   beforeEach(() => {
     removeCalls.length = 0
     deleteCalls.length = 0
+    productRow = { created_by: currentUser.id }
+    profileRow = { is_admin: false }
+    signedInUserId = currentUser.id
   })
 
   it('removes product image and review image storage objects before deleting the product row', async () => {
@@ -68,5 +90,16 @@ describe('deleteProduct', () => {
       ]),
     )
     expect(deleteCalls).toEqual([{ table: 'product', ids: ['product-a'] }])
+  })
+
+  it('rejects before storage cleanup when the signed-in user cannot delete the product', async () => {
+    signedInUserId = 'review-user'
+    productRow = { created_by: 'product-owner' }
+
+    await expect(deleteProduct('product-a')).rejects.toThrow(
+      'Not authorized to delete this product.',
+    )
+    expect(removeCalls).toEqual([])
+    expect(deleteCalls).toEqual([])
   })
 })

@@ -22,6 +22,8 @@ type NutrientWrite = {
   amount_micrograms: number
 }
 
+const DELETE_PRODUCT_NOT_AUTHORIZED_ERROR_MESSAGE = 'Not authorized to delete this product.'
+
 const getIngredientSignature = (ingredient: {
   name: string
   comparator: string
@@ -263,6 +265,32 @@ const removeStorageObjects = async (bucket: string, storagePaths: string[]): Pro
   )
 }
 
+const ensureCanDeleteProduct = async (id: string): Promise<void> => {
+  const { data: product, error: productError } = await supabase
+    .from('product')
+    .select('created_by')
+    .eq('id', id)
+    .maybeSingle()
+  if (productError) throw productError
+  if (!product) return
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+  if (userError) throw userError
+  if (!user) throw new Error(DELETE_PRODUCT_NOT_AUTHORIZED_ERROR_MESSAGE)
+  if (product.created_by === user.id) return
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profile')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single()
+  if (profileError) throw profileError
+  if (!profile.is_admin) throw new Error(DELETE_PRODUCT_NOT_AUTHORIZED_ERROR_MESSAGE)
+}
+
 export const deleteProductImage = async (id: string, storagePath: string): Promise<void> => {
   const { error } = await supabase.from('product_image').delete().eq('id', id)
   if (error) throw error
@@ -270,6 +298,8 @@ export const deleteProductImage = async (id: string, storagePath: string): Promi
 }
 
 export const deleteProduct = async (id: string): Promise<void> => {
+  // Client-side guard: authorize before storage cleanup so an unauthorized caller cannot remove blobs and then fail the final RLS-enforced product delete.
+  await ensureCanDeleteProduct(id)
   // Limitation: these dependent-row reads are unpaginated, so cleanup is capped by PostgREST api.max_rows (currently 1,000).
   const { data: productImages, error: productImagesError } = await supabase
     .from('product_image')
