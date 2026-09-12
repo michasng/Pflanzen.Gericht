@@ -117,7 +117,7 @@ describe('deleteProduct', () => {
   it('returns without cleanup when the product no longer exists', async () => {
     productRow = null
 
-    await deleteProduct('product-a')
+    await expect(deleteProduct('product-a')).resolves.toBeUndefined()
 
     expect(removeCalls).toEqual([])
     expect(deleteCalls).toEqual([])
