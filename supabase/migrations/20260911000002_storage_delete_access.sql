@@ -1,6 +1,4 @@
 DROP POLICY IF EXISTS "product-images: delete own files" ON storage.objects;
-DROP POLICY IF EXISTS "product-images: uploader delete own files" ON storage.objects;
-DROP POLICY IF EXISTS "product-images: product owner or admin cleanup" ON storage.objects;
 
 CREATE POLICY "product-images: uploader delete own files"
   ON storage.objects FOR DELETE
@@ -22,9 +20,6 @@ CREATE POLICY "product-images: product owner or admin cleanup"
   );
 
 DROP POLICY IF EXISTS "review-images: delete own files" ON storage.objects;
-DROP POLICY IF EXISTS "review-images: uploader delete own files" ON storage.objects;
-DROP POLICY IF EXISTS "review-images: review owner or admin delete" ON storage.objects;
-DROP POLICY IF EXISTS "review-images: product owner cleanup" ON storage.objects;
 
 CREATE POLICY "review-images: uploader delete own files"
   ON storage.objects FOR DELETE
