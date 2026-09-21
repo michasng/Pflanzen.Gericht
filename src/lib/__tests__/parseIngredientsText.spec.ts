@@ -5,7 +5,7 @@ const ORGANIC_KEYWORDS_DE = ['bio', 'öko']
 const ORGANIC_KEYWORDS_EN = ['organic', 'eco']
 
 describe('parseIngredientsText', () => {
-  it('given the german oat drink example, parses names, percent, brackets and organic markers', () => {
+  it('given the german oat drink example, parses names, percent and organic markers, keeping bracketed qualifiers on the ingredient', () => {
     const text =
       'Wasser, HAFER* 10%, Rapsöl*, Meersalz, Säureregulator (Kaliumcarbonat). Ökologische Zutaten.'
 
@@ -14,8 +14,7 @@ describe('parseIngredientsText', () => {
       { name: 'HAFER (Bio)', fractionBasisPoints: 1000, comparator: '=' },
       { name: 'Rapsöl (Bio)', fractionBasisPoints: null, comparator: '=' },
       { name: 'Meersalz', fractionBasisPoints: null, comparator: '=' },
-      { name: 'Säureregulator', fractionBasisPoints: null, comparator: '=' },
-      { name: 'Kaliumcarbonat', fractionBasisPoints: null, comparator: '=' },
+      { name: 'Säureregulator (Kaliumcarbonat)', fractionBasisPoints: null, comparator: '=' },
     ])
   })
 
@@ -28,8 +27,11 @@ describe('parseIngredientsText', () => {
       { name: 'OAT (Bio)', fractionBasisPoints: 1000, comparator: '=' },
       { name: 'rapeseed oil', fractionBasisPoints: null, comparator: '=' },
       { name: 'sea salt', fractionBasisPoints: null, comparator: '=' },
-      { name: 'acidity regulator', fractionBasisPoints: null, comparator: '=' },
-      { name: 'potassium carbonate', fractionBasisPoints: null, comparator: '=' },
+      {
+        name: 'acidity regulator (potassium carbonate)',
+        fractionBasisPoints: null,
+        comparator: '=',
+      },
     ])
   })
 
@@ -60,13 +62,15 @@ describe('parseIngredientsText', () => {
     ])
   })
 
-  it('given a bracket lists multiple sub-ingredients, splits them into separate entries', () => {
+  it('given a bracketed qualifier follows an ingredient, keeps it as a single ingredient name', () => {
     const text = 'Regulator (Kaliumcarbonat, Natriumcarbonat)'
 
     expect(parseIngredientsText(text, ORGANIC_KEYWORDS_DE)).toEqual([
-      { name: 'Regulator', fractionBasisPoints: null, comparator: '=' },
-      { name: 'Kaliumcarbonat', fractionBasisPoints: null, comparator: '=' },
-      { name: 'Natriumcarbonat', fractionBasisPoints: null, comparator: '=' },
+      {
+        name: 'Regulator (Kaliumcarbonat, Natriumcarbonat)',
+        fractionBasisPoints: null,
+        comparator: '=',
+      },
     ])
   })
 

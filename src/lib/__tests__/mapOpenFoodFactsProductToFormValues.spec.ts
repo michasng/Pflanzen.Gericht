@@ -106,8 +106,7 @@ describe('mapOpenFoodFactsProductToFormValues', () => {
       { name: 'HAFER (Bio)', fractionBasisPoints: 1000, comparator: '=' },
       { name: 'Rapsöl (Bio)', fractionBasisPoints: null, comparator: '=' },
       { name: 'Meersalz', fractionBasisPoints: null, comparator: '=' },
-      { name: 'Säureregulator', fractionBasisPoints: null, comparator: '=' },
-      { name: 'Kaliumcarbonat', fractionBasisPoints: null, comparator: '=' },
+      { name: 'Säureregulator (Kaliumcarbonat)', fractionBasisPoints: null, comparator: '=' },
     ])
   })
 
@@ -143,8 +142,11 @@ describe('mapOpenFoodFactsProductToFormValues', () => {
       { name: 'OAT (Bio)', fractionBasisPoints: 1000, comparator: '=' },
       { name: 'rapeseed oil', fractionBasisPoints: null, comparator: '=' },
       { name: 'sea salt', fractionBasisPoints: null, comparator: '=' },
-      { name: 'acidity regulator', fractionBasisPoints: null, comparator: '=' },
-      { name: 'potassium carbonate', fractionBasisPoints: null, comparator: '=' },
+      {
+        name: 'acidity regulator (potassium carbonate)',
+        fractionBasisPoints: null,
+        comparator: '=',
+      },
     ])
   })
 
@@ -174,8 +176,7 @@ describe('mapOpenFoodFactsProductToFormValues', () => {
       { name: 'HAFER (Bio)', fractionBasisPoints: 1000, comparator: '=' },
       { name: 'Rapsöl (Bio)', fractionBasisPoints: null, comparator: '=' },
       { name: 'Meersalz', fractionBasisPoints: null, comparator: '=' },
-      { name: 'Säureregulator', fractionBasisPoints: null, comparator: '=' },
-      { name: 'Kaliumcarbonat', fractionBasisPoints: null, comparator: '=' },
+      { name: 'Säureregulator (Kaliumcarbonat)', fractionBasisPoints: null, comparator: '=' },
     ])
   })
 

@@ -5,7 +5,6 @@ import { DEFAULT_INGREDIENT_COMPARATOR, type IngredientLike } from '@/config/ing
 const PERCENT_PATTERN = /(\d+(?:[.,]\d+)?)\s*%/
 const ASTERISK_PATTERN = /\*/g
 const ASTERISK_CHARACTER = '*'
-const BRACKET_PATTERN = /^(.*?)\(([^)]*)\)\s*$/
 const SENTENCE_SEPARATOR = '.'
 const TOP_LEVEL_SEPARATOR = ','
 
@@ -68,19 +67,8 @@ const parseSegment = (segment: string, isTextOrganic: boolean): IngredientLike[]
   const fractionBasisPoints =
     percent === undefined ? null : Math.round(percent * BASIS_POINTS_PER_PERCENT)
 
-  const bracketMatch = textWithoutPercent.match(BRACKET_PATTERN)
-  if (!bracketMatch) {
-    const ingredient = toIngredient(textWithoutPercent, isTextOrganic, fractionBasisPoints)
-    return ingredient ? [ingredient] : []
-  }
-
-  const [, mainNameText = '', bracketContent = ''] = bracketMatch
-  const mainIngredient = toIngredient(mainNameText, isTextOrganic, fractionBasisPoints)
-  const bracketIngredients = splitTopLevel(bracketContent, TOP_LEVEL_SEPARATOR)
-    .map((name) => toIngredient(name, isTextOrganic, null))
-    .filter((ingredient): ingredient is IngredientLike => ingredient !== undefined)
-
-  return mainIngredient ? [mainIngredient, ...bracketIngredients] : bracketIngredients
+  const ingredient = toIngredient(textWithoutPercent, isTextOrganic, fractionBasisPoints)
+  return ingredient ? [ingredient] : []
 }
 
 export const parseIngredientsText = (text: string, organicKeywords: string[]): IngredientLike[] => {
