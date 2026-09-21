@@ -74,6 +74,111 @@ describe('mapOpenFoodFactsProductToFormValues', () => {
     ])
   })
 
+  it('given an ingredient is labelled organic, appends the organic suffix to its name', () => {
+    const product: OpenFoodFactsProduct = {
+      lang: 'de',
+      ingredients: [
+        { text: 'Hafer', percent_estimate: 10, labels: 'en:organic' },
+        { text: 'Wasser', percent_estimate: 60 },
+      ],
+    }
+
+    const values = mapOpenFoodFactsProductToFormValues(product)
+
+    expect(values.ingredients).toEqual([
+      { name: 'Hafer (Bio)', fractionBasisPoints: 1000, comparator: '=' },
+      { name: 'Wasser', fractionBasisPoints: 6000, comparator: '=' },
+    ])
+  })
+
+  it('given the product language is not german but a german ingredients text exists, parses the german text instead of the structured ingredients', () => {
+    const product: OpenFoodFactsProduct = {
+      lang: 'nl',
+      ingredients: [{ text: 'HAVER 10% koolzaadolie', percent_estimate: 18.44 }],
+      ingredients_text_de:
+        'Wasser, HAFER* 10%, Rapsöl*, Meersalz, Säureregulator (Kaliumcarbonat). Ökologische Zutaten.',
+    }
+
+    const values = mapOpenFoodFactsProductToFormValues(product)
+
+    expect(values.ingredients).toEqual([
+      { name: 'Wasser', fractionBasisPoints: null, comparator: '=' },
+      { name: 'HAFER (Bio)', fractionBasisPoints: 1000, comparator: '=' },
+      { name: 'Rapsöl (Bio)', fractionBasisPoints: null, comparator: '=' },
+      { name: 'Meersalz', fractionBasisPoints: null, comparator: '=' },
+      { name: 'Säureregulator', fractionBasisPoints: null, comparator: '=' },
+      { name: 'Kaliumcarbonat', fractionBasisPoints: null, comparator: '=' },
+    ])
+  })
+
+  it('given the product language is english and no german text exists, uses the structured english ingredients', () => {
+    const product: OpenFoodFactsProduct = {
+      lang: 'en',
+      ingredients: [
+        { text: 'Water', percent_estimate: 60 },
+        { text: 'Oat', percent_estimate: 10, labels: 'en:organic' },
+      ],
+    }
+
+    const values = mapOpenFoodFactsProductToFormValues(product)
+
+    expect(values.ingredients).toEqual([
+      { name: 'Water', fractionBasisPoints: 6000, comparator: '=' },
+      { name: 'Oat (Bio)', fractionBasisPoints: 1000, comparator: '=' },
+    ])
+  })
+
+  it('given neither german structured data nor german text exists and the product language is not english, parses the english text as a fallback', () => {
+    const product: OpenFoodFactsProduct = {
+      lang: 'nl',
+      ingredients: [{ text: 'HAVER 10% koolzaadolie', percent_estimate: 18.44 }],
+      ingredients_text_en:
+        'Water, OAT* 10%, rapeseed oil, sea salt, acidity regulator (potassium carbonate). \r\n\r\n*Organic ingredients.',
+    }
+
+    const values = mapOpenFoodFactsProductToFormValues(product)
+
+    expect(values.ingredients).toEqual([
+      { name: 'Water', fractionBasisPoints: null, comparator: '=' },
+      { name: 'OAT (Bio)', fractionBasisPoints: 1000, comparator: '=' },
+      { name: 'rapeseed oil', fractionBasisPoints: null, comparator: '=' },
+      { name: 'sea salt', fractionBasisPoints: null, comparator: '=' },
+      { name: 'acidity regulator', fractionBasisPoints: null, comparator: '=' },
+      { name: 'potassium carbonate', fractionBasisPoints: null, comparator: '=' },
+    ])
+  })
+
+  it('given the barista oat drink product from open food facts, parses the german ingredients text', () => {
+    const product: OpenFoodFactsProduct = {
+      lang: 'nl',
+      ingredients: [
+        { text: 'Water', percent_estimate: 59.9 },
+        { text: 'HAVER 10% koolzaadolie', percent_estimate: 18.44, labels: 'en:organic' },
+        { text: 'zeezout', percent_estimate: 9.25 },
+        { text: 'zuurte', percent_estimate: 5.67 },
+        { text: 'regelaar', percent_estimate: 3.88 },
+        { text: 'ingrediënt', percent_estimate: 2.85 },
+      ],
+      ingredients_text:
+        'Water, HAVER* 10% koolzaadolie, zeezout, zuurte - regelaar (kaliumcarbonaat). \r\n\r\n*Biologisch ingrediënt.',
+      ingredients_text_de:
+        'Wasser, HAFER* 10%, Rapsöl*, Meersalz, Säureregulator (Kaliumcarbonat). Ökologische Zutaten.',
+      ingredients_text_en:
+        'Water, OAT* 10%, rapeseed oil, sea salt, acidity regulator (potassium carbonate). \r\n\r\n*Organic ingredients.',
+    }
+
+    const values = mapOpenFoodFactsProductToFormValues(product)
+
+    expect(values.ingredients).toEqual([
+      { name: 'Wasser', fractionBasisPoints: null, comparator: '=' },
+      { name: 'HAFER (Bio)', fractionBasisPoints: 1000, comparator: '=' },
+      { name: 'Rapsöl (Bio)', fractionBasisPoints: null, comparator: '=' },
+      { name: 'Meersalz', fractionBasisPoints: null, comparator: '=' },
+      { name: 'Säureregulator', fractionBasisPoints: null, comparator: '=' },
+      { name: 'Kaliumcarbonat', fractionBasisPoints: null, comparator: '=' },
+    ])
+  })
+
   it('given known nutrient fields are present, maps them, sorts by hierarchy and keeps unmapped ones with english fallback names', () => {
     const product: OpenFoodFactsProduct = {
       nutriments: {

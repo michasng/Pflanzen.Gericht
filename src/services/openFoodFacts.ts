@@ -25,14 +25,18 @@ const isNutrimentRecord = (value: unknown): value is Record<string, OpenFoodFact
 const isOpenFoodFactsIngredient = (value: unknown): boolean =>
   isRecord(value) &&
   (value.text === undefined || typeof value.text === 'string') &&
-  (value.percent_estimate === undefined || typeof value.percent_estimate === 'number')
+  (value.percent_estimate === undefined || typeof value.percent_estimate === 'number') &&
+  (value.labels === undefined || typeof value.labels === 'string')
 
 const isOpenFoodFactsProduct = (value: unknown): value is OpenFoodFactsProduct =>
   isRecord(value) &&
   (value.product_name === undefined || typeof value.product_name === 'string') &&
   (value.brands === undefined || typeof value.brands === 'string') &&
   (value.generic_name === undefined || typeof value.generic_name === 'string') &&
+  (value.lang === undefined || typeof value.lang === 'string') &&
   (value.ingredients_text === undefined || typeof value.ingredients_text === 'string') &&
+  (value.ingredients_text_de === undefined || typeof value.ingredients_text_de === 'string') &&
+  (value.ingredients_text_en === undefined || typeof value.ingredients_text_en === 'string') &&
   (value.labels_tags === undefined || isStringArray(value.labels_tags)) &&
   (value.allergens_tags === undefined || isStringArray(value.allergens_tags)) &&
   (value.nutriments === undefined || isNutrimentRecord(value.nutriments)) &&

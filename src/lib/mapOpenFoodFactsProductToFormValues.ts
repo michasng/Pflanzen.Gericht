@@ -4,15 +4,21 @@ import { MICROGRAMS_PER_UNIT, NutrientUnit } from '@/config/nutrients'
 import {
   OPEN_FOOD_FACTS_ALLERGEN_TAG_TO_ALLERGEN,
   OPEN_FOOD_FACTS_ENERGY_NUTRIMENT_FIELD,
+  OPEN_FOOD_FACTS_LANGUAGE_DE,
+  OPEN_FOOD_FACTS_LANGUAGE_EN,
   OPEN_FOOD_FACTS_NUTRIENT_FIELD_TO_NAME,
+  OPEN_FOOD_FACTS_ORGANIC_INGREDIENT_SUFFIX,
+  OPEN_FOOD_FACTS_ORGANIC_KEYWORDS_DE,
+  OPEN_FOOD_FACTS_ORGANIC_KEYWORDS_EN,
   OPEN_FOOD_FACTS_ORGANIC_LABEL_TAG,
   isOpenFoodFactsEstimatedNutrimentField,
 } from '@/config/openFoodFacts'
 import type { Allergen } from '@/config/allergens'
 import { BASIS_POINTS_PER_PERCENT } from '@/lib/basisPoints'
+import { parseIngredientsText } from '@/lib/parseIngredientsText'
 import { sortNutrientsByHierarchy } from '@/lib/sortNutrientsByHierarchy'
 import type { ProductFormValues } from '@/types/productForm'
-import type { OpenFoodFactsProduct } from '@/types/openFoodFacts'
+import type { OpenFoodFactsIngredient, OpenFoodFactsProduct } from '@/types/openFoodFacts'
 
 const NUTRIMENT_FIELD_SUFFIX = '_100g'
 const NUTRIMENT_UNIT_SUFFIX = '_unit'
@@ -57,26 +63,73 @@ const mapAllergens = (product: OpenFoodFactsProduct): Allergen[] | undefined => 
 const mapIsOrganic = (product: OpenFoodFactsProduct): true | undefined =>
   product.labels_tags?.includes(OPEN_FOOD_FACTS_ORGANIC_LABEL_TAG) ? true : undefined
 
-const mapIngredients = (
-  product: OpenFoodFactsProduct,
+const isIngredientLabelledOrganic = (ingredient: OpenFoodFactsIngredient): boolean =>
+  (ingredient.labels ?? '')
+    .split(',')
+    .map((label) => label.trim())
+    .includes(OPEN_FOOD_FACTS_ORGANIC_LABEL_TAG)
+
+const mapStructuredIngredients = (
+  ingredients: OpenFoodFactsIngredient[],
 ): ProductFormValues['ingredients'] | undefined => {
-  const ingredients = (product.ingredients ?? [])
+  const mappedIngredients = ingredients
     .map((ingredient) => ({
       name: ingredient.text?.trim(),
       percentEstimate: ingredient.percent_estimate,
+      isOrganic: isIngredientLabelledOrganic(ingredient),
     }))
-    .filter((ingredient): ingredient is { name: string; percentEstimate: number | undefined } =>
-      Boolean(ingredient.name),
+    .filter(
+      (
+        ingredient,
+      ): ingredient is { name: string; percentEstimate: number | undefined; isOrganic: boolean } =>
+        Boolean(ingredient.name),
     )
     .map((ingredient) => ({
-      name: ingredient.name,
+      name: ingredient.isOrganic
+        ? `${ingredient.name}${OPEN_FOOD_FACTS_ORGANIC_INGREDIENT_SUFFIX}`
+        : ingredient.name,
       fractionBasisPoints:
         typeof ingredient.percentEstimate === 'number'
           ? Math.round(ingredient.percentEstimate * BASIS_POINTS_PER_PERCENT)
           : null,
       comparator: DEFAULT_INGREDIENT_COMPARATOR,
     }))
-  return ingredients.length ? ingredients : undefined
+  return mappedIngredients.length ? mappedIngredients : undefined
+}
+
+const mapParsedIngredients = (
+  ingredientsText: string,
+  organicKeywords: string[],
+): ProductFormValues['ingredients'] | undefined => {
+  const parsedIngredients = parseIngredientsText(ingredientsText, organicKeywords)
+  return parsedIngredients.length ? parsedIngredients : undefined
+}
+
+const isStructuredLanguageKnownNotToBeGerman = (product: OpenFoodFactsProduct): boolean =>
+  product.lang !== undefined && product.lang !== OPEN_FOOD_FACTS_LANGUAGE_DE
+
+const mapIngredients = (
+  product: OpenFoodFactsProduct,
+): ProductFormValues['ingredients'] | undefined => {
+  if (product.ingredients && !isStructuredLanguageKnownNotToBeGerman(product)) {
+    const structuredIngredients = mapStructuredIngredients(product.ingredients)
+    if (structuredIngredients) return structuredIngredients
+  }
+
+  if (product.ingredients_text_de) {
+    return mapParsedIngredients(product.ingredients_text_de, OPEN_FOOD_FACTS_ORGANIC_KEYWORDS_DE)
+  }
+
+  if (product.ingredients && product.lang === OPEN_FOOD_FACTS_LANGUAGE_EN) {
+    const structuredIngredients = mapStructuredIngredients(product.ingredients)
+    if (structuredIngredients) return structuredIngredients
+  }
+
+  if (product.ingredients_text_en) {
+    return mapParsedIngredients(product.ingredients_text_en, OPEN_FOOD_FACTS_ORGANIC_KEYWORDS_EN)
+  }
+
+  return undefined
 }
 
 const mapNutrients = (

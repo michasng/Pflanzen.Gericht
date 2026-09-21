@@ -28,3 +28,11 @@ export const OPEN_FOOD_FACTS_ESTIMATE_NUTRIMENT_SEGMENT = 'estimate'
 
 export const isOpenFoodFactsEstimatedNutrimentField = (field: string): boolean =>
   field.split(/[-_]/).includes(OPEN_FOOD_FACTS_ESTIMATE_NUTRIMENT_SEGMENT)
+
+export const OPEN_FOOD_FACTS_ORGANIC_KEYWORDS_DE = ['bio', 'öko']
+export const OPEN_FOOD_FACTS_ORGANIC_KEYWORDS_EN = ['organic', 'eco']
+
+export const OPEN_FOOD_FACTS_ORGANIC_INGREDIENT_SUFFIX = ' (Bio)'
+
+export const OPEN_FOOD_FACTS_LANGUAGE_DE = 'de'
+export const OPEN_FOOD_FACTS_LANGUAGE_EN = 'en'
