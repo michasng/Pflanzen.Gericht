@@ -13,6 +13,22 @@ const containsOrganicKeyword = (text: string, organicKeywords: string[]): boolea
   return organicKeywords.some((keyword) => lowerCaseText.includes(keyword.toLowerCase()))
 }
 
+const getSentenceBoundaryIndex = (text: string): number => text.search(/(?<!\d)\.(?!\d)/)
+
+const splitIngredientListAndSuffix = (
+  text: string,
+): { ingredientListText: string; suffixText: string } => {
+  const sentenceBoundaryIndex = getSentenceBoundaryIndex(text)
+  if (sentenceBoundaryIndex < 0) {
+    return { ingredientListText: text, suffixText: '' }
+  }
+
+  return {
+    ingredientListText: text.slice(0, sentenceBoundaryIndex),
+    suffixText: text.slice(sentenceBoundaryIndex + SENTENCE_SEPARATOR.length),
+  }
+}
+
 const splitTopLevel = (text: string, separator: string): string[] => {
   const segments: string[] = []
   let depth = 0
@@ -72,10 +88,10 @@ const parseSegment = (segment: string, isTextOrganic: boolean): IngredientLike[]
 }
 
 export const parseIngredientsText = (text: string, organicKeywords: string[]): IngredientLike[] => {
-  const isTextOrganic = containsOrganicKeyword(text, organicKeywords)
-  const mainText = text.split(SENTENCE_SEPARATOR)[0] ?? ''
+  const { ingredientListText, suffixText } = splitIngredientListAndSuffix(text)
+  const isTextOrganic = containsOrganicKeyword(suffixText, organicKeywords)
 
-  return splitTopLevel(mainText, TOP_LEVEL_SEPARATOR).flatMap((segment) =>
+  return splitTopLevel(ingredientListText, TOP_LEVEL_SEPARATOR).flatMap((segment) =>
     parseSegment(segment, isTextOrganic),
   )
 }

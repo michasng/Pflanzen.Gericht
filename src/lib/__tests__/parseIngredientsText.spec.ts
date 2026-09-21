@@ -53,6 +53,16 @@ describe('parseIngredientsText', () => {
     ])
   })
 
+  it('given an ingredient contains bio in the ingredient list, does not treat it as the organic footnote', () => {
+    const text = 'Wasser, Hafer* 5%, Biotin.'
+
+    expect(parseIngredientsText(text, ORGANIC_KEYWORDS_DE)).toEqual([
+      { name: 'Wasser', fractionBasisPoints: null, comparator: '=' },
+      { name: 'Hafer', fractionBasisPoints: 500, comparator: '=' },
+      { name: 'Biotin', fractionBasisPoints: null, comparator: '=' },
+    ])
+  })
+
   it('given no organic keyword is present in the text, does not mark starred ingredients as organic', () => {
     const text = 'Wasser, Hafer* 5%.'
 
@@ -80,6 +90,15 @@ describe('parseIngredientsText', () => {
     expect(parseIngredientsText(text, ORGANIC_KEYWORDS_DE)).toEqual([
       { name: 'Wasser', fractionBasisPoints: null, comparator: '=' },
       { name: 'Zucker', fractionBasisPoints: null, comparator: '=' },
+    ])
+  })
+
+  it('given an ingredient uses a decimal percentage, keeps the decimal part', () => {
+    const text = 'Wasser, Hafer 2.5%.'
+
+    expect(parseIngredientsText(text, ORGANIC_KEYWORDS_DE)).toEqual([
+      { name: 'Wasser', fractionBasisPoints: null, comparator: '=' },
+      { name: 'Hafer', fractionBasisPoints: 250, comparator: '=' },
     ])
   })
 

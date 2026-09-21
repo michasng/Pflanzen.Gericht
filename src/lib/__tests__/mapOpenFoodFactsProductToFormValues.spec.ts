@@ -150,6 +150,24 @@ describe('mapOpenFoodFactsProductToFormValues', () => {
     ])
   })
 
+  it('given a german ingredients text parses to no entries, falls back to the english structured ingredients', () => {
+    const product: OpenFoodFactsProduct = {
+      lang: 'en',
+      ingredients: [
+        { text: 'Water', percent_estimate: 60 },
+        { text: 'Oat', percent_estimate: 10, labels: 'en:organic' },
+      ],
+      ingredients_text_de: ' . ',
+    }
+
+    const values = mapOpenFoodFactsProductToFormValues(product)
+
+    expect(values.ingredients).toEqual([
+      { name: 'Water', fractionBasisPoints: 6000, comparator: '=' },
+      { name: 'Oat (Bio)', fractionBasisPoints: 1000, comparator: '=' },
+    ])
+  })
+
   it('given the barista oat drink product from open food facts, parses the german ingredients text', () => {
     const product: OpenFoodFactsProduct = {
       lang: 'nl',

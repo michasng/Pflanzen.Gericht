@@ -117,7 +117,11 @@ const mapIngredients = (
   }
 
   if (product.ingredients_text_de) {
-    return mapParsedIngredients(product.ingredients_text_de, OPEN_FOOD_FACTS_ORGANIC_KEYWORDS_DE)
+    const parsedIngredients = mapParsedIngredients(
+      product.ingredients_text_de,
+      OPEN_FOOD_FACTS_ORGANIC_KEYWORDS_DE,
+    )
+    if (parsedIngredients) return parsedIngredients
   }
 
   if (product.ingredients && product.lang === OPEN_FOOD_FACTS_LANGUAGE_EN) {
