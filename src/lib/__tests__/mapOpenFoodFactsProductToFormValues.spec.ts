@@ -19,6 +19,37 @@ describe('mapOpenFoodFactsProductToFormValues', () => {
     expect(values.brand).toBe('Alpro')
   })
 
+  it('given a product has a german and an english name, prefers the german name', () => {
+    const product: OpenFoodFactsProduct = {
+      product_name: 'Soja Drink',
+      product_name_de: 'Soja-Drink Original',
+      product_name_en: 'Soy Drink Original',
+    }
+
+    const values = mapOpenFoodFactsProductToFormValues(product)
+
+    expect(values.name).toBe('Soja-Drink Original')
+  })
+
+  it('given a product has no german name but an english name, prefers the english name', () => {
+    const product: OpenFoodFactsProduct = {
+      product_name: 'Soja Drink',
+      product_name_en: 'Soy Drink Original',
+    }
+
+    const values = mapOpenFoodFactsProductToFormValues(product)
+
+    expect(values.name).toBe('Soy Drink Original')
+  })
+
+  it('given a product has no german or english name, falls back to the generic name', () => {
+    const product: OpenFoodFactsProduct = { product_name: 'Soja Drink' }
+
+    const values = mapOpenFoodFactsProductToFormValues(product)
+
+    expect(values.name).toBe('Soja Drink')
+  })
+
   it('given a product has no generic name, falls back to the ingredients text as description', () => {
     const product: OpenFoodFactsProduct = { ingredients_text: 'Wasser, Sojabohnen' }
 

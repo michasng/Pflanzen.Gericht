@@ -35,7 +35,10 @@ const toEnglishNutrientName = (value: string): string =>
     .join(' ')
 
 const mapName = (product: OpenFoodFactsProduct): string | undefined =>
-  product.product_name?.trim() || undefined
+  product.product_name_de?.trim() ||
+  product.product_name_en?.trim() ||
+  product.product_name?.trim() ||
+  undefined
 
 const mapBrand = (product: OpenFoodFactsProduct): string | undefined =>
   product.brands?.split(',')[0]?.trim() || undefined

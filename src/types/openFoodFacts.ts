@@ -8,6 +8,8 @@ export type OpenFoodFactsNutrimentValue = number | string
 
 export interface OpenFoodFactsProduct {
   product_name?: string
+  product_name_de?: string
+  product_name_en?: string
   brands?: string
   generic_name?: string
   lang?: string
