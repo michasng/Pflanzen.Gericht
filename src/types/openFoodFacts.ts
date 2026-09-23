@@ -12,6 +12,8 @@ export interface OpenFoodFactsProduct {
   product_name_en?: string
   brands?: string
   generic_name?: string
+  generic_name_de?: string
+  generic_name_en?: string
   lang?: string
   ingredients_text?: string
   ingredients_text_de?: string
