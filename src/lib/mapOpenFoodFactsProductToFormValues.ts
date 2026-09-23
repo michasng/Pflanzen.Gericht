@@ -44,7 +44,10 @@ const mapBrand = (product: OpenFoodFactsProduct): string | undefined =>
   product.brands?.split(',')[0]?.trim() || undefined
 
 const mapDescription = (product: OpenFoodFactsProduct): string | undefined =>
-  product.generic_name?.trim() || product.ingredients_text?.trim() || undefined
+  product.generic_name_de?.trim() ||
+  product.generic_name_en?.trim() ||
+  product.generic_name?.trim() ||
+  undefined
 
 const mapEnergyJoules = (product: OpenFoodFactsProduct): number | undefined => {
   const energyKilojoules = product.nutriments?.[OPEN_FOOD_FACTS_ENERGY_NUTRIMENT_FIELD]

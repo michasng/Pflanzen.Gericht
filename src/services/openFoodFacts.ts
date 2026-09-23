@@ -35,6 +35,8 @@ const isOpenFoodFactsProduct = (value: unknown): value is OpenFoodFactsProduct =
   (value.product_name_en === undefined || typeof value.product_name_en === 'string') &&
   (value.brands === undefined || typeof value.brands === 'string') &&
   (value.generic_name === undefined || typeof value.generic_name === 'string') &&
+  (value.generic_name_de === undefined || typeof value.generic_name_de === 'string') &&
+  (value.generic_name_en === undefined || typeof value.generic_name_en === 'string') &&
   (value.lang === undefined || typeof value.lang === 'string') &&
   (value.ingredients_text === undefined || typeof value.ingredients_text === 'string') &&
   (value.ingredients_text_de === undefined || typeof value.ingredients_text_de === 'string') &&

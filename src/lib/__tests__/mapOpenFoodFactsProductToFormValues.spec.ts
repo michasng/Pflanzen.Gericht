@@ -50,12 +50,43 @@ describe('mapOpenFoodFactsProductToFormValues', () => {
     expect(values.name).toBe('Soja Drink')
   })
 
-  it('given a product has no generic name, falls back to the ingredients text as description', () => {
+  it('given a product has a german and an english generic name, prefers the german generic name', () => {
+    const product: OpenFoodFactsProduct = {
+      generic_name: 'Soja Drink',
+      generic_name_de: 'Soja-Drink Original',
+      generic_name_en: 'Soy Drink Original',
+    }
+
+    const values = mapOpenFoodFactsProductToFormValues(product)
+
+    expect(values.description).toBe('Soja-Drink Original')
+  })
+
+  it('given a product has no german generic name but an english generic name, prefers the english generic name', () => {
+    const product: OpenFoodFactsProduct = {
+      generic_name: 'Soja Drink',
+      generic_name_en: 'Soy Drink Original',
+    }
+
+    const values = mapOpenFoodFactsProductToFormValues(product)
+
+    expect(values.description).toBe('Soy Drink Original')
+  })
+
+  it('given a product has no german or english generic name, falls back to the generic name', () => {
+    const product: OpenFoodFactsProduct = { generic_name: 'Soja Drink' }
+
+    const values = mapOpenFoodFactsProductToFormValues(product)
+
+    expect(values.description).toBe('Soja Drink')
+  })
+
+  it('given a product has no generic name at all, leaves the description blank', () => {
     const product: OpenFoodFactsProduct = { ingredients_text: 'Wasser, Sojabohnen' }
 
     const values = mapOpenFoodFactsProductToFormValues(product)
 
-    expect(values.description).toBe('Wasser, Sojabohnen')
+    expect(values.description).toBeUndefined()
   })
 
   it('given energy is present in kJ, converts it to joules', () => {
