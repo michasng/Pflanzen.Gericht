@@ -14,6 +14,7 @@ vi.mock('@/services/catalog', () => ({
 }))
 
 import ProductForm from '../ProductForm.vue'
+import type { ProductFormValues } from '@/types/productForm'
 
 const ProductBarcodeScannerStub = defineComponent({
   emits: ['scanned'],
@@ -99,5 +100,43 @@ describe('ProductForm', () => {
     expect(wrapper.find('#pf-barcode').exists()).toBe(false)
     const emittedValues = wrapper.emitted('submit')?.[0]?.[0] as { barcode: string | null }
     expect(emittedValues.barcode).toBeNull()
+  })
+
+  describe('given a comparison of two products', () => {
+    const buildValues = (overrides: Partial<ProductFormValues>): ProductFormValues => ({
+      name: '',
+      category: 'drink',
+      base: null,
+      brand: null,
+      description: null,
+      energyJoules: null,
+      allergens: [],
+      isOrganic: false,
+      barcode: null,
+      ingredients: [],
+      nutrients: [],
+      ...overrides,
+    })
+    const comparison = {
+      a: buildValues({ name: 'Name A', allergens: ['soy'] }),
+      b: buildValues({ name: 'Name B' }),
+    }
+
+    it('copies the accepted values into the editable fields', async () => {
+      const wrapper = mount(ProductForm, {
+        props: { comparison },
+        global: { stubs: { ImageUpload: true, RouterLink: true } },
+      })
+
+      await wrapper.get('[aria-label="Name, User B: Name B akzeptieren"]').trigger('click')
+      await wrapper.get('[aria-label="Soja, User A: Ja akzeptieren"]').trigger('click')
+      await wrapper.get('form').trigger('submit')
+
+      expect(wrapper.get<HTMLInputElement>('#pf-name').element.value).toBe('Name B')
+      expect(wrapper.emitted('submit')?.[0]?.[0]).toMatchObject({
+        name: 'Name B',
+        allergens: ['soy'],
+      })
+    })
   })
 })

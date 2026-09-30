@@ -21,6 +21,12 @@ const router = createRouter({
           meta: { requiresAuth: true },
         },
         {
+          path: 'product/merge',
+          name: 'product-merge',
+          component: () => import('@/views/ProductMergeView.vue'),
+          meta: { requiresAuth: true, requiresAdmin: true },
+        },
+        {
           path: 'product/:id',
           name: 'product-detail',
           component: () => import('@/views/ProductDetailView.vue'),

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   fetchAllProductsForAdmin,
   deleteProduct,
@@ -27,6 +28,11 @@ import Chip from '@/components/primitives/ChipComponent.vue'
 import { ChipSize } from '@/components/primitives/ChipSize'
 import { ChipTone } from '@/components/primitives/ChipTone'
 import { formatDate } from '@/lib/date'
+import { orderProductPairByCreation } from '@/lib/orderProductPairByCreation'
+
+const MERGE_SELECTION_SIZE = 2
+
+const router = useRouter()
 
 const activeTab = ref<'products' | 'reviews'>('products')
 const products = ref<ProductListItem[]>([])
@@ -34,6 +40,8 @@ const reviews = ref<AdminReviewItem[]>([])
 const loading = ref(true)
 const loadError = ref<string | null>(null)
 const deletingId = ref<string | null>(null)
+const selectedProductIds = ref<string[]>([])
+const canMergeProducts = computed(() => selectedProductIds.value.length === MERGE_SELECTION_SIZE)
 const productPage = ref(0)
 const productHasMore = ref(true)
 const reviewPage = ref(0)
@@ -88,11 +96,20 @@ const handleDeleteProduct = async (id: string): Promise<void> => {
   try {
     await deleteProduct(id)
     products.value = products.value.filter((p) => p.id !== id)
+    selectedProductIds.value = selectedProductIds.value.filter((selectedId) => selectedId !== id)
   } catch (err) {
     alert(toErrorMessage(err))
   } finally {
     deletingId.value = null
   }
+}
+
+const handleMergeProducts = async (): Promise<void> => {
+  const selected = products.value.filter((p) => selectedProductIds.value.includes(p.id))
+  const [first, second] = selected
+  if (!first || !second || !canMergeProducts.value) return
+  const [a, b] = orderProductPairByCreation(first, second)
+  await router.push({ name: 'product-merge', query: { a: a.id, b: b.id } })
 }
 
 const handleDeleteReview = async (id: string): Promise<void> => {
@@ -138,11 +155,29 @@ const handleDeleteReview = async (id: string): Promise<void> => {
         <p v-if="products.length === 0" class="py-12 text-center text-gray-400 text-sm">
           Keine Produkte vorhanden.
         </p>
-        <ul v-else class="space-y-2">
+        <div v-else class="mb-3 flex justify-end">
+          <Button
+            ariaLabel="Produkte zusammenführen"
+            :variant="ButtonVariant.Outlined"
+            :size="ButtonSize.Compact"
+            :disabled="!canMergeProducts"
+            @click="handleMergeProducts"
+          >
+            Zusammenführen
+          </Button>
+        </div>
+        <ul v-if="products.length" class="space-y-2">
           <li v-for="product in products" :key="product.id">
             <Card>
               <div class="flex items-start justify-between gap-2">
-                <div class="min-w-0">
+                <input
+                  v-model="selectedProductIds"
+                  type="checkbox"
+                  :value="product.id"
+                  :aria-label="`${product.name} auswählen`"
+                  class="mt-1 h-4 w-4 shrink-0 rounded"
+                />
+                <div class="min-w-0 flex-1">
                   <RouterLink
                     :to="{ name: 'product-detail', params: { id: product.id } }"
                     class="font-semibold text-gray-900 hover:text-primary-600 transition-colors"

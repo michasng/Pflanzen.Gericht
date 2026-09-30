@@ -38,8 +38,14 @@ import {
 import { getImageUrl } from '@/services/catalog'
 import { ImageSize } from '@/config/imageSizes'
 import type { Product, ProductImage } from '@/types'
+import FieldComparisonRow from '@/components/FieldComparisonRow.vue'
+import { ComparedField } from '@/types/ComparedField'
+import { ComparisonSide } from '@/types/ComparisonSide'
+import { comparedFieldToLabel } from '@/lib/comparedFieldToLabel'
+import { formatComparedFieldValue, formatComparedAllergen } from '@/lib/formatComparedFieldValue'
 import type {
   ProductFormValues,
+  ProductFormComparison,
   ProductFormIngredient,
   ProductFormNutrient,
 } from '@/types/productForm'
@@ -49,8 +55,10 @@ const props = withDefaults(
     initial?: Partial<ProductFormValues>
     existingImages?: ProductImage[]
     submitting?: boolean
+    submitLabel?: string
+    comparison?: ProductFormComparison
   }>(),
-  { existingImages: () => [] },
+  { existingImages: () => [], submitLabel: 'Speichern' },
 )
 
 const emit = defineEmits<{
@@ -74,11 +82,10 @@ const toggleAllergen = (allergen: Allergen): void => {
   else allergens.value = allergens.value.filter((a) => a !== allergen)
 }
 
-const energyInput = ref(
-  props.initial?.energyJoules != null
-    ? String(props.initial.energyJoules / JOULES_PER_ENERGY_UNIT[DEFAULT_ENERGY_UNIT])
-    : '',
-)
+const toEnergyInput = (energyJoules: number | null | undefined): string =>
+  energyJoules != null ? String(energyJoules / JOULES_PER_ENERGY_UNIT[DEFAULT_ENERGY_UNIT]) : ''
+
+const energyInput = ref(toEnergyInput(props.initial?.energyJoules))
 const energyUnit = ref<EnergyUnit>(DEFAULT_ENERGY_UNIT)
 
 const parsedEnergyJoules = computed(() =>
@@ -218,7 +225,7 @@ let dedupeTimer: ReturnType<typeof setTimeout> | undefined
 
 watch(name, (val) => {
   clearTimeout(dedupeTimer)
-  if (val.trim().length < 3) {
+  if (props.comparison || val.trim().length < 3) {
     similarProducts.value = []
     return
   }
@@ -248,6 +255,62 @@ const handleSubmit = (): void => {
   })
 }
 
+const comparisonValues = (side: ComparisonSide): ProductFormValues | undefined =>
+  side === ComparisonSide.A ? props.comparison?.a : props.comparison?.b
+
+const comparedProps = (field: ComparedField) => ({
+  comparing: !!props.comparison,
+  fieldLabel: comparedFieldToLabel(field),
+  valueA: props.comparison ? formatComparedFieldValue(field, props.comparison.a) : '',
+  valueB: props.comparison ? formatComparedFieldValue(field, props.comparison.b) : '',
+})
+
+const comparedAllergenProps = (allergen: Allergen) => ({
+  comparing: !!props.comparison,
+  fieldLabel: allergenToLabel(allergen),
+  valueA: props.comparison ? formatComparedAllergen(allergen, props.comparison.a) : '',
+  valueB: props.comparison ? formatComparedAllergen(allergen, props.comparison.b) : '',
+})
+
+const acceptField = (field: ComparedField, side: ComparisonSide): void => {
+  const source = comparisonValues(side)
+  if (!source) return
+  switch (field) {
+    case ComparedField.Barcode:
+      barcode.value = source.barcode ?? ''
+      break
+    case ComparedField.Name:
+      name.value = source.name
+      break
+    case ComparedField.Category:
+      category.value = source.category
+      break
+    case ComparedField.Brand:
+      brand.value = source.brand ?? ''
+      break
+    case ComparedField.Description:
+      description.value = source.description ?? ''
+      break
+    case ComparedField.IsOrganic:
+      isOrganic.value = source.isOrganic
+      break
+    case ComparedField.Base:
+      base.value = source.base ?? ''
+      break
+    case ComparedField.Energy:
+      energyUnit.value = DEFAULT_ENERGY_UNIT
+      energyInput.value = toEnergyInput(source.energyJoules)
+      break
+  }
+}
+
+const acceptAllergen = (allergen: Allergen, side: ComparisonSide): void => {
+  const source = comparisonValues(side)
+  if (!source) return
+  const isAccepted = allergens.value.includes(allergen)
+  if (source.allergens.includes(allergen) !== isAccepted) toggleAllergen(allergen)
+}
+
 const imageUploadRef = ref<InstanceType<typeof ImageUpload> | null>(null)
 
 const applyScannedValues = (values: Partial<ProductFormValues>): void => {
@@ -270,147 +333,196 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
 <template>
   <form class="space-y-5" @submit.prevent="handleSubmit">
     <ProductBarcodeScanner
+      v-if="!comparison"
       @scanned="applyScannedValues"
       @scanned-image="(file) => imageUploadRef?.addFile(file)"
     />
 
-    <div v-if="barcode">
-      <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-barcode">
-        Barcode
-      </label>
-      <div class="flex gap-2">
+    <FieldComparisonRow
+      v-bind="comparedProps(ComparedField.Barcode)"
+      @accept-a="acceptField(ComparedField.Barcode, ComparisonSide.A)"
+      @accept-b="acceptField(ComparedField.Barcode, ComparisonSide.B)"
+    >
+      <div v-if="barcode || comparison">
+        <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-barcode">
+          Barcode
+        </label>
+        <div class="flex gap-2">
+          <input
+            id="pf-barcode"
+            v-model="barcode"
+            type="text"
+            inputmode="numeric"
+            class="flex-1 min-w-0 px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+          <button
+            type="button"
+            class="px-3 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+            aria-label="Barcode entfernen"
+            @click="barcode = ''"
+          >
+            Entfernen
+          </button>
+        </div>
+      </div>
+    </FieldComparisonRow>
+
+    <FieldComparisonRow
+      v-bind="comparedProps(ComparedField.Name)"
+      @accept-a="acceptField(ComparedField.Name, ComparisonSide.A)"
+      @accept-b="acceptField(ComparedField.Name, ComparisonSide.B)"
+    >
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-name">
+          Name <span class="text-red-500" aria-hidden="true">*</span>
+        </label>
         <input
-          id="pf-barcode"
-          v-model="barcode"
+          id="pf-name"
+          v-model="name"
           type="text"
-          inputmode="numeric"
-          class="flex-1 min-w-0 px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          required
+          minlength="2"
+          maxlength="120"
+          placeholder="z. B. Alpro Soja-Drink Original"
+          class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
-        <button
-          type="button"
-          class="px-3 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors"
-          aria-label="Barcode entfernen"
-          @click="barcode = ''"
+        <div
+          v-if="similarProducts.length && !comparison"
+          class="mt-2 p-3 bg-amber-50 border border-amber-100 rounded-lg text-sm"
         >
-          Entfernen
-        </button>
+          <p class="font-medium text-amber-800 mb-1">Ähnliche Produkte bereits vorhanden:</p>
+          <ul class="space-y-1">
+            <li v-for="p in similarProducts" :key="p.id">
+              <RouterLink
+                :to="{ name: 'product-detail', params: { id: p.id } }"
+                target="_blank"
+                class="text-amber-700 hover:text-amber-900 underline"
+              >
+                {{ p.name }}<span v-if="p.brand"> ({{ p.brand }})</span>
+              </RouterLink>
+            </li>
+          </ul>
+        </div>
       </div>
-    </div>
+    </FieldComparisonRow>
 
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-name">
-        Name <span class="text-red-500" aria-hidden="true">*</span>
-      </label>
-      <input
-        id="pf-name"
-        v-model="name"
-        type="text"
-        required
-        minlength="2"
-        maxlength="120"
-        placeholder="z. B. Alpro Soja-Drink Original"
-        class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-      />
-      <div
-        v-if="similarProducts.length"
-        class="mt-2 p-3 bg-amber-50 border border-amber-100 rounded-lg text-sm"
-      >
-        <p class="font-medium text-amber-800 mb-1">Ähnliche Produkte bereits vorhanden:</p>
-        <ul class="space-y-1">
-          <li v-for="p in similarProducts" :key="p.id">
-            <RouterLink
-              :to="{ name: 'product-detail', params: { id: p.id } }"
-              target="_blank"
-              class="text-amber-700 hover:text-amber-900 underline"
-            >
-              {{ p.name }}<span v-if="p.brand"> ({{ p.brand }})</span>
-            </RouterLink>
-          </li>
-        </ul>
+    <FieldComparisonRow
+      v-bind="comparedProps(ComparedField.Category)"
+      @accept-a="acceptField(ComparedField.Category, ComparisonSide.A)"
+      @accept-b="acceptField(ComparedField.Category, ComparisonSide.B)"
+    >
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-category">
+          Kategorie <span class="text-red-500" aria-hidden="true">*</span>
+        </label>
+        <select
+          id="pf-category"
+          v-model="category"
+          required
+          class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+        >
+          <option value="" disabled>Bitte wählen …</option>
+          <option v-for="cat in CATEGORIES" :key="cat" :value="cat">
+            {{ categoryToLabel(cat) }}
+          </option>
+        </select>
       </div>
-    </div>
+    </FieldComparisonRow>
 
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-category">
-        Kategorie <span class="text-red-500" aria-hidden="true">*</span>
-      </label>
-      <select
-        id="pf-category"
-        v-model="category"
-        required
-        class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
-      >
-        <option value="" disabled>Bitte wählen …</option>
-        <option v-for="cat in CATEGORIES" :key="cat" :value="cat">
-          {{ categoryToLabel(cat) }}
-        </option>
-      </select>
-    </div>
+    <FieldComparisonRow
+      v-bind="comparedProps(ComparedField.Brand)"
+      @accept-a="acceptField(ComparedField.Brand, ComparisonSide.A)"
+      @accept-b="acceptField(ComparedField.Brand, ComparisonSide.B)"
+    >
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-brand">
+          Marke / Hersteller
+        </label>
+        <input
+          id="pf-brand"
+          v-model="brand"
+          type="text"
+          maxlength="80"
+          placeholder="z. B. Alpro"
+          class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+      </div>
+    </FieldComparisonRow>
 
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-brand">
-        Marke / Hersteller
-      </label>
-      <input
-        id="pf-brand"
-        v-model="brand"
-        type="text"
-        maxlength="80"
-        placeholder="z. B. Alpro"
-        class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-      />
-    </div>
+    <FieldComparisonRow
+      v-bind="comparedProps(ComparedField.Description)"
+      @accept-a="acceptField(ComparedField.Description, ComparisonSide.A)"
+      @accept-b="acceptField(ComparedField.Description, ComparisonSide.B)"
+    >
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-description">
+          Beschreibung
+        </label>
+        <textarea
+          id="pf-description"
+          v-model="description"
+          rows="3"
+          maxlength="500"
+          placeholder="Kurze Beschreibung des Produkts …"
+          class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+        />
+      </div>
+    </FieldComparisonRow>
 
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-description">
-        Beschreibung
-      </label>
-      <textarea
-        id="pf-description"
-        v-model="description"
-        rows="3"
-        maxlength="500"
-        placeholder="Kurze Beschreibung des Produkts …"
-        class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
-      />
-    </div>
+    <FieldComparisonRow
+      v-bind="comparedProps(ComparedField.IsOrganic)"
+      @accept-a="acceptField(ComparedField.IsOrganic, ComparisonSide.A)"
+      @accept-b="acceptField(ComparedField.IsOrganic, ComparisonSide.B)"
+    >
+      <div class="flex items-center gap-2">
+        <input id="pf-organic" v-model="isOrganic" type="checkbox" class="h-4 w-4 rounded" />
+        <label class="text-sm font-medium text-gray-700" for="pf-organic">Bio-Produkt</label>
+      </div>
+    </FieldComparisonRow>
 
-    <div class="flex items-center gap-2">
-      <input id="pf-organic" v-model="isOrganic" type="checkbox" class="h-4 w-4 rounded" />
-      <label class="text-sm font-medium text-gray-700" for="pf-organic">Bio-Produkt</label>
-    </div>
-
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-base">Basis</label>
-      <select
-        id="pf-base"
-        v-model="base"
-        class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
-      >
-        <option value="">Keine Angabe</option>
-        <option v-for="b in BASES" :key="b" :value="b">
-          {{ baseToLabel(b) }}
-        </option>
-      </select>
-    </div>
+    <FieldComparisonRow
+      v-bind="comparedProps(ComparedField.Base)"
+      @accept-a="acceptField(ComparedField.Base, ComparisonSide.A)"
+      @accept-b="acceptField(ComparedField.Base, ComparisonSide.B)"
+    >
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-base">Basis</label>
+        <select
+          id="pf-base"
+          v-model="base"
+          class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+        >
+          <option value="">Keine Angabe</option>
+          <option v-for="b in BASES" :key="b" :value="b">
+            {{ baseToLabel(b) }}
+          </option>
+        </select>
+      </div>
+    </FieldComparisonRow>
 
     <div>
       <p class="text-sm font-medium text-gray-700 mb-1.5">Allergene</p>
-      <div class="flex flex-wrap gap-2">
-        <button
+      <div :class="comparison ? 'space-y-2' : 'flex flex-wrap gap-2'">
+        <FieldComparisonRow
           v-for="allergen in ALLERGENS"
           :key="allergen"
-          type="button"
-          class="px-3 py-1.5 rounded-full text-sm transition-colors"
-          :class="
-            allergens.includes(allergen)
-              ? 'bg-primary-600 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          "
-          @click="toggleAllergen(allergen)"
+          v-bind="comparedAllergenProps(allergen)"
+          @accept-a="acceptAllergen(allergen, ComparisonSide.A)"
+          @accept-b="acceptAllergen(allergen, ComparisonSide.B)"
         >
-          {{ allergenToLabel(allergen) }}
-        </button>
+          <button
+            type="button"
+            class="px-3 py-1.5 rounded-full text-sm transition-colors"
+            :class="
+              allergens.includes(allergen)
+                ? 'bg-primary-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            "
+            @click="toggleAllergen(allergen)"
+          >
+            {{ allergenToLabel(allergen) }}
+          </button>
+        </FieldComparisonRow>
       </div>
     </div>
 
@@ -496,38 +608,44 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
       </button>
     </div>
 
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-energy">
-        Energie
-        <span class="text-xs text-gray-400 font-normal">(pro 100 g/ml)</span>
-      </label>
-      <div
-        v-if="hasInvalidEnergy"
-        role="alert"
-        class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
-      >
-        Bitte gib für die Energie einen gültigen Wert ein.
-      </div>
-      <div class="flex gap-2">
-        <input
-          id="pf-energy"
-          v-model="energyInput"
-          type="text"
-          inputmode="decimal"
-          maxlength="8"
-          placeholder="z. B. 1500"
-          class="flex-1 min-w-0 px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-        />
-        <select
-          v-model="energyUnit"
-          class="px-2 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+    <FieldComparisonRow
+      v-bind="comparedProps(ComparedField.Energy)"
+      @accept-a="acceptField(ComparedField.Energy, ComparisonSide.A)"
+      @accept-b="acceptField(ComparedField.Energy, ComparisonSide.B)"
+    >
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-energy">
+          Energie
+          <span class="text-xs text-gray-400 font-normal">(pro 100 g/ml)</span>
+        </label>
+        <div
+          v-if="hasInvalidEnergy"
+          role="alert"
+          class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
         >
-          <option v-for="unit in ENERGY_UNITS" :key="unit" :value="unit">
-            {{ ENERGY_UNIT_LABELS[unit] }}
-          </option>
-        </select>
+          Bitte gib für die Energie einen gültigen Wert ein.
+        </div>
+        <div class="flex gap-2">
+          <input
+            id="pf-energy"
+            v-model="energyInput"
+            type="text"
+            inputmode="decimal"
+            maxlength="8"
+            placeholder="z. B. 1500"
+            class="flex-1 min-w-0 px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+          <select
+            v-model="energyUnit"
+            class="px-2 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option v-for="unit in ENERGY_UNITS" :key="unit" :value="unit">
+              {{ ENERGY_UNIT_LABELS[unit] }}
+            </option>
+          </select>
+        </div>
       </div>
-    </div>
+    </FieldComparisonRow>
 
     <div>
       <p class="text-sm font-medium text-gray-700 mb-1.5">
@@ -590,7 +708,7 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
       </button>
     </div>
 
-    <div v-if="existingImages.length">
+    <div v-if="existingImages.length && !comparison">
       <p class="text-sm font-medium text-gray-700 mb-2">Vorhandene Bilder</p>
       <div class="grid grid-cols-3 gap-2">
         <div
@@ -623,19 +741,21 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
       </div>
     </div>
 
-    <div>
+    <div v-if="!comparison">
       <p class="text-sm font-medium text-gray-700 mb-2">
         {{ existingImages.length ? 'Weitere Bilder hinzufügen' : 'Bilder' }}
       </p>
       <ImageUpload ref="imageUploadRef" @change="emit('filesChanged', $event)" />
     </div>
 
+    <slot name="extras" />
+
     <button
       type="submit"
       :disabled="submitting"
       class="w-full py-3 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 disabled:opacity-60 transition-colors"
     >
-      {{ submitting ? 'Wird gespeichert …' : 'Speichern' }}
+      {{ submitting ? 'Wird gespeichert …' : submitLabel }}
     </button>
   </form>
 </template>
