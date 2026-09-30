@@ -1,0 +1,33 @@
+import { ALLERGENS, type Allergen } from '@/config/allergens'
+import type { IngredientComparator } from '@/config/ingredients'
+import type { Product, ProductIngredient, ProductNutrient } from '@/types'
+import type { ProductFormValues } from '@/types/productForm'
+
+const isKnownAllergen = (allergen: string): allergen is Allergen =>
+  ALLERGENS.some((known) => known === allergen)
+
+export const toProductFormValues = (
+  product: Product,
+  ingredients: ProductIngredient[],
+  nutrients: ProductNutrient[],
+): ProductFormValues => ({
+  name: product.name,
+  category: product.category,
+  base: product.base,
+  brand: product.brand,
+  description: product.description,
+  energyJoules: product.energy_joules,
+  allergens: product.allergens.filter(isKnownAllergen),
+  isOrganic: product.is_organic,
+  barcode: product.barcode,
+  ingredients: ingredients.map((ingredient) => ({
+    name: ingredient.name,
+    fractionBasisPoints: ingredient.fraction_basis_points,
+    // The database stores the comparator as plain text; the form only accepts the known values.
+    comparator: ingredient.comparator as IngredientComparator,
+  })),
+  nutrients: nutrients.map((nutrient) => ({
+    name: nutrient.name,
+    amountMicrograms: nutrient.amount_micrograms,
+  })),
+})

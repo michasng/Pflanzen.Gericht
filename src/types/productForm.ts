@@ -25,3 +25,8 @@ export interface ProductFormValues {
   ingredients: ProductFormIngredient[]
   nutrients: ProductFormNutrient[]
 }
+
+export interface ProductFormComparison {
+  a: ProductFormValues
+  b: ProductFormValues
+}
