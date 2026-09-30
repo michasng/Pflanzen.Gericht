@@ -2,11 +2,13 @@ import { ref, type Ref } from 'vue'
 
 type StoredImage = { id: string; storage_path: string; sort_order: number }
 
-export const useImageUpload = <T extends StoredImage>(
+export const useImageUpload = <T extends StoredImage, S = never>(
   uploadFn: (file: File, sortOrder: number) => Promise<unknown>,
   deleteFn: (image: T) => Promise<unknown>,
+  copyFn: (source: S, sortOrder: number) => Promise<unknown> = () => Promise.resolve(),
 ) => {
   const pendingFiles = ref<File[]>([])
+  const pendingCopies = ref([]) as Ref<S[]>
   const existingImages = ref([]) as Ref<T[]>
   const stagedForDeletion: T[] = []
 
@@ -21,7 +23,11 @@ export const useImageUpload = <T extends StoredImage>(
     await Promise.all(
       pendingFiles.value.map((file, index) => uploadFn(file, nextSortOrder + index)),
     )
+    const nextCopySortOrder = nextSortOrder + pendingFiles.value.length
+    await Promise.all(
+      pendingCopies.value.map((source, index) => copyFn(source, nextCopySortOrder + index)),
+    )
   }
 
-  return { pendingFiles, existingImages, handleDeleteImage, commitImageChanges }
+  return { pendingFiles, pendingCopies, existingImages, handleDeleteImage, commitImageChanges }
 }

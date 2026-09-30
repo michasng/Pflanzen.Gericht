@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { generateSquareImageVariants } from '@/lib/generateSquareImageVariants'
 import { deleteImageVariants, persistImageVariants } from '@/lib/imageVariantStorage'
+import { copyStoredImageWithRecord } from '@/services/copyStoredImageWithRecord'
 import type {
   Product,
   ProductInsert,
@@ -8,6 +9,7 @@ import type {
   ProductImage,
   ProductIngredient,
   ProductNutrient,
+  ReviewImage,
 } from '@/types'
 import type { ProductListItem } from '@/services/catalog'
 
@@ -250,6 +252,25 @@ export const uploadProductImage = async (
       if (error) throw error
       return data
     },
+  )
+}
+
+export const copyReviewImageToProduct = (
+  reviewImage: ReviewImage,
+  productId: string,
+  userId: string,
+  sortOrder: number,
+): Promise<ProductImage> => {
+  const storagePath = `${userId}/${productId}/${crypto.randomUUID()}`
+  return copyStoredImageWithRecord(
+    { bucketName: 'review-images', storagePath: reviewImage.storage_path },
+    { bucketName: 'product-images', storagePath },
+    () =>
+      supabase
+        .from('product_image')
+        .insert({ product_id: productId, storage_path: storagePath, sort_order: sortOrder })
+        .select()
+        .single(),
   )
 }
 

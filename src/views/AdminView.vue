@@ -264,17 +264,24 @@ const handleDeleteReview = async (id: string): Promise<void> => {
                     <span class="text-xs text-gray-400">{{ formatDate(review.created_at) }}</span>
                   </div>
                 </div>
-                <Button
-                  ariaLabel="Bewertung löschen"
-                  :variant="ButtonVariant.Text"
-                  :size="ButtonSize.Small"
-                  :tone="ButtonTone.Danger"
-                  class="shrink-0"
-                  :disabled="deletingId === review.id"
-                  @click="handleDeleteReview(review.id)"
-                >
-                  {{ deletingId === review.id ? 'Löscht …' : 'Löschen' }}
-                </Button>
+                <div class="flex gap-2 shrink-0">
+                  <RouterLink
+                    :to="{ name: 'review-edit', params: { reviewId: review.id } }"
+                    class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
+                  >
+                    Bearbeiten
+                  </RouterLink>
+                  <Button
+                    ariaLabel="Bewertung löschen"
+                    :variant="ButtonVariant.Text"
+                    :size="ButtonSize.Small"
+                    :tone="ButtonTone.Danger"
+                    :disabled="deletingId === review.id"
+                    @click="handleDeleteReview(review.id)"
+                  >
+                    {{ deletingId === review.id ? 'Löscht …' : 'Löschen' }}
+                  </Button>
+                </div>
               </div>
             </Card>
           </li>

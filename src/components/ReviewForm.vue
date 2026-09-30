@@ -15,10 +15,12 @@ export interface ReviewFormValues {
 import { ref, reactive } from 'vue'
 import StarRatingInput from '@/components/StarRatingInput.vue'
 import ImageUpload from '@/components/ImageUpload.vue'
+import ImageCopyPicker from '@/components/ImageCopyPicker.vue'
 import Image from '@/components/primitives/ImageComponent.vue'
 import { TAG_GROUPS } from '@/config/reviewTags'
 import { ImageSize } from '@/config/imageSizes'
 import type { ReviewImage } from '@/types'
+import type { ImageCopyGroup } from '@/types/ImageCopyGroup'
 import { getImageUrl } from '@/services/catalog'
 
 const CRITERIA_KEYS = ['taste', 'consistency', 'appearance', 'nutrition', 'value'] as const
@@ -36,14 +38,16 @@ const props = withDefaults(
     initial?: Partial<ReviewFormValues>
     existingImages?: ReviewImage[]
     submitting?: boolean
+    imageCopySources?: ImageCopyGroup[]
   }>(),
-  { existingImages: () => [] },
+  { existingImages: () => [], imageCopySources: () => [] },
 )
 
 const emit = defineEmits<{
   submit: [values: ReviewFormValues]
   filesChanged: [files: File[]]
   deleteImage: [image: ReviewImage]
+  copySelectionChanged: [imageIds: string[]]
 }>()
 
 const overall = ref<number | null>(props.initial?.overall ?? null)
@@ -176,6 +180,13 @@ const handleSubmit = (): void => {
       </p>
       <ImageUpload @change="emit('filesChanged', $event)" />
     </div>
+
+    <ImageCopyPicker
+      title="Produktbilder übernehmen"
+      bucket="product-images"
+      :groups="imageCopySources"
+      @change="emit('copySelectionChanged', $event)"
+    />
 
     <div>
       <button

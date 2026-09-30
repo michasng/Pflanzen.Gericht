@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import ImageUpload from '@/components/ImageUpload.vue'
+import ImageCopyPicker from '@/components/ImageCopyPicker.vue'
 import Image from '@/components/primitives/ImageComponent.vue'
 import ProductBarcodeScanner from '@/components/ProductBarcodeScanner.vue'
 import SuggestionTextInput from '@/components/SuggestionTextInput.vue'
@@ -38,6 +39,7 @@ import {
 import { getImageUrl } from '@/services/catalog'
 import { ImageSize } from '@/config/imageSizes'
 import type { Product, ProductImage } from '@/types'
+import type { ImageCopyGroup } from '@/types/ImageCopyGroup'
 import FieldComparisonRow from '@/components/FieldComparisonRow.vue'
 import { ComparedField } from '@/types/ComparedField'
 import { ComparisonSide } from '@/types/ComparisonSide'
@@ -57,14 +59,16 @@ const props = withDefaults(
     submitting?: boolean
     submitLabel?: string
     comparison?: ProductFormComparison
+    imageCopySources?: ImageCopyGroup[]
   }>(),
-  { existingImages: () => [], submitLabel: 'Speichern' },
+  { existingImages: () => [], submitLabel: 'Speichern', imageCopySources: () => [] },
 )
 
 const emit = defineEmits<{
   submit: [values: ProductFormValues]
   filesChanged: [files: File[]]
   deleteImage: [image: ProductImage]
+  copySelectionChanged: [imageIds: string[]]
 }>()
 
 const name = ref(props.initial?.name ?? '')
@@ -747,6 +751,14 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
       </p>
       <ImageUpload ref="imageUploadRef" @change="emit('filesChanged', $event)" />
     </div>
+
+    <ImageCopyPicker
+      v-if="!comparison"
+      title="Bilder aus Bewertungen übernehmen"
+      bucket="review-images"
+      :groups="imageCopySources"
+      @change="emit('copySelectionChanged', $event)"
+    />
 
     <slot name="extras" />
 

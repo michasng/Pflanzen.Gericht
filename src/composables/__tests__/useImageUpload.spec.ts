@@ -69,4 +69,27 @@ describe('useImageUpload', () => {
 
     expect(uploadFn).toHaveBeenCalledWith(expect.any(File), 2)
   })
+
+  describe('given staged copies', () => {
+    it('when committing, copies after existing images and uploaded files', async () => {
+      const copyFn = vi.fn<(source: string, sortOrder: number) => Promise<void>>()
+      copyFn.mockResolvedValue(undefined)
+      const { existingImages, pendingFiles, pendingCopies, commitImageChanges } = useImageUpload<
+        FakeImage,
+        string
+      >(
+        vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
+        vi.fn<() => Promise<void>>(),
+        copyFn,
+      )
+      existingImages.value = [makeImage('a', 0)]
+      pendingFiles.value = [new File([], 'new.jpg')]
+      pendingCopies.value = ['x', 'y']
+
+      await commitImageChanges()
+
+      expect(copyFn).toHaveBeenCalledWith('x', 2)
+      expect(copyFn).toHaveBeenCalledWith('y', 3)
+    })
+  })
 })
