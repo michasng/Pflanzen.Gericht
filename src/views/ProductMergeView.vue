@@ -156,7 +156,7 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
             <p v-if="!allImages.length" class="text-sm text-gray-400">Keine Bilder vorhanden.</p>
             <div class="grid grid-cols-3 sm:grid-cols-5 gap-2">
               <label
-                v-for="image in allImages"
+                v-for="(image, index) in allImages"
                 :key="image.id"
                 class="relative rounded-lg overflow-hidden bg-gray-100 cursor-pointer"
               >
@@ -167,7 +167,12 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
                 <span
                   class="absolute bottom-0 inset-x-0 flex items-center gap-1 bg-black/60 px-2 py-1 text-xs text-white"
                 >
-                  <input v-model="acceptedImageIds" type="checkbox" :value="image.id" />
+                  <input
+                    v-model="acceptedImageIds"
+                    type="checkbox"
+                    :value="image.id"
+                    :aria-label="`Bild ${index + 1} akzeptieren`"
+                  />
                   Akzeptieren
                 </span>
               </label>

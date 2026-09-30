@@ -41,6 +41,7 @@ import type { Product, ProductImage } from '@/types'
 import FieldComparisonRow from '@/components/FieldComparisonRow.vue'
 import { ComparedField } from '@/types/ComparedField'
 import { ComparisonSide } from '@/types/ComparisonSide'
+import { comparedFieldToLabel } from '@/lib/comparedFieldToLabel'
 import { formatComparedFieldValue, formatComparedAllergen } from '@/lib/formatComparedFieldValue'
 import type {
   ProductFormValues,
@@ -259,12 +260,14 @@ const comparisonValues = (side: ComparisonSide): ProductFormValues | undefined =
 
 const comparedProps = (field: ComparedField) => ({
   comparing: !!props.comparison,
+  fieldLabel: comparedFieldToLabel(field),
   valueA: props.comparison ? formatComparedFieldValue(field, props.comparison.a) : '',
   valueB: props.comparison ? formatComparedFieldValue(field, props.comparison.b) : '',
 })
 
 const comparedAllergenProps = (allergen: Allergen) => ({
   comparing: !!props.comparison,
+  fieldLabel: allergenToLabel(allergen),
   valueA: props.comparison ? formatComparedAllergen(allergen, props.comparison.a) : '',
   valueB: props.comparison ? formatComparedAllergen(allergen, props.comparison.b) : '',
 })

@@ -7,6 +7,7 @@ import { ComparisonSide } from '@/types/ComparisonSide'
 
 const props = defineProps<{
   side: ComparisonSide
+  fieldLabel: string
   value: string
 }>()
 
@@ -35,7 +36,7 @@ const sideLabel = computed(() => SIDE_LABELS[props.side])
       <p class="break-words whitespace-pre-line">{{ value }}</p>
     </div>
     <Button
-      :ariaLabel="`${sideLabel}: ${value} akzeptieren`"
+      :ariaLabel="`${fieldLabel}, ${sideLabel}: ${value} akzeptieren`"
       :variant="ButtonVariant.Text"
       :size="ButtonSize.Small"
       class="shrink-0"

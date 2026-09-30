@@ -1,10 +1,12 @@
 import { supabase } from '@/lib/supabase'
 import { copyImageVariants } from '@/lib/copyImageVariants'
+import { ImageSize } from '@/config/imageSizes'
 import {
   createProduct,
   deleteProduct,
   replaceProductIngredients,
   replaceProductNutrients,
+  updateProduct,
 } from '@/services/products'
 import type { ProductMergeGateway } from '@/services/ProductMergeGateway'
 
@@ -33,6 +35,22 @@ const copyStoredImage = (
   )
 }
 
+const copyStoredImageWithRow = async (
+  bucketName: string,
+  sourceStoragePath: string,
+  destinationStoragePath: string,
+  insertRow: () => PromiseLike<{ error: Error | null }>,
+): Promise<void> => {
+  await copyStoredImage(bucketName, sourceStoragePath, destinationStoragePath)
+  const { error } = await insertRow()
+  if (!error) return
+  await supabase.storage
+    .from(bucketName)
+    .remove(Object.values(ImageSize).map((size) => `${destinationStoragePath}/${size}.webp`))
+    .catch(() => undefined)
+  throw error
+}
+
 const copyReviewDetails = async (
   reviewId: string,
   userId: string,
@@ -57,18 +75,19 @@ const copyReviewDetails = async (
   if (imagesError) throw imagesError
   for (const image of images ?? []) {
     const storagePath = `${userId}/${copiedReviewId}/${crypto.randomUUID()}`
-    await copyStoredImage(REVIEW_IMAGE_BUCKET, image.storage_path, storagePath)
-    const { error } = await supabase.from('review_image').insert({
-      review_id: copiedReviewId,
-      storage_path: storagePath,
-      sort_order: image.sort_order,
-    })
-    if (error) throw error
+    await copyStoredImageWithRow(REVIEW_IMAGE_BUCKET, image.storage_path, storagePath, () =>
+      supabase.from('review_image').insert({
+        review_id: copiedReviewId,
+        storage_path: storagePath,
+        sort_order: image.sort_order,
+      }),
+    )
   }
 }
 
 export const supabaseProductMergeGateway: ProductMergeGateway = {
   createProduct,
+  updateProduct,
   deleteProduct,
   replaceIngredients: (productId, ingredients) =>
     replaceProductIngredients(
@@ -89,11 +108,11 @@ export const supabaseProductMergeGateway: ProductMergeGateway = {
     ),
   copyImage: async (image, ownerId, productId, sortOrder) => {
     const storagePath = `${ownerId}/${productId}/${crypto.randomUUID()}`
-    await copyStoredImage(PRODUCT_IMAGE_BUCKET, image.storage_path, storagePath)
-    const { error } = await supabase
-      .from('product_image')
-      .insert({ product_id: productId, storage_path: storagePath, sort_order: sortOrder })
-    if (error) throw error
+    await copyStoredImageWithRow(PRODUCT_IMAGE_BUCKET, image.storage_path, storagePath, () =>
+      supabase
+        .from('product_image')
+        .insert({ product_id: productId, storage_path: storagePath, sort_order: sortOrder }),
+    )
   },
   fetchReviews: async (productId) => {
     const { data, error } = await supabase.from('review').select('*').eq('product_id', productId)

@@ -49,4 +49,18 @@ describe('resolveMergedSimilarityVotes', () => {
       ).toEqual(['new'])
     })
   })
+
+  describe('given a negative vote listed before an affirmative vote', () => {
+    it('returns affirmative votes first so the cleanup trigger keeps the pair', () => {
+      const votes = [
+        buildVote({ id: 'negative', agreed: false, user_id: 'user-1', product_id_b: 'x' }),
+        buildVote({ id: 'positive', agreed: true, user_id: 'user-2', product_id_b: 'x' }),
+      ]
+
+      expect(resolveMergedSimilarityVotes(votes, ['a'], 'merged').map((v) => v.id)).toEqual([
+        'positive',
+        'negative',
+      ])
+    })
+  })
 })

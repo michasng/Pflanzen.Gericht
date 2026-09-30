@@ -1,4 +1,8 @@
 -- Merging products copies rows and blobs that belong to other users, so admins need insert access beyond their own user id.
+CREATE POLICY "products: admin create for merge"
+  ON public.product FOR INSERT
+  WITH CHECK (public.is_admin());
+
 CREATE POLICY "reviews: admin create for merge"
   ON public.review FOR INSERT
   WITH CHECK (public.is_admin());

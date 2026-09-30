@@ -4,6 +4,7 @@ import { ComparisonSide } from '@/types/ComparisonSide'
 
 defineProps<{
   comparing: boolean
+  fieldLabel: string
   valueA: string
   valueB: string
 }>()
@@ -17,6 +18,7 @@ defineEmits<{ acceptA: []; acceptB: [] }>()
     <ComparisonSideCard
       class="order-1"
       :side="ComparisonSide.A"
+      :field-label="fieldLabel"
       :value="valueA"
       @accept="$emit('acceptA')"
     />
@@ -26,6 +28,7 @@ defineEmits<{ acceptA: []; acceptB: [] }>()
     <ComparisonSideCard
       class="order-2 md:order-3"
       :side="ComparisonSide.B"
+      :field-label="fieldLabel"
       :value="valueB"
       @accept="$emit('acceptB')"
     />

@@ -1,7 +1,7 @@
 import { resolveMergedPriceReports } from '@/lib/resolveMergedPriceReports'
 import { resolveMergedReviews } from '@/lib/resolveMergedReviews'
 import { resolveMergedSimilarityVotes } from '@/lib/resolveMergedSimilarityVotes'
-import type { ProductMergeGateway } from '@/services/ProductMergeGateway'
+import type { MergedProductFields, ProductMergeGateway } from '@/services/ProductMergeGateway'
 import type { Product, ProductImage } from '@/types'
 import type { ProductFormValues } from '@/types/productForm'
 
@@ -11,6 +11,8 @@ export interface MergeProductsInput {
   acceptedImages: ProductImage[]
   ownerId: string
 }
+
+const TEMPORARY_NAME_PREFIX = 'Merge '
 
 const copyAll = async <T>(items: T[], copy: (item: T) => Promise<void>): Promise<void> => {
   for (const item of items) await copy(item)
@@ -50,18 +52,19 @@ export const mergeProducts = async (
   input: MergeProductsInput,
 ): Promise<Product> => {
   const { values, ownerId, productIds } = input
+  const mergedFields: MergedProductFields = {
+    name: values.name,
+    category: values.category,
+    base: values.base,
+    brand: values.brand,
+    description: values.description,
+    energy_joules: values.energyJoules,
+    allergens: values.allergens,
+    is_organic: values.isOrganic,
+    barcode: values.barcode,
+  }
   const mergedProduct = await gateway.createProduct(
-    {
-      name: values.name,
-      category: values.category,
-      base: values.base,
-      brand: values.brand,
-      description: values.description,
-      energy_joules: values.energyJoules,
-      allergens: values.allergens,
-      is_organic: values.isOrganic,
-      barcode: values.barcode,
-    },
+    { ...mergedFields, name: `${TEMPORARY_NAME_PREFIX}${productIds.join('-')}`, brand: null },
     ownerId,
   )
 
@@ -73,5 +76,6 @@ export const mergeProducts = async (
   }
 
   for (const productId of productIds) await gateway.deleteProduct(productId)
-  return mergedProduct
+  await gateway.updateProduct(mergedProduct.id, mergedFields)
+  return { ...mergedProduct, ...mergedFields }
 }

@@ -23,6 +23,7 @@ export type MergedProductFields = Pick<
 
 export interface ProductMergeGateway {
   createProduct: (fields: MergedProductFields, ownerId: string) => Promise<Product>
+  updateProduct: (productId: string, fields: MergedProductFields) => Promise<void>
   replaceIngredients: (
     productId: string,
     ingredients: ProductFormValues['ingredients'],

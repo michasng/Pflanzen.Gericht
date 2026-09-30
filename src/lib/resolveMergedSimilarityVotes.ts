@@ -9,7 +9,8 @@ export const resolveMergedSimilarityVotes = (
   const replaced = new Set(replacedProductIds)
   const toMergedId = (id: string): string => (replaced.has(id) ? mergedProductId : id)
   const voteByKey = new Map<string, ProductSimilarityVote>()
-  for (const vote of votes) {
+  const affirmativeFirst = [...votes].sort((a, b) => Number(b.agreed) - Number(a.agreed))
+  for (const vote of affirmativeFirst) {
     const [productIdA, productIdB] = canonicalizeProductPair(
       toMergedId(vote.product_id_a),
       toMergedId(vote.product_id_b),
@@ -21,5 +22,5 @@ export const resolveMergedSimilarityVotes = (
       voteByKey.set(key, { ...vote, product_id_a: productIdA, product_id_b: productIdB })
     }
   }
-  return [...voteByKey.values()]
+  return [...voteByKey.values()].sort((a, b) => Number(b.agreed) - Number(a.agreed))
 }

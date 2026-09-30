@@ -83,6 +83,8 @@ interface FakeData {
 
 const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGateway) => {
   const calls: string[] = []
+  const createdNames: string[] = []
+  const updatedFields: string[] = []
   const copiedReviews: Review[] = []
   const copiedPriceReports: PriceReport[] = []
   const insertedVotes: ProductSimilarityVote[] = []
@@ -92,9 +94,14 @@ const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGatewa
     if (step === failingStep) throw new Error(`${step} failed`)
   }
   const gateway: ProductMergeGateway = {
-    createProduct: async (_fields, ownerId) => {
+    createProduct: async (fields, ownerId) => {
       await record('createProduct', `:${ownerId}`)
+      createdNames.push(fields.name)
       return { ...MERGED_PRODUCT }
+    },
+    updateProduct: async (id, fields) => {
+      await record('updateProduct', `:${id}`)
+      updatedFields.push(fields.name)
     },
     replaceIngredients: (_id, _ingredients) => record('replaceIngredients'),
     replaceNutrients: (_id, _nutrients) => record('replaceNutrients'),
@@ -120,7 +127,16 @@ const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGatewa
     },
     deleteProduct: (id) => record('deleteProduct', `:${id}`),
   }
-  return { gateway, calls, copiedReviews, copiedPriceReports, insertedVotes, copiedImages }
+  return {
+    gateway,
+    calls,
+    createdNames,
+    updatedFields,
+    copiedReviews,
+    copiedPriceReports,
+    insertedVotes,
+    copiedImages,
+  }
 }
 
 const input: MergeProductsInput = {
@@ -170,8 +186,24 @@ describe('mergeProducts', () => {
       ])
       expect(fake.copiedPriceReports.map((r) => r.id)).toEqual(['new'])
       expect(fake.insertedVotes.map((v) => v.id)).toEqual(['kept'])
-      expect(fake.calls.slice(-2)).toEqual(['deleteProduct:a', 'deleteProduct:b'])
+      expect(fake.calls.slice(-3, -1)).toEqual(['deleteProduct:a', 'deleteProduct:b'])
       expect(fake.calls).not.toContain(`deleteProduct:${MERGED_ID}`)
+    })
+  })
+
+  describe('given the final name could collide with an original', () => {
+    it('creates with a temporary name and renames after deleting the originals', async () => {
+      const fake = buildFakeGateway(emptyData)
+
+      await mergeProducts(fake.gateway, input)
+
+      expect(fake.createdNames).not.toContain(input.values.name)
+      expect(fake.updatedFields).toEqual([input.values.name])
+      expect(fake.calls.slice(-3)).toEqual([
+        'deleteProduct:a',
+        'deleteProduct:b',
+        `updateProduct:${MERGED_ID}`,
+      ])
     })
   })
 

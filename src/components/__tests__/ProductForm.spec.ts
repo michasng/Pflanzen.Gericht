@@ -128,8 +128,8 @@ describe('ProductForm', () => {
         global: { stubs: { ImageUpload: true, RouterLink: true } },
       })
 
-      await wrapper.get('[aria-label="User B: Name B akzeptieren"]').trigger('click')
-      await wrapper.get('[aria-label="User A: Ja akzeptieren"]').trigger('click')
+      await wrapper.get('[aria-label="Name, User B: Name B akzeptieren"]').trigger('click')
+      await wrapper.get('[aria-label="Soja, User A: Ja akzeptieren"]').trigger('click')
       await wrapper.get('form').trigger('submit')
 
       expect(wrapper.get<HTMLInputElement>('#pf-name').element.value).toBe('Name B')
