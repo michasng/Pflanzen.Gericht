@@ -39,7 +39,7 @@ const imageCopySources = computed(() =>
     ? [{ label: 'Produkt', images: productImages.value }]
     : [],
 )
-const { pendingFiles, pendingCopies, existingImages, handleDeleteImage, commitImageChanges } =
+const { pendingFiles, selectCopies, existingImages, handleDeleteImage, commitImageChanges } =
   useImageUpload<ReviewImage, ProductImage>(
     (file, sortOrder) => {
       if (!review.value || !authStore.user) return Promise.resolve()
@@ -53,7 +53,7 @@ const { pendingFiles, pendingCopies, existingImages, handleDeleteImage, commitIm
   )
 
 const handleCopySelectionChanged = (imageIds: string[]): void => {
-  pendingCopies.value = productImages.value.filter((image) => imageIds.includes(image.id))
+  selectCopies(productImages.value.filter((image) => imageIds.includes(image.id)))
 }
 
 onMounted(async () => {

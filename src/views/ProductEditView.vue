@@ -46,7 +46,7 @@ const imageCopySources = computed(() =>
       }))
     : [],
 )
-const { pendingFiles, pendingCopies, existingImages, handleDeleteImage, commitImageChanges } =
+const { pendingFiles, selectCopies, existingImages, handleDeleteImage, commitImageChanges } =
   useImageUpload<ProductImage, ReviewImage>(
     (file, sortOrder) => {
       if (!product.value || !authStore.user) return Promise.resolve()
@@ -60,9 +60,11 @@ const { pendingFiles, pendingCopies, existingImages, handleDeleteImage, commitIm
   )
 
 const handleCopySelectionChanged = (imageIds: string[]): void => {
-  pendingCopies.value = reviewImageGroups.value
-    .flatMap((group) => group.images)
-    .filter((image) => imageIds.includes(image.id))
+  selectCopies(
+    reviewImageGroups.value
+      .flatMap((group) => group.images)
+      .filter((image) => imageIds.includes(image.id)),
+  )
 }
 
 const toIngredientSignature = (ingredient: ProductFormValues['ingredients'][number]): string =>

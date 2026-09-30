@@ -89,6 +89,7 @@ export const copyProductImageToReview = (
         .insert({ review_id: reviewId, storage_path: storagePath, sort_order: sortOrder })
         .select()
         .single(),
+    () => supabase.from('review_image').select('id').eq('storage_path', storagePath).maybeSingle(),
   )
 }
 

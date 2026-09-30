@@ -67,7 +67,7 @@ describe('useImageUpload', () => {
 
     await commitImageChanges()
 
-    expect(uploadFn).toHaveBeenCalledWith(expect.any(File), 2)
+    expect(uploadFn).toHaveBeenCalledWith(expect.any(File), 3)
   })
 
   describe('given staged copies', () => {
@@ -90,6 +90,23 @@ describe('useImageUpload', () => {
 
       expect(copyFn).toHaveBeenCalledWith('x', 2)
       expect(copyFn).toHaveBeenCalledWith('y', 3)
+    })
+
+    it('when one copy fails, keeps only the failed copy pending and rethrows', async () => {
+      const copyFn = vi
+        .fn<(source: string, sortOrder: number) => Promise<void>>()
+        .mockResolvedValueOnce(undefined)
+        .mockRejectedValueOnce(new Error('copy failed'))
+      const { pendingCopies, commitImageChanges } = useImageUpload<FakeImage, string>(
+        vi.fn<() => Promise<void>>(),
+        vi.fn<() => Promise<void>>(),
+        copyFn,
+      )
+      pendingCopies.value = ['x', 'y']
+
+      await expect(commitImageChanges()).rejects.toThrow('copy failed')
+
+      expect(pendingCopies.value).toEqual(['y'])
     })
   })
 })

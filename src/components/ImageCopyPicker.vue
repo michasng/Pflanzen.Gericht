@@ -24,17 +24,17 @@ const toggle = (id: string): void => {
 <template>
   <div v-if="groups.length" class="space-y-3">
     <p class="text-sm font-medium text-gray-700">{{ title }}</p>
-    <div v-for="group in groups" :key="group.label">
+    <div v-for="(group, groupIndex) in groups" :key="group.images[0]?.id ?? group.label">
       <p class="text-xs text-gray-500 mb-1">{{ group.label }}</p>
       <div class="grid grid-cols-3 gap-2">
         <button
-          v-for="img in group.images"
+          v-for="(img, imageIndex) in group.images"
           :key="img.id"
           type="button"
           class="relative rounded-lg overflow-hidden bg-gray-100 ring-2 transition-shadow"
           :class="isSelected(img.id) ? 'ring-primary-500' : 'ring-transparent'"
           :aria-pressed="isSelected(img.id)"
-          :aria-label="`Bild aus ${group.label} auswählen`"
+          :aria-label="`Bild ${imageIndex + 1} aus Gruppe ${groupIndex + 1} (${group.label}) auswählen`"
           @click="toggle(img.id)"
         >
           <Image :src="getImageUrl(bucket, img.storage_path, ImageSize.Thumbnail)" alt="" />

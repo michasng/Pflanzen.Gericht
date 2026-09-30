@@ -11,6 +11,7 @@ export const useImageUpload = <T extends StoredImage, S = never>(
   const pendingCopies = ref([]) as Ref<S[]>
   const existingImages = ref([]) as Ref<T[]>
   const stagedForDeletion: T[] = []
+  const copiedSources: S[] = []
 
   const handleDeleteImage = (image: T): void => {
     stagedForDeletion.push(image)
@@ -19,15 +20,36 @@ export const useImageUpload = <T extends StoredImage, S = never>(
 
   const commitImageChanges = async (): Promise<void> => {
     await Promise.all(stagedForDeletion.map((image) => deleteFn(image)))
-    const nextSortOrder = existingImages.value.length
+    const nextSortOrder = existingImages.value.reduce(
+      (next, image) => Math.max(next, image.sort_order + 1),
+      0,
+    )
     await Promise.all(
       pendingFiles.value.map((file, index) => uploadFn(file, nextSortOrder + index)),
     )
     const nextCopySortOrder = nextSortOrder + pendingFiles.value.length
-    await Promise.all(
-      pendingCopies.value.map((source, index) => copyFn(source, nextCopySortOrder + index)),
+    const copiesToCommit = [...pendingCopies.value]
+    const results = await Promise.allSettled(
+      copiesToCommit.map((source, index) => copyFn(source, nextCopySortOrder + index)),
     )
+    const failures = results.filter((result) => result.status === 'rejected')
+    const failedCopies = copiesToCommit.filter((_, index) => results[index]?.status === 'rejected')
+    copiedSources.push(...copiesToCommit.filter((source) => !failedCopies.includes(source)))
+    pendingCopies.value = failedCopies
+    const [firstFailure] = failures
+    if (firstFailure) throw firstFailure.reason
   }
 
-  return { pendingFiles, pendingCopies, existingImages, handleDeleteImage, commitImageChanges }
+  const selectCopies = (sources: S[]): void => {
+    pendingCopies.value = sources.filter((source) => !copiedSources.includes(source))
+  }
+
+  return {
+    pendingFiles,
+    pendingCopies,
+    selectCopies,
+    existingImages,
+    handleDeleteImage,
+    commitImageChanges,
+  }
 }
