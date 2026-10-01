@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { fetchProduct } from '@/services/products'
+import { fetchProduct, fetchProductImages } from '@/services/products'
 import {
   fetchReviewForEdit,
   updateReview,
   uploadReviewImage,
   deleteReviewImage,
+  copyProductImageToReview,
 } from '@/services/reviews'
 import { toErrorMessage } from '@/lib/error'
 import { useImageUpload } from '@/composables/useImageUpload'
@@ -15,7 +16,7 @@ import ReviewForm from '@/components/ReviewForm.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
 import type { ReviewFormValues } from '@/components/ReviewForm.vue'
-import type { Product, Review, ReviewImage } from '@/types'
+import type { Product, ProductImage, Review, ReviewImage } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -32,14 +33,28 @@ const loading = ref(true)
 const loadError = ref<string | null>(null)
 const submitting = ref(false)
 const submitError = ref<string | null>(null)
-const { pendingFiles, existingImages, handleDeleteImage, commitImageChanges } =
-  useImageUpload<ReviewImage>(
+const productImages = ref<ProductImage[]>([])
+const imageCopySources = computed(() =>
+  authStore.isAdmin && productImages.value.length
+    ? [{ label: 'Produkt', images: productImages.value }]
+    : [],
+)
+const { pendingFiles, selectCopies, existingImages, handleDeleteImage, commitImageChanges } =
+  useImageUpload<ReviewImage, ProductImage>(
     (file, sortOrder) => {
       if (!review.value || !authStore.user) return Promise.resolve()
       return uploadReviewImage(review.value.id, authStore.user.id, file, sortOrder)
     },
     (img) => deleteReviewImage(img.id, img.storage_path),
+    (productImage, sortOrder) => {
+      if (!review.value || !authStore.user) return Promise.resolve()
+      return copyProductImageToReview(productImage, review.value.id, authStore.user.id, sortOrder)
+    },
   )
+
+const handleCopySelectionChanged = (imageIds: string[]): void => {
+  selectCopies(productImages.value.filter((image) => imageIds.includes(image.id)))
+}
 
 onMounted(async () => {
   const reviewId = route.params.reviewId as string
@@ -53,13 +68,17 @@ onMounted(async () => {
       await router.replace({ name: 'product-detail', params: { id: r.product_id } })
       return
     }
-    const p = await fetchProduct(r.product_id)
+    const [p, productImageList] = await Promise.all([
+      fetchProduct(r.product_id),
+      authStore.isAdmin ? fetchProductImages(r.product_id) : Promise.resolve([]),
+    ])
     if (!p) {
       loadError.value = 'Produkt nicht gefunden.'
       return
     }
     review.value = r
     product.value = p
+    productImages.value = productImageList
     existingImages.value = [...r.images].sort((a, b) => a.sort_order - b.sort_order)
   } catch (err) {
     loadError.value = toErrorMessage(err)
@@ -112,7 +131,9 @@ const handleSubmit = async (values: ReviewFormValues): Promise<void> => {
         :submitting="submitting"
         @submit="handleSubmit"
         @files-changed="pendingFiles = $event"
+        :image-copy-sources="imageCopySources"
         @delete-image="handleDeleteImage"
+        @copy-selection-changed="handleCopySelectionChanged"
       />
     </template>
   </div>

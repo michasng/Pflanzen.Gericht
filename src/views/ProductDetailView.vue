@@ -433,7 +433,8 @@ watch(
             :key="review.id"
             :review="review"
             :editable="
-              authStore.isLoggedIn && review.user_id === authStore.user?.id && review.is_current
+              authStore.isLoggedIn &&
+              (authStore.isAdmin || (review.user_id === authStore.user?.id && review.is_current))
             "
           />
         </div>

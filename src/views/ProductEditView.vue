@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import ProductForm from '@/components/ProductForm.vue'
@@ -14,12 +14,15 @@ import {
   updateProduct,
   uploadProductImage,
   deleteProductImage,
+  copyReviewImageToProduct,
   replaceProductIngredients,
   replaceProductNutrients,
 } from '@/services/products'
+import { fetchProductReviewImages, type ProductReviewImages } from '@/services/reviews'
+import { formatDate } from '@/lib/date'
 import { toErrorMessage } from '@/lib/error'
 import { useImageUpload } from '@/composables/useImageUpload'
-import type { Product, ProductImage } from '@/types'
+import type { Product, ProductImage, ReviewImage } from '@/types'
 import type { ProductFormValues } from '@/types/productForm'
 
 const route = useRoute()
@@ -34,14 +37,35 @@ const loadError = ref<string | null>(null)
 const submitting = ref(false)
 const submitError = ref<string | null>(null)
 const knownAllergens = new Set<string>(ALLERGENS)
-const { pendingFiles, existingImages, handleDeleteImage, commitImageChanges } =
-  useImageUpload<ProductImage>(
+const reviewImageGroups = ref<ProductReviewImages[]>([])
+const imageCopySources = computed(() =>
+  authStore.isAdmin
+    ? reviewImageGroups.value.map((group) => ({
+        label: `${group.reviewerName} · ${formatDate(group.createdAt)}`,
+        images: group.images,
+      }))
+    : [],
+)
+const { pendingFiles, selectCopies, existingImages, handleDeleteImage, commitImageChanges } =
+  useImageUpload<ProductImage, ReviewImage>(
     (file, sortOrder) => {
       if (!product.value || !authStore.user) return Promise.resolve()
       return uploadProductImage(product.value.id, authStore.user.id, file, sortOrder)
     },
     (img) => deleteProductImage(img.id, img.storage_path),
+    (reviewImage, sortOrder) => {
+      if (!product.value || !authStore.user) return Promise.resolve()
+      return copyReviewImageToProduct(reviewImage, product.value.id, authStore.user.id, sortOrder)
+    },
   )
+
+const handleCopySelectionChanged = (imageIds: string[]): void => {
+  selectCopies(
+    reviewImageGroups.value
+      .flatMap((group) => group.images)
+      .filter((image) => imageIds.includes(image.id)),
+  )
+}
 
 const toIngredientSignature = (ingredient: ProductFormValues['ingredients'][number]): string =>
   `${ingredient.name}|${ingredient.comparator}|${ingredient.fractionBasisPoints === null ? '' : ingredient.fractionBasisPoints}`
@@ -75,11 +99,12 @@ const haveSameNutrients = (
 onMounted(async () => {
   const id = route.params.id as string
   try {
-    const [p, imgs, ingredients, nutrients] = await Promise.all([
+    const [p, imgs, ingredients, nutrients, reviewImages] = await Promise.all([
       fetchProduct(id),
       fetchProductImages(id),
       fetchProductIngredients(id),
       fetchProductNutrients(id),
+      authStore.isAdmin ? fetchProductReviewImages(id) : Promise.resolve([]),
     ])
     if (!p) {
       loadError.value = 'Produkt nicht gefunden.'
@@ -90,6 +115,7 @@ onMounted(async () => {
       return
     }
     product.value = p
+    reviewImageGroups.value = reviewImages
     existingImages.value = imgs.sort((a, b) => a.sort_order - b.sort_order)
     initialIngredients.value = ingredients.map((ingredient) => ({
       name: ingredient.name,
@@ -188,7 +214,9 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
         :submitting="submitting"
         @submit="handleSubmit"
         @files-changed="pendingFiles = $event"
+        :image-copy-sources="imageCopySources"
         @delete-image="handleDeleteImage"
+        @copy-selection-changed="handleCopySelectionChanged"
       />
     </template>
   </div>
