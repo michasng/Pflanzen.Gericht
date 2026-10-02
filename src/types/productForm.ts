@@ -26,6 +26,15 @@ export interface ProductFormValues {
   nutrients: ProductFormNutrient[]
 }
 
+export interface ProductFormInitialNutrient {
+  name: string
+  amountMicrograms: number | null
+}
+
+export interface ProductFormInitialValues extends Omit<Partial<ProductFormValues>, 'nutrients'> {
+  nutrients?: ProductFormInitialNutrient[]
+}
+
 export interface ProductFormComparison {
   a: ProductFormValues
   b: ProductFormValues

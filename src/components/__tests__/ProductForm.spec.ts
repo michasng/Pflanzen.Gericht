@@ -138,5 +138,45 @@ describe('ProductForm', () => {
         allergens: ['soy'],
       })
     })
+
+    it('replaces the ingredients with the accepted side', async () => {
+      const ingredientComparison = {
+        a: buildValues({
+          ingredients: [{ name: 'Hafer', fractionBasisPoints: 1000, comparator: '=' }],
+        }),
+        b: buildValues({}),
+      }
+      const wrapper = mount(ProductForm, {
+        props: { comparison: ingredientComparison },
+        global: { stubs: { ImageUpload: true, RouterLink: true } },
+      })
+
+      await wrapper.get('[aria-label="Zutaten, User A: Hafer 10 % akzeptieren"]').trigger('click')
+      await wrapper.get('form').trigger('submit')
+
+      expect(wrapper.emitted('submit')?.[0]?.[0]).toMatchObject({
+        ingredients: [{ name: 'Hafer', fractionBasisPoints: 1000, comparator: '=' }],
+      })
+    })
+
+    it('replaces the nutrients with the accepted side', async () => {
+      const nutrientComparison = {
+        a: buildValues({}),
+        b: buildValues({ nutrients: [{ name: 'Protein', amountMicrograms: 3_000_000 }] }),
+      }
+      const wrapper = mount(ProductForm, {
+        props: { comparison: nutrientComparison },
+        global: { stubs: { ImageUpload: true, RouterLink: true } },
+      })
+
+      await wrapper
+        .get('[aria-label="Nährwerte, User B: Protein 3 g akzeptieren"]')
+        .trigger('click')
+      await wrapper.get('form').trigger('submit')
+
+      expect(wrapper.emitted('submit')?.[0]?.[0]).toMatchObject({
+        nutrients: [{ name: 'Protein', amountMicrograms: 3_000_000 }],
+      })
+    })
   })
 })

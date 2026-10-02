@@ -1,0 +1,76 @@
+import { describe, expect, it } from 'vitest'
+import { mergeProductFormValues } from '../mergeProductFormValues'
+import type { ProductFormValues } from '@/types/productForm'
+
+describe('mergeProductFormValues', () => {
+  const buildValues = (overrides: Partial<ProductFormValues>): ProductFormValues => ({
+    name: 'Soja Drink',
+    category: 'drink',
+    base: 'soy',
+    brand: 'Alpro',
+    description: 'Lecker',
+    energyJoules: 1500,
+    allergens: ['soy'],
+    isOrganic: true,
+    barcode: '4006381333931',
+    ingredients: [],
+    nutrients: [],
+    ...overrides,
+  })
+
+  describe('given two identical products', () => {
+    it('keeps every value', () => {
+      const values = buildValues({
+        ingredients: [{ name: 'Soja', fractionBasisPoints: 800, comparator: '=' }],
+        nutrients: [{ name: 'Protein', amountMicrograms: 3_000_000 }],
+      })
+
+      expect(mergeProductFormValues(values, values)).toEqual(values)
+    })
+  })
+
+  describe('given products that claim conflicting scalar values', () => {
+    it('leaves only those fields undecided', () => {
+      const result = mergeProductFormValues(
+        buildValues({ name: 'Name A' }),
+        buildValues({ name: 'Name B' }),
+      )
+
+      expect(result.name).toBeUndefined()
+      expect(result.brand).toBe('Alpro')
+    })
+  })
+
+  describe('given one product that lacks claims the other makes', () => {
+    it('fills the gaps from the other product', () => {
+      const sparse = buildValues({ brand: null, description: '', isOrganic: false })
+
+      expect(mergeProductFormValues(sparse, buildValues({}))).toMatchObject({
+        brand: 'Alpro',
+        description: 'Lecker',
+        isOrganic: true,
+      })
+    })
+  })
+
+  describe('given lists that differ', () => {
+    it('unions allergens, ingredients and nutrients', () => {
+      const a = buildValues({
+        allergens: ['soy'],
+        ingredients: [{ name: 'Soja', fractionBasisPoints: 800, comparator: '=' }],
+        nutrients: [{ name: 'Protein', amountMicrograms: 3_000_000 }],
+      })
+      const b = buildValues({
+        allergens: ['nuts'],
+        ingredients: [{ name: 'Salz', fractionBasisPoints: null, comparator: '=' }],
+        nutrients: [{ name: 'Fett', amountMicrograms: 1_000_000 }],
+      })
+
+      const result = mergeProductFormValues(a, b)
+
+      expect(result.allergens).toEqual(['soy', 'nuts'])
+      expect(result.ingredients?.map((ingredient) => ingredient.name)).toEqual(['Soja', 'Salz'])
+      expect(result.nutrients?.map((nutrient) => nutrient.name)).toEqual(['Protein', 'Fett'])
+    })
+  })
+})

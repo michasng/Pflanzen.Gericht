@@ -45,16 +45,20 @@ import { ComparedField } from '@/types/ComparedField'
 import { ComparisonSide } from '@/types/ComparisonSide'
 import { comparedFieldToLabel } from '@/lib/comparedFieldToLabel'
 import { formatComparedFieldValue, formatComparedAllergen } from '@/lib/formatComparedFieldValue'
+import { formatComparedIngredients } from '@/lib/formatComparedIngredients'
+import { formatComparedNutrients } from '@/lib/formatComparedNutrients'
 import type {
   ProductFormValues,
   ProductFormComparison,
   ProductFormIngredient,
+  ProductFormInitialNutrient,
+  ProductFormInitialValues,
   ProductFormNutrient,
 } from '@/types/productForm'
 
 const props = withDefaults(
   defineProps<{
-    initial?: Partial<ProductFormValues>
+    initial?: ProductFormInitialValues
     existingImages?: ProductImage[]
     submitting?: boolean
     submitLabel?: string
@@ -172,7 +176,15 @@ interface NutrientRow {
   unit: NutrientUnit
 }
 
-const toNutrientRow = (nutrient: ProductFormNutrient): NutrientRow => {
+const toNutrientRow = (nutrient: ProductFormInitialNutrient): NutrientRow => {
+  if (nutrient.amountMicrograms === null) {
+    return {
+      key: crypto.randomUUID(),
+      name: nutrient.name,
+      amountInput: '',
+      unit: DEFAULT_NUTRIENT_UNIT,
+    }
+  }
   const unit = chooseNutrientDisplayUnit(nutrient.amountMicrograms)
   return {
     key: crypto.randomUUID(),
@@ -313,6 +325,35 @@ const acceptAllergen = (allergen: Allergen, side: ComparisonSide): void => {
   if (!source) return
   const isAccepted = allergens.value.includes(allergen)
   if (source.allergens.includes(allergen) !== isAccepted) toggleAllergen(allergen)
+}
+
+const INGREDIENTS_LABEL = 'Zutaten'
+const NUTRIENTS_LABEL = 'Nährwerte'
+
+const ingredientComparisonProps = computed(() => ({
+  comparing: !!props.comparison,
+  fieldLabel: INGREDIENTS_LABEL,
+  valueA: props.comparison ? formatComparedIngredients(props.comparison.a.ingredients) : '',
+  valueB: props.comparison ? formatComparedIngredients(props.comparison.b.ingredients) : '',
+}))
+
+const nutrientComparisonProps = computed(() => ({
+  comparing: !!props.comparison,
+  fieldLabel: NUTRIENTS_LABEL,
+  valueA: props.comparison ? formatComparedNutrients(props.comparison.a.nutrients) : '',
+  valueB: props.comparison ? formatComparedNutrients(props.comparison.b.nutrients) : '',
+}))
+
+const acceptIngredients = (side: ComparisonSide): void => {
+  const source = comparisonValues(side)
+  if (!source) return
+  ingredientRows.value = source.ingredients.map(toRow)
+}
+
+const acceptNutrients = (side: ComparisonSide): void => {
+  const source = comparisonValues(side)
+  if (!source) return
+  nutrientRows.value = sortNutrientsByHierarchy(source.nutrients).map(toNutrientRow)
 }
 
 const imageUploadRef = ref<InstanceType<typeof ImageUpload> | null>(null)
@@ -530,87 +571,93 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
       </div>
     </div>
 
-    <div>
-      <p class="text-sm font-medium text-gray-700 mb-1.5">Zutaten</p>
-      <div
-        v-if="hasInvalidIngredientFraction"
-        role="alert"
-        class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
-      >
-        Bitte gib für Zutatenanteile nur gültige Werte zwischen 0 und 100 ein.
-      </div>
-      <div
-        v-if="hasDuplicateIngredientNames"
-        role="alert"
-        class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
-      >
-        Jede Zutat darf nur einmal eingetragen werden.
-      </div>
-      <div
-        v-if="nonVeganIngredientNames.length"
-        role="alert"
-        class="mb-2 p-3 bg-amber-50 border border-amber-100 rounded-lg text-sm text-amber-800"
-      >
-        Achtung: {{ nonVeganIngredientNames.join(', ') }}
-        {{ nonVeganIngredientNames.length > 1 ? 'sind' : 'ist' }}
-        möglicherweise nicht vegan. Nicht-vegane Produkte sind in dieser App nicht erlaubt.
-      </div>
-      <div
-        v-if="exceedsTotalFraction"
-        role="alert"
-        class="mb-2 p-3 bg-amber-50 border border-amber-100 rounded-lg text-sm text-amber-800"
-      >
-        Achtung: Die Zutatenanteile ergeben zusammen mehr als 100 %.
-      </div>
-      <div v-for="row in ingredientRows" :key="row.key" class="flex gap-2 mb-2">
-        <SuggestionTextInput
-          v-model="row.name"
-          :suggestions="ingredientSuggestions"
-          :maxlength="80"
-          placeholder="z. B. Hafer"
-          class="flex-1 min-w-0"
-        />
-        <select
-          v-model="row.comparator"
-          :disabled="parsePercentInputToBasisPoints(row.fractionInput) === null"
-          class="px-2 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+    <FieldComparisonRow
+      v-bind="ingredientComparisonProps"
+      @accept-a="acceptIngredients(ComparisonSide.A)"
+      @accept-b="acceptIngredients(ComparisonSide.B)"
+    >
+      <div>
+        <p class="text-sm font-medium text-gray-700 mb-1.5">{{ INGREDIENTS_LABEL }}</p>
+        <div
+          v-if="hasInvalidIngredientFraction"
+          role="alert"
+          class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
         >
-          <option
-            v-for="comparator in INGREDIENT_COMPARATORS"
-            :key="comparator"
-            :value="comparator"
-          >
-            {{ comparator }}
-          </option>
-        </select>
-        <div class="flex items-center gap-1">
-          <input
-            v-model="row.fractionInput"
-            type="text"
-            inputmode="decimal"
-            maxlength="6"
-            placeholder="0,1"
-            class="w-20 px-2 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          Bitte gib für Zutatenanteile nur gültige Werte zwischen 0 und 100 ein.
+        </div>
+        <div
+          v-if="hasDuplicateIngredientNames"
+          role="alert"
+          class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
+        >
+          Jede Zutat darf nur einmal eingetragen werden.
+        </div>
+        <div
+          v-if="nonVeganIngredientNames.length"
+          role="alert"
+          class="mb-2 p-3 bg-amber-50 border border-amber-100 rounded-lg text-sm text-amber-800"
+        >
+          Achtung: {{ nonVeganIngredientNames.join(', ') }}
+          {{ nonVeganIngredientNames.length > 1 ? 'sind' : 'ist' }}
+          möglicherweise nicht vegan. Nicht-vegane Produkte sind in dieser App nicht erlaubt.
+        </div>
+        <div
+          v-if="exceedsTotalFraction"
+          role="alert"
+          class="mb-2 p-3 bg-amber-50 border border-amber-100 rounded-lg text-sm text-amber-800"
+        >
+          Achtung: Die Zutatenanteile ergeben zusammen mehr als 100 %.
+        </div>
+        <div v-for="row in ingredientRows" :key="row.key" class="flex gap-2 mb-2">
+          <SuggestionTextInput
+            v-model="row.name"
+            :suggestions="ingredientSuggestions"
+            :maxlength="80"
+            placeholder="z. B. Hafer"
+            class="flex-1 min-w-0"
           />
-          <span class="text-sm text-gray-500" aria-hidden="true">%</span>
+          <select
+            v-model="row.comparator"
+            :disabled="parsePercentInputToBasisPoints(row.fractionInput) === null"
+            class="px-2 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+          >
+            <option
+              v-for="comparator in INGREDIENT_COMPARATORS"
+              :key="comparator"
+              :value="comparator"
+            >
+              {{ comparator }}
+            </option>
+          </select>
+          <div class="flex items-center gap-1">
+            <input
+              v-model="row.fractionInput"
+              type="text"
+              inputmode="decimal"
+              maxlength="6"
+              placeholder="0,1"
+              class="w-20 px-2 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+            <span class="text-sm text-gray-500" aria-hidden="true">%</span>
+          </div>
+          <button
+            type="button"
+            class="px-2 text-gray-400 hover:text-red-500 transition-colors"
+            aria-label="Zutat entfernen"
+            @click="removeIngredientRow(row.key)"
+          >
+            ✕
+          </button>
         </div>
         <button
           type="button"
-          class="px-2 text-gray-400 hover:text-red-500 transition-colors"
-          aria-label="Zutat entfernen"
-          @click="removeIngredientRow(row.key)"
+          class="text-sm text-primary-600 font-medium hover:text-primary-700 transition-colors"
+          @click="addIngredientRow"
         >
-          ✕
+          + Zutat hinzufügen
         </button>
       </div>
-      <button
-        type="button"
-        class="text-sm text-primary-600 font-medium hover:text-primary-700 transition-colors"
-        @click="addIngredientRow"
-      >
-        + Zutat hinzufügen
-      </button>
-    </div>
+    </FieldComparisonRow>
 
     <FieldComparisonRow
       v-bind="comparedProps(ComparedField.Energy)"
@@ -651,66 +698,72 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
       </div>
     </FieldComparisonRow>
 
-    <div>
-      <p class="text-sm font-medium text-gray-700 mb-1.5">
-        Nährwerte
-        <span class="text-xs text-gray-400 font-normal">(pro 100 g/ml)</span>
-      </p>
-      <div
-        v-if="hasInvalidNutrientAmount"
-        role="alert"
-        class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
-      >
-        Bitte gib für jeden Nährwert einen gültigen Wert ein.
-      </div>
-      <div
-        v-if="hasDuplicateNutrientNames"
-        role="alert"
-        class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
-      >
-        Jeder Nährwert darf nur einmal eingetragen werden.
-      </div>
-      <div v-for="row in nutrientRows" :key="row.key" class="flex gap-2 mb-2">
-        <SuggestionTextInput
-          v-model="row.name"
-          :suggestions="nutrientSuggestions"
-          :maxlength="80"
-          placeholder="z. B. Ballaststoffe"
-          class="flex-1 min-w-0"
-        />
-        <input
-          v-model="row.amountInput"
-          type="text"
-          inputmode="decimal"
-          maxlength="10"
-          placeholder="0,8"
-          class="w-20 px-2 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-        />
-        <select
-          v-model="row.unit"
-          class="px-2 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+    <FieldComparisonRow
+      v-bind="nutrientComparisonProps"
+      @accept-a="acceptNutrients(ComparisonSide.A)"
+      @accept-b="acceptNutrients(ComparisonSide.B)"
+    >
+      <div>
+        <p class="text-sm font-medium text-gray-700 mb-1.5">
+          {{ NUTRIENTS_LABEL }}
+          <span class="text-xs text-gray-400 font-normal">(pro 100 g/ml)</span>
+        </p>
+        <div
+          v-if="hasInvalidNutrientAmount"
+          role="alert"
+          class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
         >
-          <option v-for="unit in NUTRIENT_UNITS" :key="unit" :value="unit">
-            {{ NUTRIENT_UNIT_LABELS[unit] }}
-          </option>
-        </select>
+          Bitte gib für jeden Nährwert einen gültigen Wert ein.
+        </div>
+        <div
+          v-if="hasDuplicateNutrientNames"
+          role="alert"
+          class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
+        >
+          Jeder Nährwert darf nur einmal eingetragen werden.
+        </div>
+        <div v-for="row in nutrientRows" :key="row.key" class="flex gap-2 mb-2">
+          <SuggestionTextInput
+            v-model="row.name"
+            :suggestions="nutrientSuggestions"
+            :maxlength="80"
+            placeholder="z. B. Ballaststoffe"
+            class="flex-1 min-w-0"
+          />
+          <input
+            v-model="row.amountInput"
+            type="text"
+            inputmode="decimal"
+            maxlength="10"
+            placeholder="0,8"
+            class="w-20 px-2 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+          <select
+            v-model="row.unit"
+            class="px-2 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option v-for="unit in NUTRIENT_UNITS" :key="unit" :value="unit">
+              {{ NUTRIENT_UNIT_LABELS[unit] }}
+            </option>
+          </select>
+          <button
+            type="button"
+            class="px-2 text-gray-400 hover:text-red-500 transition-colors"
+            aria-label="Nährwert entfernen"
+            @click="removeNutrientRow(row.key)"
+          >
+            ✕
+          </button>
+        </div>
         <button
           type="button"
-          class="px-2 text-gray-400 hover:text-red-500 transition-colors"
-          aria-label="Nährwert entfernen"
-          @click="removeNutrientRow(row.key)"
+          class="text-sm text-primary-600 font-medium hover:text-primary-700 transition-colors"
+          @click="addNutrientRow"
         >
-          ✕
+          + Nährwert hinzufügen
         </button>
       </div>
-      <button
-        type="button"
-        class="text-sm text-primary-600 font-medium hover:text-primary-700 transition-colors"
-        @click="addNutrientRow"
-      >
-        + Nährwert hinzufügen
-      </button>
-    </div>
+    </FieldComparisonRow>
 
     <div v-if="existingImages.length && !comparison">
       <p class="text-sm font-medium text-gray-700 mb-2">Vorhandene Bilder</p>

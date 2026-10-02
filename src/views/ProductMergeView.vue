@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, provide } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ProductForm from '@/components/ProductForm.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
@@ -13,30 +13,34 @@ import {
   fetchProductIngredients,
   fetchProductNutrients,
 } from '@/services/products'
+import { fetchPublicProfile } from '@/services/profile'
 import { getImageUrl } from '@/services/catalog'
 import { mergeProducts } from '@/services/mergeProducts'
 import { supabaseProductMergeGateway } from '@/services/supabaseProductMergeGateway'
 import { toErrorMessage } from '@/lib/error'
 import { orderProductPairByCreation } from '@/lib/orderProductPairByCreation'
 import { toProductFormValues } from '@/lib/toProductFormValues'
-import { unionByName } from '@/lib/unionByName'
+import { formatCountWithNoun } from '@/lib/formatCountWithNoun'
+import { mergeProductFormValues } from '@/lib/mergeProductFormValues'
+import { DEFAULT_COMPARISON_SIDE_LABELS, comparisonSideLabelsKey } from '@/lib/comparisonSideLabels'
 import { ComparisonSide } from '@/types/ComparisonSide'
 import type { Product, ProductImage } from '@/types'
-import type { ProductFormComparison, ProductFormValues } from '@/types/productForm'
+import type {
+  ProductFormComparison,
+  ProductFormInitialValues,
+  ProductFormValues,
+} from '@/types/productForm'
 
 interface MergeSource {
   product: Product
   images: ProductImage[]
   values: ProductFormValues
+  ownerName: string
   reviewsCount: number
   priceReportsCount: number
   similarityVotesCount: number
 }
 
-const SIDE_LABELS: Record<ComparisonSide, string> = {
-  [ComparisonSide.A]: 'User A',
-  [ComparisonSide.B]: 'User B',
-}
 const SIDES = [ComparisonSide.A, ComparisonSide.B]
 
 const route = useRoute()
@@ -63,10 +67,12 @@ const loadSource = async (id: string): Promise<MergeSource> => {
     ],
   )
   if (!product) throw new Error('Produkt nicht gefunden.')
+  const profile = await fetchPublicProfile(product.created_by)
   return {
     product,
     images,
     values: toProductFormValues(product, ingredients, nutrients),
+    ownerName: profile?.display_name || profile?.username || 'Unbekannt',
     reviewsCount: reviews.length,
     priceReportsCount: priceReports.length,
     similarityVotesCount: votes.length,
@@ -83,6 +89,7 @@ onMounted(async () => {
     const [earlierProduct] = orderProductPairByCreation(first.product, second.product)
     const [sourceA, sourceB] = earlierProduct === first.product ? [first, second] : [second, first]
     sources.value = { [ComparisonSide.A]: sourceA, [ComparisonSide.B]: sourceB }
+    acceptedImageIds.value = [...sourceA.images, ...sourceB.images].map((image) => image.id)
   } catch (err) {
     loadError.value = toErrorMessage(err)
   } finally {
@@ -96,13 +103,18 @@ const comparison = computed<ProductFormComparison | null>(() =>
     : null,
 )
 
-const initialValues = computed(() =>
-  comparison.value
+const sideLabels = computed<Record<ComparisonSide, string>>(() =>
+  sources.value
     ? {
-        ingredients: unionByName(comparison.value.a.ingredients, comparison.value.b.ingredients),
-        nutrients: unionByName(comparison.value.a.nutrients, comparison.value.b.nutrients),
+        [ComparisonSide.A]: sources.value[ComparisonSide.A].ownerName,
+        [ComparisonSide.B]: sources.value[ComparisonSide.B].ownerName,
       }
-    : {},
+    : DEFAULT_COMPARISON_SIDE_LABELS,
+)
+provide(comparisonSideLabelsKey, sideLabels)
+
+const initialValues = computed<ProductFormInitialValues>(() =>
+  comparison.value ? mergeProductFormValues(comparison.value.a, comparison.value.b) : {},
 )
 
 const allImages = computed(() =>
@@ -170,6 +182,7 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
                   <input
                     v-model="acceptedImageIds"
                     type="checkbox"
+                    class="h-4 w-4 rounded"
                     :value="image.id"
                     :aria-label="`Bild ${index + 1} akzeptieren`"
                   />
@@ -186,20 +199,27 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
             <div class="flex gap-4">
               <label v-for="side in SIDES" :key="side" class="flex items-center gap-2 text-sm">
                 <input v-model="ownerSide" type="radio" name="owner" :value="side" />
-                {{ SIDE_LABELS[side] }}
+                {{ sideLabels[side] }}
               </label>
             </div>
           </fieldset>
 
           <Card>
             <p class="text-sm font-medium text-gray-700 mb-2">
-              Bewertungen, Preise und Ähnlichkeiten werden zusammengeführt
+              Bewertungen, Preise und Ähnliche Produkte werden vereint
             </p>
             <ul class="text-sm text-gray-600 space-y-0.5">
               <li v-for="side in SIDES" :key="side">
-                {{ SIDE_LABELS[side] }}: {{ sources[side].reviewsCount }} Bewertungen,
-                {{ sources[side].priceReportsCount }} Preise,
-                {{ sources[side].similarityVotesCount }} Ähnlichkeitsstimmen
+                {{ sideLabels[side] }}:
+                {{ formatCountWithNoun(sources[side].reviewsCount, 'Bewertung', 'Bewertungen') }},
+                {{ formatCountWithNoun(sources[side].priceReportsCount, 'Preis', 'Preise') }},
+                {{
+                  formatCountWithNoun(
+                    sources[side].similarityVotesCount,
+                    'Ähnliches Produkt',
+                    'Ähnliche Produkte',
+                  )
+                }}
               </li>
             </ul>
           </Card>

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import Button from '@/components/primitives/ButtonComponent.vue'
 import { ButtonVariant } from '@/components/primitives/ButtonVariant'
 import { ButtonSize } from '@/components/primitives/ButtonSize'
 import { ComparisonSide } from '@/types/ComparisonSide'
+import { DEFAULT_COMPARISON_SIDE_LABELS, comparisonSideLabelsKey } from '@/lib/comparisonSideLabels'
 
 const props = defineProps<{
   side: ComparisonSide
@@ -17,13 +18,11 @@ const SIDE_CLASSES: Record<ComparisonSide, string> = {
   [ComparisonSide.A]: 'bg-blue-50 border-blue-200 text-blue-900',
   [ComparisonSide.B]: 'bg-orange-50 border-orange-200 text-orange-900',
 }
-const SIDE_LABELS: Record<ComparisonSide, string> = {
-  [ComparisonSide.A]: 'User A',
-  [ComparisonSide.B]: 'User B',
-}
+
+const sideLabels = inject(comparisonSideLabelsKey, undefined)
 
 const sideClass = computed(() => SIDE_CLASSES[props.side])
-const sideLabel = computed(() => SIDE_LABELS[props.side])
+const sideLabel = computed(() => (sideLabels?.value ?? DEFAULT_COMPARISON_SIDE_LABELS)[props.side])
 </script>
 
 <template>
