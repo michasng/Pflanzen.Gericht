@@ -1,7 +1,10 @@
 import { supabase } from '@/lib/supabase'
 import { generateSquareImageVariants } from '@/lib/generateSquareImageVariants'
 import { deleteImageVariants, persistImageVariants } from '@/lib/imageVariantStorage'
-import { copyStoredImageWithRecord } from '@/services/copyStoredImageWithRecord'
+import {
+  copyStoredImageWithRecord,
+  type StoredImageLocation,
+} from '@/services/copyStoredImageWithRecord'
 import type { Review, ReviewInsert, ReviewImage, ProductImage } from '@/types'
 
 export const ADMIN_PAGE_SIZE = 50
@@ -16,15 +19,31 @@ export type ReviewFields = Pick<
   'overall' | 'taste' | 'consistency' | 'appearance' | 'nutrition' | 'value' | 'comment'
 >
 
+export type ReviewHistory = Pick<ReviewInsert, 'created_at' | 'updated_at'>
+
+export type ReviewWithDetails = Review & { tags: string[]; images: ReviewImage[] }
+
+const REVIEW_WITH_DETAILS_SELECT =
+  '*, tags:review_tag(tag), images:review_image(id, storage_path, sort_order)'
+
+const toReviewWithDetails = (data: {
+  tags: unknown
+  images: unknown
+}): { tags: string[]; images: ReviewImage[] } => ({
+  tags: ((data.tags ?? []) as { tag: string }[]).map((t) => t.tag),
+  images: (data.images as ReviewImage[] | null) ?? [],
+})
+
 export const createReview = async (
   productId: string,
   userId: string,
   fields: ReviewFields,
   tags: string[],
+  history?: ReviewHistory,
 ): Promise<Review> => {
   const { data, error } = await supabase
     .from('review')
-    .insert({ ...fields, product_id: productId, user_id: userId })
+    .insert({ ...fields, ...history, product_id: productId, user_id: userId })
     .select()
     .single()
   if (error) throw error
@@ -73,15 +92,15 @@ export const uploadReviewImage = async (
   )
 }
 
-export const copyProductImageToReview = (
-  productImage: ProductImage,
+const copyImageToReview = (
+  source: StoredImageLocation,
   reviewId: string,
   userId: string,
   sortOrder: number,
 ): Promise<ReviewImage> => {
   const storagePath = `${userId}/${reviewId}/${crypto.randomUUID()}`
   return copyStoredImageWithRecord(
-    { bucketName: 'product-images', storagePath: productImage.storage_path },
+    source,
     { bucketName: 'review-images', storagePath },
     () =>
       supabase
@@ -91,6 +110,40 @@ export const copyProductImageToReview = (
         .single(),
     () => supabase.from('review_image').select('id').eq('storage_path', storagePath).maybeSingle(),
   )
+}
+
+export const copyProductImageToReview = (
+  productImage: ProductImage,
+  reviewId: string,
+  userId: string,
+  sortOrder: number,
+): Promise<ReviewImage> =>
+  copyImageToReview(
+    { bucketName: 'product-images', storagePath: productImage.storage_path },
+    reviewId,
+    userId,
+    sortOrder,
+  )
+
+export const copyReviewImageToReview = (
+  reviewImage: ReviewImage,
+  reviewId: string,
+  userId: string,
+): Promise<ReviewImage> =>
+  copyImageToReview(
+    { bucketName: 'review-images', storagePath: reviewImage.storage_path },
+    reviewId,
+    userId,
+    reviewImage.sort_order,
+  )
+
+export const fetchProductReviews = async (productId: string): Promise<ReviewWithDetails[]> => {
+  const { data, error } = await supabase
+    .from('review')
+    .select(REVIEW_WITH_DETAILS_SELECT)
+    .eq('product_id', productId)
+  if (error) throw error
+  return (data ?? []).map((row) => ({ ...row, ...toReviewWithDetails(row) }))
 }
 
 export interface ProductReviewImages {
@@ -119,21 +172,15 @@ export const fetchProductReviewImages = async (
     }))
 }
 
-export const fetchReviewForEdit = async (
-  reviewId: string,
-): Promise<(Review & { tags: string[]; images: ReviewImage[] }) | null> => {
+export const fetchReviewForEdit = async (reviewId: string): Promise<ReviewWithDetails | null> => {
   const { data, error } = await supabase
     .from('review')
-    .select('*, tags:review_tag(tag), images:review_image(id, storage_path, sort_order)')
+    .select(REVIEW_WITH_DETAILS_SELECT)
     .eq('id', reviewId)
     .single()
   if (error?.code === 'PGRST116') return null
   if (error) throw error
-  return {
-    ...data,
-    tags: ((data.tags ?? []) as { tag: string }[]).map((t) => t.tag),
-    images: (data.images as ReviewImage[] | null) ?? [],
-  }
+  return { ...data, ...toReviewWithDetails(data) }
 }
 
 export const updateReview = async (

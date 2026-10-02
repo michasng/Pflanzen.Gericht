@@ -19,6 +19,8 @@ export const copyStoredImageWithRecord = async <T>(
     const { error } = await destinationBucket.remove(paths)
     if (error) throw error
   }
+  const discardDestinationVariants = (): Promise<void> =>
+    removeDestinationVariants(getImageVariantPaths(destination.storagePath)).catch(() => undefined)
 
   await copyImageVariants(
     {
@@ -39,16 +41,12 @@ export const copyStoredImageWithRecord = async <T>(
     async (rejection: unknown) => {
       const { data: existingRecord, error: findError } = await findRecord()
       if (findError || existingRecord) throw rejection
-      await removeDestinationVariants(getImageVariantPaths(destination.storagePath)).catch(
-        () => undefined,
-      )
+      await discardDestinationVariants()
       throw rejection
     },
   )
   const { data, error } = result
   if (data && !error) return data
-  await removeDestinationVariants(getImageVariantPaths(destination.storagePath)).catch(
-    () => undefined,
-  )
+  await discardDestinationVariants()
   throw error ?? new Error('Bild konnte nicht kopiert werden.')
 }

@@ -1,12 +1,15 @@
 import type {
-  PriceReport,
   Product,
   ProductImage,
   ProductInsert,
   ProductSimilarityVote,
   Review,
+  ReviewImage,
 } from '@/types'
-import type { ProductFormValues } from '@/types/productForm'
+import type { PriceReportWithProfile } from '@/services/prices'
+import type { ReviewFields, ReviewHistory, ReviewWithDetails } from '@/services/reviews'
+import type { SimilarityVoteHistory } from '@/services/similarProducts'
+import type { IngredientWrite, NutrientWrite } from '@/types/productWrites'
 
 export type MergedProductFields = Pick<
   ProductInsert,
@@ -24,22 +27,41 @@ export type MergedProductFields = Pick<
 export interface ProductMergeGateway {
   createProduct: (fields: MergedProductFields, ownerId: string) => Promise<Product>
   updateProduct: (productId: string, fields: MergedProductFields) => Promise<void>
-  replaceIngredients: (
-    productId: string,
-    ingredients: ProductFormValues['ingredients'],
-  ) => Promise<void>
-  replaceNutrients: (productId: string, nutrients: ProductFormValues['nutrients']) => Promise<void>
+  replaceIngredients: (productId: string, ingredients: IngredientWrite[]) => Promise<void>
+  replaceNutrients: (productId: string, nutrients: NutrientWrite[]) => Promise<void>
   copyImage: (
     image: ProductImage,
-    ownerId: string,
     productId: string,
+    ownerId: string,
     sortOrder: number,
-  ) => Promise<void>
-  fetchReviews: (productId: string) => Promise<Review[]>
-  copyReview: (review: Review, productId: string) => Promise<void>
-  fetchPriceReports: (productId: string) => Promise<PriceReport[]>
-  copyPriceReport: (report: PriceReport, productId: string) => Promise<void>
+  ) => Promise<unknown>
+  fetchReviews: (productId: string) => Promise<ReviewWithDetails[]>
+  createReview: (
+    productId: string,
+    userId: string,
+    fields: ReviewFields,
+    tags: string[],
+    history?: ReviewHistory,
+  ) => Promise<Review>
+  copyReviewImage: (reviewImage: ReviewImage, reviewId: string, userId: string) => Promise<unknown>
+  fetchPriceReports: (productId: string) => Promise<PriceReportWithProfile[]>
+  upsertPriceReport: (
+    productId: string,
+    userId: string,
+    store: string,
+    cityName: string,
+    priceEuroCents: number,
+    salePriceEuroCents: number | null,
+    observedAt: string,
+    createdAt?: string,
+  ) => Promise<unknown>
   fetchSimilarityVotes: (productId: string) => Promise<ProductSimilarityVote[]>
-  insertSimilarityVote: (vote: ProductSimilarityVote) => Promise<void>
+  voteSimilarity: (
+    productId: string,
+    otherProductId: string,
+    agreed: boolean,
+    userId: string,
+    history?: SimilarityVoteHistory,
+  ) => Promise<void>
   deleteProduct: (productId: string) => Promise<void>
 }

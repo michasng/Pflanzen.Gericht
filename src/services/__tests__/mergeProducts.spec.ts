@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { mergeProducts, type MergeProductsInput } from '../mergeProducts'
 import type { ProductMergeGateway } from '../ProductMergeGateway'
-import type { PriceReport, Product, ProductImage, ProductSimilarityVote, Review } from '@/types'
+import type {
+  PriceReport,
+  Product,
+  ProductImage,
+  ProductSimilarityVote,
+  ReviewImage,
+} from '@/types'
+import type { ReviewWithDetails } from '../reviews'
 
 const MERGED_ID = 'merged'
 const MERGED_PRODUCT: Product = {
@@ -25,17 +32,19 @@ const MERGED_PRODUCT: Product = {
   updated_at: '2026-01-01T00:00:00Z',
 }
 
-const buildReview = (overrides: Partial<Review>): Review => ({
+const buildReview = (overrides: Partial<ReviewWithDetails>): ReviewWithDetails => ({
   appearance: null,
   comment: null,
   consistency: null,
   created_at: '2026-01-01T00:00:00Z',
   id: 'review',
+  images: [],
   is_current: true,
   nutrition: null,
   overall: 4,
   product_id: 'a',
   taste: null,
+  tags: [],
   updated_at: '2026-01-01T00:00:00Z',
   user_id: 'user-1',
   value: null,
@@ -75,8 +84,16 @@ const buildImage = (id: string): ProductImage => ({
   storage_path: `user/a/${id}`,
 })
 
+const buildReviewImage = (id: string): ReviewImage => ({
+  created_at: '2026-01-01T00:00:00Z',
+  id,
+  review_id: 'new',
+  sort_order: 0,
+  storage_path: `user/new/${id}`,
+})
+
 interface FakeData {
-  reviews: Review[]
+  reviews: ReviewWithDetails[]
   priceReports: PriceReport[]
   votes: ProductSimilarityVote[]
 }
@@ -85,9 +102,10 @@ const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGatewa
   const calls: string[] = []
   const createdNames: string[] = []
   const updatedFields: string[] = []
-  const copiedReviews: Review[] = []
-  const copiedPriceReports: PriceReport[] = []
-  const insertedVotes: ProductSimilarityVote[] = []
+  const createdReviews: { createdAt: string | undefined; tags: string[] }[] = []
+  const copiedReviewImageIds: string[] = []
+  const upsertedPriceReports: (string | undefined)[][] = []
+  const votes: (string | undefined)[][] = []
   const copiedImages: { image: ProductImage; ownerId: string; sortOrder: number }[] = []
   const record = async (step: keyof ProductMergeGateway, detail = ''): Promise<void> => {
     calls.push(`${step}${detail}`)
@@ -105,25 +123,42 @@ const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGatewa
     },
     replaceIngredients: (_id, _ingredients) => record('replaceIngredients'),
     replaceNutrients: (_id, _nutrients) => record('replaceNutrients'),
-    copyImage: async (image, ownerId, _productId, sortOrder) => {
+    copyImage: async (image, _productId, ownerId, sortOrder) => {
       await record('copyImage')
       copiedImages.push({ image, ownerId, sortOrder })
     },
     fetchReviews: async (id) => data.reviews.filter((review) => review.product_id === id),
-    copyReview: async (review) => {
-      await record('copyReview')
-      copiedReviews.push(review)
+    createReview: async (_productId, _userId, _fields, tags, history) => {
+      await record('createReview')
+      createdReviews.push({ createdAt: history?.created_at, tags })
+      return buildReview({ id: `copy-${createdReviews.length}` })
     },
-    fetchPriceReports: async (id) => data.priceReports.filter((r) => r.product_id === id),
-    copyPriceReport: async (report) => {
-      await record('copyPriceReport')
-      copiedPriceReports.push(report)
+    copyReviewImage: async (image) => {
+      await record('copyReviewImage')
+      copiedReviewImageIds.push(image.id)
+    },
+    fetchPriceReports: async (id) =>
+      data.priceReports
+        .filter((r) => r.product_id === id)
+        .map((r) => ({ ...r, profile: { username: 'user', display_name: null } })),
+    upsertPriceReport: async (
+      _productId,
+      _userId,
+      _store,
+      _city,
+      _price,
+      _sale,
+      observedAt,
+      createdAt,
+    ) => {
+      await record('upsertPriceReport')
+      upsertedPriceReports.push([observedAt, createdAt])
     },
     fetchSimilarityVotes: async (id) =>
       data.votes.filter((vote) => vote.product_id_a === id || vote.product_id_b === id),
-    insertSimilarityVote: async (vote) => {
-      await record('insertSimilarityVote')
-      insertedVotes.push(vote)
+    voteSimilarity: async (productId, otherProductId, _agreed, _userId, history) => {
+      await record('voteSimilarity')
+      votes.push([productId, otherProductId, history?.created_at])
     },
     deleteProduct: (id) => record('deleteProduct', `:${id}`),
   }
@@ -132,9 +167,10 @@ const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGatewa
     calls,
     createdNames,
     updatedFields,
-    copiedReviews,
-    copiedPriceReports,
-    insertedVotes,
+    createdReviews,
+    copiedReviewImageIds,
+    upsertedPriceReports,
+    votes,
     copiedImages,
   }
 }
@@ -166,26 +202,43 @@ describe('mergeProducts', () => {
       const fake = buildFakeGateway({
         reviews: [
           buildReview({ id: 'old', product_id: 'a' }),
-          buildReview({ id: 'new', product_id: 'b', created_at: '2026-05-01T00:00:00Z' }),
+          buildReview({
+            id: 'new',
+            product_id: 'b',
+            created_at: '2026-05-01T00:00:00Z',
+            tags: ['sweet'],
+            images: [buildReviewImage('photo')],
+          }),
         ],
         priceReports: [
           buildPriceReport({ id: 'old', product_id: 'a' }),
-          buildPriceReport({ id: 'new', product_id: 'b', observed_at: '2026-05-01' }),
+          buildPriceReport({
+            id: 'new',
+            product_id: 'b',
+            observed_at: '2026-05-01',
+            created_at: '2026-05-02T00:00:00Z',
+          }),
         ],
         votes: [
           buildVote({ id: 'self', product_id_a: 'a', product_id_b: 'b' }),
-          buildVote({ id: 'kept', product_id_a: 'a', product_id_b: 'x' }),
+          buildVote({
+            id: 'kept',
+            product_id_a: 'a',
+            product_id_b: 'x',
+            created_at: '2026-03-01T00:00:00Z',
+          }),
         ],
       })
 
       await mergeProducts(fake.gateway, input)
 
-      expect(fake.copiedReviews.map((r) => [r.id, r.is_current])).toEqual([
-        ['old', false],
-        ['new', true],
+      expect(fake.createdReviews).toEqual([
+        { createdAt: '2026-01-01T00:00:00Z', tags: [] },
+        { createdAt: '2026-05-01T00:00:00Z', tags: ['sweet'] },
       ])
-      expect(fake.copiedPriceReports.map((r) => r.id)).toEqual(['new'])
-      expect(fake.insertedVotes.map((v) => v.id)).toEqual(['kept'])
+      expect(fake.copiedReviewImageIds).toEqual(['photo'])
+      expect(fake.upsertedPriceReports).toEqual([['2026-05-01', '2026-05-02T00:00:00Z']])
+      expect(fake.votes).toEqual([[MERGED_ID, 'x', '2026-03-01T00:00:00Z']])
       expect(fake.calls.slice(-3, -1)).toEqual(['deleteProduct:a', 'deleteProduct:b'])
       expect(fake.calls).not.toContain(`deleteProduct:${MERGED_ID}`)
     })
@@ -225,9 +278,9 @@ describe('mergeProducts', () => {
   describe.each([
     'replaceIngredients',
     'copyImage',
-    'copyReview',
-    'copyPriceReport',
-    'insertSimilarityVote',
+    'createReview',
+    'upsertPriceReport',
+    'voteSimilarity',
   ] as const)('given %s fails', (failingStep) => {
     it('deletes only the merged product and rethrows', async () => {
       const fake = buildFakeGateway(

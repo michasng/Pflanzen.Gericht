@@ -1,7 +1,10 @@
 import { supabase } from '@/lib/supabase'
 import { generateSquareImageVariants } from '@/lib/generateSquareImageVariants'
 import { deleteImageVariants, persistImageVariants } from '@/lib/imageVariantStorage'
-import { copyStoredImageWithRecord } from '@/services/copyStoredImageWithRecord'
+import {
+  copyStoredImageWithRecord,
+  type StoredImageLocation,
+} from '@/services/copyStoredImageWithRecord'
 import type {
   Product,
   ProductInsert,
@@ -12,17 +15,7 @@ import type {
   ReviewImage,
 } from '@/types'
 import type { ProductListItem } from '@/services/catalog'
-
-type IngredientWrite = {
-  name: string
-  fraction_basis_points: number | null
-  comparator: string
-}
-
-type NutrientWrite = {
-  name: string
-  amount_micrograms: number
-}
+import type { IngredientWrite, NutrientWrite } from '@/types/productWrites'
 
 const DELETE_PRODUCT_NOT_AUTHORIZED_ERROR_MESSAGE = 'Not authorized to delete this product.'
 
@@ -255,15 +248,15 @@ export const uploadProductImage = async (
   )
 }
 
-export const copyReviewImageToProduct = (
-  reviewImage: ReviewImage,
+const copyImageToProduct = (
+  source: StoredImageLocation,
   productId: string,
   userId: string,
   sortOrder: number,
 ): Promise<ProductImage> => {
   const storagePath = `${userId}/${productId}/${crypto.randomUUID()}`
   return copyStoredImageWithRecord(
-    { bucketName: 'review-images', storagePath: reviewImage.storage_path },
+    source,
     { bucketName: 'product-images', storagePath },
     () =>
       supabase
@@ -274,6 +267,32 @@ export const copyReviewImageToProduct = (
     () => supabase.from('product_image').select('id').eq('storage_path', storagePath).maybeSingle(),
   )
 }
+
+export const copyReviewImageToProduct = (
+  reviewImage: ReviewImage,
+  productId: string,
+  userId: string,
+  sortOrder: number,
+): Promise<ProductImage> =>
+  copyImageToProduct(
+    { bucketName: 'review-images', storagePath: reviewImage.storage_path },
+    productId,
+    userId,
+    sortOrder,
+  )
+
+export const copyProductImageToProduct = (
+  productImage: ProductImage,
+  productId: string,
+  userId: string,
+  sortOrder: number,
+): Promise<ProductImage> =>
+  copyImageToProduct(
+    { bucketName: 'product-images', storagePath: productImage.storage_path },
+    productId,
+    userId,
+    sortOrder,
+  )
 
 const removeStorageObjects = async (bucket: string, storagePaths: string[]): Promise<void> => {
   await deleteImageVariants(

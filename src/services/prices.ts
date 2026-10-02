@@ -27,6 +27,7 @@ export const upsertPriceReport = async (
   priceEuroCents: number,
   salePriceEuroCents: number | null,
   observedAt: string,
+  createdAt?: string,
 ): Promise<PriceReportWithProfile> => {
   const { data, error } = await supabase
     .from('price_report')
@@ -39,6 +40,7 @@ export const upsertPriceReport = async (
         price_euro_cents: priceEuroCents,
         sale_price_euro_cents: salePriceEuroCents,
         observed_at: observedAt,
+        created_at: createdAt,
       },
       { onConflict: 'product_id,user_id,store,city_name' },
     )

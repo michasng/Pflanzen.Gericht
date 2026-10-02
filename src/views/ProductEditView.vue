@@ -21,6 +21,8 @@ import {
 import { fetchProductReviewImages, type ProductReviewImages } from '@/services/reviews'
 import { formatDate } from '@/lib/date'
 import { toErrorMessage } from '@/lib/error'
+import { toIngredientWrites } from '@/lib/toIngredientWrites'
+import { toNutrientWrites } from '@/lib/toNutrientWrites'
 import { useImageUpload } from '@/composables/useImageUpload'
 import type { Product, ProductImage, ReviewImage } from '@/types'
 import type { ProductFormValues } from '@/types/productForm'
@@ -160,24 +162,11 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
     }
     const shouldReplaceIngredients = !haveSameIngredients(initialIngredients.value, ingredients)
     if (shouldReplaceIngredients) {
-      await replaceProductIngredients(
-        product.value.id,
-        ingredients.map((ingredient) => ({
-          name: ingredient.name,
-          fraction_basis_points: ingredient.fractionBasisPoints,
-          comparator: ingredient.comparator,
-        })),
-      )
+      await replaceProductIngredients(product.value.id, toIngredientWrites(ingredients))
     }
     const shouldReplaceNutrients = !haveSameNutrients(initialNutrients.value, nutrients)
     if (shouldReplaceNutrients) {
-      await replaceProductNutrients(
-        product.value.id,
-        nutrients.map((nutrient) => ({
-          name: nutrient.name,
-          amount_micrograms: nutrient.amountMicrograms,
-        })),
-      )
+      await replaceProductNutrients(product.value.id, toNutrientWrites(nutrients))
     }
     await commitImageChanges()
     await router.push({ name: 'product-detail', params: { id: product.value.id } })

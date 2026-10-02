@@ -16,6 +16,7 @@ import {
 import { fetchPublicProfile } from '@/services/profile'
 import { getImageUrl } from '@/services/catalog'
 import { mergeProducts } from '@/services/mergeProducts'
+import { fetchProductActivityCounts } from '@/services/fetchProductActivityCounts'
 import { supabaseProductMergeGateway } from '@/services/supabaseProductMergeGateway'
 import { toErrorMessage } from '@/lib/error'
 import { orderProductPairByCreation } from '@/lib/orderProductPairByCreation'
@@ -55,17 +56,13 @@ const ownerSide = ref<ComparisonSide | null>(null)
 const acceptedImageIds = ref<string[]>([])
 
 const loadSource = async (id: string): Promise<MergeSource> => {
-  const [product, images, ingredients, nutrients, reviews, priceReports, votes] = await Promise.all(
-    [
-      fetchProduct(id),
-      fetchProductImages(id),
-      fetchProductIngredients(id),
-      fetchProductNutrients(id),
-      supabaseProductMergeGateway.fetchReviews(id),
-      supabaseProductMergeGateway.fetchPriceReports(id),
-      supabaseProductMergeGateway.fetchSimilarityVotes(id),
-    ],
-  )
+  const [product, images, ingredients, nutrients, counts] = await Promise.all([
+    fetchProduct(id),
+    fetchProductImages(id),
+    fetchProductIngredients(id),
+    fetchProductNutrients(id),
+    fetchProductActivityCounts(id),
+  ])
   if (!product) throw new Error('Produkt nicht gefunden.')
   const profile = await fetchPublicProfile(product.created_by)
   return {
@@ -73,9 +70,7 @@ const loadSource = async (id: string): Promise<MergeSource> => {
     images,
     values: toProductFormValues(product, ingredients, nutrients),
     ownerName: profile?.display_name || profile?.username || 'Unbekannt',
-    reviewsCount: reviews.length,
-    priceReportsCount: priceReports.length,
-    similarityVotesCount: votes.length,
+    ...counts,
   }
 }
 

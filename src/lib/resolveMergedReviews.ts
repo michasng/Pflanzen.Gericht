@@ -1,7 +1,7 @@
 import type { Review } from '@/types'
 
-export const resolveMergedReviews = (reviews: Review[]): Review[] => {
-  const newestCurrentReviewByUser = new Map<string, Review>()
+export const resolveMergedReviews = <T extends Review>(reviews: T[]): T[] => {
+  const newestCurrentReviewByUser = new Map<string, T>()
   for (const review of reviews) {
     if (!review.is_current) continue
     const newest = newestCurrentReviewByUser.get(review.user_id)

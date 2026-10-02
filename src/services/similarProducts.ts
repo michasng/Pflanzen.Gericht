@@ -53,6 +53,8 @@ interface SimilarProductRow {
   total_count: number
 }
 
+export type SimilarityVoteHistory = Pick<ProductSimilarityVoteInsert, 'created_at' | 'updated_at'>
+
 export interface SimilarProductsDependencies {
   deleteVote: (query: { product_id_a: string; product_id_b: string; user_id?: string }) => Promise<{
     error: unknown | null
@@ -120,10 +122,12 @@ export const createSimilarProductsService = (dependencies: SimilarProductsDepend
     otherProductId: string,
     agreed: boolean,
     userId: string,
+    history?: SimilarityVoteHistory,
   ): Promise<void> => {
     ensureDifferentProducts(productId, otherProductId)
     const [productIdA, productIdB] = canonicalizeProductPair(productId, otherProductId)
     const vote: ProductSimilarityVoteInsert = {
+      ...history,
       agreed,
       product_id_a: productIdA,
       product_id_b: productIdB,
@@ -244,8 +248,9 @@ export const voteSimilarity = async (
   otherProductId: string,
   agreed: boolean,
   userId: string,
+  history?: SimilarityVoteHistory,
 ): Promise<void> =>
-  (await getDefaultService()).voteSimilarity(productId, otherProductId, agreed, userId)
+  (await getDefaultService()).voteSimilarity(productId, otherProductId, agreed, userId, history)
 
 export const removeSimilarityVote = async (
   productId: string,
