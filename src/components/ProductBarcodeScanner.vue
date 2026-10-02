@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import BarcodeScannerDialog from '@/components/BarcodeScannerDialog.vue'
+import { defineAsyncComponent, ref } from 'vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import Button from '@/components/primitives/ButtonComponent.vue'
 import { ButtonSize } from '@/components/primitives/ButtonSize'
@@ -10,7 +9,6 @@ import {
   type ProductBarcodeScannerDependencies,
 } from '@/composables/useProductBarcodeScanner'
 import type { BarcodeReader } from '@/composables/useBarcodeScanner'
-import { createZxingBarcodeReader } from '@/lib/createZxingBarcodeReader'
 import { toErrorMessage } from '@/lib/error'
 import { isPlausibleBarcode } from '@/lib/isPlausibleBarcode'
 import { mapOpenFoodFactsProductToFormValues } from '@/lib/mapOpenFoodFactsProductToFormValues'
@@ -18,11 +16,14 @@ import { fetchOpenFoodFactsProduct, fetchOpenFoodFactsProductImage } from '@/ser
 import type { ProductFormValues } from '@/types/productForm'
 
 interface ProductBarcodeScannerComponentDependencies extends ProductBarcodeScannerDependencies {
-  createReader: () => BarcodeReader
+  createReader?: () => BarcodeReader
 }
 
+const BarcodeScannerDialog = defineAsyncComponent(
+  () => import('@/components/BarcodeScannerDialog.vue'),
+)
+
 const createDefaultDependencies = (): ProductBarcodeScannerComponentDependencies => ({
-  createReader: createZxingBarcodeReader,
   isPlausibleBarcode,
   fetchProduct: fetchOpenFoodFactsProduct,
   mapProductToFormValues: mapOpenFoodFactsProductToFormValues,
