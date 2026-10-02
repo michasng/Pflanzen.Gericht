@@ -10,12 +10,7 @@ export type Database = {
     }
     Functions: {
       graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
+        Args: { extensions?: Json; operationName?: string; query?: string; variables?: Json }
         Returns: Json
       }
     }
@@ -44,7 +39,7 @@ export type Database = {
         Insert: {
           city_name?: string
           created_at?: string
-          effective_price_euro_cents?: number | null
+          effective_price_euro_cents?: never
           id?: string
           observed_at?: string
           price_euro_cents: number
@@ -56,7 +51,7 @@ export type Database = {
         Update: {
           city_name?: string
           created_at?: string
-          effective_price_euro_cents?: number | null
+          effective_price_euro_cents?: never
           id?: string
           observed_at?: string
           price_euro_cents?: number
@@ -118,7 +113,7 @@ export type Database = {
           is_organic?: boolean
           min_price_euro_cents?: number | null
           name: string
-          normalized_name?: string | null
+          normalized_name?: never
           reviews_count?: number
           tags?: string[]
           updated_at?: string
@@ -138,7 +133,7 @@ export type Database = {
           is_organic?: boolean
           min_price_euro_cents?: number | null
           name?: string
-          normalized_name?: string | null
+          normalized_name?: never
           reviews_count?: number
           tags?: string[]
           updated_at?: string
@@ -460,29 +455,26 @@ export type Database = {
           agree_count: number
           agreement_rate: number
           allergens: string[]
-          avg_appearance: number | null
-          avg_consistency: number | null
-          avg_nutrition: number | null
-          avg_overall: number | null
-          avg_taste: number | null
-          avg_value: number | null
-          base: string | null
-          brand: string | null
+          avg_appearance: number
+          avg_consistency: number
+          avg_nutrition: number
+          avg_overall: number
+          avg_taste: number
+          avg_value: number
+          base: string
+          brand: string
           category: string
           id: string
           is_organic: boolean
-          my_vote: boolean | null
+          my_vote: boolean
           name: string
           reviews_count: number
-          storage_path: string | null
+          storage_path: string
           total_count: number
         }[]
       }
-      is_admin: { Args: never; Returns: boolean }
-      recompute_product_tags: {
-        Args: { p_product_id: string }
-        Returns: undefined
-      }
+      is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      recompute_product_tags: { Args: { p_product_id: string }; Returns: undefined }
       search_products: {
         Args: {
           p_base?: string
@@ -524,19 +516,16 @@ export type Database = {
         }[]
       }
       search_similarity_candidates: {
-        Args: {
-          p_product_id: string
-          p_search: string
-        }
+        Args: { p_product_id: string; p_search: string }
         Returns: {
-          brand: string | null
+          brand: string
           category: string
           id: string
           name: string
-          storage_path: string | null
+          storage_path: string
         }[]
       }
-      show_limit: { Args: never; Returns: number }
+      show_limit: { Args: Record<PropertyKey, never>; Returns: number }
       show_trgm: { Args: { '': string }; Returns: string[] }
     }
     Enums: {
@@ -562,9 +551,7 @@ export type Tables<
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
     : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
       Row: infer R
@@ -588,9 +575,7 @@ export type TablesInsert<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Insert: infer I
     }
@@ -613,9 +598,7 @@ export type TablesUpdate<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Update: infer U
     }
@@ -638,9 +621,7 @@ export type Enums<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
     : never) = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
     ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
@@ -655,9 +636,7 @@ export type CompositeTypes<
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
     : never) = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
     ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
