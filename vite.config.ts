@@ -10,7 +10,7 @@ import tailwindcss from '@tailwindcss/vite'
 const githubPagesSpaFallback = {
   name: 'github-pages-spa-fallback',
   closeBundle() {
-    const dist = resolve(__dirname, 'dist')
+    const dist = resolve(import.meta.dirname, 'dist')
     copyFileSync(resolve(dist, 'index.html'), resolve(dist, '404.html'))
   },
 }
