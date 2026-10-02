@@ -21,8 +21,6 @@ import {
 import { fetchProductReviewImages, type ProductReviewImages } from '@/services/reviews'
 import { formatDate } from '@/lib/date'
 import { toErrorMessage } from '@/lib/error'
-import { toIngredientWrites } from '@/lib/toIngredientWrites'
-import { toNutrientWrites } from '@/lib/toNutrientWrites'
 import { useImageUpload } from '@/composables/useImageUpload'
 import type { Product, ProductImage, ReviewImage } from '@/types'
 import type { ProductFormValues } from '@/types/productForm'
@@ -54,7 +52,7 @@ const { pendingFiles, selectCopies, existingImages, handleDeleteImage, commitIma
       if (!product.value || !authStore.user) return Promise.resolve()
       return uploadProductImage(product.value.id, authStore.user.id, file, sortOrder)
     },
-    (img) => deleteProductImage(img.id, img.storage_path),
+    (img) => deleteProductImage(img.id, img.storagePath),
     (reviewImage, sortOrder) => {
       if (!product.value || !authStore.user) return Promise.resolve()
       return copyReviewImageToProduct(reviewImage, product.value.id, authStore.user.id, sortOrder)
@@ -112,21 +110,21 @@ onMounted(async () => {
       loadError.value = 'Produkt nicht gefunden.'
       return
     }
-    if (p.created_by !== authStore.user?.id && !authStore.isAdmin) {
+    if (p.createdBy !== authStore.user?.id && !authStore.isAdmin) {
       await router.replace({ name: 'product-detail', params: { id } })
       return
     }
     product.value = p
     reviewImageGroups.value = reviewImages
-    existingImages.value = imgs.sort((a, b) => a.sort_order - b.sort_order)
+    existingImages.value = imgs.sort((a, b) => a.sortOrder - b.sortOrder)
     initialIngredients.value = ingredients.map((ingredient) => ({
       name: ingredient.name,
-      fractionBasisPoints: ingredient.fraction_basis_points,
+      fractionBasisPoints: ingredient.fractionBasisPoints,
       comparator: ingredient.comparator as ProductFormValues['ingredients'][number]['comparator'],
     }))
     initialNutrients.value = nutrients.map((nutrient) => ({
       name: nutrient.name,
-      amountMicrograms: nutrient.amount_micrograms,
+      amountMicrograms: nutrient.amountMicrograms,
     }))
   } catch (err) {
     loadError.value = toErrorMessage(err)
@@ -140,7 +138,7 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
   submitting.value = true
   submitError.value = null
   try {
-    const { ingredients, nutrients, energyJoules, isOrganic, ...fields } = values
+    const { ingredients, nutrients, ...fields } = values
     const submittedAllergens = new Set<string>(fields.allergens)
     const shouldUpdateProductFields =
       product.value.name !== fields.name ||
@@ -148,25 +146,21 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
       product.value.base !== fields.base ||
       product.value.brand !== fields.brand ||
       product.value.description !== fields.description ||
-      product.value.energy_joules !== energyJoules ||
-      product.value.is_organic !== isOrganic ||
+      product.value.energyJoules !== fields.energyJoules ||
+      product.value.isOrganic !== fields.isOrganic ||
       product.value.barcode !== fields.barcode ||
       product.value.allergens.length !== fields.allergens.length ||
       product.value.allergens.some((allergen) => !submittedAllergens.has(allergen))
     if (shouldUpdateProductFields) {
-      await updateProduct(product.value.id, {
-        ...fields,
-        energy_joules: energyJoules,
-        is_organic: isOrganic,
-      })
+      await updateProduct(product.value.id, fields)
     }
     const shouldReplaceIngredients = !haveSameIngredients(initialIngredients.value, ingredients)
     if (shouldReplaceIngredients) {
-      await replaceProductIngredients(product.value.id, toIngredientWrites(ingredients))
+      await replaceProductIngredients(product.value.id, ingredients)
     }
     const shouldReplaceNutrients = !haveSameNutrients(initialNutrients.value, nutrients)
     if (shouldReplaceNutrients) {
-      await replaceProductNutrients(product.value.id, toNutrientWrites(nutrients))
+      await replaceProductNutrients(product.value.id, nutrients)
     }
     await commitImageChanges()
     await router.push({ name: 'product-detail', params: { id: product.value.id } })
@@ -192,9 +186,9 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
           base: product.base,
           brand: product.brand,
           description: product.description,
-          energyJoules: product.energy_joules,
+          energyJoules: product.energyJoules,
           allergens: product.allergens.filter(isKnownAllergen),
-          isOrganic: product.is_organic,
+          isOrganic: product.isOrganic,
           barcode: product.barcode,
           ingredients: initialIngredients,
           nutrients: initialNutrients,

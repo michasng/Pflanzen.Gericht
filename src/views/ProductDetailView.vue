@@ -39,7 +39,7 @@ const notFound = ref(false)
 const activeImageIndex = ref(0)
 
 const images = computed(() =>
-  [...(product.value?.images ?? [])].sort((a, b) => a.sort_order - b.sort_order),
+  [...(product.value?.images ?? [])].sort((a, b) => a.sortOrder - b.sortOrder),
 )
 
 const activeImage = computed(() => images.value[activeImageIndex.value] ?? null)
@@ -49,7 +49,7 @@ const sortedIngredients = computed(() =>
     (product.value?.ingredients ?? []).map((ingredient) => ({
       id: ingredient.id,
       name: ingredient.name,
-      fractionBasisPoints: ingredient.fraction_basis_points,
+      fractionBasisPoints: ingredient.fractionBasisPoints,
       comparator: ingredient.comparator as IngredientComparator,
     })),
   ),
@@ -65,7 +65,7 @@ const nutrientIndentClass = (name: string): string =>
 const nutrientLabel = (name: string): string =>
   NUTRIENT_PARENT_NAME.has(name) ? `davon ${name}` : name
 
-const currentReviews = computed(() => product.value?.reviews.filter((r) => r.is_current) ?? [])
+const currentReviews = computed(() => product.value?.reviews.filter((r) => r.isCurrent) ?? [])
 
 type ReviewKey = 'taste' | 'consistency' | 'appearance' | 'nutrition' | 'value'
 
@@ -107,7 +107,7 @@ const submitPriceReport = async (values: PriceReportFormValues): Promise<void> =
       values.observedAt,
     )
     const existing = product.value.priceReports.findIndex(
-      (r) => r.user_id === user.id && r.store === values.store && r.city_name === values.cityName,
+      (r) => r.userId === user.id && r.store === values.store && r.cityName === values.cityName,
     )
     if (existing >= 0) product.value.priceReports.splice(existing, 1, updated)
     else product.value.priceReports.unshift(updated)
@@ -193,7 +193,7 @@ watch(
         <div class="aspect-square bg-gray-100">
           <Image
             v-if="activeImage"
-            :src="getImageUrl('product-images', activeImage.storage_path, ImageSize.Large)"
+            :src="getImageUrl('product-images', activeImage.storagePath, ImageSize.Large)"
             :alt="product.name"
           />
           <div v-else class="w-full h-full flex items-center justify-center">
@@ -209,7 +209,7 @@ watch(
             @click="activeImageIndex = i"
           >
             <Image
-              :src="getImageUrl('product-images', img.storage_path, ImageSize.Thumbnail)"
+              :src="getImageUrl('product-images', img.storagePath, ImageSize.Thumbnail)"
               :alt="`Bild ${i + 1}`"
             />
           </button>
@@ -230,7 +230,7 @@ watch(
             {{ baseToLabel(product.base) }}
           </span>
           <span
-            v-if="product.is_organic"
+            v-if="product.isOrganic"
             class="text-xs bg-green-50 text-green-700 rounded-full px-2.5 py-0.5 font-medium"
           >
             Bio
@@ -261,17 +261,17 @@ watch(
       </div>
 
       <div
-        v-if="product.energy_joules != null || nutrients.length"
+        v-if="product.energyJoules != null || nutrients.length"
         class="mb-4 bg-white rounded-2xl border border-gray-100 p-4"
       >
         <h2 class="text-base font-bold text-gray-900 mb-2">Nährwerte</h2>
         <p class="text-xs text-gray-400 mb-2">pro 100 g/ml</p>
         <table class="w-full text-sm">
           <tbody class="divide-y divide-gray-50">
-            <tr v-if="product.energy_joules != null">
+            <tr v-if="product.energyJoules != null">
               <td class="py-1.5 pr-2 text-gray-600">Energie</td>
               <td class="py-1.5 text-right font-medium text-gray-900 tabular-nums">
-                {{ formatEnergy(product.energy_joules) }}
+                {{ formatEnergy(product.energyJoules) }}
               </td>
             </tr>
             <tr v-for="nutrient in nutrients" :key="nutrient.id">
@@ -279,7 +279,7 @@ watch(
                 {{ nutrientLabel(nutrient.name) }}
               </td>
               <td class="py-1.5 text-right font-medium text-gray-900 tabular-nums">
-                {{ formatNutrientAmount(nutrient.amount_micrograms) }}
+                {{ formatNutrientAmount(nutrient.amountMicrograms) }}
               </td>
             </tr>
           </tbody>
@@ -287,19 +287,19 @@ watch(
       </div>
 
       <div class="bg-white rounded-2xl border border-gray-100 p-4 mb-4">
-        <p v-if="product.reviews_count === 0" class="text-sm text-gray-400 text-center py-2">
+        <p v-if="product.reviewsCount === 0" class="text-sm text-gray-400 text-center py-2">
           Noch keine Bewertungen — sei der Erste!
         </p>
         <template v-else>
           <div class="flex items-center gap-4 mb-4">
             <span class="text-4xl font-bold text-gray-900 tabular-nums">
-              {{ product.avg_overall?.toFixed(1) }}
+              {{ product.avgOverall?.toFixed(1) }}
             </span>
             <div>
-              <StarDisplay :value="product.avg_overall" size="md" />
+              <StarDisplay :value="product.avgOverall" size="md" />
               <p class="text-xs text-gray-400 mt-0.5">
-                {{ product.reviews_count }}
-                Bewertung{{ product.reviews_count !== 1 ? 'en' : '' }}
+                {{ product.reviewsCount }}
+                Bewertung{{ product.reviewsCount !== 1 ? 'en' : '' }}
               </p>
             </div>
           </div>
@@ -357,23 +357,23 @@ watch(
           >
             <div>
               <span class="font-medium text-gray-800">{{ report.store }}</span>
-              <span v-if="report.city_name" class="text-gray-400 ml-1 text-xs">
-                · {{ report.city_name }}
+              <span v-if="report.cityName" class="text-gray-400 ml-1 text-xs">
+                · {{ report.cityName }}
               </span>
               <span class="ml-2 font-semibold text-gray-900">
-                {{ formatEuroCents(report.effective_price_euro_cents ?? report.price_euro_cents) }}
+                {{ formatEuroCents(report.effectivePriceEuroCents ?? report.priceEuroCents) }}
               </span>
               <span
-                v-if="report.sale_price_euro_cents != null"
+                v-if="report.salePriceEuroCents != null"
                 class="ml-1 line-through text-gray-400 text-xs"
               >
-                {{ formatEuroCents(report.price_euro_cents) }}
+                {{ formatEuroCents(report.priceEuroCents) }}
               </span>
             </div>
             <div class="flex items-center gap-3 text-xs text-gray-400">
-              <span>{{ report.observed_at }}</span>
+              <span>{{ report.observedAt }}</span>
               <button
-                v-if="authStore.isLoggedIn && report.user_id === authStore.user?.id"
+                v-if="authStore.isLoggedIn && report.userId === authStore.user?.id"
                 type="button"
                 class="text-red-400 hover:text-red-600 transition-colors"
                 aria-label="Eintrag löschen"
@@ -403,7 +403,7 @@ watch(
         </RouterLink>
         <div
           v-if="
-            authStore.isLoggedIn && (product.created_by === authStore.user?.id || authStore.isAdmin)
+            authStore.isLoggedIn && (product.createdBy === authStore.user?.id || authStore.isAdmin)
           "
           class="flex gap-2"
         >
@@ -434,7 +434,7 @@ watch(
             :review="review"
             :editable="
               authStore.isLoggedIn &&
-              (authStore.isAdmin || (review.user_id === authStore.user?.id && review.is_current))
+              (authStore.isAdmin || (review.userId === authStore.user?.id && review.isCurrent))
             "
           />
         </div>

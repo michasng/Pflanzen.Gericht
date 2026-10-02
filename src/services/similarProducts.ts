@@ -1,5 +1,9 @@
 import { canonicalizeProductPair } from '@/lib/canonicalizeProductPair'
+import { camelizeKeys } from '@/lib/camelizeKeys'
+import type { CamelCasedKeys } from '@/lib/CamelCasedKeys'
+import { snakeifyKeys } from '@/lib/snakeifyKeys'
 import type { ProductSimilarityVoteInsert } from '@/types'
+import type { TablesInsert } from '@/types/database'
 
 export interface SimilarProduct {
   id: string
@@ -7,23 +11,25 @@ export interface SimilarProduct {
   brand: string | null
   category: string
   base: string | null
-  is_organic: boolean
+  isOrganic: boolean
   allergens: string[]
-  avg_overall: number | null
-  avg_taste: number | null
-  avg_consistency: number | null
-  avg_appearance: number | null
-  avg_nutrition: number | null
-  avg_value: number | null
-  reviews_count: number
-  storage_path: string | null
-  agree_count: number
-  total_count: number
-  agreement_rate: number
-  my_vote: boolean | null
+  avgOverall: number | null
+  avgTaste: number | null
+  avgConsistency: number | null
+  avgAppearance: number | null
+  avgNutrition: number | null
+  avgValue: number | null
+  reviewsCount: number
+  storagePath: string | null
+  agreeCount: number
+  totalCount: number
+  agreementRate: number
+  myVote: boolean | null
 }
 
-export interface SimilarityCandidate {
+export type SimilarityCandidate = CamelCasedKeys<SimilarityCandidateRow>
+
+export interface SimilarityCandidateRow {
   id: string
   name: string
   brand: string | null
@@ -53,7 +59,7 @@ interface SimilarProductRow {
   total_count: number
 }
 
-export type SimilarityVoteHistory = Pick<ProductSimilarityVoteInsert, 'created_at' | 'updated_at'>
+export type SimilarityVoteHistory = Pick<ProductSimilarityVoteInsert, 'createdAt' | 'updatedAt'>
 
 export interface SimilarProductsDependencies {
   deleteVote: (query: { product_id_a: string; product_id_b: string; user_id?: string }) => Promise<{
@@ -67,11 +73,11 @@ export interface SimilarProductsDependencies {
     productId: string,
     search: string,
   ) => Promise<{
-    data: SimilarityCandidate[] | null
+    data: SimilarityCandidateRow[] | null
     error: unknown | null
   }>
   upsertVote: (
-    vote: ProductSimilarityVoteInsert,
+    vote: TablesInsert<'product_similarity_vote'>,
     options: { onConflict: string },
   ) => Promise<{ error: unknown | null }>
 }
@@ -86,20 +92,22 @@ export const createSimilarProductsService = (dependencies: SimilarProductsDepend
   const fetchSimilarProducts = async (productId: string): Promise<SimilarProduct[]> => {
     const { data, error } = await dependencies.fetchSimilarProductsRpc(productId)
     if (error) throw error
-    return (data ?? []).map((row) => ({
-      ...row,
-      allergens: row.allergens ?? [],
-      avg_appearance: row.avg_appearance ?? null,
-      avg_consistency: row.avg_consistency ?? null,
-      avg_nutrition: row.avg_nutrition ?? null,
-      avg_overall: row.avg_overall ?? null,
-      avg_taste: row.avg_taste ?? null,
-      avg_value: row.avg_value ?? null,
-      base: row.base ?? null,
-      brand: row.brand ?? null,
-      my_vote: row.my_vote ?? null,
-      storage_path: row.storage_path ?? null,
-    }))
+    return camelizeKeys(
+      (data ?? []).map((row) => ({
+        ...row,
+        allergens: row.allergens ?? [],
+        avg_appearance: row.avg_appearance ?? null,
+        avg_consistency: row.avg_consistency ?? null,
+        avg_nutrition: row.avg_nutrition ?? null,
+        avg_overall: row.avg_overall ?? null,
+        avg_taste: row.avg_taste ?? null,
+        avg_value: row.avg_value ?? null,
+        base: row.base ?? null,
+        brand: row.brand ?? null,
+        my_vote: row.my_vote ?? null,
+        storage_path: row.storage_path ?? null,
+      })),
+    )
   }
 
   const searchSimilarityCandidates = async (
@@ -110,11 +118,13 @@ export const createSimilarProductsService = (dependencies: SimilarProductsDepend
 
     const { data, error } = await dependencies.searchSimilarityCandidatesRpc(productId, search)
     if (error) throw error
-    return (data ?? []).map((row) => ({
-      ...row,
-      brand: row.brand ?? null,
-      storage_path: row.storage_path ?? null,
-    }))
+    return camelizeKeys(
+      (data ?? []).map((row) => ({
+        ...row,
+        brand: row.brand ?? null,
+        storage_path: row.storage_path ?? null,
+      })),
+    )
   }
 
   const voteSimilarity = async (
@@ -126,13 +136,13 @@ export const createSimilarProductsService = (dependencies: SimilarProductsDepend
   ): Promise<void> => {
     ensureDifferentProducts(productId, otherProductId)
     const [productIdA, productIdB] = canonicalizeProductPair(productId, otherProductId)
-    const vote: ProductSimilarityVoteInsert = {
+    const vote: TablesInsert<'product_similarity_vote'> = snakeifyKeys({
       ...history,
       agreed,
-      product_id_a: productIdA,
-      product_id_b: productIdB,
-      user_id: userId,
-    }
+      productIdA,
+      productIdB,
+      userId,
+    })
     const { error } = await dependencies.upsertVote(vote, {
       onConflict: 'product_id_a,product_id_b,user_id',
     })

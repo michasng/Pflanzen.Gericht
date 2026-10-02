@@ -1,6 +1,7 @@
 import { ref, type Ref } from 'vue'
+import type { ProductImage } from '@/types'
 
-type StoredImage = { id: string; storage_path: string; sort_order: number }
+type StoredImage = Pick<ProductImage, 'id' | 'storagePath' | 'sortOrder'>
 
 export const useImageUpload = <T extends StoredImage, S = never>(
   uploadFn: (file: File, sortOrder: number) => Promise<unknown>,
@@ -21,7 +22,7 @@ export const useImageUpload = <T extends StoredImage, S = never>(
   const commitImageChanges = async (): Promise<void> => {
     await Promise.all(stagedForDeletion.map((image) => deleteFn(image)))
     const nextSortOrder = existingImages.value.reduce(
-      (next, image) => Math.max(next, image.sort_order + 1),
+      (next, image) => Math.max(next, image.sortOrder + 1),
       0,
     )
     await Promise.all(

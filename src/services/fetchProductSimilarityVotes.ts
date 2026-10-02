@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { camelizeKeys } from '@/lib/camelizeKeys'
 import type { ProductSimilarityVote } from '@/types'
 
 export const fetchProductSimilarityVotes = async (
@@ -9,5 +10,5 @@ export const fetchProductSimilarityVotes = async (
     .select('*')
     .or(`product_id_a.eq.${productId},product_id_b.eq.${productId}`)
   if (error) throw error
-  return data ?? []
+  return camelizeKeys(data ?? [])
 }

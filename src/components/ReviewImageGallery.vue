@@ -10,9 +10,7 @@ const REVIEW_IMAGE_BUCKET = 'review-images'
 const props = defineProps<{ images: ReviewImage[] }>()
 
 const sortedImages = computed(() =>
-  [...props.images].sort(
-    (firstImage, secondImage) => firstImage.sort_order - secondImage.sort_order,
-  ),
+  [...props.images].sort((firstImage, secondImage) => firstImage.sortOrder - secondImage.sortOrder),
 )
 
 const selectedImage = ref<ReviewImage | null>(null)
@@ -33,7 +31,7 @@ const closeDialog = (): void => {
       @click="selectedImage = image"
     >
       <Image
-        :src="getImageUrl(REVIEW_IMAGE_BUCKET, image.storage_path, ImageSize.Thumbnail)"
+        :src="getImageUrl(REVIEW_IMAGE_BUCKET, image.storagePath, ImageSize.Thumbnail)"
         :alt="`Foto ${index + 1}`"
       />
     </button>
@@ -55,7 +53,7 @@ const closeDialog = (): void => {
         class="fixed inset-x-4 top-1/2 z-50 -translate-y-1/2 sm:mx-auto sm:max-w-md"
       >
         <Image
-          :src="getImageUrl(REVIEW_IMAGE_BUCKET, selectedImage.storage_path, ImageSize.Large)"
+          :src="getImageUrl(REVIEW_IMAGE_BUCKET, selectedImage.storagePath, ImageSize.Large)"
           alt="Foto in voller Größe"
           class="rounded-2xl"
         />

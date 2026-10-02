@@ -774,7 +774,7 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
           class="relative rounded-lg overflow-hidden bg-gray-100"
         >
           <Image
-            :src="getImageUrl('product-images', img.storage_path, ImageSize.Thumbnail)"
+            :src="getImageUrl('product-images', img.storagePath, ImageSize.Thumbnail)"
             alt=""
           />
           <button

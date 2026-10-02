@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import type { ProductSimilarityVoteInsert } from '@/types'
+import type { TablesInsert } from '@/types/database'
 import {
   createSimilarProductsService,
   type SimilarProductsDependencies,
-  type SimilarityCandidate,
+  type SimilarityCandidateRow,
 } from '../similarProducts'
 
 const PRODUCT_ID_A = 'a-product-id'
@@ -14,7 +14,7 @@ const createService = () => {
   const rpcCalls: Array<{ productId: string; search?: string }> = []
   const upsertCalls: Array<{
     options: { onConflict: string }
-    vote: ProductSimilarityVoteInsert
+    vote: TablesInsert<'product_similarity_vote'>
   }> = []
   const matchCalls: Array<{ product_id_a: string; product_id_b: string; user_id?: string }> = []
 
@@ -39,7 +39,7 @@ const createService = () => {
     storage_path: string | null
     total_count: number
   }> | null = null
-  let searchRows: SimilarityCandidate[] | null = null
+  let searchRows: SimilarityCandidateRow[] | null = null
 
   const dependencies: SimilarProductsDependencies = {
     deleteVote: async (query) => {
@@ -67,7 +67,7 @@ const createService = () => {
     setFetchRows: (rows: typeof fetchRows) => {
       fetchRows = rows
     },
-    setSearchRows: (rows: SimilarityCandidate[] | null) => {
+    setSearchRows: (rows: SimilarityCandidateRow[] | null) => {
       searchRows = rows
     },
     upsertCalls,
@@ -106,25 +106,25 @@ describe('createSimilarProductsService', () => {
     expect(rpcCalls).toEqual([{ productId: PRODUCT_ID_A }])
     expect(result).toEqual([
       {
-        agree_count: 3,
-        agreement_rate: 0.6,
+        agreeCount: 3,
+        agreementRate: 0.6,
         allergens: [],
-        avg_overall: null,
-        avg_taste: null,
-        avg_consistency: null,
-        avg_appearance: null,
-        avg_nutrition: null,
-        avg_value: null,
+        avgOverall: null,
+        avgTaste: null,
+        avgConsistency: null,
+        avgAppearance: null,
+        avgNutrition: null,
+        avgValue: null,
         base: null,
         brand: null,
         category: 'Milchalternative',
         id: PRODUCT_ID_B,
-        is_organic: true,
-        my_vote: null,
+        isOrganic: true,
+        myVote: null,
         name: 'Sojadrink',
-        reviews_count: 12,
-        storage_path: null,
-        total_count: 5,
+        reviewsCount: 12,
+        storagePath: null,
+        totalCount: 5,
       },
     ])
   })
@@ -164,7 +164,7 @@ describe('createSimilarProductsService', () => {
         category: 'Milchalternative',
         id: PRODUCT_ID_B,
         name: 'Haferdrink',
-        storage_path: null,
+        storagePath: null,
       },
     ])
   })

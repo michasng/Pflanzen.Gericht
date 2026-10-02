@@ -149,10 +149,7 @@ const handleSubmit = (): void => {
           :key="img.id"
           class="relative rounded-lg overflow-hidden bg-gray-100"
         >
-          <Image
-            :src="getImageUrl('review-images', img.storage_path, ImageSize.Thumbnail)"
-            alt=""
-          />
+          <Image :src="getImageUrl('review-images', img.storagePath, ImageSize.Thumbnail)" alt="" />
           <button
             type="button"
             class="absolute top-1 right-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"

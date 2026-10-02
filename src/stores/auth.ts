@@ -3,6 +3,8 @@ import { defineStore } from 'pinia'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { appBaseUrl } from '@/lib/appBaseUrl'
+import { camelizeKeys } from '@/lib/camelizeKeys'
+import { snakeifyKeys } from '@/lib/snakeifyKeys'
 import type { Profile } from '@/types'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -13,11 +15,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   const user = computed(() => session.value?.user ?? null)
   const isLoggedIn = computed(() => session.value !== null)
-  const isAdmin = computed(() => profile.value?.is_admin ?? false)
+  const isAdmin = computed(() => profile.value?.isAdmin ?? false)
 
   const fetchProfile = async (userId: string): Promise<void> => {
     const { data } = await supabase.from('profile').select('*').eq('id', userId).single()
-    profile.value = data
+    profile.value = data && camelizeKeys(data)
   }
 
   const init = async (): Promise<void> => {
@@ -52,7 +54,7 @@ export const useAuthStore = defineStore('auth', () => {
       email,
       password,
       options: {
-        data: { username, display_name: displayName },
+        data: snakeifyKeys({ username, displayName }),
         emailRedirectTo: appBaseUrl(),
       },
     })

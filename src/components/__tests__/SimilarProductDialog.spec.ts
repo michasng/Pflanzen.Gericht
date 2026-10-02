@@ -9,25 +9,25 @@ import SimilarProductDialog from '@/components/SimilarProductDialog.vue'
 import type { SimilarProduct } from '@/services/similarProducts'
 
 const similarProduct: SimilarProduct = {
-  agree_count: 4,
-  agreement_rate: 0.8,
+  agreeCount: 4,
+  agreementRate: 0.8,
   allergens: ['soy'],
-  avg_appearance: 3.8,
-  avg_consistency: 4.0,
-  avg_nutrition: 3.6,
-  avg_overall: 4.2,
-  avg_taste: 4.4,
-  avg_value: 4.1,
+  avgAppearance: 3.8,
+  avgConsistency: 4.0,
+  avgNutrition: 3.6,
+  avgOverall: 4.2,
+  avgTaste: 4.4,
+  avgValue: 4.1,
   base: 'soy',
   brand: 'Marke',
   category: 'drink',
   id: 'product-2',
-  is_organic: true,
-  my_vote: true,
+  isOrganic: true,
+  myVote: true,
   name: 'Soja Drink',
-  reviews_count: 12,
-  storage_path: null,
-  total_count: 5,
+  reviewsCount: 12,
+  storagePath: null,
+  totalCount: 5,
 }
 
 describe('SimilarProductDialog', () => {
@@ -64,7 +64,7 @@ describe('SimilarProductDialog', () => {
           isBusy: false,
           isLoggedIn: true,
           loginRedirectPath: '/product/1',
-          product: { ...similarProduct, my_vote: null },
+          product: { ...similarProduct, myVote: null },
         },
         global: {
           stubs: {

@@ -141,7 +141,7 @@ const handleVote = async (agreed: boolean): Promise<void> => {
   dialogError.value = null
   actionPending.value = true
   try {
-    if (similarProduct.my_vote === agreed) {
+    if (similarProduct.myVote === agreed) {
       await removeSimilarityVote(props.productId, similarProduct.id, user.id)
     } else {
       await voteSimilarity(props.productId, similarProduct.id, agreed, user.id)
@@ -172,8 +172,8 @@ const handleAdminRemove = async (): Promise<void> => {
 }
 
 const suggestionImageUrl = (candidate: SimilarityCandidate): string | null =>
-  candidate.storage_path
-    ? getImageUrl('product-images', candidate.storage_path, ImageSize.Thumbnail)
+  candidate.storagePath
+    ? getImageUrl('product-images', candidate.storagePath, ImageSize.Thumbnail)
     : null
 
 const selectHighlightedSuggestion = (event: KeyboardEvent): void => {

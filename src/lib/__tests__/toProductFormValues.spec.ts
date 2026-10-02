@@ -4,38 +4,38 @@ import type { Product, ProductIngredient, ProductNutrient } from '@/types'
 
 const product: Product = {
   allergens: ['soy', 'unknown'],
-  avg_overall: null,
+  avgOverall: null,
   barcode: null,
   base: null,
   brand: 'Alpro',
   category: 'drink',
-  created_at: '2026-01-01T00:00:00Z',
-  created_by: 'user-1',
+  createdAt: '2026-01-01T00:00:00Z',
+  createdBy: 'user-1',
   description: null,
-  energy_joules: 100,
+  energyJoules: 100,
   id: 'product',
-  is_organic: true,
-  min_price_euro_cents: null,
+  isOrganic: true,
+  minPriceEuroCents: null,
   name: 'Drink',
-  normalized_name: 'drink',
-  reviews_count: 0,
+  normalizedName: 'drink',
+  reviewsCount: 0,
   tags: [],
-  updated_at: '2026-01-01T00:00:00Z',
+  updatedAt: '2026-01-01T00:00:00Z',
 }
 const ingredient: ProductIngredient = {
   comparator: '≥',
-  created_at: '2026-01-01T00:00:00Z',
-  fraction_basis_points: 500,
+  createdAt: '2026-01-01T00:00:00Z',
+  fractionBasisPoints: 500,
   id: 'ingredient',
   name: 'Soja',
-  product_id: 'product',
+  productId: 'product',
 }
 const nutrient: ProductNutrient = {
-  amount_micrograms: 1000,
-  created_at: '2026-01-01T00:00:00Z',
+  amountMicrograms: 1000,
+  createdAt: '2026-01-01T00:00:00Z',
   id: 'nutrient',
   name: 'Fett',
-  product_id: 'product',
+  productId: 'product',
 }
 
 describe('toProductFormValues', () => {

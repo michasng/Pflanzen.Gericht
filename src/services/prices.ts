@@ -1,8 +1,15 @@
 import { supabase } from '@/lib/supabase'
+import { camelizeKeys } from '@/lib/camelizeKeys'
+import { snakeifyKeys } from '@/lib/snakeifyKeys'
 import type { PriceReport } from '@/types'
 
 export type PriceReportWithProfile = PriceReport & {
-  profile: { username: string; display_name: string | null }
+  profile: { username: string; displayName: string | null }
+}
+
+interface ProfileRow {
+  username: string
+  display_name: string | null
 }
 
 export const fetchPriceReports = async (productId: string): Promise<PriceReportWithProfile[]> => {
@@ -13,10 +20,7 @@ export const fetchPriceReports = async (productId: string): Promise<PriceReportW
     .order('observed_at', { ascending: false })
     .order('created_at', { ascending: false })
   if (error) throw error
-  return (data ?? []).map((r) => ({
-    ...r,
-    profile: r.profile as { username: string; display_name: string | null },
-  }))
+  return camelizeKeys((data ?? []).map((r) => ({ ...r, profile: r.profile as ProfileRow })))
 }
 
 export const upsertPriceReport = async (
@@ -32,25 +36,31 @@ export const upsertPriceReport = async (
   const { data, error } = await supabase
     .from('price_report')
     .upsert(
-      {
-        product_id: productId,
-        user_id: userId,
+      snakeifyKeys({
+        productId,
+        userId,
         store,
-        city_name: cityName,
-        price_euro_cents: priceEuroCents,
-        sale_price_euro_cents: salePriceEuroCents,
-        observed_at: observedAt,
-        created_at: createdAt,
-      },
+        cityName,
+        priceEuroCents,
+        salePriceEuroCents,
+        observedAt,
+        createdAt,
+      }),
       { onConflict: 'product_id,user_id,store,city_name' },
     )
     .select('*, profile:user_id(username, display_name)')
     .single()
   if (error) throw error
-  return {
-    ...data,
-    profile: data.profile as { username: string; display_name: string | null },
-  }
+  return camelizeKeys({ ...data, profile: data.profile as ProfileRow })
+}
+
+export const fetchPriceReportCityNames = async (store: string): Promise<string[]> => {
+  const { data } = await supabase
+    .from('price_report')
+    .select('city_name')
+    .eq('store', store)
+    .neq('city_name', '')
+  return [...new Set((data ?? []).map((row) => row.city_name))].sort()
 }
 
 export const deletePriceReport = async (id: string): Promise<void> => {

@@ -189,7 +189,7 @@ const handleDeleteReview = async (id: string): Promise<void> => {
                     <span v-if="product.brand"> · {{ product.brand }}</span>
                   </p>
                   <p class="text-xs text-gray-400 mt-0.5">
-                    {{ product.reviews_count }} Bewertungen · {{ formatDate(product.created_at) }}
+                    {{ product.reviewsCount }} Bewertungen · {{ formatDate(product.createdAt) }}
                   </p>
                 </div>
                 <div class="flex gap-2 shrink-0">
@@ -245,13 +245,13 @@ const handleDeleteReview = async (id: string): Promise<void> => {
                   <p class="text-sm text-gray-500 mt-0.5">
                     von
                     <RouterLink
-                      :to="{ name: 'profile-public', params: { id: review.user_id } }"
+                      :to="{ name: 'profile-public', params: { id: review.userId } }"
                       class="hover:text-primary-600 transition-colors"
                     >
                       {{ review.profile.username }}
                     </RouterLink>
                     <Chip
-                      v-if="!review.is_current"
+                      v-if="!review.isCurrent"
                       class="ml-2"
                       :size="ChipSize.Tight"
                       :tone="ChipTone.Muted"
@@ -261,7 +261,7 @@ const handleDeleteReview = async (id: string): Promise<void> => {
                   </p>
                   <div class="flex items-center gap-2 mt-1">
                     <StarDisplay :value="review.overall" />
-                    <span class="text-xs text-gray-400">{{ formatDate(review.created_at) }}</span>
+                    <span class="text-xs text-gray-400">{{ formatDate(review.createdAt) }}</span>
                   </div>
                 </div>
                 <div class="flex gap-2 shrink-0">

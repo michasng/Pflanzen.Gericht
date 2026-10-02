@@ -74,14 +74,12 @@ onMounted(async () => {
         </div>
         <div class="min-w-0">
           <p class="font-bold text-gray-900 text-lg leading-tight truncate">
-            {{ profile.display_name || profile.username }}
+            {{ profile.displayName || profile.username }}
           </p>
-          <p v-if="profile.display_name" class="text-sm text-gray-500 truncate">
+          <p v-if="profile.displayName" class="text-sm text-gray-500 truncate">
             @{{ profile.username }}
           </p>
-          <p class="text-xs text-gray-400 mt-0.5">
-            Dabei seit {{ formatDate(profile.created_at) }}
-          </p>
+          <p class="text-xs text-gray-400 mt-0.5">Dabei seit {{ formatDate(profile.createdAt) }}</p>
         </div>
       </div>
 
@@ -131,7 +129,7 @@ onMounted(async () => {
 
               <div class="flex items-center gap-2 mb-2">
                 <StarDisplay :value="review.overall" />
-                <span class="text-xs text-gray-400">{{ formatDate(review.created_at) }}</span>
+                <span class="text-xs text-gray-400">{{ formatDate(review.createdAt) }}</span>
               </div>
 
               <TagList :tags="review.tags" class="mb-2" />

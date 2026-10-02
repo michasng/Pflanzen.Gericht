@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { camelizeKeys } from '@/lib/camelizeKeys'
 import type {
   Product,
   ProductImage,
@@ -7,6 +8,7 @@ import type {
   Review,
   ReviewImage,
 } from '@/types'
+import type { Tables } from '@/types/database'
 import { fetchPriceReports, type PriceReportWithProfile } from '@/services/prices'
 import type { SortOption } from '@/config/sortOptions'
 import { ImageSize } from '@/config/imageSizes'
@@ -38,7 +40,7 @@ export interface ProductPage {
 }
 
 export type ReviewWithDetails = Review & {
-  profile: { username: string; display_name: string | null }
+  profile: { username: string; displayName: string | null }
   tags: string[]
   images: ReviewImage[]
 }
@@ -90,28 +92,30 @@ export const fetchProducts = async (filter: CatalogFilter, page = 0): Promise<Pr
           })
       : []
 
-  const imagesByProduct = new Map<string, ProductImage[]>()
+  const imagesByProduct = new Map<string, Tables<'product_image'>[]>()
   for (const img of images) {
     const list = imagesByProduct.get(img.product_id) ?? []
-    list.push(img as ProductImage)
+    list.push(img)
     imagesByProduct.set(img.product_id, list)
   }
 
   return {
-    items: rows.map((r) => ({
-      ...r,
-      avg_overall: r.avg_overall ?? null,
-      barcode: null,
-      brand: r.brand ?? null,
-      base: r.base ?? null,
-      description: r.description ?? null,
-      energy_joules: r.energy_joules ?? null,
-      min_price_euro_cents: r.min_price_euro_cents ?? null,
-      normalized_name: r.normalized_name ?? null,
-      allergens: r.allergens ?? [],
-      is_organic: r.is_organic ?? false,
-      images: imagesByProduct.get(r.id) ?? [],
-    })),
+    items: rows.map((r) =>
+      camelizeKeys({
+        ...r,
+        avg_overall: r.avg_overall ?? null,
+        barcode: null,
+        brand: r.brand ?? null,
+        base: r.base ?? null,
+        description: r.description ?? null,
+        energy_joules: r.energy_joules ?? null,
+        min_price_euro_cents: r.min_price_euro_cents ?? null,
+        normalized_name: r.normalized_name ?? null,
+        allergens: r.allergens ?? [],
+        is_organic: r.is_organic ?? false,
+        images: imagesByProduct.get(r.id) ?? [],
+      }),
+    ),
     total,
   }
 }
@@ -143,16 +147,18 @@ export const fetchProductDetail = async (id: string): Promise<ProductDetail | nu
   if (!p) return null
 
   return {
-    ...p,
-    images: (p.images as ProductImage[] | null) ?? [],
-    ingredients: (p.ingredients as ProductIngredient[] | null) ?? [],
-    nutrients: (p.nutrients as ProductNutrient[] | null) ?? [],
-    reviews: (rawReviews ?? []).map((r) => ({
-      ...r,
-      profile: r.profile as { username: string; display_name: string | null },
-      tags: ((r.tags ?? []) as { tag: string }[]).map((t) => t.tag),
-      images: (r.images as ReviewImage[] | null) ?? [],
-    })),
+    ...camelizeKeys({
+      ...p,
+      images: (p.images as Tables<'product_image'>[] | null) ?? [],
+      ingredients: (p.ingredients as Tables<'product_ingredient'>[] | null) ?? [],
+      nutrients: (p.nutrients as Tables<'product_nutrient'>[] | null) ?? [],
+      reviews: (rawReviews ?? []).map((r) => ({
+        ...r,
+        profile: r.profile as { username: string; display_name: string | null },
+        tags: ((r.tags ?? []) as { tag: string }[]).map((t) => t.tag),
+        images: (r.images as Tables<'review_image'>[] | null) ?? [],
+      })),
+    }),
     priceReports,
   }
 }

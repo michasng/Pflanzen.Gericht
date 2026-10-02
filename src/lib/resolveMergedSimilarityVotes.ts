@@ -12,14 +12,14 @@ export const resolveMergedSimilarityVotes = (
   const affirmativeFirst = [...votes].sort((a, b) => Number(b.agreed) - Number(a.agreed))
   for (const vote of affirmativeFirst) {
     const [productIdA, productIdB] = canonicalizeProductPair(
-      toMergedId(vote.product_id_a),
-      toMergedId(vote.product_id_b),
+      toMergedId(vote.productIdA),
+      toMergedId(vote.productIdB),
     )
     if (productIdA === productIdB) continue
-    const key = JSON.stringify([productIdA, productIdB, vote.user_id])
+    const key = JSON.stringify([productIdA, productIdB, vote.userId])
     const existing = voteByKey.get(key)
-    if (!existing || vote.updated_at > existing.updated_at) {
-      voteByKey.set(key, { ...vote, product_id_a: productIdA, product_id_b: productIdB })
+    if (!existing || vote.updatedAt > existing.updatedAt) {
+      voteByKey.set(key, { ...vote, productIdA, productIdB })
     }
   }
   return [...voteByKey.values()].sort((a, b) => Number(b.agreed) - Number(a.agreed))

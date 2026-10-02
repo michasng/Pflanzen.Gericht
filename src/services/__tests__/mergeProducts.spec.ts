@@ -13,83 +13,83 @@ import type { ReviewWithDetails } from '../reviews'
 const MERGED_ID = 'merged'
 const MERGED_PRODUCT: Product = {
   allergens: [],
-  avg_overall: null,
+  avgOverall: null,
   barcode: null,
   base: null,
   brand: null,
   category: 'drink',
-  created_at: '2026-01-01T00:00:00Z',
-  created_by: 'owner',
+  createdAt: '2026-01-01T00:00:00Z',
+  createdBy: 'owner',
   description: null,
-  energy_joules: null,
+  energyJoules: null,
   id: MERGED_ID,
-  is_organic: false,
-  min_price_euro_cents: null,
+  isOrganic: false,
+  minPriceEuroCents: null,
   name: 'Merged',
-  normalized_name: 'merged',
-  reviews_count: 0,
+  normalizedName: 'merged',
+  reviewsCount: 0,
   tags: [],
-  updated_at: '2026-01-01T00:00:00Z',
+  updatedAt: '2026-01-01T00:00:00Z',
 }
 
 const buildReview = (overrides: Partial<ReviewWithDetails>): ReviewWithDetails => ({
   appearance: null,
   comment: null,
   consistency: null,
-  created_at: '2026-01-01T00:00:00Z',
+  createdAt: '2026-01-01T00:00:00Z',
   id: 'review',
   images: [],
-  is_current: true,
+  isCurrent: true,
   nutrition: null,
   overall: 4,
-  product_id: 'a',
+  productId: 'a',
   taste: null,
   tags: [],
-  updated_at: '2026-01-01T00:00:00Z',
-  user_id: 'user-1',
+  updatedAt: '2026-01-01T00:00:00Z',
+  userId: 'user-1',
   value: null,
   ...overrides,
 })
 
 const buildPriceReport = (overrides: Partial<PriceReport>): PriceReport => ({
-  city_name: 'Berlin',
-  created_at: '2026-01-01T00:00:00Z',
-  effective_price_euro_cents: 100,
+  cityName: 'Berlin',
+  createdAt: '2026-01-01T00:00:00Z',
+  effectivePriceEuroCents: 100,
   id: 'report',
-  observed_at: '2026-01-01',
-  price_euro_cents: 100,
-  product_id: 'a',
-  sale_price_euro_cents: null,
+  observedAt: '2026-01-01',
+  priceEuroCents: 100,
+  productId: 'a',
+  salePriceEuroCents: null,
   store: 'Rewe',
-  user_id: 'user-1',
+  userId: 'user-1',
   ...overrides,
 })
 
 const buildVote = (overrides: Partial<ProductSimilarityVote>): ProductSimilarityVote => ({
   agreed: true,
-  created_at: '2026-01-01T00:00:00Z',
+  createdAt: '2026-01-01T00:00:00Z',
   id: 'vote',
-  product_id_a: 'a',
-  product_id_b: 'x',
-  updated_at: '2026-01-01T00:00:00Z',
-  user_id: 'user-1',
+  productIdA: 'a',
+  productIdB: 'x',
+  updatedAt: '2026-01-01T00:00:00Z',
+  userId: 'user-1',
   ...overrides,
 })
 
 const buildImage = (id: string): ProductImage => ({
-  created_at: '2026-01-01T00:00:00Z',
+  createdAt: '2026-01-01T00:00:00Z',
   id,
-  product_id: 'a',
-  sort_order: 0,
-  storage_path: `user/a/${id}`,
+  productId: 'a',
+  sortOrder: 0,
+  storagePath: `user/a/${id}`,
 })
 
 const buildReviewImage = (id: string): ReviewImage => ({
-  created_at: '2026-01-01T00:00:00Z',
+  createdAt: '2026-01-01T00:00:00Z',
   id,
-  review_id: 'new',
-  sort_order: 0,
-  storage_path: `user/new/${id}`,
+  reviewId: 'new',
+  sortOrder: 0,
+  storagePath: `user/new/${id}`,
 })
 
 interface FakeData {
@@ -127,10 +127,10 @@ const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGatewa
       await record('copyImage')
       copiedImages.push({ image, ownerId, sortOrder })
     },
-    fetchReviews: async (id) => data.reviews.filter((review) => review.product_id === id),
+    fetchReviews: async (id) => data.reviews.filter((review) => review.productId === id),
     createReview: async (_productId, _userId, _fields, tags, history) => {
       await record('createReview')
-      createdReviews.push({ createdAt: history?.created_at, tags })
+      createdReviews.push({ createdAt: history?.createdAt, tags })
       return buildReview({ id: `copy-${createdReviews.length}` })
     },
     copyReviewImage: async (image) => {
@@ -139,8 +139,8 @@ const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGatewa
     },
     fetchPriceReports: async (id) =>
       data.priceReports
-        .filter((r) => r.product_id === id)
-        .map((r) => ({ ...r, profile: { username: 'user', display_name: null } })),
+        .filter((r) => r.productId === id)
+        .map((r) => ({ ...r, profile: { username: 'user', displayName: null } })),
     upsertPriceReport: async (
       _productId,
       _userId,
@@ -155,10 +155,10 @@ const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGatewa
       upsertedPriceReports.push([observedAt, createdAt])
     },
     fetchSimilarityVotes: async (id) =>
-      data.votes.filter((vote) => vote.product_id_a === id || vote.product_id_b === id),
+      data.votes.filter((vote) => vote.productIdA === id || vote.productIdB === id),
     voteSimilarity: async (productId, otherProductId, _agreed, _userId, history) => {
       await record('voteSimilarity')
-      votes.push([productId, otherProductId, history?.created_at])
+      votes.push([productId, otherProductId, history?.createdAt])
     },
     deleteProduct: (id) => record('deleteProduct', `:${id}`),
   }
@@ -201,31 +201,31 @@ describe('mergeProducts', () => {
     it('combines them and deletes the originals last', async () => {
       const fake = buildFakeGateway({
         reviews: [
-          buildReview({ id: 'old', product_id: 'a' }),
+          buildReview({ id: 'old', productId: 'a' }),
           buildReview({
             id: 'new',
-            product_id: 'b',
-            created_at: '2026-05-01T00:00:00Z',
+            productId: 'b',
+            createdAt: '2026-05-01T00:00:00Z',
             tags: ['sweet'],
             images: [buildReviewImage('photo')],
           }),
         ],
         priceReports: [
-          buildPriceReport({ id: 'old', product_id: 'a' }),
+          buildPriceReport({ id: 'old', productId: 'a' }),
           buildPriceReport({
             id: 'new',
-            product_id: 'b',
-            observed_at: '2026-05-01',
-            created_at: '2026-05-02T00:00:00Z',
+            productId: 'b',
+            observedAt: '2026-05-01',
+            createdAt: '2026-05-02T00:00:00Z',
           }),
         ],
         votes: [
-          buildVote({ id: 'self', product_id_a: 'a', product_id_b: 'b' }),
+          buildVote({ id: 'self', productIdA: 'a', productIdB: 'b' }),
           buildVote({
             id: 'kept',
-            product_id_a: 'a',
-            product_id_b: 'x',
-            created_at: '2026-03-01T00:00:00Z',
+            productIdA: 'a',
+            productIdB: 'x',
+            createdAt: '2026-03-01T00:00:00Z',
           }),
         ],
       })

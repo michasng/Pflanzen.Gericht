@@ -1,4 +1,6 @@
 import { supabase } from '@/lib/supabase'
+import { camelizeKeys } from '@/lib/camelizeKeys'
+import { snakeifyKeys } from '@/lib/snakeifyKeys'
 import { generateSquareImageVariants } from '@/lib/generateSquareImageVariants'
 import { deleteImageVariants, persistImageVariants } from '@/lib/imageVariantStorage'
 import {
@@ -15,48 +17,33 @@ import type {
   ReviewImage,
 } from '@/types'
 import type { ProductListItem } from '@/services/catalog'
+import type { Tables } from '@/types/database'
 import type { IngredientWrite, NutrientWrite } from '@/types/productWrites'
 
 const DELETE_PRODUCT_NOT_AUTHORIZED_ERROR_MESSAGE = 'Not authorized to delete this product.'
 
-const getIngredientSignature = (ingredient: {
-  name: string
-  comparator: string
-  fractionBasisPoints: number | null
-}): string =>
+type ProductImageRow = Tables<'product_image'>
+
+const getIngredientSignature = (
+  ingredient: Pick<IngredientWrite, 'name' | 'comparator' | 'fractionBasisPoints'>,
+): string =>
   `${ingredient.name}|${ingredient.comparator}|${ingredient.fractionBasisPoints === null ? '' : ingredient.fractionBasisPoints}`
 
 const haveSameIngredientEntries = (
-  existingIngredients: Pick<ProductIngredient, 'name' | 'fraction_basis_points' | 'comparator'>[],
+  existingIngredients: Pick<ProductIngredient, 'name' | 'fractionBasisPoints' | 'comparator'>[],
   nextIngredients: IngredientWrite[],
 ): boolean => {
   if (existingIngredients.length !== nextIngredients.length) return false
-  const existingSignatures = existingIngredients
-    .map((ingredient) =>
-      getIngredientSignature({
-        name: ingredient.name,
-        comparator: ingredient.comparator,
-        fractionBasisPoints: ingredient.fraction_basis_points,
-      }),
-    )
-    .sort()
-  const nextSignatures = nextIngredients
-    .map((ingredient) =>
-      getIngredientSignature({
-        name: ingredient.name,
-        comparator: ingredient.comparator,
-        fractionBasisPoints: ingredient.fraction_basis_points,
-      }),
-    )
-    .sort()
+  const existingSignatures = existingIngredients.map(getIngredientSignature).sort()
+  const nextSignatures = nextIngredients.map(getIngredientSignature).sort()
   return existingSignatures.every((signature, index) => signature === nextSignatures[index])
 }
 
 const getNutrientSignature = (nutrient: NutrientWrite): string =>
-  `${nutrient.name}|${nutrient.amount_micrograms}`
+  `${nutrient.name}|${nutrient.amountMicrograms}`
 
 const haveSameNutrientEntries = (
-  existingNutrients: Pick<ProductNutrient, 'name' | 'amount_micrograms'>[],
+  existingNutrients: Pick<ProductNutrient, 'name' | 'amountMicrograms'>[],
   nextNutrients: NutrientWrite[],
 ): boolean => {
   if (existingNutrients.length !== nextNutrients.length) return false
@@ -69,7 +56,7 @@ export const fetchProduct = async (id: string): Promise<Product | null> => {
   const { data, error } = await supabase.from('product').select('*').eq('id', id).single()
   if (error?.code === 'PGRST116') return null
   if (error) throw error
-  return data
+  return camelizeKeys(data)
 }
 
 export const fetchProductImages = async (productId: string): Promise<ProductImage[]> => {
@@ -79,7 +66,7 @@ export const fetchProductImages = async (productId: string): Promise<ProductImag
     .eq('product_id', productId)
     .order('sort_order')
   if (error) throw error
-  return data ?? []
+  return camelizeKeys(data ?? [])
 }
 
 export const searchSimilarProducts = async (
@@ -92,7 +79,7 @@ export const searchSimilarProducts = async (
     .ilike('normalized_name', `%${name.trim().toLowerCase()}%`)
     .limit(5)
   if (error) throw error
-  return data ?? []
+  return camelizeKeys(data ?? [])
 }
 
 export const createProduct = async (
@@ -103,20 +90,20 @@ export const createProduct = async (
     | 'base'
     | 'brand'
     | 'description'
-    | 'energy_joules'
+    | 'energyJoules'
     | 'allergens'
-    | 'is_organic'
+    | 'isOrganic'
     | 'barcode'
   >,
   userId: string,
 ): Promise<Product> => {
   const { data, error } = await supabase
     .from('product')
-    .insert({ ...fields, created_by: userId })
+    .insert(snakeifyKeys({ ...fields, createdBy: userId }))
     .select()
     .single()
   if (error) throw error
-  return data
+  return camelizeKeys(data)
 }
 
 export const updateProduct = async (
@@ -128,13 +115,13 @@ export const updateProduct = async (
     | 'base'
     | 'brand'
     | 'description'
-    | 'energy_joules'
+    | 'energyJoules'
     | 'allergens'
-    | 'is_organic'
+    | 'isOrganic'
     | 'barcode'
   >,
 ): Promise<void> => {
-  const { error } = await supabase.from('product').update(updates).eq('id', id)
+  const { error } = await supabase.from('product').update(snakeifyKeys(updates)).eq('id', id)
   if (error) throw error
 }
 
@@ -144,7 +131,7 @@ export const fetchProductIngredients = async (productId: string): Promise<Produc
     .select('*')
     .eq('product_id', productId)
   if (error) throw error
-  return data ?? []
+  return camelizeKeys(data ?? [])
 }
 
 export const replaceProductIngredients = async (
@@ -156,7 +143,7 @@ export const replaceProductIngredients = async (
     .select('name, fraction_basis_points, comparator')
     .eq('product_id', productId)
   if (fetchError) throw fetchError
-  if (haveSameIngredientEntries(existingIngredients ?? [], ingredients)) return
+  if (haveSameIngredientEntries(camelizeKeys(existingIngredients ?? []), ingredients)) return
 
   const { error: deleteError } = await supabase
     .from('product_ingredient')
@@ -166,7 +153,7 @@ export const replaceProductIngredients = async (
   if (!ingredients.length) return
   const { error: insertError } = await supabase
     .from('product_ingredient')
-    .insert(ingredients.map((ingredient) => ({ ...ingredient, product_id: productId })))
+    .insert(ingredients.map((ingredient) => snakeifyKeys({ ...ingredient, productId })))
   if (insertError) throw insertError
 }
 
@@ -182,7 +169,7 @@ export const fetchProductNutrients = async (productId: string): Promise<ProductN
     .select('*')
     .eq('product_id', productId)
   if (error) throw error
-  return data ?? []
+  return camelizeKeys(data ?? [])
 }
 
 export const replaceProductNutrients = async (
@@ -194,7 +181,7 @@ export const replaceProductNutrients = async (
     .select('name, amount_micrograms')
     .eq('product_id', productId)
   if (fetchError) throw fetchError
-  if (haveSameNutrientEntries(existingNutrients ?? [], nutrients)) return
+  if (haveSameNutrientEntries(camelizeKeys(existingNutrients ?? []), nutrients)) return
 
   const { error: deleteError } = await supabase
     .from('product_nutrient')
@@ -204,7 +191,7 @@ export const replaceProductNutrients = async (
   if (!nutrients.length) return
   const { error: insertError } = await supabase
     .from('product_nutrient')
-    .insert(nutrients.map((nutrient) => ({ ...nutrient, product_id: productId })))
+    .insert(nutrients.map((nutrient) => snakeifyKeys({ ...nutrient, productId })))
   if (insertError) throw insertError
 }
 
@@ -243,19 +230,19 @@ export const uploadProductImage = async (
         .select()
         .single()
       if (error) throw error
-      return data
+      return camelizeKeys(data)
     },
   )
 }
 
-const copyImageToProduct = (
+const copyImageToProduct = async (
   source: StoredImageLocation,
   productId: string,
   userId: string,
   sortOrder: number,
 ): Promise<ProductImage> => {
   const storagePath = `${userId}/${productId}/${crypto.randomUUID()}`
-  return copyStoredImageWithRecord(
+  const copiedImage = await copyStoredImageWithRecord<ProductImageRow>(
     source,
     { bucketName: 'product-images', storagePath },
     () =>
@@ -266,6 +253,7 @@ const copyImageToProduct = (
         .single(),
     () => supabase.from('product_image').select('id').eq('storage_path', storagePath).maybeSingle(),
   )
+  return camelizeKeys(copiedImage)
 }
 
 export const copyReviewImageToProduct = (
@@ -275,7 +263,7 @@ export const copyReviewImageToProduct = (
   sortOrder: number,
 ): Promise<ProductImage> =>
   copyImageToProduct(
-    { bucketName: 'review-images', storagePath: reviewImage.storage_path },
+    { bucketName: 'review-images', storagePath: reviewImage.storagePath },
     productId,
     userId,
     sortOrder,
@@ -288,7 +276,7 @@ export const copyProductImageToProduct = (
   sortOrder: number,
 ): Promise<ProductImage> =>
   copyImageToProduct(
-    { bucketName: 'product-images', storagePath: productImage.storage_path },
+    { bucketName: 'product-images', storagePath: productImage.storagePath },
     productId,
     userId,
     sortOrder,
@@ -383,8 +371,10 @@ export const fetchAllProductsForAdmin = async (page = 0): Promise<ProductListIte
     .order('created_at', { ascending: false })
     .range(page * ADMIN_PAGE_SIZE, (page + 1) * ADMIN_PAGE_SIZE - 1)
   if (error) throw error
-  return (data ?? []).map((p) => ({
-    ...p,
-    images: (p.images as ProductImage[] | null) ?? [],
-  }))
+  return camelizeKeys(
+    (data ?? []).map((p) => ({
+      ...p,
+      images: (p.images as ProductImageRow[] | null) ?? [],
+    })),
+  )
 }

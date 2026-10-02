@@ -16,18 +16,18 @@ export const toProductFormValues = (
   base: product.base,
   brand: product.brand,
   description: product.description,
-  energyJoules: product.energy_joules,
+  energyJoules: product.energyJoules,
   allergens: product.allergens.filter(isKnownAllergen),
-  isOrganic: product.is_organic,
+  isOrganic: product.isOrganic,
   barcode: product.barcode,
   ingredients: ingredients.map((ingredient) => ({
     name: ingredient.name,
-    fractionBasisPoints: ingredient.fraction_basis_points,
+    fractionBasisPoints: ingredient.fractionBasisPoints,
     // The database stores the comparator as plain text; the form only accepts the known values.
     comparator: ingredient.comparator as IngredientComparator,
   })),
   nutrients: nutrients.map((nutrient) => ({
     name: nutrient.name,
-    amountMicrograms: nutrient.amount_micrograms,
+    amountMicrograms: nutrient.amountMicrograms,
   })),
 })

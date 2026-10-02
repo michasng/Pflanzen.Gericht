@@ -1,8 +1,6 @@
 import { resolveMergedPriceReports } from '@/lib/resolveMergedPriceReports'
 import { resolveMergedReviews } from '@/lib/resolveMergedReviews'
 import { resolveMergedSimilarityVotes } from '@/lib/resolveMergedSimilarityVotes'
-import { toIngredientWrites } from '@/lib/toIngredientWrites'
-import { toNutrientWrites } from '@/lib/toNutrientWrites'
 import { toReviewFields } from '@/lib/toReviewFields'
 import type { MergedProductFields, ProductMergeGateway } from '@/services/ProductMergeGateway'
 import type { Product, ProductImage } from '@/types'
@@ -22,8 +20,8 @@ const fillMergedProduct = async (
   mergedProduct: Product,
   { productIds, values, acceptedImages, ownerId }: MergeProductsInput,
 ): Promise<void> => {
-  await gateway.replaceIngredients(mergedProduct.id, toIngredientWrites(values.ingredients))
-  await gateway.replaceNutrients(mergedProduct.id, toNutrientWrites(values.nutrients))
+  await gateway.replaceIngredients(mergedProduct.id, values.ingredients)
+  await gateway.replaceNutrients(mergedProduct.id, values.nutrients)
   for (const [sortOrder, image] of acceptedImages.entries()) {
     await gateway.copyImage(image, mergedProduct.id, ownerId, sortOrder)
   }
@@ -32,16 +30,16 @@ const fillMergedProduct = async (
   for (const review of resolveMergedReviews(reviews)) {
     const copiedReview = await gateway.createReview(
       mergedProduct.id,
-      review.user_id,
+      review.userId,
       toReviewFields(review),
       review.tags,
       {
-        created_at: review.created_at,
-        updated_at: review.updated_at,
+        createdAt: review.createdAt,
+        updatedAt: review.updatedAt,
       },
     )
     for (const image of review.images) {
-      await gateway.copyReviewImage(image, copiedReview.id, review.user_id)
+      await gateway.copyReviewImage(image, copiedReview.id, review.userId)
     }
   }
 
@@ -51,21 +49,21 @@ const fillMergedProduct = async (
   for (const report of resolveMergedPriceReports(priceReports)) {
     await gateway.upsertPriceReport(
       mergedProduct.id,
-      report.user_id,
+      report.userId,
       report.store,
-      report.city_name,
-      report.price_euro_cents,
-      report.sale_price_euro_cents,
-      report.observed_at,
-      report.created_at,
+      report.cityName,
+      report.priceEuroCents,
+      report.salePriceEuroCents,
+      report.observedAt,
+      report.createdAt,
     )
   }
 
   const votes = (await Promise.all(productIds.map((id) => gateway.fetchSimilarityVotes(id)))).flat()
   for (const vote of resolveMergedSimilarityVotes(votes, productIds, mergedProduct.id)) {
-    await gateway.voteSimilarity(vote.product_id_a, vote.product_id_b, vote.agreed, vote.user_id, {
-      created_at: vote.created_at,
-      updated_at: vote.updated_at,
+    await gateway.voteSimilarity(vote.productIdA, vote.productIdB, vote.agreed, vote.userId, {
+      createdAt: vote.createdAt,
+      updatedAt: vote.updatedAt,
     })
   }
 }
@@ -81,9 +79,9 @@ export const mergeProducts = async (
     base: values.base,
     brand: values.brand,
     description: values.description,
-    energy_joules: values.energyJoules,
+    energyJoules: values.energyJoules,
     allergens: values.allergens,
-    is_organic: values.isOrganic,
+    isOrganic: values.isOrganic,
     barcode: values.barcode,
   }
   const mergedProduct = await gateway.createProduct(

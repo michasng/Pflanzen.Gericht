@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import { useImageUpload } from '../useImageUpload'
 
-type FakeImage = { id: string; storage_path: string; sort_order: number }
+type FakeImage = { id: string; storagePath: string; sortOrder: number }
 
 const makeImage = (id: string, sortOrder = 0): FakeImage => ({
   id,
-  storage_path: `path/${id}`,
-  sort_order: sortOrder,
+  storagePath: `path/${id}`,
+  sortOrder: sortOrder,
 })
 
 describe('useImageUpload', () => {

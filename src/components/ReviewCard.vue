@@ -17,7 +17,7 @@ const MAX_CRITERION_VALUE = 5
 const props = defineProps<{ review: ReviewWithDetails; editable?: boolean }>()
 
 const displayName = computed(
-  () => props.review.profile.display_name || props.review.profile.username,
+  () => props.review.profile.displayName || props.review.profile.username,
 )
 
 const filledCriteria = computed(() => {
@@ -37,15 +37,15 @@ const filledCriteria = computed(() => {
     <div class="flex items-start justify-between gap-2 mb-3">
       <div>
         <RouterLink
-          :to="{ name: 'profile-public', params: { id: review.user_id } }"
+          :to="{ name: 'profile-public', params: { id: review.userId } }"
           class="font-semibold text-sm text-gray-900 hover:text-primary-600 transition-colors"
         >
           {{ displayName }}
         </RouterLink>
-        <span class="text-xs text-gray-400 ml-2">{{ formatDate(review.created_at) }}</span>
+        <span class="text-xs text-gray-400 ml-2">{{ formatDate(review.createdAt) }}</span>
       </div>
       <Chip
-        v-if="!review.is_current"
+        v-if="!review.isCurrent"
         class="shrink-0"
         :size="ChipSize.Compact"
         :tone="ChipTone.Muted"

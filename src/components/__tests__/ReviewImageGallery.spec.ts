@@ -11,18 +11,18 @@ import type { ReviewImage } from '@/types'
 
 const images: ReviewImage[] = [
   {
-    created_at: '2024-01-01T00:00:00Z',
+    createdAt: '2024-01-01T00:00:00Z',
     id: 'image-1',
-    review_id: 'review-1',
-    sort_order: 0,
-    storage_path: 'photo-1.webp',
+    reviewId: 'review-1',
+    sortOrder: 0,
+    storagePath: 'photo-1.webp',
   },
   {
-    created_at: '2024-01-01T00:00:00Z',
+    createdAt: '2024-01-01T00:00:00Z',
     id: 'image-2',
-    review_id: 'review-1',
-    sort_order: 1,
-    storage_path: 'photo-2.webp',
+    reviewId: 'review-1',
+    sortOrder: 1,
+    storagePath: 'photo-2.webp',
   },
 ]
 

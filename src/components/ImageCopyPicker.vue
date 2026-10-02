@@ -37,7 +37,7 @@ const toggle = (id: string): void => {
           :aria-label="`Bild ${imageIndex + 1} aus Gruppe ${groupIndex + 1} (${group.label}) auswählen`"
           @click="toggle(img.id)"
         >
-          <Image :src="getImageUrl(bucket, img.storage_path, ImageSize.Thumbnail)" alt="" />
+          <Image :src="getImageUrl(bucket, img.storagePath, ImageSize.Thumbnail)" alt="" />
           <span
             v-if="isSelected(img.id)"
             class="absolute top-1 right-1 w-6 h-6 bg-primary-600 text-white rounded-full flex items-center justify-center text-xs"

@@ -11,7 +11,7 @@ const mountPicker = () =>
     props: {
       title: 'Bilder',
       bucket: 'review-images',
-      groups: [{ label: 'Anna', images: [{ id: 'a', storage_path: 'u/r/a' }] }],
+      groups: [{ label: 'Anna', images: [{ id: 'a', storagePath: 'u/r/a' }] }],
     },
   })
 

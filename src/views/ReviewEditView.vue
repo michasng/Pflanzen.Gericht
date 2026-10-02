@@ -45,7 +45,7 @@ const { pendingFiles, selectCopies, existingImages, handleDeleteImage, commitIma
       if (!review.value || !authStore.user) return Promise.resolve()
       return uploadReviewImage(review.value.id, authStore.user.id, file, sortOrder)
     },
-    (img) => deleteReviewImage(img.id, img.storage_path),
+    (img) => deleteReviewImage(img.id, img.storagePath),
     (productImage, sortOrder) => {
       if (!review.value || !authStore.user) return Promise.resolve()
       return copyProductImageToReview(productImage, review.value.id, authStore.user.id, sortOrder)
@@ -64,13 +64,13 @@ onMounted(async () => {
       loadError.value = 'Bewertung nicht gefunden.'
       return
     }
-    if (r.user_id !== authStore.user?.id && !authStore.isAdmin) {
-      await router.replace({ name: 'product-detail', params: { id: r.product_id } })
+    if (r.userId !== authStore.user?.id && !authStore.isAdmin) {
+      await router.replace({ name: 'product-detail', params: { id: r.productId } })
       return
     }
     const [p, productImageList] = await Promise.all([
-      fetchProduct(r.product_id),
-      authStore.isAdmin ? fetchProductImages(r.product_id) : Promise.resolve([]),
+      fetchProduct(r.productId),
+      authStore.isAdmin ? fetchProductImages(r.productId) : Promise.resolve([]),
     ])
     if (!p) {
       loadError.value = 'Produkt nicht gefunden.'
@@ -79,7 +79,7 @@ onMounted(async () => {
     review.value = r
     product.value = p
     productImages.value = productImageList
-    existingImages.value = [...r.images].sort((a, b) => a.sort_order - b.sort_order)
+    existingImages.value = [...r.images].sort((a, b) => a.sortOrder - b.sortOrder)
   } catch (err) {
     loadError.value = toErrorMessage(err)
   } finally {
@@ -95,7 +95,7 @@ const handleSubmit = async (values: ReviewFormValues): Promise<void> => {
     const { tags, ...fields } = values
     await updateReview(review.value.id, fields, tags)
     await commitImageChanges()
-    await router.push({ name: 'product-detail', params: { id: review.value.product_id } })
+    await router.push({ name: 'product-detail', params: { id: review.value.productId } })
   } catch (err) {
     submitError.value = toErrorMessage(err)
     submitting.value = false

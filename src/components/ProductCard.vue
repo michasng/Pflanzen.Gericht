@@ -11,8 +11,8 @@ import { getImageUrl, type ProductListItem } from '@/services/catalog'
 const props = defineProps<{ product: ProductListItem }>()
 
 const coverUrl = computed(() => {
-  const sorted = [...props.product.images].sort((a, b) => a.sort_order - b.sort_order)
-  return sorted[0] ? getImageUrl('product-images', sorted[0].storage_path, ImageSize.Preview) : null
+  const sorted = [...props.product.images].sort((a, b) => a.sortOrder - b.sortOrder)
+  return sorted[0] ? getImageUrl('product-images', sorted[0].storagePath, ImageSize.Preview) : null
 })
 
 const categoryLabel = computed(() => categoryToLabel(props.product.category))
@@ -37,13 +37,13 @@ const categoryLabel = computed(() => categoryToLabel(props.product.category))
       </h3>
       <p v-if="product.brand" class="text-xs text-gray-400 truncate">{{ product.brand }}</p>
       <div class="flex items-center gap-1.5 mt-0.5">
-        <StarDisplay :value="product.avg_overall" />
+        <StarDisplay :value="product.avgOverall" />
         <span class="text-xs text-gray-400">
-          {{ product.reviews_count > 0 ? `(${product.reviews_count})` : 'Neu' }}
+          {{ product.reviewsCount > 0 ? `(${product.reviewsCount})` : 'Neu' }}
         </span>
       </div>
-      <p v-if="product.min_price_euro_cents != null" class="text-xs font-medium text-gray-600">
-        ab {{ (product.min_price_euro_cents / 100).toFixed(2).replace('.', ',') }} €
+      <p v-if="product.minPriceEuroCents != null" class="text-xs font-medium text-gray-600">
+        ab {{ (product.minPriceEuroCents / 100).toFixed(2).replace('.', ',') }} €
       </p>
     </div>
   </RouterLink>

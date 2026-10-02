@@ -1,10 +1,5 @@
-export interface IngredientWrite {
-  name: string
-  fraction_basis_points: number | null
-  comparator: string
-}
+import type { ProductIngredient, ProductNutrient } from '@/types'
 
-export interface NutrientWrite {
-  name: string
-  amount_micrograms: number
-}
+export type IngredientWrite = Pick<ProductIngredient, 'name' | 'fractionBasisPoints' | 'comparator'>
+
+export type NutrientWrite = Pick<ProductNutrient, 'name' | 'amountMicrograms'>

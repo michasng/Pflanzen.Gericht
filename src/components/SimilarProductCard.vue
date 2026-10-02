@@ -14,11 +14,11 @@ defineEmits<{ select: [] }>()
 const AGREEMENT_ARIA_LABEL = 'Zustimmung'
 
 const coverUrl = computed(() =>
-  props.product.storage_path
-    ? getImageUrl('product-images', props.product.storage_path, ImageSize.Preview)
+  props.product.storagePath
+    ? getImageUrl('product-images', props.product.storagePath, ImageSize.Preview)
     : null,
 )
-const agreementPercent = computed(() => Math.round(props.product.agreement_rate * 100))
+const agreementPercent = computed(() => Math.round(props.product.agreementRate * 100))
 const agreementValueText = computed(() => `${agreementPercent.value} % Zustimmung`)
 </script>
 

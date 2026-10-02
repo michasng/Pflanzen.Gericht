@@ -14,8 +14,8 @@ import { STORE_SUGGESTIONS } from '@/config/storeSuggestions'
 import { TAG_GROUPS } from '@/config/reviewTags'
 import { ALLERGENS, allergenToLabel } from '@/config/allergens'
 import { parseEurosToCents, formatEuroCents } from '@/lib/price'
-import { supabase } from '@/lib/supabase'
 import { useNameSuggestions } from '@/composables/useNameSuggestions'
+import { fetchPriceReportCityNames } from '@/services/prices'
 import { fetchIngredientNameSuggestions } from '@/services/products'
 
 const props = defineProps<{ open: boolean }>()
@@ -79,12 +79,7 @@ const loadCities = async (store: string | null): Promise<void> => {
     cities.value = []
     return
   }
-  const { data } = await supabase
-    .from('price_report')
-    .select('city_name')
-    .eq('store', store)
-    .neq('city_name', '')
-  cities.value = [...new Set((data ?? []).map((r) => r.city_name))].sort()
+  cities.value = await fetchPriceReportCityNames(store)
 }
 
 watch(

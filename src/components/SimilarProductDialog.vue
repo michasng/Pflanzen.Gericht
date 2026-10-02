@@ -27,26 +27,26 @@ defineEmits<{
 }>()
 
 const coverUrl = computed(() =>
-  props.product?.storage_path
-    ? getImageUrl('product-images', props.product.storage_path, ImageSize.Preview)
+  props.product?.storagePath
+    ? getImageUrl('product-images', props.product.storagePath, ImageSize.Preview)
     : null,
 )
 const agreementPercent = computed(() =>
-  props.product ? Math.round(props.product.agreement_rate * 100) : 0,
+  props.product ? Math.round(props.product.agreementRate * 100) : 0,
 )
 const voteLabel = computed(() => {
-  const voteCount = props.product?.total_count ?? 0
+  const voteCount = props.product?.totalCount ?? 0
   return `${voteCount} Stimme${voteCount === 1 ? '' : 'n'}`
 })
 const criteriaAverages = computed(() => {
   if (!props.product) return []
 
   return [
-    { label: 'Geschmack', value: props.product.avg_taste },
-    { label: 'Konsistenz', value: props.product.avg_consistency },
-    { label: 'Aussehen', value: props.product.avg_appearance },
-    { label: 'Nährwerte', value: props.product.avg_nutrition },
-    { label: 'Preis-Leistung', value: props.product.avg_value },
+    { label: 'Geschmack', value: props.product.avgTaste },
+    { label: 'Konsistenz', value: props.product.avgConsistency },
+    { label: 'Aussehen', value: props.product.avgAppearance },
+    { label: 'Nährwerte', value: props.product.avgNutrition },
+    { label: 'Preis-Leistung', value: props.product.avgValue },
   ].filter((criterion): criterion is { label: string; value: number } => criterion.value !== null)
 })
 </script>
@@ -101,16 +101,16 @@ const criteriaAverages = computed(() => {
           </RouterLink>
 
           <div class="rounded-xl border border-gray-100 p-3">
-            <template v-if="product.avg_overall != null && product.reviews_count > 0">
+            <template v-if="product.avgOverall != null && product.reviewsCount > 0">
               <div class="flex items-center gap-3">
                 <span class="text-3xl font-bold text-gray-900 tabular-nums">
-                  {{ product.avg_overall.toFixed(1) }}
+                  {{ product.avgOverall.toFixed(1) }}
                 </span>
                 <div>
-                  <StarDisplay :value="product.avg_overall" />
+                  <StarDisplay :value="product.avgOverall" />
                   <p class="mt-0.5 text-xs text-gray-400">
-                    {{ product.reviews_count }}
-                    Bewertung{{ product.reviews_count === 1 ? '' : 'en' }}
+                    {{ product.reviewsCount }}
+                    Bewertung{{ product.reviewsCount === 1 ? '' : 'en' }}
                   </p>
                 </div>
               </div>
@@ -124,7 +124,7 @@ const criteriaAverages = computed(() => {
           </div>
 
           <div
-            v-if="product.base || product.is_organic || product.allergens.length"
+            v-if="product.base || product.isOrganic || product.allergens.length"
             class="flex flex-wrap gap-1.5"
           >
             <span
@@ -134,7 +134,7 @@ const criteriaAverages = computed(() => {
               {{ baseToLabel(product.base) }}
             </span>
             <span
-              v-if="product.is_organic"
+              v-if="product.isOrganic"
               class="rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700"
             >
               Bio
@@ -168,12 +168,12 @@ const criteriaAverages = computed(() => {
                 type="button"
                 class="rounded-xl border px-3 py-2 text-sm font-medium transition-colors"
                 :class="
-                  product.my_vote === true
+                  product.myVote === true
                     ? 'border-primary-600 bg-primary-50 text-primary-700'
                     : 'border-gray-200 text-gray-600 hover:border-primary-300'
                 "
                 :disabled="isBusy"
-                :aria-pressed="product.my_vote === true"
+                :aria-pressed="product.myVote === true"
                 aria-label="Daumen hoch"
                 @click="$emit('vote', true)"
               >
@@ -183,12 +183,12 @@ const criteriaAverages = computed(() => {
                 type="button"
                 class="rounded-xl border px-3 py-2 text-sm font-medium transition-colors"
                 :class="
-                  product.my_vote === false
+                  product.myVote === false
                     ? 'border-red-500 bg-red-50 text-red-700'
                     : 'border-gray-200 text-gray-600 hover:border-red-300'
                 "
                 :disabled="isBusy"
-                :aria-pressed="product.my_vote === false"
+                :aria-pressed="product.myVote === false"
                 aria-label="Daumen runter"
                 @click="$emit('vote', false)"
               >

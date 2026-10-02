@@ -1,4 +1,6 @@
 import { supabase } from '@/lib/supabase'
+import { camelizeKeys } from '@/lib/camelizeKeys'
+import { snakeifyKeys } from '@/lib/snakeifyKeys'
 import { generateSquareImageVariants } from '@/lib/generateSquareImageVariants'
 import { deleteImageVariants, persistImageVariants } from '@/lib/imageVariantStorage'
 import {
@@ -6,6 +8,7 @@ import {
   type StoredImageLocation,
 } from '@/services/copyStoredImageWithRecord'
 import type { Review, ReviewInsert, ReviewImage, ProductImage } from '@/types'
+import type { Tables } from '@/types/database'
 
 export const ADMIN_PAGE_SIZE = 50
 
@@ -19,7 +22,7 @@ export type ReviewFields = Pick<
   'overall' | 'taste' | 'consistency' | 'appearance' | 'nutrition' | 'value' | 'comment'
 >
 
-export type ReviewHistory = Pick<ReviewInsert, 'created_at' | 'updated_at'>
+export type ReviewHistory = Pick<ReviewInsert, 'createdAt' | 'updatedAt'>
 
 export type ReviewWithDetails = Review & { tags: string[]; images: ReviewImage[] }
 
@@ -29,9 +32,9 @@ const REVIEW_WITH_DETAILS_SELECT =
 const toReviewWithDetails = (data: {
   tags: unknown
   images: unknown
-}): { tags: string[]; images: ReviewImage[] } => ({
+}): { tags: string[]; images: Tables<'review_image'>[] } => ({
   tags: ((data.tags ?? []) as { tag: string }[]).map((t) => t.tag),
-  images: (data.images as ReviewImage[] | null) ?? [],
+  images: (data.images as Tables<'review_image'>[] | null) ?? [],
 })
 
 export const createReview = async (
@@ -43,7 +46,7 @@ export const createReview = async (
 ): Promise<Review> => {
   const { data, error } = await supabase
     .from('review')
-    .insert({ ...fields, ...history, product_id: productId, user_id: userId })
+    .insert(snakeifyKeys({ ...fields, ...history, productId, userId }))
     .select()
     .single()
   if (error) throw error
@@ -55,7 +58,7 @@ export const createReview = async (
     if (tagError) throw tagError
   }
 
-  return data
+  return camelizeKeys(data)
 }
 
 export const uploadReviewImage = async (
@@ -87,19 +90,19 @@ export const uploadReviewImage = async (
         .select()
         .single()
       if (error) throw error
-      return data
+      return camelizeKeys(data)
     },
   )
 }
 
-const copyImageToReview = (
+const copyImageToReview = async (
   source: StoredImageLocation,
   reviewId: string,
   userId: string,
   sortOrder: number,
 ): Promise<ReviewImage> => {
   const storagePath = `${userId}/${reviewId}/${crypto.randomUUID()}`
-  return copyStoredImageWithRecord(
+  const copiedImage = await copyStoredImageWithRecord<Tables<'review_image'>>(
     source,
     { bucketName: 'review-images', storagePath },
     () =>
@@ -110,6 +113,7 @@ const copyImageToReview = (
         .single(),
     () => supabase.from('review_image').select('id').eq('storage_path', storagePath).maybeSingle(),
   )
+  return camelizeKeys(copiedImage)
 }
 
 export const copyProductImageToReview = (
@@ -119,7 +123,7 @@ export const copyProductImageToReview = (
   sortOrder: number,
 ): Promise<ReviewImage> =>
   copyImageToReview(
-    { bucketName: 'product-images', storagePath: productImage.storage_path },
+    { bucketName: 'product-images', storagePath: productImage.storagePath },
     reviewId,
     userId,
     sortOrder,
@@ -131,10 +135,10 @@ export const copyReviewImageToReview = (
   userId: string,
 ): Promise<ReviewImage> =>
   copyImageToReview(
-    { bucketName: 'review-images', storagePath: reviewImage.storage_path },
+    { bucketName: 'review-images', storagePath: reviewImage.storagePath },
     reviewId,
     userId,
-    reviewImage.sort_order,
+    reviewImage.sortOrder,
   )
 
 export const fetchProductReviews = async (productId: string): Promise<ReviewWithDetails[]> => {
@@ -143,7 +147,7 @@ export const fetchProductReviews = async (productId: string): Promise<ReviewWith
     .select(REVIEW_WITH_DETAILS_SELECT)
     .eq('product_id', productId)
   if (error) throw error
-  return (data ?? []).map((row) => ({ ...row, ...toReviewWithDetails(row) }))
+  return camelizeKeys((data ?? []).map((row) => ({ ...row, ...toReviewWithDetails(row) })))
 }
 
 export interface ProductReviewImages {
@@ -168,7 +172,7 @@ export const fetchProductReviewImages = async (
       reviewId: review.id,
       reviewerName: review.profile.display_name || review.profile.username,
       createdAt: review.created_at,
-      images: [...review.images].sort((a, b) => a.sort_order - b.sort_order),
+      images: camelizeKeys([...review.images].sort((a, b) => a.sort_order - b.sort_order)),
     }))
 }
 
@@ -180,7 +184,7 @@ export const fetchReviewForEdit = async (reviewId: string): Promise<ReviewWithDe
     .single()
   if (error?.code === 'PGRST116') return null
   if (error) throw error
-  return { ...data, ...toReviewWithDetails(data) }
+  return camelizeKeys({ ...data, ...toReviewWithDetails(data) })
 }
 
 export const updateReview = async (
@@ -188,7 +192,7 @@ export const updateReview = async (
   fields: ReviewFields,
   tags: string[],
 ): Promise<void> => {
-  const { error } = await supabase.from('review').update(fields).eq('id', reviewId)
+  const { error } = await supabase.from('review').update(snakeifyKeys(fields)).eq('id', reviewId)
   if (error) throw error
 
   const { error: delErr } = await supabase.from('review_tag').delete().eq('review_id', reviewId)
@@ -223,9 +227,11 @@ export const fetchAllReviewsForAdmin = async (page = 0): Promise<AdminReviewItem
     .order('created_at', { ascending: false })
     .range(page * ADMIN_PAGE_SIZE, (page + 1) * ADMIN_PAGE_SIZE - 1)
   if (error) throw error
-  return (data ?? []).map((r) => ({
-    ...r,
-    profile: r.profile as { username: string },
-    product: r.product as { id: string; name: string },
-  }))
+  return camelizeKeys(
+    (data ?? []).map((r) => ({
+      ...r,
+      profile: r.profile as { username: string },
+      product: r.product as { id: string; name: string },
+    })),
+  )
 }

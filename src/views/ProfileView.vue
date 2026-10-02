@@ -46,11 +46,11 @@ const saveError = ref<string | null>(null)
 const deletingId = ref<string | null>(null)
 const deletingProductId = ref<string | null>(null)
 
-const currentReviewsCount = computed(() => reviews.value.filter((r) => r.is_current).length)
+const currentReviewsCount = computed(() => reviews.value.filter((r) => r.isCurrent).length)
 const initials = computed(() => authStore.profile?.username?.charAt(0).toUpperCase() ?? '?')
 
 const startEdit = (): void => {
-  displayName.value = authStore.profile?.display_name ?? ''
+  displayName.value = authStore.profile?.displayName ?? ''
   bio.value = authStore.profile?.bio ?? ''
   isEditing.value = true
   saveError.value = null
@@ -66,7 +66,7 @@ const saveProfileData = async (): Promise<void> => {
   saveError.value = null
   try {
     await updateProfile(authStore.user.id, {
-      display_name: displayName.value.trim() || null,
+      displayName: displayName.value.trim() || null,
       bio: bio.value.trim() || null,
     })
     await authStore.fetchProfile(authStore.user.id)
@@ -140,9 +140,9 @@ onMounted(async () => {
       </div>
       <div class="min-w-0">
         <p class="font-bold text-gray-900 text-lg leading-tight truncate">
-          {{ authStore.profile?.display_name || authStore.profile?.username }}
+          {{ authStore.profile?.displayName || authStore.profile?.username }}
         </p>
-        <p v-if="authStore.profile?.display_name" class="text-sm text-gray-500 truncate">
+        <p v-if="authStore.profile?.displayName" class="text-sm text-gray-500 truncate">
           @{{ authStore.profile.username }}
         </p>
         <p class="text-xs text-gray-400 mt-0.5">{{ authStore.user?.email }}</p>
@@ -269,15 +269,15 @@ onMounted(async () => {
               <Chip
                 class="shrink-0"
                 :size="ChipSize.Compact"
-                :tone="review.is_current ? ChipTone.Success : ChipTone.Muted"
+                :tone="review.isCurrent ? ChipTone.Success : ChipTone.Muted"
               >
-                {{ review.is_current ? 'Aktuell' : 'Veraltet' }}
+                {{ review.isCurrent ? 'Aktuell' : 'Veraltet' }}
               </Chip>
             </div>
 
             <div class="flex items-center gap-2 mb-2">
               <StarDisplay :value="review.overall" />
-              <span class="text-xs text-gray-400">{{ formatDate(review.created_at) }}</span>
+              <span class="text-xs text-gray-400">{{ formatDate(review.createdAt) }}</span>
             </div>
 
             <TagList :tags="review.tags" class="mb-2" />
@@ -288,7 +288,7 @@ onMounted(async () => {
 
             <div class="flex gap-3 pt-2 border-t border-gray-50">
               <RouterLink
-                v-if="review.is_current"
+                v-if="review.isCurrent"
                 :to="{ name: 'review-edit', params: { reviewId: review.id } }"
                 class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
               >
@@ -333,7 +333,7 @@ onMounted(async () => {
               {{ categoryToLabel(product.category) }}
               <span v-if="product.brand"> · {{ product.brand }}</span>
             </p>
-            <p class="text-xs text-gray-400 mt-1">{{ formatDate(product.created_at) }}</p>
+            <p class="text-xs text-gray-400 mt-1">{{ formatDate(product.createdAt) }}</p>
             <div class="flex gap-3 pt-2 border-t border-gray-50 mt-2">
               <RouterLink
                 :to="{ name: 'product-edit', params: { id: product.id } }"

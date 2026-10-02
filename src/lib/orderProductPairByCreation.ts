@@ -1,4 +1,4 @@
-export const orderProductPairByCreation = <T extends { created_at: string }>(
+export const orderProductPairByCreation = <T extends { createdAt: string }>(
   first: T,
   second: T,
-): [T, T] => (first.created_at <= second.created_at ? [first, second] : [second, first])
+): [T, T] => (first.createdAt <= second.createdAt ? [first, second] : [second, first])

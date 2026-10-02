@@ -1,4 +1,6 @@
+import type { ProductImage } from '@/types'
+
 export interface ImageCopyGroup {
   label: string
-  images: { id: string; storage_path: string }[]
+  images: Pick<ProductImage, 'id' | 'storagePath'>[]
 }

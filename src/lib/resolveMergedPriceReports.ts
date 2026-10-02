@@ -1,11 +1,11 @@
 import type { PriceReport } from '@/types'
 
 const toConflictKey = (report: PriceReport): string =>
-  JSON.stringify([report.user_id, report.store, report.city_name])
+  JSON.stringify([report.userId, report.store, report.cityName])
 
 const isMoreRecent = (candidate: PriceReport, existing: PriceReport): boolean =>
-  candidate.observed_at > existing.observed_at ||
-  (candidate.observed_at === existing.observed_at && candidate.created_at > existing.created_at)
+  candidate.observedAt > existing.observedAt ||
+  (candidate.observedAt === existing.observedAt && candidate.createdAt > existing.createdAt)
 
 export const resolveMergedPriceReports = (reports: PriceReport[]): PriceReport[] => {
   const reportByConflictKey = new Map<string, PriceReport>()

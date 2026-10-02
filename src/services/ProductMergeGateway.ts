@@ -18,9 +18,9 @@ export type MergedProductFields = Pick<
   | 'base'
   | 'brand'
   | 'description'
-  | 'energy_joules'
+  | 'energyJoules'
   | 'allergens'
-  | 'is_organic'
+  | 'isOrganic'
   | 'barcode'
 >
 

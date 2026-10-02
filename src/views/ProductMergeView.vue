@@ -64,12 +64,12 @@ const loadSource = async (id: string): Promise<MergeSource> => {
     fetchProductActivityCounts(id),
   ])
   if (!product) throw new Error('Produkt nicht gefunden.')
-  const profile = await fetchPublicProfile(product.created_by)
+  const profile = await fetchPublicProfile(product.createdBy)
   return {
     product,
     images,
     values: toProductFormValues(product, ingredients, nutrients),
-    ownerName: profile?.display_name || profile?.username || 'Unbekannt',
+    ownerName: profile?.displayName || profile?.username || 'Unbekannt',
     ...counts,
   }
 }
@@ -132,7 +132,7 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
       ],
       values,
       acceptedImages: allImages.value.filter((image) => acceptedImageIds.value.includes(image.id)),
-      ownerId: sources.value[ownerSide.value].product.created_by,
+      ownerId: sources.value[ownerSide.value].product.createdBy,
     })
     await router.push({ name: 'product-detail', params: { id: merged.id } })
   } catch (err) {
@@ -168,7 +168,7 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
                 class="relative rounded-lg overflow-hidden bg-gray-100 cursor-pointer"
               >
                 <Image
-                  :src="getImageUrl('product-images', image.storage_path, ImageSize.Thumbnail)"
+                  :src="getImageUrl('product-images', image.storagePath, ImageSize.Thumbnail)"
                   alt=""
                 />
                 <span

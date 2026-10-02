@@ -1,14 +1,10 @@
 import { supabase } from '@/lib/supabase'
 import { deleteImageVariants } from '@/lib/imageVariantStorage'
-import type { Product, Review } from '@/types'
+import { camelizeKeys } from '@/lib/camelizeKeys'
+import { snakeifyKeys } from '@/lib/snakeifyKeys'
+import type { Product, Profile, Review } from '@/types'
 
-export type PublicProfile = {
-  id: string
-  username: string
-  display_name: string | null
-  bio: string | null
-  created_at: string
-}
+export type PublicProfile = Pick<Profile, 'id' | 'username' | 'displayName' | 'bio' | 'createdAt'>
 
 export type ReviewWithMeta = Review & {
   product: Pick<Product, 'id' | 'name' | 'category'>
@@ -27,11 +23,13 @@ export const fetchUserReviews = async (
   if (onlyCurrent) query = query.eq('is_current', true)
   const { data, error } = await query
   if (error) throw error
-  return (data ?? []).map((r) => ({
-    ...r,
-    product: r.product as Pick<Product, 'id' | 'name' | 'category'>,
-    tags: ((r.tags ?? []) as { tag: string }[]).map((t) => t.tag),
-  }))
+  return camelizeKeys(
+    (data ?? []).map((r) => ({
+      ...r,
+      product: r.product as Pick<Product, 'id' | 'name' | 'category'>,
+      tags: ((r.tags ?? []) as { tag: string }[]).map((t) => t.tag),
+    })),
+  )
 }
 
 export const fetchUserProducts = async (userId: string): Promise<Product[]> => {
@@ -41,14 +39,14 @@ export const fetchUserProducts = async (userId: string): Promise<Product[]> => {
     .eq('created_by', userId)
     .order('created_at', { ascending: false })
   if (error) throw error
-  return data ?? []
+  return camelizeKeys(data ?? [])
 }
 
 export const updateProfile = async (
   userId: string,
-  updates: { display_name?: string | null; bio?: string | null },
+  updates: { displayName?: string | null; bio?: string | null },
 ): Promise<void> => {
-  const { error } = await supabase.from('profile').update(updates).eq('id', userId)
+  const { error } = await supabase.from('profile').update(snakeifyKeys(updates)).eq('id', userId)
   if (error) throw error
 }
 
@@ -92,5 +90,5 @@ export const fetchPublicProfile = async (userId: string): Promise<PublicProfile 
     .single()
   if (error?.code === 'PGRST116') return null
   if (error) throw error
-  return data
+  return camelizeKeys(data)
 }
