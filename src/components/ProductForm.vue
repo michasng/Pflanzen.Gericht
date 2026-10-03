@@ -534,6 +534,46 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
     </FieldComparisonRow>
 
     <FieldComparisonRow
+      v-bind="comparedProps(ComparedField.Quantity)"
+      @accept-a="acceptField(ComparedField.Quantity, ComparisonSide.A)"
+      @accept-b="acceptField(ComparedField.Quantity, ComparisonSide.B)"
+    >
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-quantity">
+          Menge <span class="text-red-500" aria-hidden="true">*</span>
+        </label>
+        <div
+          v-if="hasInvalidQuantity"
+          role="alert"
+          class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
+        >
+          Bitte gib eine positive Menge ein, die sich in ganzen ml, g oder Stück angeben lässt.
+        </div>
+        <div class="flex gap-2">
+          <input
+            id="pf-quantity"
+            v-model="quantityInput"
+            type="text"
+            inputmode="decimal"
+            required
+            maxlength="8"
+            placeholder="z. B. 500"
+            class="flex-1 min-w-0 px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+          <select
+            v-model="quantityInputUnit"
+            aria-label="Einheit der Menge"
+            class="px-2 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option v-for="unit in QUANTITY_INPUT_UNITS" :key="unit" :value="unit">
+              {{ QUANTITY_INPUT_UNIT_LABELS[unit] }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </FieldComparisonRow>
+
+    <FieldComparisonRow
       v-bind="comparedProps(ComparedField.Description)"
       @accept-a="acceptField(ComparedField.Description, ComparisonSide.A)"
       @accept-b="acceptField(ComparedField.Description, ComparisonSide.B)"
@@ -695,46 +735,6 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
         >
           + Zutat hinzufügen
         </button>
-      </div>
-    </FieldComparisonRow>
-
-    <FieldComparisonRow
-      v-bind="comparedProps(ComparedField.Quantity)"
-      @accept-a="acceptField(ComparedField.Quantity, ComparisonSide.A)"
-      @accept-b="acceptField(ComparedField.Quantity, ComparisonSide.B)"
-    >
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-quantity">
-          Menge <span class="text-red-500" aria-hidden="true">*</span>
-        </label>
-        <div
-          v-if="hasInvalidQuantity"
-          role="alert"
-          class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
-        >
-          Bitte gib eine positive Menge ein, die sich in ganzen ml, g oder Stück angeben lässt.
-        </div>
-        <div class="flex gap-2">
-          <input
-            id="pf-quantity"
-            v-model="quantityInput"
-            type="text"
-            inputmode="decimal"
-            required
-            maxlength="8"
-            placeholder="z. B. 500"
-            class="flex-1 min-w-0 px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-          <select
-            v-model="quantityInputUnit"
-            aria-label="Einheit der Menge"
-            class="px-2 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            <option v-for="unit in QUANTITY_INPUT_UNITS" :key="unit" :value="unit">
-              {{ QUANTITY_INPUT_UNIT_LABELS[unit] }}
-            </option>
-          </select>
-        </div>
       </div>
     </FieldComparisonRow>
 

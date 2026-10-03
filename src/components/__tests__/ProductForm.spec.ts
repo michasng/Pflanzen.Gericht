@@ -30,6 +30,16 @@ describe('ProductForm', () => {
     vi.unstubAllGlobals()
   })
 
+  it('places quantity between brand and description in the product form', () => {
+    const wrapper = mount(ProductForm, {
+      global: { stubs: { ImageUpload: true, ProductBarcodeScanner: true, RouterLink: true } },
+    })
+
+    expect(
+      wrapper.findAll('#pf-brand, #pf-quantity, #pf-description').map(({ element }) => element.id),
+    ).toEqual(['pf-brand', 'pf-quantity', 'pf-description'])
+  })
+
   it('given kcal is selected when barcode data fills energy, resets the field to the default unit', async () => {
     const wrapper = mount(ProductForm, {
       global: {
@@ -218,6 +228,19 @@ describe('ProductForm', () => {
       a: buildValues({ name: 'Name A', allergens: ['soy'] }),
       b: buildValues({ name: 'Name B' }),
     }
+
+    it('places quantity between brand and description in the merge form', () => {
+      const wrapper = mount(ProductForm, {
+        props: { comparison, initial: EQUAL_QUANTITY },
+        global: { stubs: { ImageUpload: true, RouterLink: true } },
+      })
+
+      expect(
+        wrapper
+          .findAll('#pf-brand, #pf-quantity, #pf-description')
+          .map(({ element }) => element.id),
+      ).toEqual(['pf-brand', 'pf-quantity', 'pf-description'])
+    })
 
     it('copies the accepted values into the editable fields', async () => {
       const wrapper = mount(ProductForm, {
