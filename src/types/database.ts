@@ -94,6 +94,8 @@ export type Database = {
           min_price_euro_cents: number | null
           name: string
           normalized_name: string | null
+          quantity_unit: string
+          quantity_value: number
           reviews_count: number
           tags: string[]
           updated_at: string
@@ -114,6 +116,8 @@ export type Database = {
           min_price_euro_cents?: number | null
           name: string
           normalized_name?: never
+          quantity_unit: string
+          quantity_value: number
           reviews_count?: number
           tags?: string[]
           updated_at?: string
@@ -134,6 +138,8 @@ export type Database = {
           min_price_euro_cents?: number | null
           name?: string
           normalized_name?: never
+          quantity_unit?: string
+          quantity_value?: number
           reviews_count?: number
           tags?: string[]
           updated_at?: string

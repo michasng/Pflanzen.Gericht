@@ -94,6 +94,8 @@ export const createProduct = async (
     | 'allergens'
     | 'isOrganic'
     | 'barcode'
+    | 'quantityUnit'
+    | 'quantityValue'
   >,
   userId: string,
 ): Promise<Product> => {
@@ -119,6 +121,8 @@ export const updateProduct = async (
     | 'allergens'
     | 'isOrganic'
     | 'barcode'
+    | 'quantityUnit'
+    | 'quantityValue'
   >,
 ): Promise<void> => {
   const { error } = await supabase.from('product').update(snakeifyKeys(updates)).eq('id', id)

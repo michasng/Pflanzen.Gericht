@@ -23,6 +23,8 @@ import { formatIngredientLabel } from '@/config/formatIngredientLabel'
 import { sortIngredientsByFractionDesc } from '@/config/sortIngredientsByFractionDesc'
 import type { IngredientComparator } from '@/config/ingredients'
 import { formatNutrientAmount } from '@/lib/formatNutrientAmount'
+import { formatQuantity } from '@/lib/formatQuantity'
+import { toQuantityUnit } from '@/lib/toQuantityUnit'
 import { formatEnergy } from '@/lib/formatEnergy'
 import { sortNutrientsByHierarchy } from '@/lib/sortNutrientsByHierarchy'
 import { getNutrientHierarchyDepth } from '@/lib/getNutrientHierarchyDepth'
@@ -228,6 +230,14 @@ watch(
             class="text-xs bg-gray-100 text-gray-600 rounded-full px-2.5 py-0.5"
           >
             {{ baseToLabel(product.base) }}
+          </span>
+          <span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2.5 py-0.5">
+            {{
+              formatQuantity({
+                unit: toQuantityUnit(product.quantityUnit),
+                value: product.quantityValue,
+              })
+            }}
           </span>
           <span
             v-if="product.isOrganic"

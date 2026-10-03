@@ -83,6 +83,8 @@ export const mergeProducts = async (
     allergens: values.allergens,
     isOrganic: values.isOrganic,
     barcode: values.barcode,
+    quantityUnit: values.quantityUnit,
+    quantityValue: values.quantityValue,
   }
   const mergedProduct = await gateway.createProduct(
     { ...mergedFields, name: `${TEMPORARY_NAME_PREFIX}${productIds.join('-')}`, brand: null },

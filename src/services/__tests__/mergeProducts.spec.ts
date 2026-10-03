@@ -8,6 +8,7 @@ import type {
   ProductSimilarityVote,
   ReviewImage,
 } from '@/types'
+import { QuantityUnit } from '@/config/quantity'
 import type { ReviewWithDetails } from '../reviews'
 
 const MERGED_ID = 'merged'
@@ -26,6 +27,8 @@ const MERGED_PRODUCT: Product = {
   isOrganic: false,
   minPriceEuroCents: null,
   name: 'Merged',
+  quantityUnit: 'piece',
+  quantityValue: 1,
   normalizedName: 'merged',
   reviewsCount: 0,
   tags: [],
@@ -189,6 +192,8 @@ const input: MergeProductsInput = {
     allergens: [],
     isOrganic: false,
     barcode: null,
+    quantityUnit: QuantityUnit.Piece,
+    quantityValue: 1,
     ingredients: [],
     nutrients: [],
   },

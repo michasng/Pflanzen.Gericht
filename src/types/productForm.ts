@@ -1,5 +1,6 @@
 import type { IngredientComparator } from '@/config/ingredients'
 import type { Allergen } from '@/config/allergens'
+import type { QuantityUnit } from '@/config/quantity'
 
 export interface ProductFormIngredient {
   name: string
@@ -12,6 +13,11 @@ export interface ProductFormNutrient {
   amountMicrograms: number
 }
 
+export interface ProductFormQuantity {
+  unit: QuantityUnit
+  value: number
+}
+
 export interface ProductFormValues {
   name: string
   category: string
@@ -22,6 +28,8 @@ export interface ProductFormValues {
   allergens: Allergen[]
   isOrganic: boolean
   barcode: string | null
+  quantityUnit: QuantityUnit
+  quantityValue: number
   ingredients: ProductFormIngredient[]
   nutrients: ProductFormNutrient[]
 }

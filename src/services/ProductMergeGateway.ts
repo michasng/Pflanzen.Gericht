@@ -22,6 +22,8 @@ export type MergedProductFields = Pick<
   | 'allergens'
   | 'isOrganic'
   | 'barcode'
+  | 'quantityUnit'
+  | 'quantityValue'
 >
 
 export interface ProductMergeGateway {

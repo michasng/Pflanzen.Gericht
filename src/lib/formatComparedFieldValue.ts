@@ -1,6 +1,7 @@
 import { baseToLabel } from '@/config/bases'
 import { categoryToLabel } from '@/config/categories'
 import { formatEnergy } from '@/lib/formatEnergy'
+import { formatQuantity } from '@/lib/formatQuantity'
 import { ComparedField } from '@/types/ComparedField'
 import type { ProductFormValues } from '@/types/productForm'
 
@@ -21,6 +22,8 @@ export const formatComparedFieldValue = (
       return values.isOrganic ? YES_LABEL : NO_LABEL
     case ComparedField.Energy:
       return values.energyJoules === null ? EMPTY_COMPARED_VALUE : formatEnergy(values.energyJoules)
+    case ComparedField.Quantity:
+      return formatQuantity({ unit: values.quantityUnit, value: values.quantityValue })
     case ComparedField.Name:
       return values.name || EMPTY_COMPARED_VALUE
     case ComparedField.Brand:
