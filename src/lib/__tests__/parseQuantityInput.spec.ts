@@ -30,6 +30,15 @@ describe('parseQuantityInput', () => {
       value: 250,
     }))
 
+  it('accepts the largest database integer quantity', () =>
+    expect(parseQuantityInput('2147483647', QuantityInputUnit.Gram)).toEqual({
+      unit: QuantityUnit.Gram,
+      value: 2147483647,
+    }))
+
+  it('returns null when a converted quantity exceeds the database integer limit', () =>
+    expect(parseQuantityInput('2147483.648', QuantityInputUnit.Kilogram)).toBeNull())
+
   it.each(['', 'abc', '0', '-1', '1,5', '0,0001'])('returns null for %j pieces', (input) =>
     expect(parseQuantityInput(input, QuantityInputUnit.Piece)).toBeNull(),
   )

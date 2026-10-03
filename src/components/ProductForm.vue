@@ -712,7 +712,7 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
           role="alert"
           class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
         >
-          Bitte gib eine positive ganze Zahl als Menge ein.
+          Bitte gib eine positive Menge ein, die sich in ganzen ml, g oder Stück angeben lässt.
         </div>
         <div class="flex gap-2">
           <input

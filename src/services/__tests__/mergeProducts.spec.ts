@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mergeProducts, type MergeProductsInput } from '../mergeProducts'
-import type { ProductMergeGateway } from '../ProductMergeGateway'
+import type { MergedProductFields, ProductMergeGateway } from '../ProductMergeGateway'
 import type {
   PriceReport,
   Product,
@@ -104,6 +104,8 @@ interface FakeData {
 const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGateway) => {
   const calls: string[] = []
   const createdNames: string[] = []
+  const createdProductFields: MergedProductFields[] = []
+  const updatedProductFields: MergedProductFields[] = []
   const updatedFields: string[] = []
   const createdReviews: { createdAt: string | undefined; tags: string[] }[] = []
   const copiedReviewImageIds: string[] = []
@@ -118,11 +120,13 @@ const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGatewa
     createProduct: async (fields, ownerId) => {
       await record('createProduct', `:${ownerId}`)
       createdNames.push(fields.name)
+      createdProductFields.push(fields)
       return { ...MERGED_PRODUCT }
     },
     updateProduct: async (id, fields) => {
       await record('updateProduct', `:${id}`)
       updatedFields.push(fields.name)
+      updatedProductFields.push(fields)
     },
     replaceIngredients: (_id, _ingredients) => record('replaceIngredients'),
     replaceNutrients: (_id, _nutrients) => record('replaceNutrients'),
@@ -169,6 +173,8 @@ const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGatewa
     gateway,
     calls,
     createdNames,
+    createdProductFields,
+    updatedProductFields,
     updatedFields,
     createdReviews,
     copiedReviewImageIds,
@@ -192,8 +198,8 @@ const input: MergeProductsInput = {
     allergens: [],
     isOrganic: false,
     barcode: null,
-    quantityUnit: QuantityUnit.Piece,
-    quantityValue: 1,
+    quantityUnit: QuantityUnit.Milliliter,
+    quantityValue: 1500,
     ingredients: [],
     nutrients: [],
   },
@@ -257,6 +263,14 @@ describe('mergeProducts', () => {
 
       expect(fake.createdNames).not.toContain(input.values.name)
       expect(fake.updatedFields).toEqual([input.values.name])
+      expect(fake.createdProductFields[0]).toMatchObject({
+        quantityUnit: input.values.quantityUnit,
+        quantityValue: input.values.quantityValue,
+      })
+      expect(fake.updatedProductFields[0]).toMatchObject({
+        quantityUnit: input.values.quantityUnit,
+        quantityValue: input.values.quantityValue,
+      })
       expect(fake.calls.slice(-3)).toEqual([
         'deleteProduct:a',
         'deleteProduct:b',

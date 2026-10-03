@@ -51,6 +51,8 @@ describe('toProductFormValues', () => {
         isOrganic: true,
         ingredients: [{ name: 'Soja', fractionBasisPoints: 500, comparator: '≥' }],
         nutrients: [{ name: 'Fett', amountMicrograms: 1000 }],
+        quantityUnit: 'piece',
+        quantityValue: 1,
       })
     })
   })

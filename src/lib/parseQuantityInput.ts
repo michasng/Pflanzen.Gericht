@@ -2,6 +2,7 @@ import { QUANTITY_INPUT_UNIT_STORAGE, type QuantityInputUnit } from '@/config/qu
 import type { ProductFormQuantity } from '@/types/productForm'
 
 const ROUNDING_TOLERANCE = 1e-6
+const MAX_QUANTITY_VALUE = 2_147_483_647
 
 export const parseQuantityInput = (
   input: string,
@@ -15,6 +16,6 @@ export const parseQuantityInput = (
   const scaledValue = amount * factor
   const value = Math.round(scaledValue)
   if (Math.abs(scaledValue - value) > ROUNDING_TOLERANCE) return null
-  if (value <= 0) return null
+  if (value <= 0 || value > MAX_QUANTITY_VALUE) return null
   return { unit, value }
 }

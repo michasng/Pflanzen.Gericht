@@ -142,7 +142,9 @@ describe('ProductForm', () => {
       const wrapper = await submitWithQuantity(input, QuantityInputUnit.Piece)
 
       expect(wrapper.emitted('submit')).toBeUndefined()
-      expect(wrapper.text()).toContain('Bitte gib eine positive ganze Zahl als Menge ein.')
+      expect(wrapper.text()).toContain(
+        'Bitte gib eine positive Menge ein, die sich in ganzen ml, g oder Stück angeben lässt.',
+      )
     })
   })
 
