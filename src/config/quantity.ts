@@ -20,13 +20,13 @@ export const QUANTITY_INPUT_UNIT_LABELS: Record<QuantityInputUnit, string> = {
   [QuantityInputUnit.Liter]: 'l',
   [QuantityInputUnit.Gram]: 'g',
   [QuantityInputUnit.Kilogram]: 'kg',
-  [QuantityInputUnit.Piece]: 'Stück',
+  [QuantityInputUnit.Piece]: 'St',
 }
 
 export const QUANTITY_UNIT_LABELS: Record<QuantityUnit, string> = {
   [QuantityUnit.Milliliter]: 'ml',
   [QuantityUnit.Gram]: 'g',
-  [QuantityUnit.Piece]: 'Stück',
+  [QuantityUnit.Piece]: 'St',
 }
 
 export const QUANTITY_INPUT_UNIT_STORAGE: Record<

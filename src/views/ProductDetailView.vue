@@ -231,14 +231,6 @@ watch(
           >
             {{ baseToLabel(product.base) }}
           </span>
-          <span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2.5 py-0.5">
-            {{
-              formatQuantity({
-                unit: toQuantityUnit(product.quantityUnit),
-                value: product.quantityValue,
-              })
-            }}
-          </span>
           <span
             v-if="product.isOrganic"
             class="text-xs bg-green-50 text-green-700 rounded-full px-2.5 py-0.5 font-medium"
@@ -253,7 +245,15 @@ watch(
             {{ allergenToLabel(allergen) }}
           </span>
         </div>
-        <h1 class="text-2xl font-bold text-gray-900 mb-1">{{ product.name }}</h1>
+        <h1 class="text-2xl font-bold text-gray-900 mb-1">
+          {{ product.name }},
+          {{
+            formatQuantity({
+              unit: toQuantityUnit(product.quantityUnit),
+              value: product.quantityValue,
+            })
+          }}
+        </h1>
         <p v-if="product.brand" class="text-sm text-gray-500 mb-3">von {{ product.brand }}</p>
         <p v-if="product.description" class="text-sm text-gray-600">{{ product.description }}</p>
       </div>
