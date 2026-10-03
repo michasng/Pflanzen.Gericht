@@ -81,6 +81,8 @@ const createProductDetail = (id: string, name: string): ProductDetail => ({
   isOrganic: false,
   minPriceEuroCents: null,
   name,
+  quantityUnit: 'piece',
+  quantityValue: 1,
   normalizedName: null,
   nutrients: [],
   priceReports: [],

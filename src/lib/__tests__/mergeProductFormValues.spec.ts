@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mergeProductFormValues } from '../mergeProductFormValues'
+import { QuantityUnit } from '@/config/quantity'
 import type { ProductFormValues } from '@/types/productForm'
 
 describe('mergeProductFormValues', () => {
@@ -13,6 +14,8 @@ describe('mergeProductFormValues', () => {
     allergens: ['soy'],
     isOrganic: true,
     barcode: '4006381333931',
+    quantityUnit: QuantityUnit.Milliliter,
+    quantityValue: 1000,
     ingredients: [],
     nutrients: [],
     ...overrides,
@@ -38,6 +41,28 @@ describe('mergeProductFormValues', () => {
 
       expect(result.name).toBeUndefined()
       expect(result.brand).toBe('Alpro')
+    })
+  })
+
+  describe('given products with different quantities', () => {
+    it('leaves unit and value undecided together', () => {
+      const result = mergeProductFormValues(
+        buildValues({ quantityUnit: QuantityUnit.Gram, quantityValue: 500 }),
+        buildValues({ quantityUnit: QuantityUnit.Milliliter, quantityValue: 500 }),
+      )
+
+      expect(result.quantityUnit).toBeUndefined()
+      expect(result.quantityValue).toBeUndefined()
+    })
+
+    it('leaves both undecided when only the value differs', () => {
+      const result = mergeProductFormValues(
+        buildValues({ quantityValue: 500 }),
+        buildValues({ quantityValue: 1000 }),
+      )
+
+      expect(result.quantityUnit).toBeUndefined()
+      expect(result.quantityValue).toBeUndefined()
     })
   })
 

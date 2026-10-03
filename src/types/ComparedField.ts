@@ -7,4 +7,5 @@ export enum ComparedField {
   IsOrganic = 'isOrganic',
   Base = 'base',
   Energy = 'energyJoules',
+  Quantity = 'quantity',
 }

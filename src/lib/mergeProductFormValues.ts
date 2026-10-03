@@ -4,10 +4,19 @@ import { mergeNutrientsByName } from '@/lib/mergeNutrientsByName'
 import { mergeScalarField } from '@/lib/mergeScalarField'
 import type { ProductFormInitialValues, ProductFormValues } from '@/types/productForm'
 
+const mergeQuantity = (
+  a: ProductFormValues,
+  b: ProductFormValues,
+): Pick<ProductFormInitialValues, 'quantityUnit' | 'quantityValue'> =>
+  a.quantityUnit === b.quantityUnit && a.quantityValue === b.quantityValue
+    ? { quantityUnit: a.quantityUnit, quantityValue: a.quantityValue }
+    : {}
+
 export const mergeProductFormValues = (
   a: ProductFormValues,
   b: ProductFormValues,
 ): ProductFormInitialValues => ({
+  ...mergeQuantity(a, b),
   name: mergeScalarField(a.name, b.name),
   category: mergeScalarField(a.category, b.category),
   base: mergeScalarField(a.base, b.base),

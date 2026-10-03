@@ -23,6 +23,8 @@ import { formatIngredientLabel } from '@/config/formatIngredientLabel'
 import { sortIngredientsByFractionDesc } from '@/config/sortIngredientsByFractionDesc'
 import type { IngredientComparator } from '@/config/ingredients'
 import { formatNutrientAmount } from '@/lib/formatNutrientAmount'
+import { formatQuantity } from '@/lib/formatQuantity'
+import { toQuantityUnit } from '@/lib/toQuantityUnit'
 import { formatEnergy } from '@/lib/formatEnergy'
 import { sortNutrientsByHierarchy } from '@/lib/sortNutrientsByHierarchy'
 import { getNutrientHierarchyDepth } from '@/lib/getNutrientHierarchyDepth'
@@ -243,7 +245,15 @@ watch(
             {{ allergenToLabel(allergen) }}
           </span>
         </div>
-        <h1 class="text-2xl font-bold text-gray-900 mb-1">{{ product.name }}</h1>
+        <h1 class="text-2xl font-bold text-gray-900 mb-1">
+          {{ product.name }},
+          {{
+            formatQuantity({
+              unit: toQuantityUnit(product.quantityUnit),
+              value: product.quantityValue,
+            })
+          }}
+        </h1>
         <p v-if="product.brand" class="text-sm text-gray-500 mb-3">von {{ product.brand }}</p>
         <p v-if="product.description" class="text-sm text-gray-600">{{ product.description }}</p>
       </div>

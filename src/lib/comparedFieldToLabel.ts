@@ -9,6 +9,7 @@ const COMPARED_FIELD_LABELS: Record<ComparedField, string> = {
   [ComparedField.IsOrganic]: 'Bio-Produkt',
   [ComparedField.Base]: 'Basis',
   [ComparedField.Energy]: 'Energie',
+  [ComparedField.Quantity]: 'Menge',
 }
 
 export const comparedFieldToLabel = (field: ComparedField): string => COMPARED_FIELD_LABELS[field]

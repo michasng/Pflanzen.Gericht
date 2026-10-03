@@ -18,6 +18,8 @@ const product: Product = {
   minPriceEuroCents: null,
   name: 'Drink',
   normalizedName: 'drink',
+  quantityUnit: 'piece',
+  quantityValue: 1,
   reviewsCount: 0,
   tags: [],
   updatedAt: '2026-01-01T00:00:00Z',
@@ -49,6 +51,8 @@ describe('toProductFormValues', () => {
         isOrganic: true,
         ingredients: [{ name: 'Soja', fractionBasisPoints: 500, comparator: '≥' }],
         nutrients: [{ name: 'Fett', amountMicrograms: 1000 }],
+        quantityUnit: 'piece',
+        quantityValue: 1,
       })
     })
   })

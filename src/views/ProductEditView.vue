@@ -21,6 +21,7 @@ import {
 import { fetchProductReviewImages, type ProductReviewImages } from '@/services/reviews'
 import { formatDate } from '@/lib/date'
 import { toErrorMessage } from '@/lib/error'
+import { toQuantityUnit } from '@/lib/toQuantityUnit'
 import { useImageUpload } from '@/composables/useImageUpload'
 import type { Product, ProductImage, ReviewImage } from '@/types'
 import type { ProductFormValues } from '@/types/productForm'
@@ -149,6 +150,8 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
       product.value.energyJoules !== fields.energyJoules ||
       product.value.isOrganic !== fields.isOrganic ||
       product.value.barcode !== fields.barcode ||
+      product.value.quantityUnit !== fields.quantityUnit ||
+      product.value.quantityValue !== fields.quantityValue ||
       product.value.allergens.length !== fields.allergens.length ||
       product.value.allergens.some((allergen) => !submittedAllergens.has(allergen))
     if (shouldUpdateProductFields) {
@@ -190,6 +193,8 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
           allergens: product.allergens.filter(isKnownAllergen),
           isOrganic: product.isOrganic,
           barcode: product.barcode,
+          quantityUnit: toQuantityUnit(product.quantityUnit),
+          quantityValue: product.quantityValue,
           ingredients: initialIngredients,
           nutrients: initialNutrients,
         }"

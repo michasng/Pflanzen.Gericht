@@ -32,7 +32,9 @@ export interface CatalogFilter {
   organic: boolean
 }
 
-export type ProductListItem = Product & { images: ProductImage[] }
+export type ProductListItem = Omit<Product, 'quantityUnit' | 'quantityValue'> & {
+  images: ProductImage[]
+}
 
 export interface ProductPage {
   items: ProductListItem[]

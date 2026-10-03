@@ -1,4 +1,5 @@
 import { ALLERGENS, type Allergen } from '@/config/allergens'
+import { toQuantityUnit } from '@/lib/toQuantityUnit'
 import type { IngredientComparator } from '@/config/ingredients'
 import type { Product, ProductIngredient, ProductNutrient } from '@/types'
 import type { ProductFormValues } from '@/types/productForm'
@@ -20,6 +21,8 @@ export const toProductFormValues = (
   allergens: product.allergens.filter(isKnownAllergen),
   isOrganic: product.isOrganic,
   barcode: product.barcode,
+  quantityUnit: toQuantityUnit(product.quantityUnit),
+  quantityValue: product.quantityValue,
   ingredients: ingredients.map((ingredient) => ({
     name: ingredient.name,
     fractionBasisPoints: ingredient.fractionBasisPoints,

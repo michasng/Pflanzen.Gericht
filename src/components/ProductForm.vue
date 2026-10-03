@@ -20,6 +20,13 @@ import {
   JOULES_PER_ENERGY_UNIT,
 } from '@/config/energy'
 import type { EnergyUnit } from '@/config/energy'
+import {
+  QUANTITY_INPUT_UNITS,
+  QUANTITY_INPUT_UNIT_LABELS,
+  DEFAULT_QUANTITY_INPUT_UNIT,
+  QuantityInputUnit,
+  QuantityUnit,
+} from '@/config/quantity'
 import { exceedsWholeFraction } from '@/config/exceedsWholeFraction'
 import { isLikelyNonVeganIngredient } from '@/config/isLikelyNonVeganIngredient'
 import { sumGuaranteedFractionBasisPoints } from '@/config/sumGuaranteedFractionBasisPoints'
@@ -29,6 +36,7 @@ import { parseNutrientAmountInputToMicrograms } from '@/lib/parseNutrientAmountI
 import { chooseNutrientDisplayUnit, formatNutrientAmountValue } from '@/lib/formatNutrientAmount'
 import { sortNutrientsByHierarchy } from '@/lib/sortNutrientsByHierarchy'
 import { hasDuplicateNames } from '@/lib/hasDuplicateNames'
+import { parseQuantityInput } from '@/lib/parseQuantityInput'
 import { parseEnergyInputToJoules } from '@/lib/parseEnergyInputToJoules'
 import { useNameSuggestions } from '@/composables/useNameSuggestions'
 import {
@@ -102,6 +110,29 @@ const parsedEnergyJoules = computed(() =>
 
 const hasInvalidEnergy = computed(
   () => energyInput.value.trim().length > 0 && parsedEnergyJoules.value === null,
+)
+
+const QUANTITY_UNIT_TO_INPUT_UNIT: Record<QuantityUnit, QuantityInputUnit> = {
+  [QuantityUnit.Milliliter]: QuantityInputUnit.Milliliter,
+  [QuantityUnit.Gram]: QuantityInputUnit.Gram,
+  [QuantityUnit.Piece]: QuantityInputUnit.Piece,
+}
+
+const quantityInput = ref(
+  props.initial?.quantityValue !== undefined ? String(props.initial.quantityValue) : '',
+)
+const quantityInputUnit = ref<QuantityInputUnit>(
+  props.initial?.quantityUnit !== undefined
+    ? QUANTITY_UNIT_TO_INPUT_UNIT[props.initial.quantityUnit]
+    : DEFAULT_QUANTITY_INPUT_UNIT,
+)
+
+const parsedQuantity = computed(() =>
+  parseQuantityInput(quantityInput.value, quantityInputUnit.value),
+)
+
+const hasInvalidQuantity = computed(
+  () => quantityInput.value.trim().length > 0 && parsedQuantity.value === null,
 )
 
 interface IngredientRow {
@@ -256,6 +287,8 @@ const handleSubmit = (): void => {
   if (hasInvalidEnergy.value) return
   if (hasInvalidNutrientAmount.value) return
   if (hasDuplicateNutrientNames.value) return
+  const quantity = parsedQuantity.value
+  if (!quantity) return
   emit('submit', {
     name: name.value.trim(),
     category: category.value,
@@ -266,6 +299,8 @@ const handleSubmit = (): void => {
     allergens: allergens.value,
     isOrganic: isOrganic.value,
     barcode: barcode.value.trim() || null,
+    quantityUnit: quantity.unit,
+    quantityValue: quantity.value,
     ingredients: parsedIngredients.value,
     nutrients: parsedNutrients.value,
   })
@@ -312,6 +347,10 @@ const acceptField = (field: ComparedField, side: ComparisonSide): void => {
       break
     case ComparedField.Base:
       base.value = source.base ?? ''
+      break
+    case ComparedField.Quantity:
+      quantityInputUnit.value = QUANTITY_UNIT_TO_INPUT_UNIT[source.quantityUnit]
+      quantityInput.value = String(source.quantityValue)
       break
     case ComparedField.Energy:
       energyUnit.value = DEFAULT_ENERGY_UNIT
@@ -491,6 +530,46 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
           placeholder="z. B. Alpro"
           class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
+      </div>
+    </FieldComparisonRow>
+
+    <FieldComparisonRow
+      v-bind="comparedProps(ComparedField.Quantity)"
+      @accept-a="acceptField(ComparedField.Quantity, ComparisonSide.A)"
+      @accept-b="acceptField(ComparedField.Quantity, ComparisonSide.B)"
+    >
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-quantity">
+          Menge <span class="text-red-500" aria-hidden="true">*</span>
+        </label>
+        <div
+          v-if="hasInvalidQuantity"
+          role="alert"
+          class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
+        >
+          Bitte gib eine positive Menge ein, die sich in ganzen ml, g oder Stück angeben lässt.
+        </div>
+        <div class="flex gap-2">
+          <input
+            id="pf-quantity"
+            v-model="quantityInput"
+            type="text"
+            inputmode="decimal"
+            required
+            maxlength="8"
+            placeholder="z. B. 500"
+            class="flex-1 min-w-0 px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+          <select
+            v-model="quantityInputUnit"
+            aria-label="Einheit der Menge"
+            class="px-2 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option v-for="unit in QUANTITY_INPUT_UNITS" :key="unit" :value="unit">
+              {{ QUANTITY_INPUT_UNIT_LABELS[unit] }}
+            </option>
+          </select>
+        </div>
       </div>
     </FieldComparisonRow>
 
