@@ -101,6 +101,42 @@ describe('ProductDetailView', () => {
     fetchProductDetail.mockReset()
   })
 
+  describe('given a product with sources', () => {
+    it('links each source by its shortened hostname', async () => {
+      const sourceUrl = 'https://www.rewe.de/shop/p/nutella/9946679'
+      fetchProductDetail.mockResolvedValue({
+        ...createProductDetail('product-1', 'First Product'),
+        sources: [{ id: 'source-1', productId: 'product-1', url: sourceUrl, createdAt: '' }],
+      })
+
+      const wrapper = mount(ProductDetailView, {
+        global: {
+          mocks: {
+            $route: useRoute(),
+          },
+          stubs: {
+            AlertMessage: true,
+            AppLogo: true,
+            PriceReportForm: true,
+            ReviewCard: true,
+            ReviewScoreDimensions: true,
+            RouterLink: true,
+            SimilarProductsSection: true,
+            StarDisplay: true,
+          },
+        },
+      })
+
+      const link = await vi.waitFor(() => {
+        const found = wrapper.find(`a[href="${sourceUrl}"]`)
+        expect(found.exists()).toBe(true)
+        return found
+      })
+      expect(link.text()).toBe('rewe.de')
+      wrapper.unmount()
+    })
+  })
+
   describe('given a slower previous request resolves after navigation', () => {
     it('when the newer request finishes first then it keeps the newer product visible', async () => {
       const firstRequest = createDeferred<ProductDetail | null>()

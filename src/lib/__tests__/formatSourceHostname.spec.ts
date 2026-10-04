@@ -22,6 +22,12 @@ describe('formatSourceHostname', () => {
     })
   })
 
+  describe('given a malformed url', () => {
+    it('returns the url unchanged', () => {
+      expect(formatSourceHostname('https://%')).toBe('https://%')
+    })
+  })
+
   describe('given a two-letter domain label', () => {
     it('keeps the hostname when stripping would leave no top-level domain', () => {
       expect(formatSourceHostname('https://co.uk/')).toBe('co.uk')

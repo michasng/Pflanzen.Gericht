@@ -17,10 +17,20 @@ vi.mock('@/services/catalog', () => ({
 import ProductForm from '../ProductForm.vue'
 import type { ProductFormValues } from '@/types/productForm'
 
+const SCANNED_SOURCE_URLS = ['https://b.de/y', 'https://c.de/z']
+
 const ProductBarcodeScannerStub = defineComponent({
   emits: ['scanned'],
   template:
     '<button type="button" data-test="scan-product" @click="$emit(\'scanned\', { energyJoules: 250000, barcode: \'4006381333931\' })"></button>',
+})
+
+const ProductBarcodeScannerWithSourcesStub = defineComponent({
+  emits: ['scanned'],
+  setup: (_props, { emit }) => ({
+    scan: () => emit('scanned', { sourceUrls: SCANNED_SOURCE_URLS }),
+  }),
+  template: '<button type="button" data-test="scan-product" @click="scan"></button>',
 })
 
 const EQUAL_QUANTITY = { quantityUnit: QuantityUnit.Gram, quantityValue: 500, brand: 'Alpro' }
@@ -51,6 +61,33 @@ describe('ProductForm', () => {
 
       expect(wrapper.emitted('submit')?.[0]?.[0]).toMatchObject({
         sourceUrls: ['https://b.de/y', 'https://c.de/z'],
+      })
+    })
+
+    it('submits the union of existing and scanned urls without duplicates', async () => {
+      const wrapper = mount(ProductForm, {
+        props: {
+          initial: {
+            name: 'A',
+            category: 'drink',
+            sourceUrls: ['https://a.de/x', 'https://b.de/y'],
+            ...EQUAL_QUANTITY,
+          },
+        },
+        global: {
+          stubs: {
+            ImageUpload: true,
+            ProductBarcodeScanner: ProductBarcodeScannerWithSourcesStub,
+            RouterLink: true,
+          },
+        },
+      })
+
+      await wrapper.get('[data-test="scan-product"]').trigger('click')
+      await wrapper.get('form').trigger('submit')
+
+      expect(wrapper.emitted('submit')?.[0]?.[0]).toMatchObject({
+        sourceUrls: ['https://a.de/x', 'https://b.de/y', 'https://c.de/z'],
       })
     })
 

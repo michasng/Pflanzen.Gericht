@@ -16,6 +16,12 @@ describe('isHttpUrlString', () => {
     })
   })
 
+  describe('given a url containing whitespace', () => {
+    it('returns false', () => {
+      expect(isHttpUrlString('https://example.com/a b')).toBe(false)
+    })
+  })
+
   describe('given text that is not a url', () => {
     it('returns false', () => {
       expect(isHttpUrlString('rewe')).toBe(false)

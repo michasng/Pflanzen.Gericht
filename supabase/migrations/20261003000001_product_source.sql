@@ -1,7 +1,7 @@
 CREATE TABLE public.product_source (
   id         uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id uuid        NOT NULL REFERENCES public.product(id) ON DELETE CASCADE,
-  url        text        NOT NULL CHECK (url ~* '^https?://\S+$'),
+  url        text        NOT NULL CHECK (url ~* '^https?://[^\s%/?#]+([/?#]\S*)?$'),
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
