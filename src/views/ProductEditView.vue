@@ -11,12 +11,14 @@ import {
   fetchProductImages,
   fetchProductIngredients,
   fetchProductNutrients,
+  fetchProductSources,
   updateProduct,
   uploadProductImage,
   deleteProductImage,
   copyReviewImageToProduct,
   replaceProductIngredients,
   replaceProductNutrients,
+  replaceProductSources,
 } from '@/services/products'
 import { fetchProductReviewImages, type ProductReviewImages } from '@/services/reviews'
 import { formatDate } from '@/lib/date'
@@ -33,6 +35,7 @@ const authStore = useAuthStore()
 const product = ref<Product | null>(null)
 const initialIngredients = ref<ProductFormValues['ingredients']>([])
 const initialNutrients = ref<ProductFormValues['nutrients']>([])
+const initialSourceUrls = ref<ProductFormValues['sourceUrls']>([])
 const loading = ref(true)
 const loadError = ref<string | null>(null)
 const submitting = ref(false)
@@ -97,14 +100,25 @@ const haveSameNutrients = (
   return currentSignatures.every((signature, index) => signature === nextSignatures[index])
 }
 
+const haveSameSourceUrls = (
+  currentUrls: ProductFormValues['sourceUrls'],
+  nextUrls: ProductFormValues['sourceUrls'],
+): boolean => {
+  if (currentUrls.length !== nextUrls.length) return false
+  const currentSorted = [...currentUrls].sort()
+  const nextSorted = [...nextUrls].sort()
+  return currentSorted.every((url, index) => url === nextSorted[index])
+}
+
 onMounted(async () => {
   const id = route.params.id as string
   try {
-    const [p, imgs, ingredients, nutrients, reviewImages] = await Promise.all([
+    const [p, imgs, ingredients, nutrients, sources, reviewImages] = await Promise.all([
       fetchProduct(id),
       fetchProductImages(id),
       fetchProductIngredients(id),
       fetchProductNutrients(id),
+      fetchProductSources(id),
       authStore.isAdmin ? fetchProductReviewImages(id) : Promise.resolve([]),
     ])
     if (!p) {
@@ -127,6 +141,7 @@ onMounted(async () => {
       name: nutrient.name,
       amountMicrograms: nutrient.amountMicrograms,
     }))
+    initialSourceUrls.value = sources.map((source) => source.url)
   } catch (err) {
     loadError.value = toErrorMessage(err)
   } finally {
@@ -139,7 +154,7 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
   submitting.value = true
   submitError.value = null
   try {
-    const { ingredients, nutrients, ...fields } = values
+    const { ingredients, nutrients, sourceUrls, ...fields } = values
     const submittedAllergens = new Set<string>(fields.allergens)
     const shouldUpdateProductFields =
       product.value.name !== fields.name ||
@@ -164,6 +179,10 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
     const shouldReplaceNutrients = !haveSameNutrients(initialNutrients.value, nutrients)
     if (shouldReplaceNutrients) {
       await replaceProductNutrients(product.value.id, nutrients)
+    }
+    const shouldReplaceSources = !haveSameSourceUrls(initialSourceUrls.value, sourceUrls)
+    if (shouldReplaceSources) {
+      await replaceProductSources(product.value.id, sourceUrls)
     }
     await commitImageChanges()
     await router.push({ name: 'product-detail', params: { id: product.value.id } })
@@ -197,6 +216,7 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
           quantityValue: product.quantityValue,
           ingredients: initialIngredients,
           nutrients: initialNutrients,
+          sourceUrls: initialSourceUrls,
         }"
         :existing-images="existingImages"
         :submitting="submitting"

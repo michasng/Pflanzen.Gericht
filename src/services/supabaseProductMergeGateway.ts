@@ -6,6 +6,7 @@ import {
   deleteProduct,
   replaceProductIngredients,
   replaceProductNutrients,
+  replaceProductSources,
   updateProduct,
 } from '@/services/products'
 import { copyReviewImageToReview, createReview, fetchProductReviews } from '@/services/reviews'
@@ -18,6 +19,7 @@ export const supabaseProductMergeGateway: ProductMergeGateway = {
   deleteProduct,
   replaceIngredients: replaceProductIngredients,
   replaceNutrients: replaceProductNutrients,
+  replaceSources: replaceProductSources,
   copyImage: copyProductImageToProduct,
   copyReviewImage: copyReviewImageToReview,
   createReview,

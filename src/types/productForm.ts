@@ -32,6 +32,7 @@ export interface ProductFormValues {
   quantityValue: number
   ingredients: ProductFormIngredient[]
   nutrients: ProductFormNutrient[]
+  sourceUrls: string[]
 }
 
 export interface ProductFormInitialNutrient {

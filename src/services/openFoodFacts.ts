@@ -30,6 +30,7 @@ const isOpenFoodFactsIngredient = (value: unknown): boolean =>
 
 const isOpenFoodFactsProduct = (value: unknown): value is OpenFoodFactsProduct =>
   isRecord(value) &&
+  (value.code === undefined || typeof value.code === 'string') &&
   (value.product_name === undefined || typeof value.product_name === 'string') &&
   (value.product_name_de === undefined || typeof value.product_name_de === 'string') &&
   (value.product_name_en === undefined || typeof value.product_name_en === 'string') &&

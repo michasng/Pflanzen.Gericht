@@ -9,6 +9,7 @@ import {
   uploadProductImage,
   replaceProductIngredients,
   replaceProductNutrients,
+  replaceProductSources,
 } from '@/services/products'
 import { toErrorMessage } from '@/lib/error'
 import type { ProductFormValues } from '@/types/productForm'
@@ -26,11 +27,12 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
   submitting.value = true
   error.value = null
   try {
-    const { ingredients, nutrients, ...fields } = values
+    const { ingredients, nutrients, sourceUrls, ...fields } = values
     const product = await createProduct(fields, user.id)
     await Promise.all([
       replaceProductIngredients(product.id, ingredients),
       replaceProductNutrients(product.id, nutrients),
+      replaceProductSources(product.id, sourceUrls),
       ...pendingFiles.value.map((file, i) => uploadProductImage(product.id, user.id, file, i)),
     ])
     await router.push({ name: 'product-detail', params: { id: product.id } })

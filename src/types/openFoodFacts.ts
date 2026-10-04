@@ -7,6 +7,7 @@ export interface OpenFoodFactsIngredient {
 export type OpenFoodFactsNutrimentValue = number | string
 
 export interface OpenFoodFactsProduct {
+  code?: string
   product_name?: string
   product_name_de?: string
   product_name_en?: string

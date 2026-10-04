@@ -18,6 +18,9 @@ export type ProductIngredientInsert = CamelCasedKeys<TablesInsert<'product_ingre
 export type ProductNutrient = CamelCasedKeys<Tables<'product_nutrient'>>
 export type ProductNutrientInsert = CamelCasedKeys<TablesInsert<'product_nutrient'>>
 
+export type ProductSource = CamelCasedKeys<Tables<'product_source'>>
+export type ProductSourceInsert = CamelCasedKeys<TablesInsert<'product_source'>>
+
 export type ProductSimilarityVote = CamelCasedKeys<Tables<'product_similarity_vote'>>
 export type ProductSimilarityVoteInsert = CamelCasedKeys<TablesInsert<'product_similarity_vote'>>
 export type ProductSimilarityVoteUpdate = CamelCasedKeys<TablesUpdate<'product_similarity_vote'>>

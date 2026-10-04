@@ -103,6 +103,7 @@ interface FakeData {
 
 const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGateway) => {
   const calls: string[] = []
+  const replacedSourceUrls: string[][] = []
   const createdNames: string[] = []
   const createdProductFields: MergedProductFields[] = []
   const updatedProductFields: MergedProductFields[] = []
@@ -130,6 +131,10 @@ const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGatewa
     },
     replaceIngredients: (_id, _ingredients) => record('replaceIngredients'),
     replaceNutrients: (_id, _nutrients) => record('replaceNutrients'),
+    replaceSources: async (_id, urls) => {
+      await record('replaceSources')
+      replacedSourceUrls.push(urls)
+    },
     copyImage: async (image, _productId, ownerId, sortOrder) => {
       await record('copyImage')
       copiedImages.push({ image, ownerId, sortOrder })
@@ -172,6 +177,7 @@ const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGatewa
   return {
     gateway,
     calls,
+    replacedSourceUrls,
     createdNames,
     createdProductFields,
     updatedProductFields,
@@ -202,6 +208,7 @@ const input: MergeProductsInput = {
     quantityValue: 1500,
     ingredients: [],
     nutrients: [],
+    sourceUrls: [],
   },
 }
 
@@ -279,6 +286,17 @@ describe('mergeProducts', () => {
     })
   })
 
+  describe('given source urls', () => {
+    it('replaces the sources of the merged product', async () => {
+      const fake = buildFakeGateway(emptyData)
+      const sourceUrls = ['https://a.de/x', 'https://b.de/y']
+
+      await mergeProducts(fake.gateway, { ...input, values: { ...input.values, sourceUrls } })
+
+      expect(fake.replacedSourceUrls).toEqual([sourceUrls])
+    })
+  })
+
   describe('given accepted images', () => {
     it('copies each one for the owner in order', async () => {
       const fake = buildFakeGateway(emptyData)
@@ -296,6 +314,7 @@ describe('mergeProducts', () => {
 
   describe.each([
     'replaceIngredients',
+    'replaceSources',
     'copyImage',
     'createReview',
     'upsertPriceReport',

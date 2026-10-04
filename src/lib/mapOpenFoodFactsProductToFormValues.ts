@@ -11,6 +11,7 @@ import {
   OPEN_FOOD_FACTS_ORGANIC_KEYWORDS_DE,
   OPEN_FOOD_FACTS_ORGANIC_KEYWORDS_EN,
   OPEN_FOOD_FACTS_ORGANIC_LABEL_TAG,
+  OPEN_FOOD_FACTS_PRODUCT_PAGE_BASE_URL,
   isOpenFoodFactsEstimatedNutrimentField,
 } from '@/config/openFoodFacts'
 import type { Allergen } from '@/config/allergens'
@@ -181,6 +182,11 @@ const mapNutrients = (
   return nutrients.length ? sortNutrientsByHierarchy(nutrients) : undefined
 }
 
+const mapSourceUrls = (product: OpenFoodFactsProduct): string[] | undefined =>
+  product.code
+    ? [`${OPEN_FOOD_FACTS_PRODUCT_PAGE_BASE_URL}/${encodeURIComponent(product.code)}`]
+    : undefined
+
 export const mapOpenFoodFactsProductToFormValues = (
   product: OpenFoodFactsProduct,
 ): Partial<ProductFormValues> => {
@@ -209,6 +215,9 @@ export const mapOpenFoodFactsProductToFormValues = (
 
   const nutrients = mapNutrients(product)
   if (nutrients !== undefined) values.nutrients = nutrients
+
+  const sourceUrls = mapSourceUrls(product)
+  if (sourceUrls !== undefined) values.sourceUrls = sourceUrls
 
   return values
 }

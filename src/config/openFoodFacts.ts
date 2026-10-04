@@ -2,6 +2,8 @@ import type { Allergen } from '@/config/allergens'
 
 export const OPEN_FOOD_FACTS_API_BASE_URL = 'https://world.openfoodfacts.org/api/v2/product'
 
+export const OPEN_FOOD_FACTS_PRODUCT_PAGE_BASE_URL = 'https://de.openfoodfacts.org/produkt'
+
 export const OPEN_FOOD_FACTS_ORGANIC_LABEL_TAG = 'en:organic'
 
 export const OPEN_FOOD_FACTS_ALLERGEN_TAG_TO_ALLERGEN: Record<string, Allergen> = {

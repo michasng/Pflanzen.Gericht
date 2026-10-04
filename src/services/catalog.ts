@@ -5,6 +5,7 @@ import type {
   ProductImage,
   ProductIngredient,
   ProductNutrient,
+  ProductSource,
   Review,
   ReviewImage,
 } from '@/types'
@@ -51,6 +52,7 @@ export type ProductDetail = Product & {
   images: ProductImage[]
   ingredients: ProductIngredient[]
   nutrients: ProductNutrient[]
+  sources: ProductSource[]
   reviews: ReviewWithDetails[]
   priceReports: PriceReportWithProfile[]
 }
@@ -128,7 +130,7 @@ export const fetchProductDetail = async (id: string): Promise<ProductDetail | nu
       supabase
         .from('product')
         .select(
-          '*, images:product_image(id, storage_path, sort_order), ingredients:product_ingredient(id, name, fraction_basis_points, comparator), nutrients:product_nutrient(id, name, amount_micrograms)',
+          '*, images:product_image(id, storage_path, sort_order), ingredients:product_ingredient(id, name, fraction_basis_points, comparator), nutrients:product_nutrient(id, name, amount_micrograms), sources:product_source(id, url, created_at)',
         )
         .eq('id', id)
         .single(),
@@ -154,6 +156,7 @@ export const fetchProductDetail = async (id: string): Promise<ProductDetail | nu
       images: (p.images as Tables<'product_image'>[] | null) ?? [],
       ingredients: (p.ingredients as Tables<'product_ingredient'>[] | null) ?? [],
       nutrients: (p.nutrients as Tables<'product_nutrient'>[] | null) ?? [],
+      sources: (p.sources as Tables<'product_source'>[] | null) ?? [],
       reviews: (rawReviews ?? []).map((r) => ({
         ...r,
         profile: r.profile as { username: string; display_name: string | null },
