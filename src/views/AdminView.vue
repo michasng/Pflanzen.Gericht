@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   fetchAllProductsForAdmin,
@@ -30,8 +30,6 @@ import { ChipTone } from '@/components/primitives/ChipTone'
 import { formatDate } from '@/lib/date'
 import { orderProductPairByCreation } from '@/lib/orderProductPairByCreation'
 
-const MERGE_SELECTION_SIZE = 2
-
 const router = useRouter()
 
 const activeTab = ref<'products' | 'reviews'>('products')
@@ -41,7 +39,6 @@ const loading = ref(true)
 const loadError = ref<string | null>(null)
 const deletingId = ref<string | null>(null)
 const selectedProductIds = ref<string[]>([])
-const canMergeProducts = computed(() => selectedProductIds.value.length === MERGE_SELECTION_SIZE)
 const productPage = ref(0)
 const productHasMore = ref(true)
 const reviewPage = ref(0)
@@ -90,8 +87,7 @@ const loadMoreReviews = async (): Promise<void> => {
   }
 }
 
-const handleDeleteProduct = async (id: string): Promise<void> => {
-  if (!confirm('Produkt und alle zugehörigen Bewertungen unwiderruflich löschen?')) return
+const removeProduct = async (id: string): Promise<void> => {
   deletingId.value = id
   try {
     await deleteProduct(id)
@@ -104,10 +100,23 @@ const handleDeleteProduct = async (id: string): Promise<void> => {
   }
 }
 
+const handleDeleteProduct = async (id: string): Promise<void> => {
+  if (!confirm('Produkt und alle zugehörigen Bewertungen unwiderruflich löschen?')) return
+  await removeProduct(id)
+}
+
+const handleDeleteSelectedProducts = async (): Promise<void> => {
+  if (!confirm('Ausgewählte Produkte und alle zugehörigen Bewertungen unwiderruflich löschen?'))
+    return
+  for (const id of selectedProductIds.value) {
+    await removeProduct(id)
+  }
+}
+
 const handleMergeProducts = async (): Promise<void> => {
   const selected = products.value.filter((p) => selectedProductIds.value.includes(p.id))
   const [first, second] = selected
-  if (!first || !second || !canMergeProducts.value) return
+  if (!first || !second || selectedProductIds.value.length !== 2) return
   const [a, b] = orderProductPairByCreation(first, second)
   await router.push({ name: 'product-merge', query: { a: a.id, b: b.id } })
 }
@@ -155,15 +164,25 @@ const handleDeleteReview = async (id: string): Promise<void> => {
         <p v-if="products.length === 0" class="py-12 text-center text-gray-400 text-sm">
           Keine Produkte vorhanden.
         </p>
-        <div v-else class="mb-3 flex justify-end">
+        <div v-else class="mb-3 flex justify-end gap-2">
           <Button
             ariaLabel="Produkte zusammenführen"
             :variant="ButtonVariant.Outlined"
             :size="ButtonSize.Compact"
-            :disabled="!canMergeProducts"
+            :disabled="selectedProductIds.length !== 2"
             @click="handleMergeProducts"
           >
             Zusammenführen
+          </Button>
+          <Button
+            ariaLabel="Ausgewählte Produkte löschen"
+            :variant="ButtonVariant.Outlined"
+            :size="ButtonSize.Compact"
+            :tone="ButtonTone.Danger"
+            :disabled="selectedProductIds.length === 0 || deletingId !== null"
+            @click="handleDeleteSelectedProducts"
+          >
+            Löschen
           </Button>
         </div>
         <ul v-if="products.length" class="space-y-2">
