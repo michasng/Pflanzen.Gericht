@@ -17,5 +17,8 @@ jobs:
         with:
           version: latest
 
+      - name: Link project
+        run: supabase link --project-ref ${{ vars.SUPABASE_PROJECT_REF }}
+
       - name: Run migrations
-        run: supabase db push --project-ref ${{ vars.SUPABASE_PROJECT_REF }}
+        run: supabase db push
