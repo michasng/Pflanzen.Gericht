@@ -87,6 +87,7 @@ const name = ref(props.initial?.name ?? '')
 const category = ref(props.initial?.category ?? '')
 const base = ref(props.initial?.base ?? '')
 const brand = ref(props.initial?.brand ?? '')
+const hasInvalidBrand = computed(() => brand.value.trim().length === 0)
 const description = ref(props.initial?.description ?? '')
 const allergens = ref<Allergen[]>(props.initial?.allergens ? [...props.initial.allergens] : [])
 const isOrganic = ref(props.initial?.isOrganic ?? false)
@@ -282,6 +283,7 @@ watch(name, (val) => {
 })
 
 const handleSubmit = (): void => {
+  if (hasInvalidBrand.value) return
   if (hasInvalidIngredientFraction.value) return
   if (hasDuplicateIngredientNames.value) return
   if (hasInvalidEnergy.value) return
@@ -522,6 +524,13 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
         <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-brand">
           Marke / Hersteller <span class="text-red-500" aria-hidden="true">*</span>
         </label>
+        <div
+          v-if="hasInvalidBrand && brand.length > 0"
+          role="alert"
+          class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
+        >
+          Bitte gib eine Marke / einen Hersteller ein.
+        </div>
         <input
           id="pf-brand"
           v-model="brand"
