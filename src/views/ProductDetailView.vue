@@ -254,7 +254,7 @@ watch(
             })
           }}
         </h1>
-        <p v-if="product.brand" class="text-sm text-gray-500 mb-3">von {{ product.brand }}</p>
+        <p class="text-sm text-gray-500 mb-3">von {{ product.brand }}</p>
         <p v-if="product.description" class="text-sm text-gray-600">{{ product.description }}</p>
       </div>
 

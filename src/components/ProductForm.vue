@@ -293,7 +293,7 @@ const handleSubmit = (): void => {
     name: name.value.trim(),
     category: category.value,
     base: base.value || null,
-    brand: brand.value.trim() || null,
+    brand: brand.value.trim(),
     description: description.value.trim() || null,
     energyJoules: parsedEnergyJoules.value,
     allergens: allergens.value,
@@ -337,7 +337,7 @@ const acceptField = (field: ComparedField, side: ComparisonSide): void => {
       category.value = source.category
       break
     case ComparedField.Brand:
-      brand.value = source.brand ?? ''
+      brand.value = source.brand
       break
     case ComparedField.Description:
       description.value = source.description ?? ''
@@ -520,12 +520,13 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
     >
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-brand">
-          Marke / Hersteller
+          Marke / Hersteller <span class="text-red-500" aria-hidden="true">*</span>
         </label>
         <input
           id="pf-brand"
           v-model="brand"
           type="text"
+          required
           maxlength="80"
           placeholder="z. B. Alpro"
           class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"

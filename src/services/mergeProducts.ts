@@ -87,7 +87,7 @@ export const mergeProducts = async (
     quantityValue: values.quantityValue,
   }
   const mergedProduct = await gateway.createProduct(
-    { ...mergedFields, name: `${TEMPORARY_NAME_PREFIX}${productIds.join('-')}`, brand: null },
+    { ...mergedFields, name: `${TEMPORARY_NAME_PREFIX}${productIds.join('-')}` },
     ownerId,
   )
 
