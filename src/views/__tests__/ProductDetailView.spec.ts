@@ -88,6 +88,7 @@ const createProductDetail = (id: string, name: string): ProductDetail => ({
   priceReports: [],
   reviews: [],
   reviewsCount: 0,
+  sources: [],
   tags: [],
   updatedAt: '2026-09-11T00:00:00.000Z',
 })

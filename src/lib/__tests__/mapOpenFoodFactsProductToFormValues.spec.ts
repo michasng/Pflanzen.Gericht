@@ -7,6 +7,12 @@ describe('mapOpenFoodFactsProductToFormValues', () => {
     expect(mapOpenFoodFactsProductToFormValues({})).toEqual({})
   })
 
+  it('given a product has a code, maps it to the open food facts product page', () => {
+    const values = mapOpenFoodFactsProductToFormValues({ code: '8000500426494' })
+
+    expect(values.sourceUrls).toEqual(['https://de.openfoodfacts.org/produkt/8000500426494'])
+  })
+
   it('given a product has a name and brand, maps them and uses only the first brand', () => {
     const product: OpenFoodFactsProduct = {
       product_name: 'Soja-Drink Original',

@@ -31,6 +31,7 @@ export interface ProductMergeGateway {
   updateProduct: (productId: string, fields: MergedProductFields) => Promise<void>
   replaceIngredients: (productId: string, ingredients: IngredientWrite[]) => Promise<void>
   replaceNutrients: (productId: string, nutrients: NutrientWrite[]) => Promise<void>
+  replaceSources: (productId: string, urls: string[]) => Promise<void>
   copyImage: (
     image: ProductImage,
     productId: string,

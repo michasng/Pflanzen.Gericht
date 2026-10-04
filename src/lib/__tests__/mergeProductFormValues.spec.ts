@@ -18,6 +18,7 @@ describe('mergeProductFormValues', () => {
     quantityValue: 1000,
     ingredients: [],
     nutrients: [],
+    sourceUrls: [],
     ...overrides,
   })
 
@@ -29,6 +30,17 @@ describe('mergeProductFormValues', () => {
       })
 
       expect(mergeProductFormValues(values, values)).toEqual(values)
+    })
+  })
+
+  describe('given products with different sources', () => {
+    it('keeps every source once', () => {
+      const result = mergeProductFormValues(
+        buildValues({ sourceUrls: ['https://a.de/x', 'https://b.de/y'] }),
+        buildValues({ sourceUrls: ['https://b.de/y', 'https://c.de/z'] }),
+      )
+
+      expect(result.sourceUrls).toEqual(['https://a.de/x', 'https://b.de/y', 'https://c.de/z'])
     })
   })
 

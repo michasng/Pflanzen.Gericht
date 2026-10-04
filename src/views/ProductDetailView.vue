@@ -26,6 +26,7 @@ import { formatNutrientAmount } from '@/lib/formatNutrientAmount'
 import { formatQuantity } from '@/lib/formatQuantity'
 import { toQuantityUnit } from '@/lib/toQuantityUnit'
 import { formatEnergy } from '@/lib/formatEnergy'
+import { formatSourceHostname } from '@/lib/formatSourceHostname'
 import { sortNutrientsByHierarchy } from '@/lib/sortNutrientsByHierarchy'
 import { getNutrientHierarchyDepth } from '@/lib/getNutrientHierarchyDepth'
 import { NUTRIENT_PARENT_NAME } from '@/config/nutrientHierarchy'
@@ -294,6 +295,26 @@ watch(
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <div
+        v-if="product.sources.length"
+        class="mb-4 bg-white rounded-2xl border border-gray-100 p-4"
+      >
+        <h2 class="text-base font-bold text-gray-900 mb-2">Quellen</h2>
+        <p class="text-sm text-gray-600">
+          <template v-for="(source, index) in product.sources" :key="source.id">
+            <span v-if="index > 0">, </span>
+            <a
+              :href="source.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-primary-600 hover:text-primary-700 underline"
+            >
+              {{ formatSourceHostname(source.url) }}
+            </a>
+          </template>
+        </p>
       </div>
 
       <div class="bg-white rounded-2xl border border-gray-100 p-4 mb-4">

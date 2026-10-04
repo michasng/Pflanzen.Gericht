@@ -12,6 +12,7 @@ import {
   fetchProductImages,
   fetchProductIngredients,
   fetchProductNutrients,
+  fetchProductSources,
 } from '@/services/products'
 import { fetchPublicProfile } from '@/services/profile'
 import { getImageUrl } from '@/services/catalog'
@@ -56,11 +57,12 @@ const ownerSide = ref<ComparisonSide | null>(null)
 const acceptedImageIds = ref<string[]>([])
 
 const loadSource = async (id: string): Promise<MergeSource> => {
-  const [product, images, ingredients, nutrients, counts] = await Promise.all([
+  const [product, images, ingredients, nutrients, sources, counts] = await Promise.all([
     fetchProduct(id),
     fetchProductImages(id),
     fetchProductIngredients(id),
     fetchProductNutrients(id),
+    fetchProductSources(id),
     fetchProductActivityCounts(id),
   ])
   if (!product) throw new Error('Produkt nicht gefunden.')
@@ -68,7 +70,7 @@ const loadSource = async (id: string): Promise<MergeSource> => {
   return {
     product,
     images,
-    values: toProductFormValues(product, ingredients, nutrients),
+    values: toProductFormValues(product, ingredients, nutrients, sources),
     ownerName: profile?.displayName || profile?.username || 'Unbekannt',
     ...counts,
   }

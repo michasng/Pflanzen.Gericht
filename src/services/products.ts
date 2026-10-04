@@ -14,6 +14,7 @@ import type {
   ProductImage,
   ProductIngredient,
   ProductNutrient,
+  ProductSource,
   ReviewImage,
 } from '@/types'
 import type { ProductListItem } from '@/services/catalog'
@@ -203,6 +204,29 @@ export const fetchNutrientNameSuggestions = async (): Promise<string[]> => {
   const { data, error } = await supabase.from('product_nutrient').select('name').limit(500)
   if (error) throw error
   return [...new Set((data ?? []).map((row) => row.name))].sort()
+}
+
+export const fetchProductSources = async (productId: string): Promise<ProductSource[]> => {
+  const { data, error } = await supabase
+    .from('product_source')
+    .select('*')
+    .eq('product_id', productId)
+    .order('created_at')
+  if (error) throw error
+  return camelizeKeys(data ?? [])
+}
+
+export const replaceProductSources = async (productId: string, urls: string[]): Promise<void> => {
+  const { error: deleteError } = await supabase
+    .from('product_source')
+    .delete()
+    .eq('product_id', productId)
+  if (deleteError) throw deleteError
+  if (!urls.length) return
+  const { error: insertError } = await supabase
+    .from('product_source')
+    .insert(urls.map((url) => ({ product_id: productId, url })))
+  if (insertError) throw insertError
 }
 
 export const uploadProductImage = async (

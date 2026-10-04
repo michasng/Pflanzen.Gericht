@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { toProductFormValues } from '../toProductFormValues'
-import type { Product, ProductIngredient, ProductNutrient } from '@/types'
+import type { Product, ProductIngredient, ProductNutrient, ProductSource } from '@/types'
 
 const product: Product = {
   allergens: ['soy', 'unknown'],
@@ -40,10 +40,17 @@ const nutrient: ProductNutrient = {
   productId: 'product',
 }
 
+const source: ProductSource = {
+  createdAt: '2026-01-01T00:00:00Z',
+  id: 'source',
+  productId: 'product',
+  url: 'https://www.rewe.de/shop/p/nutella/9946679',
+}
+
 describe('toProductFormValues', () => {
   describe('given a product with an unknown allergen', () => {
     it('keeps only known allergens and maps database names', () => {
-      const values = toProductFormValues(product, [ingredient], [nutrient])
+      const values = toProductFormValues(product, [ingredient], [nutrient], [source])
 
       expect(values).toMatchObject({
         allergens: ['soy'],
@@ -51,6 +58,7 @@ describe('toProductFormValues', () => {
         isOrganic: true,
         ingredients: [{ name: 'Soja', fractionBasisPoints: 500, comparator: '≥' }],
         nutrients: [{ name: 'Fett', amountMicrograms: 1000 }],
+        sourceUrls: ['https://www.rewe.de/shop/p/nutella/9946679'],
         quantityUnit: 'piece',
         quantityValue: 1,
       })

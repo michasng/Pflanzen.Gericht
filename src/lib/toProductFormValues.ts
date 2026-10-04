@@ -1,7 +1,7 @@
 import { ALLERGENS, type Allergen } from '@/config/allergens'
 import { toQuantityUnit } from '@/lib/toQuantityUnit'
 import type { IngredientComparator } from '@/config/ingredients'
-import type { Product, ProductIngredient, ProductNutrient } from '@/types'
+import type { Product, ProductIngredient, ProductNutrient, ProductSource } from '@/types'
 import type { ProductFormValues } from '@/types/productForm'
 
 const isKnownAllergen = (allergen: string): allergen is Allergen =>
@@ -11,6 +11,7 @@ export const toProductFormValues = (
   product: Product,
   ingredients: ProductIngredient[],
   nutrients: ProductNutrient[],
+  sources: ProductSource[],
 ): ProductFormValues => ({
   name: product.name,
   category: product.category,
@@ -33,4 +34,5 @@ export const toProductFormValues = (
     name: nutrient.name,
     amountMicrograms: nutrient.amountMicrograms,
   })),
+  sourceUrls: sources.map((source) => source.url),
 })

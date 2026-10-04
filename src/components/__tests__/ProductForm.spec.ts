@@ -30,6 +30,40 @@ describe('ProductForm', () => {
     vi.unstubAllGlobals()
   })
 
+  describe('given source urls', () => {
+    const mountWithSources = (sourceUrls: string[]) =>
+      mount(ProductForm, {
+        props: {
+          initial: { name: 'A', category: 'drink', sourceUrls, ...EQUAL_QUANTITY },
+        },
+        global: { stubs: { ImageUpload: true, RouterLink: true } },
+      })
+
+    it('submits the trimmed urls after one was removed and one added', async () => {
+      const wrapper = mountWithSources(['https://a.de/x', 'https://b.de/y'])
+
+      await wrapper.get('[aria-label="Quelle entfernen"]').trigger('click')
+      const addButton = wrapper.findAll('button').find((b) => b.text() === '+ Quelle hinzufügen')
+      await addButton?.trigger('click')
+      const inputs = wrapper.findAll('[aria-label="Quelle"]')
+      await inputs[inputs.length - 1]?.setValue(' https://c.de/z ')
+      await wrapper.get('form').trigger('submit')
+
+      expect(wrapper.emitted('submit')?.[0]?.[0]).toMatchObject({
+        sourceUrls: ['https://b.de/y', 'https://c.de/z'],
+      })
+    })
+
+    it('does not submit an invalid url', async () => {
+      const wrapper = mountWithSources(['not a url'])
+
+      await wrapper.get('form').trigger('submit')
+
+      expect(wrapper.emitted('submit')).toBeUndefined()
+      expect(wrapper.text()).toContain('gültige Web-Adresse')
+    })
+  })
+
   it('given kcal is selected when barcode data fills energy, resets the field to the default unit', async () => {
     const wrapper = mount(ProductForm, {
       global: {
@@ -183,6 +217,7 @@ describe('ProductForm', () => {
           quantityValue: 1000,
           ingredients: [],
           nutrients: [],
+          sourceUrls: [],
         },
         b: {
           name: 'A',
@@ -198,6 +233,7 @@ describe('ProductForm', () => {
           quantityValue: 6,
           ingredients: [],
           nutrients: [],
+          sourceUrls: [],
         },
       }
       const wrapper = mount(ProductForm, {
@@ -230,6 +266,7 @@ describe('ProductForm', () => {
       quantityValue: 500,
       ingredients: [],
       nutrients: [],
+      sourceUrls: [],
       ...overrides,
     })
     const comparison = {

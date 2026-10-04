@@ -36,6 +36,7 @@ import { parseNutrientAmountInputToMicrograms } from '@/lib/parseNutrientAmountI
 import { chooseNutrientDisplayUnit, formatNutrientAmountValue } from '@/lib/formatNutrientAmount'
 import { sortNutrientsByHierarchy } from '@/lib/sortNutrientsByHierarchy'
 import { hasDuplicateNames } from '@/lib/hasDuplicateNames'
+import { isHttpUrlString } from '@/lib/isHttpUrlString'
 import { parseQuantityInput } from '@/lib/parseQuantityInput'
 import { parseEnergyInputToJoules } from '@/lib/parseEnergyInputToJoules'
 import { useNameSuggestions } from '@/composables/useNameSuggestions'
@@ -55,6 +56,8 @@ import { comparedFieldToLabel } from '@/lib/comparedFieldToLabel'
 import { formatComparedFieldValue, formatComparedAllergen } from '@/lib/formatComparedFieldValue'
 import { formatComparedIngredients } from '@/lib/formatComparedIngredients'
 import { formatComparedNutrients } from '@/lib/formatComparedNutrients'
+import { formatComparedSourceUrls } from '@/lib/formatComparedSourceUrls'
+import { mergeUnique } from '@/lib/mergeUnique'
 import type {
   ProductFormValues,
   ProductFormComparison,
@@ -267,6 +270,31 @@ const hasDuplicateNutrientNames = computed(() =>
   hasDuplicateNames(nutrientRows.value.map((row) => row.name)),
 )
 
+interface SourceRow {
+  key: string
+  url: string
+}
+
+const toSourceRow = (url: string): SourceRow => ({ key: crypto.randomUUID(), url })
+
+const sourceRows = ref<SourceRow[]>((props.initial?.sourceUrls ?? []).map(toSourceRow))
+
+const addSourceRow = (): void => {
+  sourceRows.value = [...sourceRows.value, toSourceRow('')]
+}
+
+const removeSourceRow = (key: string): void => {
+  sourceRows.value = sourceRows.value.filter((row) => row.key !== key)
+}
+
+const parsedSourceUrls = computed(() => [
+  ...new Set(sourceRows.value.map((row) => row.url.trim()).filter(Boolean)),
+])
+
+const hasInvalidSourceUrl = computed(() =>
+  parsedSourceUrls.value.some((url) => !isHttpUrlString(url)),
+)
+
 type SimilarProduct = Pick<Product, 'id' | 'name' | 'brand' | 'category'>
 const similarProducts = ref<SimilarProduct[]>([])
 let dedupeTimer: ReturnType<typeof setTimeout> | undefined
@@ -289,6 +317,7 @@ const handleSubmit = (): void => {
   if (hasInvalidEnergy.value) return
   if (hasInvalidNutrientAmount.value) return
   if (hasDuplicateNutrientNames.value) return
+  if (hasInvalidSourceUrl.value) return
   const quantity = parsedQuantity.value
   if (!quantity) return
   emit('submit', {
@@ -305,6 +334,7 @@ const handleSubmit = (): void => {
     quantityValue: quantity.value,
     ingredients: parsedIngredients.value,
     nutrients: parsedNutrients.value,
+    sourceUrls: parsedSourceUrls.value,
   })
 }
 
@@ -370,6 +400,7 @@ const acceptAllergen = (allergen: Allergen, side: ComparisonSide): void => {
 
 const INGREDIENTS_LABEL = 'Zutaten'
 const NUTRIENTS_LABEL = 'Nährwerte'
+const SOURCES_LABEL = 'Quellen'
 
 const ingredientComparisonProps = computed(() => ({
   comparing: !!props.comparison,
@@ -385,6 +416,13 @@ const nutrientComparisonProps = computed(() => ({
   valueB: props.comparison ? formatComparedNutrients(props.comparison.b.nutrients) : '',
 }))
 
+const sourceComparisonProps = computed(() => ({
+  comparing: !!props.comparison,
+  fieldLabel: SOURCES_LABEL,
+  valueA: props.comparison ? formatComparedSourceUrls(props.comparison.a.sourceUrls) : '',
+  valueB: props.comparison ? formatComparedSourceUrls(props.comparison.b.sourceUrls) : '',
+}))
+
 const acceptIngredients = (side: ComparisonSide): void => {
   const source = comparisonValues(side)
   if (!source) return
@@ -395,6 +433,12 @@ const acceptNutrients = (side: ComparisonSide): void => {
   const source = comparisonValues(side)
   if (!source) return
   nutrientRows.value = sortNutrientsByHierarchy(source.nutrients).map(toNutrientRow)
+}
+
+const acceptSources = (side: ComparisonSide): void => {
+  const source = comparisonValues(side)
+  if (!source) return
+  sourceRows.value = source.sourceUrls.map(toSourceRow)
 }
 
 const imageUploadRef = ref<InstanceType<typeof ImageUpload> | null>(null)
@@ -413,6 +457,8 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
   if (values.ingredients !== undefined) ingredientRows.value = values.ingredients.map(toRow)
   if (values.nutrients !== undefined)
     nutrientRows.value = sortNutrientsByHierarchy(values.nutrients).map(toNutrientRow)
+  if (values.sourceUrls !== undefined)
+    sourceRows.value = mergeUnique(parsedSourceUrls.value, values.sourceUrls).map(toSourceRow)
 }
 </script>
 
@@ -850,6 +896,48 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
           @click="addNutrientRow"
         >
           + Nährwert hinzufügen
+        </button>
+      </div>
+    </FieldComparisonRow>
+
+    <FieldComparisonRow
+      v-bind="sourceComparisonProps"
+      @accept-a="acceptSources(ComparisonSide.A)"
+      @accept-b="acceptSources(ComparisonSide.B)"
+    >
+      <div>
+        <p class="text-sm font-medium text-gray-700 mb-1.5">{{ SOURCES_LABEL }}</p>
+        <div
+          v-if="hasInvalidSourceUrl"
+          role="alert"
+          class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
+        >
+          Bitte gib für jede Quelle eine gültige Web-Adresse ein (https://…).
+        </div>
+        <div v-for="row in sourceRows" :key="row.key" class="flex gap-2 mb-2">
+          <input
+            v-model="row.url"
+            type="url"
+            maxlength="2000"
+            placeholder="https://www.example.de/produkt"
+            aria-label="Quelle"
+            class="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+          <button
+            type="button"
+            class="px-2 text-gray-400 hover:text-red-500 transition-colors"
+            aria-label="Quelle entfernen"
+            @click="removeSourceRow(row.key)"
+          >
+            ✕
+          </button>
+        </div>
+        <button
+          type="button"
+          class="text-sm text-primary-600 font-medium hover:text-primary-700 transition-colors"
+          @click="addSourceRow"
+        >
+          + Quelle hinzufügen
         </button>
       </div>
     </FieldComparisonRow>

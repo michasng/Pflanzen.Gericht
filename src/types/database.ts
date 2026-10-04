@@ -305,6 +305,35 @@ export type Database = {
           },
         ]
       }
+      product_source: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'product_source_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'product'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       profile: {
         Row: {
           bio: string | null

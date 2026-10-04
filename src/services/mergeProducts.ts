@@ -22,6 +22,7 @@ const fillMergedProduct = async (
 ): Promise<void> => {
   await gateway.replaceIngredients(mergedProduct.id, values.ingredients)
   await gateway.replaceNutrients(mergedProduct.id, values.nutrients)
+  await gateway.replaceSources(mergedProduct.id, values.sourceUrls)
   for (const [sortOrder, image] of acceptedImages.entries()) {
     await gateway.copyImage(image, mergedProduct.id, ownerId, sortOrder)
   }

@@ -1,7 +1,7 @@
-import { mergeAllergens } from '@/lib/mergeAllergens'
 import { mergeIngredientsByName } from '@/lib/mergeIngredientsByName'
 import { mergeNutrientsByName } from '@/lib/mergeNutrientsByName'
 import { mergeScalarField } from '@/lib/mergeScalarField'
+import { mergeUnique } from '@/lib/mergeUnique'
 import type { ProductFormInitialValues, ProductFormValues } from '@/types/productForm'
 
 const mergeQuantity = (
@@ -25,7 +25,8 @@ export const mergeProductFormValues = (
   energyJoules: mergeScalarField(a.energyJoules, b.energyJoules),
   isOrganic: mergeScalarField(a.isOrganic, b.isOrganic),
   barcode: mergeScalarField(a.barcode, b.barcode),
-  allergens: mergeAllergens(a.allergens, b.allergens),
+  allergens: mergeUnique(a.allergens, b.allergens),
   ingredients: mergeIngredientsByName(a.ingredients, b.ingredients),
   nutrients: mergeNutrientsByName(a.nutrients, b.nutrients),
+  sourceUrls: mergeUnique(a.sourceUrls, b.sourceUrls),
 })

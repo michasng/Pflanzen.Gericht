@@ -130,6 +130,7 @@ const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGatewa
     },
     replaceIngredients: (_id, _ingredients) => record('replaceIngredients'),
     replaceNutrients: (_id, _nutrients) => record('replaceNutrients'),
+    replaceSources: (_id, _urls) => record('replaceSources'),
     copyImage: async (image, _productId, ownerId, sortOrder) => {
       await record('copyImage')
       copiedImages.push({ image, ownerId, sortOrder })
@@ -202,6 +203,7 @@ const input: MergeProductsInput = {
     quantityValue: 1500,
     ingredients: [],
     nutrients: [],
+    sourceUrls: [],
   },
 }
 
