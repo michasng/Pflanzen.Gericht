@@ -87,6 +87,7 @@ const name = ref(props.initial?.name ?? '')
 const category = ref(props.initial?.category ?? '')
 const base = ref(props.initial?.base ?? '')
 const brand = ref(props.initial?.brand ?? '')
+const hasInvalidBrand = computed(() => brand.value.trim().length === 0)
 const description = ref(props.initial?.description ?? '')
 const allergens = ref<Allergen[]>(props.initial?.allergens ? [...props.initial.allergens] : [])
 const isOrganic = ref(props.initial?.isOrganic ?? false)
@@ -282,6 +283,7 @@ watch(name, (val) => {
 })
 
 const handleSubmit = (): void => {
+  if (hasInvalidBrand.value) return
   if (hasInvalidIngredientFraction.value) return
   if (hasDuplicateIngredientNames.value) return
   if (hasInvalidEnergy.value) return
@@ -293,7 +295,7 @@ const handleSubmit = (): void => {
     name: name.value.trim(),
     category: category.value,
     base: base.value || null,
-    brand: brand.value.trim() || null,
+    brand: brand.value.trim(),
     description: description.value.trim() || null,
     energyJoules: parsedEnergyJoules.value,
     allergens: allergens.value,
@@ -337,7 +339,7 @@ const acceptField = (field: ComparedField, side: ComparisonSide): void => {
       category.value = source.category
       break
     case ComparedField.Brand:
-      brand.value = source.brand ?? ''
+      brand.value = source.brand
       break
     case ComparedField.Description:
       description.value = source.description ?? ''
@@ -520,12 +522,20 @@ const applyScannedValues = (values: Partial<ProductFormValues>): void => {
     >
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1.5" for="pf-brand">
-          Marke / Hersteller
+          Marke / Hersteller <span class="text-red-500" aria-hidden="true">*</span>
         </label>
+        <div
+          v-if="hasInvalidBrand && brand.length > 0"
+          role="alert"
+          class="mb-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700"
+        >
+          Bitte gib eine Marke / einen Hersteller ein.
+        </div>
         <input
           id="pf-brand"
           v-model="brand"
           type="text"
+          required
           maxlength="80"
           placeholder="z. B. Alpro"
           class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"

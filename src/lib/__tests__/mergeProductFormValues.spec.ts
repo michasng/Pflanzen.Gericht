@@ -68,7 +68,7 @@ describe('mergeProductFormValues', () => {
 
   describe('given one product that lacks claims the other makes', () => {
     it('fills the gaps from the other product', () => {
-      const sparse = buildValues({ brand: null, description: '', isOrganic: false })
+      const sparse = buildValues({ brand: '', description: '', isOrganic: false })
 
       expect(mergeProductFormValues(sparse, buildValues({}))).toMatchObject({
         brand: 'Alpro',

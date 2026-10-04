@@ -23,7 +23,7 @@ const ProductBarcodeScannerStub = defineComponent({
     '<button type="button" data-test="scan-product" @click="$emit(\'scanned\', { energyJoules: 250000, barcode: \'4006381333931\' })"></button>',
 })
 
-const EQUAL_QUANTITY = { quantityUnit: QuantityUnit.Gram, quantityValue: 500 }
+const EQUAL_QUANTITY = { quantityUnit: QuantityUnit.Gram, quantityValue: 500, brand: 'Alpro' }
 
 describe('ProductForm', () => {
   afterEach(() => {
@@ -77,6 +77,7 @@ describe('ProductForm', () => {
 
     await wrapper.get('#pf-name').setValue('Soja Drink')
     await wrapper.get('#pf-category').setValue('drink')
+    await wrapper.get('#pf-brand').setValue('Alpro')
     await wrapper.get('#pf-quantity').setValue('500')
     await wrapper.get('form').trigger('submit')
 
@@ -99,12 +100,28 @@ describe('ProductForm', () => {
     await wrapper.get('[aria-label="Barcode entfernen"]').trigger('click')
     await wrapper.get('#pf-name').setValue('Soja Drink')
     await wrapper.get('#pf-category').setValue('drink')
+    await wrapper.get('#pf-brand').setValue('Alpro')
     await wrapper.get('#pf-quantity').setValue('500')
     await wrapper.get('form').trigger('submit')
 
     expect(wrapper.find('#pf-barcode').exists()).toBe(false)
     const emittedValues = wrapper.emitted('submit')?.[0]?.[0] as { barcode: string | null }
     expect(emittedValues.barcode).toBeNull()
+  })
+
+  it('given a whitespace-only brand, rejects submission and displays a field-level error', async () => {
+    const wrapper = mount(ProductForm, {
+      global: { stubs: { ImageUpload: true, ProductBarcodeScanner: true, RouterLink: true } },
+    })
+    await wrapper.get('#pf-name').setValue('Hafer Drink')
+    await wrapper.get('#pf-category').setValue('drink')
+    await wrapper.get('#pf-brand').setValue('   ')
+    await wrapper.get('#pf-quantity').setValue('500')
+    await wrapper.get('form').trigger('submit')
+
+    expect(wrapper.emitted('submit')).toBeUndefined()
+    expect(wrapper.get('#pf-brand').attributes('required')).toBeDefined()
+    expect(wrapper.text()).toContain('Bitte gib eine Marke / einen Hersteller ein.')
   })
 
   describe('given a quantity entered with a large unit', () => {
@@ -114,6 +131,7 @@ describe('ProductForm', () => {
       })
       await wrapper.get('#pf-name').setValue('Hafer Drink')
       await wrapper.get('#pf-category').setValue('drink')
+      await wrapper.get('#pf-brand').setValue('Alpro')
       await wrapper.get('#pf-quantity').setValue(input)
       await wrapper.get('[aria-label="Einheit der Menge"]').setValue(unit)
       await wrapper.get('form').trigger('submit')
@@ -155,7 +173,7 @@ describe('ProductForm', () => {
           name: 'A',
           category: 'drink',
           base: null,
-          brand: null,
+          brand: 'Alpro',
           description: null,
           energyJoules: null,
           allergens: [],
@@ -170,7 +188,7 @@ describe('ProductForm', () => {
           name: 'A',
           category: 'drink',
           base: null,
-          brand: null,
+          brand: 'Alpro',
           description: null,
           energyJoules: null,
           allergens: [],
@@ -183,7 +201,7 @@ describe('ProductForm', () => {
         },
       }
       const wrapper = mount(ProductForm, {
-        props: { comparison, initial: { name: 'A', category: 'drink' } },
+        props: { comparison, initial: { name: 'A', category: 'drink', brand: 'Alpro' } },
         global: { stubs: { ImageUpload: true, RouterLink: true } },
       })
 
@@ -202,7 +220,7 @@ describe('ProductForm', () => {
       name: '',
       category: 'drink',
       base: null,
-      brand: null,
+      brand: 'Alpro',
       description: null,
       energyJoules: null,
       allergens: [],

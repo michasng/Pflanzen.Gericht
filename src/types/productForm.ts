@@ -22,7 +22,7 @@ export interface ProductFormValues {
   name: string
   category: string
   base: string | null
-  brand: string | null
+  brand: string
   description: string | null
   energyJoules: number | null
   allergens: Allergen[]

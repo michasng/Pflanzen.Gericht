@@ -83,7 +83,7 @@ export type Database = {
           avg_overall: number | null
           barcode: string | null
           base: string | null
-          brand: string | null
+          brand: string
           category: string
           created_at: string
           created_by: string
@@ -105,7 +105,7 @@ export type Database = {
           avg_overall?: number | null
           barcode?: string | null
           base?: string | null
-          brand?: string | null
+          brand: string
           category: string
           created_at?: string
           created_by: string
@@ -127,7 +127,7 @@ export type Database = {
           avg_overall?: number | null
           barcode?: string | null
           base?: string | null
-          brand?: string | null
+          brand?: string
           category?: string
           created_at?: string
           created_by?: string
