@@ -1,4 +1,9 @@
-export const BASE_LABELS = {
+import { BASES, type Base } from '@pflanzen-gericht/contracts'
+
+export { BASES }
+export type { Base }
+
+const BASE_LABELS: Record<Base, string> = {
   soy: 'Soja',
   pea: 'Erbse',
   oat: 'Hafer',
@@ -12,9 +17,6 @@ export const BASE_LABELS = {
   hemp: 'Hanf',
   mycoprotein: 'Mykoprotein',
   blend: 'Gemisch',
-} as const
-export type Base = keyof typeof BASE_LABELS
-const isBase = (value: string): value is Base =>
-  Object.prototype.hasOwnProperty.call(BASE_LABELS, value)
-export const BASES = Object.keys(BASE_LABELS).filter(isBase)
+}
+const isBase = (value: string): value is Base => (BASES as readonly string[]).includes(value)
 export const baseToLabel = (base: string): string => (isBase(base) ? BASE_LABELS[base] : base)

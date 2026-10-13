@@ -30,6 +30,7 @@
     "db:push:linked": "supabase db push --linked"
   },
   "dependencies": {
+    "@pflanzen-gericht/contracts": "workspace:*",
     "@supabase/supabase-js": "^2.117.2",
     "@zxing/browser": "^0.2.1",
     "@zxing/library": "^0.23.0",

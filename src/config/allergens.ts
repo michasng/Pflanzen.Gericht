@@ -1,11 +1,14 @@
-export const ALLERGEN_LABELS = {
+import { ALLERGENS, type Allergen } from '@pflanzen-gericht/contracts'
+
+export { ALLERGENS }
+export type { Allergen }
+
+const ALLERGEN_LABELS: Record<Allergen, string> = {
   gluten: 'Gluten',
   soy: 'Soja',
   nuts: 'Nüsse',
-} as const
-export type Allergen = keyof typeof ALLERGEN_LABELS
+}
 const isAllergen = (value: string): value is Allergen =>
-  Object.prototype.hasOwnProperty.call(ALLERGEN_LABELS, value)
-export const ALLERGENS = Object.keys(ALLERGEN_LABELS).filter(isAllergen)
+  (ALLERGENS as readonly string[]).includes(value)
 export const allergenToLabel = (allergen: string): string =>
   isAllergen(allergen) ? ALLERGEN_LABELS[allergen] : allergen

@@ -1,0 +1,32 @@
+{
+  "name": "@pflanzen-gericht/crawler",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "crawl": "tsx src/cli/crawl.ts",
+    "consolidate": "tsx src/consolidate/index.ts",
+    "rewe:remap-categories": "tsx src/cli/remapReweCategories.ts",
+    "test:unit": "vitest run",
+    "playwright:install": "playwright install chromium"
+  },
+  "dependencies": {
+    "@pflanzen-gericht/contracts": "workspace:*",
+    "@supabase/supabase-js": "^2.117.2",
+    "commander": "^15.0.0",
+    "dotenv": "^18.0.5",
+    "playwright": "^1.63.0",
+    "prompts": "^2.4.2",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/prompts": "^2.4.9",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.3"
+  },
+  "engines": {
+    "node": "^22.18.0 || >=24.12.0"
+  }
+}

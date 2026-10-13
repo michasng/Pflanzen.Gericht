@@ -1,4 +1,9 @@
-export const CATEGORY_LABELS = {
+import { CATEGORIES, type Category } from '@pflanzen-gericht/contracts'
+
+export { CATEGORIES }
+export type { Category }
+
+const CATEGORY_LABELS: Record<Category, string> = {
   meat: 'Fleisch-Alternative',
   sausage: 'Wurst-Alternative',
   fish: 'Fisch-Alternative',
@@ -13,10 +18,8 @@ export const CATEGORY_LABELS = {
   ice_cream: 'Eis',
   ready_meal: 'Fertigprodukt',
   other: 'Sonstiges',
-} as const
-export type Category = keyof typeof CATEGORY_LABELS
+}
 const isCategory = (value: string): value is Category =>
-  Object.prototype.hasOwnProperty.call(CATEGORY_LABELS, value)
-export const CATEGORIES = Object.keys(CATEGORY_LABELS).filter(isCategory)
+  (CATEGORIES as readonly string[]).includes(value)
 export const categoryToLabel = (category: string): string =>
   isCategory(category) ? CATEGORY_LABELS[category] : category
