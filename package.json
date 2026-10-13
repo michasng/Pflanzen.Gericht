@@ -22,6 +22,8 @@
     "format:check": "oxfmt --check .",
     "fix": "run-s \"lint:fix:*\" format",
     "prepare": "simple-git-hooks",
+    "db:login": "supabase login",
+    "db:link": "supabase link",
     "db:start:local": "supabase start",
     "db:stop:local": "supabase stop",
     "db:types:local": "supabase gen types typescript --local > src/types/database.ts",
