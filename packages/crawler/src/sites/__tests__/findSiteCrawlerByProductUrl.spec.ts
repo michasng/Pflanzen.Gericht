@@ -6,6 +6,7 @@ const createCrawlerStub = (id: SiteCrawler['id'], urlPrefix: string): SiteCrawle
   id,
   isProductUrl: (url) => url.startsWith(urlPrefix),
   collectProductUrls: async () => [],
+  productPageSelector: '#product',
   scrapeProduct: async () => null,
 })
 

@@ -1,7 +1,9 @@
 import { Command, Option } from 'commander'
 import { launchBrowser } from '../shared/browser/launchBrowser.js'
-import { gotoAndHandleChallenge } from '../shared/browser/gotoAndHandleChallenge.js'
+import { createInterruptionDetectingNavigator } from '../shared/browser/createInterruptionDetectingNavigator.js'
 import { waitForEnterKey } from '../shared/browser/waitForEnterKey.js'
+import { promptForAnswer } from '../shared/browser/promptForAnswer.js'
+import { CrawlAbortedError } from '../shared/crawling/CrawlAbortedError.js'
 import { createConfirmingNavigator } from '../shared/browser/createConfirmingNavigator.js'
 import { crawlProductUrls } from '../shared/crawling/crawlProductUrls.js'
 import { crawlSite } from '../shared/crawling/crawlSite.js'
@@ -18,6 +20,10 @@ import type { CrawlContext } from '../sites/types.js'
 import type { CrawledProduct } from '../schema/crawledProduct.js'
 
 const SESSION_SETUP_PROMPT = 'Accept/Deny cookies, then press Enter to start crawling...'
+const INTERRUPTION_PROMPT =
+  'Resolve it in the browser window, then press Enter to continue crawling, or type q and Enter to stop... '
+const CONTINUE_ANSWER = ''
+const EXPECTED_CONTENT_TIMEOUT_MILLISECONDS = 5_000
 
 interface CrawlCliOptions {
   site?: string
@@ -81,7 +87,25 @@ const unmappedCategories = createUnmappedCategoryCollector()
 const context: CrawlContext = {
   page,
   navigateTo: createConfirmingNavigator(
-    (url) => gotoAndHandleChallenge(page, url, logger),
+    createInterruptionDetectingNavigator({
+      goto: async (url) => {
+        await page.goto(url, { waitUntil: 'domcontentloaded' })
+      },
+      waitForExpectedContent: (expectedSelector) =>
+        page
+          .waitForSelector(expectedSelector, {
+            state: 'attached',
+            timeout: EXPECTED_CONTENT_TIMEOUT_MILLISECONDS,
+          })
+          .then(
+            () => true,
+            () => false,
+          ),
+      askWhetherToContinue: async (url) => {
+        logger.warn(`Interruption detected: the expected page did not appear for ${url}.`)
+        return (await promptForAnswer(INTERRUPTION_PROMPT)).trim() === CONTINUE_ANSWER
+      },
+    }),
     () => waitForEnterKey(SESSION_SETUP_PROMPT),
   ),
   logger,
@@ -120,6 +144,9 @@ const saveProduct = async (product: CrawledProduct): Promise<void> => {
 
 try {
   for await (const product of products) await saveProduct(product)
+} catch (error) {
+  if (!(error instanceof CrawlAbortedError)) throw error
+  logger.warn(error.message)
 } finally {
   await session.close()
 }

@@ -21,6 +21,8 @@ const LISTING_URLS = [
 // Knuspr product detail URLs start with a numeric product id, e.g. /28605-...
 const PRODUCT_HREF_PATTERN = /^https:\/\/www\.knuspr\.de\/\d+-[^/]+$/
 const SHOW_ALL_BUTTON_SELECTOR = 'button:has-text("Alles anzeigen")'
+const PRODUCT_CARD_SELECTOR = '[data-test="productCard"]'
+const PRODUCT_NAME_SELECTOR = '[data-test="product-detail-product-name"]'
 
 const NUTRIENT_LABEL_PATTERNS: readonly (readonly [KnownNutrientName, RegExp])[] = [
   ['Fett', /^fett\b/i],
@@ -97,7 +99,7 @@ const scrapeProduct = async (
   sourceUrl: string,
 ): Promise<CrawledProduct> => {
   const name = await page
-    .locator('[data-test="product-detail-product-name"]')
+    .locator(PRODUCT_NAME_SELECTOR)
     .first()
     .innerText()
     .catch(() => '')
@@ -192,7 +194,7 @@ const collectProductUrls = async (
   const productUrls = new Set<string>()
 
   for (const listingUrl of LISTING_URLS) {
-    await navigateTo(listingUrl)
+    await navigateTo(listingUrl, PRODUCT_CARD_SELECTOR)
 
     const showAllButton = page.locator(SHOW_ALL_BUTTON_SELECTOR)
     const showAllButtonCount = await showAllButton.count()
@@ -218,5 +220,6 @@ export const createKnusprCrawler = (): SiteCrawler => ({
   id: 'knuspr',
   isProductUrl: (url) => PRODUCT_HREF_PATTERN.test(url),
   collectProductUrls,
+  productPageSelector: PRODUCT_NAME_SELECTOR,
   scrapeProduct,
 })

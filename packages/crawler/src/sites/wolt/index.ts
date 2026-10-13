@@ -18,6 +18,8 @@ const LISTING_URL = 'https://wolt.com/en/deu/munich/venue/wolt-market-schwabing/
 const PRODUCT_HREF_PATTERN =
   /^https:\/\/wolt\.com\/en\/deu\/munich\/venue\/wolt-market-schwabing\/[^/]+-itemid-([a-z0-9]+)$/i
 const PRODUCT_JSON_LD_SELECTOR = 'script[type="application/ld+json"]'
+const PRODUCT_LINK_SELECTOR = 'a[href*="-itemid-"]'
+const PRODUCT_INFO_HEADING_SELECTOR = 'h3'
 // The "Product info" modal embeds this same standalone page in an iframe, whose hydration state
 // is unreliable to scrape live; navigating to it directly gets the server-rendered content instead.
 const PRODUCT_INFO_VENUE_ID = '68a2f43a01d603e6a14a341f'
@@ -131,10 +133,10 @@ const readProductInfoPage = async (
     logger.warn(`Could not derive product info URL for ${productUrl}`)
     return null
   }
-  await navigateTo(infoUrl)
+  await navigateTo(infoUrl, PRODUCT_INFO_HEADING_SELECTOR)
 
   const infoItems = await page
-    .locator('h3')
+    .locator(PRODUCT_INFO_HEADING_SELECTOR)
     .evaluateAll((headings) =>
       headings
         .map((heading): [string, string] => [
@@ -213,7 +215,7 @@ const collectProductUrls = async (
   { page, navigateTo }: CrawlContext,
   collectLimit: number | null,
 ): Promise<string[]> => {
-  await navigateTo(LISTING_URL)
+  await navigateTo(LISTING_URL, PRODUCT_LINK_SELECTOR)
   return collectLinksByInfiniteScroll(page, {
     hrefPattern: PRODUCT_HREF_PATTERN,
     limit: collectLimit,
@@ -224,5 +226,6 @@ export const createWoltCrawler = (): SiteCrawler => ({
   id: 'wolt',
   isProductUrl: (url) => PRODUCT_HREF_PATTERN.test(url),
   collectProductUrls,
+  productPageSelector: PRODUCT_JSON_LD_SELECTOR,
   scrapeProduct,
 })

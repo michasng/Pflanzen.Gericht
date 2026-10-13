@@ -24,6 +24,7 @@ describe('crawlSite', () => {
     >(async () => COLLECTED_URLS)
     const siteCrawler = {
       collectProductUrls,
+      productPageSelector: '#product',
       scrapeProduct: async (_context: typeof context, productUrl: string) =>
         buildCrawledProduct(productUrl),
     }

@@ -7,7 +7,7 @@ export const crawlProductUrls = async function* <Context extends NavigationConte
   productUrls: readonly string[],
 ): AsyncGenerator<CrawledProduct> {
   for (const productUrl of productUrls) {
-    await context.navigateTo(productUrl)
+    await context.navigateTo(productUrl, productScraper.productPageSelector)
     const product = await productScraper.scrapeProduct(context, productUrl)
     if (product) yield product
   }

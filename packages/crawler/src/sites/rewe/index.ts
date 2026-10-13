@@ -41,6 +41,8 @@ const PRODUCT_HREF_PATTERN = /^https:\/\/www\.rewe\.de\/shop\/p\/[^/]+\/\d+$/
 const PAGINATION_ITEM_SELECTOR = '.plr-pagination-item'
 const PRODUCT_TILE_SELECTOR = '.plrProductGrid li:not(.plrProductGrid__flagship)'
 const PRODUCT_TRACKING_SCRIPT_SELECTOR = 'script[data-tracking-type="product"]'
+const PRODUCT_GRID_SELECTOR = '.plrProductGrid'
+const PROP_STORE_SELECTOR = 'script[id^="pdpr-propstore"]'
 
 // REWE embeds the full product record as JSON right in the page - far more
 // reliable than scraping visible DOM text, which uses CSS-module hashed classes.
@@ -114,7 +116,7 @@ const buildDescription = (productData: RewePropStore['productData'] | null): str
 
 const readPropStore = async (page: Page): Promise<RewePropStore | null> => {
   const rawJson = await page
-    .locator('script[id^="pdpr-propstore"]')
+    .locator(PROP_STORE_SELECTOR)
     .first()
     .textContent()
     .catch(() => null)
@@ -252,7 +254,7 @@ const collectProductUrls = async (
   collectLimit: number | null,
 ): Promise<string[]> => {
   const readListingPage = async (listingUrl: string): Promise<ListingPage> => {
-    await navigateTo(listingUrl)
+    await navigateTo(listingUrl, PRODUCT_GRID_SELECTOR)
     const productUrls = (await collectNonSponsoredProductUrls(page)).filter((url) =>
       PRODUCT_HREF_PATTERN.test(url),
     )
@@ -274,5 +276,6 @@ export const createReweCrawler = (): SiteCrawler => ({
   id: 'rewe',
   isProductUrl: (url) => PRODUCT_HREF_PATTERN.test(url),
   collectProductUrls,
+  productPageSelector: PROP_STORE_SELECTOR,
   scrapeProduct,
 })

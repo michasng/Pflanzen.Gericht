@@ -11,7 +11,7 @@ export interface CrawlOptions {
 }
 
 export interface NavigationContext {
-  navigateTo(url: string): Promise<void>
+  navigateTo(url: string, expectedSelector: string): Promise<void>
 }
 
 export interface CrawlContext extends NavigationContext {
@@ -26,6 +26,7 @@ export interface ProductUrlCollector<Context> {
 }
 
 export interface ProductScraper<Context> {
+  productPageSelector: string
   /** reads the product from the page, which is already navigated to `productUrl` */
   scrapeProduct(context: Context, productUrl: string): Promise<CrawledProduct | null>
 }
