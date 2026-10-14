@@ -1,5 +1,6 @@
 import type { CrawledProduct } from '../schema/crawledProduct.js'
-import { MICROGRAMS_PER_GRAM, JOULES_PER_KILOJOULE } from '../schema/units.js'
+import { convertGramsToMicrograms } from '../schema/convertGramsToMicrograms.js'
+import { convertKilojoulesToJoules } from '../schema/convertKilojoulesToJoules.js'
 import type { ExistingProductSummary } from './loadExistingProducts.js'
 import type { ExistingProductDetail } from './loadExistingProductDetail.js'
 
@@ -73,18 +74,16 @@ const toCandidateComparable = (candidate: CrawledProduct): ComparableRecord => (
   allergens: [...candidate.allergens].sort(),
   isOrganic: candidate.isOrganic,
   barcode: candidate.barcode,
-  energyJoules:
-    candidate.energyKilojoules !== null ? candidate.energyKilojoules * JOULES_PER_KILOJOULE : null,
+  energyJoules: convertKilojoulesToJoules(candidate.energyKilojoules),
   ingredientsSummary: candidate.ingredientsRawText,
   nutrientsMicrograms: Object.fromEntries(
     Object.entries(candidate.nutrientsPer100g).map(([name, grams]) => [
       name,
-      grams * MICROGRAMS_PER_GRAM,
+      convertGramsToMicrograms(grams),
     ]),
   ),
 })
 
-/** Full field-by-field diff between a crawled candidate and an existing DB product. */
 export const diffProduct = (
   candidate: CrawledProduct,
   existing: ExistingProductSummary,

@@ -1,7 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../../../../src/types/database.js'
 import type { CrawledProduct, SiteId } from '../schema/crawledProduct.js'
-import { MICROGRAMS_PER_GRAM, JOULES_PER_KILOJOULE } from '../schema/units.js'
+import { convertGramsToMicrograms } from '../schema/convertGramsToMicrograms.js'
+import { convertKilojoulesToJoules } from '../schema/convertKilojoulesToJoules.js'
 import type { DiffEntry } from './diffProduct.js'
 import type { FieldDecision } from './promptDecisions.js'
 import type { RequiredProductFields } from './resolveRequiredProductFields.js'
@@ -29,7 +30,7 @@ const buildNutrientRows = (candidate: CrawledProduct, productId: string) =>
   Object.entries(candidate.nutrientsPer100g).map(([name, grams]) => ({
     product_id: productId,
     name,
-    amount_micrograms: grams * MICROGRAMS_PER_GRAM,
+    amount_micrograms: convertGramsToMicrograms(grams),
   }))
 
 const attachImageIfAvailable = async (
@@ -58,10 +59,7 @@ export const createNewProduct = async (
       quantity_unit: quantityUnit,
       quantity_value: quantityValue,
       description: candidate.description,
-      energy_joules:
-        candidate.energyKilojoules !== null
-          ? candidate.energyKilojoules * JOULES_PER_KILOJOULE
-          : null,
+      energy_joules: convertKilojoulesToJoules(candidate.energyKilojoules),
       allergens: candidate.allergens,
       is_organic: candidate.isOrganic,
       barcode: candidate.barcode,
@@ -106,10 +104,8 @@ const buildProductColumnUpdates = (
   if (overriddenFieldNames.has('allergens')) updates.allergens = candidate.allergens
   if (overriddenFieldNames.has('isOrganic')) updates.is_organic = candidate.isOrganic
   if (overriddenFieldNames.has('barcode')) updates.barcode = candidate.barcode
-  if (overriddenFieldNames.has('energyJoules')) {
-    updates.energy_joules =
-      candidate.energyKilojoules !== null ? candidate.energyKilojoules * JOULES_PER_KILOJOULE : null
-  }
+  if (overriddenFieldNames.has('energyJoules'))
+    updates.energy_joules = convertKilojoulesToJoules(candidate.energyKilojoules)
   return updates
 }
 
