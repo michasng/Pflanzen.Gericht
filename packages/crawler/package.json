@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "crawl": "tsx src/cli/crawl.ts",
-    "consolidate": "tsx src/consolidate/index.ts",
+    "upsert": "tsx src/upsert/index.ts",
     "rewe:remap-categories": "tsx src/cli/remapReweCategories.ts",
     "test:unit": "vitest run",
     "playwright:install": "playwright install chromium"

@@ -2,7 +2,6 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../../../../src/types/database.js'
 import type { CrawledProduct, SiteId } from '../schema/crawledProduct.js'
 import { MICROGRAMS_PER_GRAM, JOULES_PER_KILOJOULE } from '../schema/units.js'
-import type { ConsolidatedCandidate } from './candidate.js'
 import type { DiffEntry } from './diffProduct.js'
 import type { FieldDecision } from './promptDecisions.js'
 import type { RequiredProductFields } from './resolveRequiredProductFields.js'
@@ -155,40 +154,38 @@ export const applyImageOverride = async (
   await attachImageIfAvailable(supabase, productId, userId, candidate)
 }
 
-export const insertProductSources = async (
+export const insertProductSource = async (
   supabase: SupabaseClient<Database>,
   productId: string,
-  candidate: ConsolidatedCandidate,
+  sourceUrl: string,
 ): Promise<void> => {
-  const urls = new Set(candidate.prices.map((price) => price.sourceUrl))
-  const rows = [...urls].map((url) => ({ product_id: productId, url }))
   const { error } = await supabase
     .from('product_source')
-    .upsert(rows, { onConflict: 'product_id,url', ignoreDuplicates: true })
+    .upsert(
+      { product_id: productId, url: sourceUrl },
+      { onConflict: 'product_id,url', ignoreDuplicates: true },
+    )
   if (error) throw error
 }
 
-export const insertPriceReportsForCandidate = async (
+export const upsertPriceReport = async (
   supabase: SupabaseClient<Database>,
   productId: string,
   userId: string,
   cityName: string,
-  candidate: ConsolidatedCandidate,
+  candidate: CrawledProduct,
 ): Promise<void> => {
-  const observedAt = new Date().toISOString()
-  for (const price of candidate.prices) {
-    const { error } = await supabase.from('price_report').upsert(
-      {
-        product_id: productId,
-        user_id: userId,
-        store: STORE_NAME_BY_SITE[price.site],
-        city_name: cityName,
-        price_euro_cents: price.priceEuroCents,
-        sale_price_euro_cents: price.salePriceEuroCents,
-        observed_at: observedAt,
-      },
-      { onConflict: 'product_id,user_id,store,city_name' },
-    )
-    if (error) throw error
-  }
+  const { error } = await supabase.from('price_report').upsert(
+    {
+      product_id: productId,
+      user_id: userId,
+      store: STORE_NAME_BY_SITE[candidate.site],
+      city_name: cityName,
+      price_euro_cents: candidate.priceEuroCents,
+      sale_price_euro_cents: candidate.salePriceEuroCents,
+      observed_at: new Date().toISOString(),
+    },
+    { onConflict: 'product_id,user_id,store,city_name' },
+  )
+  if (error) throw error
 }

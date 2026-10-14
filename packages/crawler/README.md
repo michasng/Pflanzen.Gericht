@@ -1,7 +1,7 @@
 # @pflanzen-gericht/crawler
 
 Standalone tooling to crawl vegan products from REWE, Knuspr, and Wolt, and to
-consolidate the results into the Supabase database.
+upsert the results into the Supabase database.
 
 ## Project Setup
 
@@ -12,7 +12,7 @@ pnpm playwright:install
 
 ### Environment
 
-Two git-ignored env files control which Supabase instance the `consolidate` CLI writes to:
+Two git-ignored env files control which Supabase instance the `upsert` CLI writes to:
 
 | File                    | Target          |
 | ----------------------- | --------------- |
@@ -54,18 +54,14 @@ the existing output without re-crawling:
 pnpm rewe:remap-categories
 ```
 
-## Consolidating
+## Upserting
 
-After crawling, review `output/<site>/*.json` and delete any files for products you don't
-want to import. Then run:
+After crawling, review `output/<site>/*.json`. Then run:
 
 ```sh
-pnpm consolidate              # against .env.local
-pnpm consolidate --env production
+pnpm upsert              # against .env.local
+pnpm upsert --env production
 ```
-
-This matches crawled products against existing database products, prompts you to confirm
-new products or resolve differences against matches, and inserts price reports per store.
 
 ## Run Unit Tests with [Vitest](https://vitest.dev/)
 

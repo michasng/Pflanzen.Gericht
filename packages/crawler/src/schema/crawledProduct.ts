@@ -8,8 +8,6 @@ import type {
 
 export type SiteId = 'rewe' | 'knuspr' | 'wolt'
 
-// The one contract shared between independent site crawlers and the consolidate CLI.
-// A site crawler writes one of these (as JSON) plus a sibling image file per product.
 export interface CrawledProduct<SiteDetails = unknown> {
   site: SiteId
   sourceUrl: string
@@ -32,6 +30,5 @@ export interface CrawledProduct<SiteDetails = unknown> {
   salePriceEuroCents: number | null
   imageSourceUrl: string | null
   crawledAt: string
-  /** properties only meaningful to the originating site's crawler, e.g. to retry category mapping later */
   siteDetails: SiteDetails
 }

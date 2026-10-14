@@ -9,13 +9,12 @@ import {
   applyImageOverride,
   applyOverrideDecisions,
   createNewProduct,
-  insertPriceReportsForCandidate,
-  insertProductSources,
+  insertProductSource,
+  upsertPriceReport,
 } from './applyImport.js'
 import { loadCrawlerEnv } from './config/env.js'
 import { diffProduct } from './diffProduct.js'
 import { findExistingProductMatches } from './findExistingProductMatches.js'
-import { groupCrawledProductsBySameProduct } from './groupCrawledProducts.js'
 import { loadCrawledOutputs } from '../shared/output/loadCrawledOutputs.js'
 import { loadExistingProductDetail } from './loadExistingProductDetail.js'
 import { loadExistingProducts } from './loadExistingProducts.js'
@@ -37,7 +36,7 @@ const program = new Command()
 program.option('--env <target>', 'local | production', 'local').parse(process.argv)
 const { env: envTarget } = program.opts<{ env: 'local' | 'production' }>()
 
-const logger = createLogger('consolidate')
+const logger = createLogger('upsert')
 const env = loadCrawlerEnv(envTarget)
 const supabase = createSupabaseAdminClient(env)
 
@@ -76,81 +75,75 @@ const getExistingImageUrl = async (
 const crawledProducts = await loadCrawledOutputs(SITE_ORDER)
 logger.info(`Loaded ${crawledProducts.length} crawled product(s) across ${SITE_ORDER.join(', ')}.`)
 
-const candidates = groupCrawledProductsBySameProduct(crawledProducts, logger)
-logger.info(`Consolidated into ${candidates.length} candidate product(s).`)
-
-const existingProducts = await loadExistingProducts(supabase)
 const cityName = await askCityName()
 
-for (const candidate of candidates) {
-  const primary = await resolveUnresolvedCategory(candidate.primary)
-  if (!primary.category) {
-    logger.error(`Skipping "${primary.name}" - no category was chosen.`)
+for (const crawledProduct of crawledProducts) {
+  const product = await resolveUnresolvedCategory(crawledProduct)
+  if (!product.category) {
+    logger.error(`Skipping "${product.name}" - no category was chosen.`)
     continue
   }
 
-  const matches = findExistingProductMatches({ ...candidate, primary }, existingProducts)
+  // Reloaded per product, so stores sharing an existing product see each other's changes.
+  const existingProducts = await loadExistingProducts(supabase)
+  const matches = findExistingProductMatches(product.sourceUrl, existingProducts)
   if (matches.length > 1) {
     logger.warn(
-      `"${primary.name}" shares source URLs with ${matches.length} existing products: ${matches.map((match) => match.id).join(', ')}.`,
+      `"${product.name}" shares its source URL with ${matches.length} existing products: ${matches.map((match) => match.id).join(', ')}.`,
     )
   }
   const existingMatch =
-    matches.length > 1 ? await askWhichExistingProduct(primary.name, matches) : (matches[0] ?? null)
+    matches.length > 1 ? await askWhichExistingProduct(product.name, matches) : (matches[0] ?? null)
 
   if (matches.length > 1 && !existingMatch) {
-    logger.info(`Skipped "${primary.name}".`)
+    logger.info(`Skipped "${product.name}".`)
     continue
   }
 
   if (!existingMatch) {
-    const requiredFields = resolveRequiredProductFields(primary)
+    const requiredFields = resolveRequiredProductFields(product)
     if (!requiredFields) {
-      logger.error(`Skipping "${primary.name}" - brand or quantity is missing.`)
+      logger.error(`Skipping "${product.name}" - brand or quantity is missing.`)
       continue
     }
-    const shouldImport = await askShouldImportNew(primary.name)
+    const shouldImport = await askShouldImportNew(product.name)
     if (!shouldImport) {
-      logger.info(`Skipped "${primary.name}".`)
+      logger.info(`Skipped "${product.name}".`)
       continue
     }
-    const productId = await createNewProduct(supabase, primary, requiredFields, env.importUserId)
-    await insertProductSources(supabase, productId, candidate)
-    await insertPriceReportsForCandidate(supabase, productId, env.importUserId, cityName, {
-      ...candidate,
-      primary,
-    })
-    logger.info(`Imported new product "${primary.name}".`)
+    const productId = await createNewProduct(supabase, product, requiredFields, env.importUserId)
+    await insertProductSource(supabase, productId, product.sourceUrl)
+    await upsertPriceReport(supabase, productId, env.importUserId, cityName, product)
+    logger.info(`Imported new product "${product.name}".`)
     continue
   }
 
   const existingDetail = await loadExistingProductDetail(supabase, existingMatch.id)
-  const diffEntries = diffProduct(primary, existingMatch, existingDetail)
+  const diffEntries = diffProduct(product, existingMatch, existingDetail)
 
   if (diffEntries.length === 0) {
     logger.info(
-      `"${primary.name}" is identical to existing product ${existingMatch.id} - no changes.`,
+      `"${product.name}" is identical to existing product ${existingMatch.id} - no changes.`,
     )
   } else {
-    logger.info(`"${primary.name}" differs from existing product ${existingMatch.id}:`)
+    logger.info(
+      `"${product.name}" (${product.site}) differs from existing product ${existingMatch.id}:`,
+    )
     const decisions = await askFieldGroupDecisions(diffEntries)
-    await applyOverrideDecisions(supabase, existingMatch.id, primary, diffEntries, decisions)
+    await applyOverrideDecisions(supabase, existingMatch.id, product, diffEntries, decisions)
 
     const localImagePath = await findProductImagePath(
-      primary.site,
-      slugifyProductName(primary.name),
+      product.site,
+      slugifyProductName(product.name),
     )
     const existingImageUrl = await getExistingImageUrl(supabase, existingMatch.id)
     const imageDecision = await askImageDecision(existingImageUrl, localImagePath)
     if (imageDecision === 'override')
-      await applyImageOverride(supabase, existingMatch.id, env.importUserId, primary)
+      await applyImageOverride(supabase, existingMatch.id, env.importUserId, product)
   }
 
-  await insertProductSources(supabase, existingMatch.id, candidate)
-  await insertPriceReportsForCandidate(supabase, existingMatch.id, env.importUserId, cityName, {
-    ...candidate,
-    primary,
-  })
+  await insertProductSource(supabase, existingMatch.id, product.sourceUrl)
+  await upsertPriceReport(supabase, existingMatch.id, env.importUserId, cityName, product)
 }
 
 logger.info('Done.')
