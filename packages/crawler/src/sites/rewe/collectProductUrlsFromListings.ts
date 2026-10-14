@@ -1,8 +1,9 @@
 import { buildPaginatedUrl } from './buildPaginatedUrl.js'
+import { inheritSearchParams } from './inheritSearchParams.js'
 
 export interface ListingPage {
   productUrls: readonly string[]
-  /** listings reached via "Mehr Produkte anzeigen" links */
+  /** listings reached via "Mehr Produkte anzeigen" links, which drop the filter query of their parent listing */
   loadMoreUrls: readonly string[]
   lastPageNumber: number
 }
@@ -42,7 +43,9 @@ export const collectProductUrlsFromListings = async ({
 
     for (const page of pages) {
       for (const productUrl of page.productUrls) productUrls.add(productUrl)
-      pendingListingUrls.push(...page.loadMoreUrls)
+      pendingListingUrls.push(
+        ...page.loadMoreUrls.map((loadMoreUrl) => inheritSearchParams(loadMoreUrl, listingUrl)),
+      )
     }
   }
 

@@ -48,6 +48,25 @@ describe('collectProductUrlsFromListings', () => {
     })
   })
 
+  describe('given a load-more link from a filtered listing', () => {
+    it('keeps the filter when following it', async () => {
+      const reader = createReader({
+        'https://x/a?attribute=vegan': { loadMoreUrls: ['https://x/b'] },
+      })
+
+      await collectProductUrlsFromListings({
+        listingUrls: ['https://x/a?attribute=vegan'],
+        limit: null,
+        readListingPage: reader.readListingPage,
+      })
+
+      expect(reader.requestedUrls).toEqual([
+        'https://x/a?attribute=vegan',
+        'https://x/b?attribute=vegan',
+      ])
+    })
+  })
+
   describe('given a load-more link to an already visited listing', () => {
     it('does not read it twice', async () => {
       const reader = createReader({
