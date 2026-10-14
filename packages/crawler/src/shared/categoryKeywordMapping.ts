@@ -22,9 +22,13 @@ const CATEGORY_KEYWORDS: readonly (readonly [Category, readonly string[]])[] = [
   ],
   ['sausage', ['wurst', 'salami', 'schinken', 'speck', 'wiener', 'mortadella', 'bratwurst']],
   ['fish', ['fisch', 'lachs', 'thunfisch', 'garnele', 'shrimp', 'krabbe']],
-  ['cheese', ['käse', 'frischkäse', 'mozzarella', 'feta', 'parmesan', 'cheddar', 'halloumi']],
-  ['yogurt', ['joghurt', 'skyr', 'quark']],
+  [
+    'cheese',
+    ['käse', 'frischkäse', 'mozzarella', 'feta', 'parmesan', 'cheddar', 'halloumi', 'quark'],
+  ],
+  ['yogurt', ['joghurt', 'skyr']],
   ['cream', ['sahne', 'schmand', 'creme fraiche', 'crème fraîche', 'cream cheese']],
+  ['butter', ['margarine', 'streichfett']],
   ['milk', ['milch', 'drink', 'barista']],
   ['eggs', ['rührei', 'eiersatz', 'ei-ersatz']],
   // protein bars/sports nutrition are treated as sweets, not "other"

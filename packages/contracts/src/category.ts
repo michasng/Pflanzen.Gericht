@@ -6,6 +6,7 @@ export const CATEGORIES = [
   'milk',
   'yogurt',
   'cream',
+  'butter',
   'eggs',
   'spread',
   'snack',

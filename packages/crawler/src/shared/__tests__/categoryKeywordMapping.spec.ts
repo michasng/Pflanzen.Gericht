@@ -14,6 +14,14 @@ describe('resolveCategoryFromKeywords', () => {
     expect(resolveCategoryFromKeywords(['KoRo Bio Erdnussmus 500g'])).toBe('spread')
   })
 
+  it('given a margarine name, maps to butter', () => {
+    expect(resolveCategoryFromKeywords(['Rama Margarine'])).toBe('butter')
+  })
+
+  it('given a quark name, maps to cheese', () => {
+    expect(resolveCategoryFromKeywords(['Bio Naturquark Alternative'])).toBe('cheese')
+  })
+
   it('given no matching keywords, returns null instead of defaulting to other', () => {
     expect(resolveCategoryFromKeywords(['Obst & Gemüse', 'Bio Apfel'])).toBeNull()
   })

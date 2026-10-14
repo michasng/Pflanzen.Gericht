@@ -11,6 +11,7 @@ const CATEGORY_LABELS: Record<Category, string> = {
   milk: 'Milch-Alternative',
   yogurt: 'Joghurt-Alternative',
   cream: 'Sahne-Alternative',
+  butter: 'Butter-Alternative',
   eggs: 'Ei-Alternative',
   spread: 'Brotaufstrich',
   snack: 'Snack',
