@@ -105,6 +105,61 @@ describe('AdminView', () => {
     })
   })
 
+  describe('when selecting all products', () => {
+    it('selects every product', async () => {
+      const wrapper = await mountView(['a', 'b'])
+
+      await wrapper.get('[aria-label="Alle Produkte auswählen"]').setValue(true)
+
+      const productA = wrapper.get<HTMLInputElement>('[aria-label="Product a auswählen"]')
+      const productB = wrapper.get<HTMLInputElement>('[aria-label="Product b auswählen"]')
+      expect(productA.element.checked).toBe(true)
+      expect(productB.element.checked).toBe(true)
+    })
+  })
+
+  describe('given all products are selected', () => {
+    describe('when deselecting all products', () => {
+      it('deselects every product', async () => {
+        const wrapper = await mountView(['a', 'b'])
+        const selectAll = wrapper.get('[aria-label="Alle Produkte auswählen"]')
+        await selectAll.setValue(true)
+
+        await selectAll.setValue(false)
+
+        const productA = wrapper.get<HTMLInputElement>('[aria-label="Product a auswählen"]')
+        const productB = wrapper.get<HTMLInputElement>('[aria-label="Product b auswählen"]')
+        expect(productA.element.checked).toBe(false)
+        expect(productB.element.checked).toBe(false)
+      })
+    })
+  })
+
+  describe('given every product is selected individually', () => {
+    it('checks the select all checkbox', async () => {
+      const wrapper = await mountView(['a', 'b'])
+
+      await wrapper.get('[aria-label="Product a auswählen"]').setValue(true)
+      await wrapper.get('[aria-label="Product b auswählen"]').setValue(true)
+
+      const selectAll = wrapper.get<HTMLInputElement>('[aria-label="Alle Produkte auswählen"]')
+      expect(selectAll.element.checked).toBe(true)
+      expect(selectAll.element.indeterminate).toBe(false)
+    })
+  })
+
+  describe('given some products are selected', () => {
+    it('shows the select all checkbox as indeterminate', async () => {
+      const wrapper = await mountView(['a', 'b'])
+
+      await wrapper.get('[aria-label="Product a auswählen"]').setValue(true)
+
+      const selectAll = wrapper.get<HTMLInputElement>('[aria-label="Alle Produkte auswählen"]')
+      expect(selectAll.element.checked).toBe(false)
+      expect(selectAll.element.indeterminate).toBe(true)
+    })
+  })
+
   describe('when deleting the selected products after confirming', () => {
     it('deletes every selected product after a single confirmation', async () => {
       const confirmSpy = vi.fn<() => boolean>(() => true)

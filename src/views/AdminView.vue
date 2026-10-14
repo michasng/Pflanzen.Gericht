@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   fetchAllProductsForAdmin,
@@ -44,6 +44,17 @@ const productHasMore = ref(true)
 const reviewPage = ref(0)
 const reviewHasMore = ref(true)
 const loadingMore = ref(false)
+
+const allProductsSelected = computed({
+  get: () => products.value.length > 0 && selectedProductIds.value.length === products.value.length,
+  set: (selectAll: boolean) => {
+    selectedProductIds.value = selectAll ? products.value.map((p) => p.id) : []
+  },
+})
+
+const someProductsSelected = computed(
+  () => selectedProductIds.value.length > 0 && !allProductsSelected.value,
+)
 
 onMounted(async () => {
   try {
@@ -164,7 +175,17 @@ const handleDeleteReview = async (id: string): Promise<void> => {
         <p v-if="products.length === 0" class="py-12 text-center text-gray-400 text-sm">
           Keine Produkte vorhanden.
         </p>
-        <div v-else class="mb-3 flex justify-end gap-2">
+        <div v-else class="mb-3 flex items-center gap-2">
+          <label class="mr-auto flex items-center gap-2 pl-4 text-sm text-gray-700">
+            <input
+              v-model="allProductsSelected"
+              type="checkbox"
+              :indeterminate="someProductsSelected"
+              aria-label="Alle Produkte auswählen"
+              class="h-4 w-4 shrink-0 rounded"
+            />
+            Alle auswählen
+          </label>
           <Button
             ariaLabel="Produkte zusammenführen"
             :variant="ButtonVariant.Outlined"
