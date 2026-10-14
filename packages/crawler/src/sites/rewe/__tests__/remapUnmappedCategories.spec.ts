@@ -11,6 +11,7 @@ const buildProduct = (
 ): CrawledProduct<ReweSiteDetails> => ({
   site: 'rewe',
   sourceUrl: `https://www.rewe.de/shop/p/${categorySlug}/1`,
+  slug: 'name-100g',
   name: 'Name',
   brand: 'Brand',
   quantityUnit: QuantityUnit.Gram,

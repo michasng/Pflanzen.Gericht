@@ -123,12 +123,7 @@ let imageFailureCount = 0
 const saveProductImage = async (product: CrawledProduct): Promise<void> => {
   if (!product.imageSourceUrl) return
   try {
-    await downloadProductImage(
-      siteCrawler.id,
-      product.name,
-      product.sourceUrl,
-      product.imageSourceUrl,
-    )
+    await downloadProductImage(siteCrawler.id, product.slug, product.imageSourceUrl)
   } catch (error) {
     imageFailureCount += 1
     logger.error(`Image download failed for "${product.name}": ${(error as Error).message}`)

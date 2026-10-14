@@ -4,6 +4,7 @@ import type { CrawledProduct } from '../../../schema/crawledProduct.js'
 export const buildCrawledProduct = (sourceUrl: string): CrawledProduct => ({
   site: 'rewe',
   sourceUrl,
+  slug: 'brand-tofu-200g',
   name: 'Tofu',
   brand: 'Brand',
   quantityUnit: QuantityUnit.Gram,

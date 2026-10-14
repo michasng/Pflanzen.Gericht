@@ -8,7 +8,6 @@ import type { FieldDecision } from './promptDecisions.js'
 import type { RequiredProductFields } from './resolveRequiredProductFields.js'
 import { uploadProductImageFromFile } from './uploadImageVariants.js'
 import { findProductImagePath } from '../shared/output/outputPaths.js'
-import { slugifyProductName } from '../shared/output/slugifyProductName.js'
 
 type ProductUpdate = Database['public']['Tables']['product']['Update']
 
@@ -39,7 +38,7 @@ const attachImageIfAvailable = async (
   userId: string,
   candidate: CrawledProduct,
 ): Promise<void> => {
-  const imagePath = await findProductImagePath(candidate.site, slugifyProductName(candidate.name))
+  const imagePath = await findProductImagePath(candidate.site, candidate.slug)
   if (imagePath) await uploadProductImageFromFile(supabase, productId, userId, imagePath, 0)
 }
 

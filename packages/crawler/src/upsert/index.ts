@@ -4,7 +4,6 @@ import type { Database } from '../../../../src/types/database.js'
 import type { CrawledProduct, SiteId } from '../schema/crawledProduct.js'
 import { createLogger } from '../shared/logging/logger.js'
 import { findProductImagePath } from '../shared/output/outputPaths.js'
-import { slugifyProductName } from '../shared/output/slugifyProductName.js'
 import {
   applyImageOverride,
   applyOverrideDecisions,
@@ -132,10 +131,7 @@ for (const crawledProduct of crawledProducts) {
     const decisions = await askFieldGroupDecisions(diffEntries)
     await applyOverrideDecisions(supabase, existingMatch.id, product, diffEntries, decisions)
 
-    const localImagePath = await findProductImagePath(
-      product.site,
-      slugifyProductName(product.name),
-    )
+    const localImagePath = await findProductImagePath(product.site, product.slug)
     const existingImageUrl = await getExistingImageUrl(supabase, existingMatch.id)
     const imageDecision = await askImageDecision(existingImageUrl, localImagePath)
     if (imageDecision === 'override')

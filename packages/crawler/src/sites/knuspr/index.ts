@@ -10,6 +10,7 @@ import type { ParsedNutrition } from '../../shared/parsing/parsedNutrition.js'
 import { listMissingRequiredFieldNames } from '../../shared/parsing/listMissingRequiredFieldNames.js'
 import { recordIncompleteProduct } from '../../shared/logging/recordIncompleteProduct.js'
 import { recordUnmappedCategory } from '../../shared/logging/recordUnmappedCategory.js'
+import { extractSlugFromUrlPath } from '../../shared/output/extractSlugFromUrlPath.js'
 
 // The user only wants meat/fish/egg alternatives and the plant-based fridge
 // category - the broader "plant-based" diet filter also includes fruit,
@@ -20,6 +21,7 @@ const LISTING_URLS = [
 ]
 // Knuspr product detail URLs start with a numeric product id, e.g. /28605-...
 const PRODUCT_HREF_PATTERN = /^https:\/\/www\.knuspr\.de\/\d+-[^/]+$/
+const PRODUCT_SLUG_PATH_SEGMENT_COUNT = 1
 const SHOW_ALL_BUTTON_SELECTOR = 'button:has-text("Alles anzeigen")'
 const PRODUCT_CARD_SELECTOR = '[data-test="productCard"]'
 const PRODUCT_NAME_SELECTOR = '[data-test="product-detail-product-name"]'
@@ -166,6 +168,7 @@ const scrapeProduct = async (
   return {
     site: 'knuspr',
     sourceUrl,
+    slug: extractSlugFromUrlPath(sourceUrl, PRODUCT_SLUG_PATH_SEGMENT_COUNT),
     name,
     brand: brand || null,
     quantityUnit: quantity?.unit ?? null,

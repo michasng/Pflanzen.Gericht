@@ -11,10 +11,10 @@ export type SiteId = 'rewe' | 'knuspr' | 'wolt'
 export interface CrawledProduct<SiteDetails = unknown> {
   site: SiteId
   sourceUrl: string
+  slug: string
   name: string
   brand: string | null
   quantityUnit: QuantityUnit | null
-  /** whole number in quantityUnit */
   quantityValue: number | null
   description: string | null
   category: Category | null
@@ -23,7 +23,6 @@ export interface CrawledProduct<SiteDetails = unknown> {
   isOrganic: boolean
   barcode: string | null
   energyKilojoules: number | null
-  /** grams per 100g, keyed by the app's known nutrient display names */
   nutrientsPer100g: Partial<Record<KnownNutrientName, number>>
   ingredientsRawText: string | null
   priceEuroCents: number

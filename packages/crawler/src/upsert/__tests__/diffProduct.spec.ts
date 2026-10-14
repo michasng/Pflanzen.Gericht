@@ -8,6 +8,7 @@ import type { ExistingProductDetail } from '../loadExistingProductDetail.js'
 const buildCandidate = (overrides: Partial<CrawledProduct> = {}): CrawledProduct => ({
   site: 'rewe',
   sourceUrl: 'https://example.test/product',
+  slug: 'alpro-tofu-natur-400g',
   name: 'Tofu Natur',
   brand: 'Alpro',
   quantityUnit: QuantityUnit.Gram,

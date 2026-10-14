@@ -3,7 +3,6 @@ import type { SiteCrawler, CrawlContext } from '../types.js'
 import type { CrawledProduct } from '../../schema/crawledProduct.js'
 import type { Allergen, KnownNutrientName } from '@pflanzen-gericht/contracts'
 import { parseMultipackQuantity } from '../../shared/parsing/parseMultipackQuantity.js'
-import { removeTrailingQuantity } from '../../shared/parsing/removeTrailingQuantity.js'
 import { listMissingRequiredFieldNames } from '../../shared/parsing/listMissingRequiredFieldNames.js'
 import type { ParsedNutrition } from '../../shared/parsing/parsedNutrition.js'
 import { recordIncompleteProduct } from '../../shared/logging/recordIncompleteProduct.js'
@@ -13,6 +12,8 @@ import {
   type ListingPage,
 } from './collectProductUrlsFromListings.js'
 import { resolveCategoryFromSlug } from './resolveCategoryFromSlug.js'
+import { cleanReweProductName } from './cleanReweProductName.js'
+import { extractReweProductSlug } from './extractReweProductSlug.js'
 import type { ReweSiteDetails } from './reweSiteDetails.js'
 
 // Only dedicated vegan sections: the global vegan filter also lists coincidentally vegan items like spices.
@@ -158,8 +159,9 @@ const scrapeProduct = async (
 ): Promise<CrawledProduct<ReweSiteDetails>> => {
   const propStore = await readPropStore(page)
   const productData = propStore?.productData ?? null
-  const name = removeTrailingQuantity(productData?.productName ?? '')
+  const productName = productData?.productName ?? ''
   const brand = productData?.brandKey ?? null
+  const name = cleanReweProductName(productName, brand)
   const quantity = parseMultipackQuantity(parseGrammageSize(productData?.pricing.grammage))
   recordIncompleteProduct(logger, incompleteProducts, {
     sourceUrl,
@@ -187,6 +189,7 @@ const scrapeProduct = async (
   return {
     site: 'rewe',
     sourceUrl,
+    slug: extractReweProductSlug(sourceUrl),
     name,
     brand,
     quantityUnit: quantity?.unit ?? null,

@@ -2,7 +2,6 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import type { SiteId } from '../../schema/crawledProduct.js'
 import { getProductImagePath } from './outputPaths.js'
-import { resolveProductSlug } from './resolveProductSlug.js'
 
 const EXTENSION_BY_CONTENT_TYPE: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -21,8 +20,7 @@ const resolveImageExtension = (imageUrl: string, contentType: string | null): st
 
 export const downloadProductImage = async (
   site: SiteId,
-  productName: string,
-  sourceUrl: string,
+  slug: string,
   imageUrl: string,
 ): Promise<string> => {
   const response = await fetch(imageUrl)
@@ -32,7 +30,6 @@ export const downloadProductImage = async (
     )
   }
   const extension = resolveImageExtension(imageUrl, response.headers.get('content-type'))
-  const slug = resolveProductSlug(productName, sourceUrl)
   const filePath = getProductImagePath(site, slug, extension)
   await mkdir(path.dirname(filePath), { recursive: true })
   await writeFile(filePath, Buffer.from(await response.arrayBuffer()))

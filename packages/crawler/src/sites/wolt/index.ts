@@ -12,12 +12,14 @@ import { recordUnmappedCategory } from '../../shared/logging/recordUnmappedCateg
 import { extractBrandFromName } from './extractBrandFromName.js'
 import { parseQuantityFromName } from './parseQuantityFromName.js'
 import { removeTrailingQuantity } from '../../shared/parsing/removeTrailingQuantity.js'
+import { extractSlugFromUrlPath } from '../../shared/output/extractSlugFromUrlPath.js'
 
 const LISTING_URL = 'https://wolt.com/en/deu/munich/venue/wolt-market-schwabing/items/vegan-280'
 // Product dialogs live at their own URL: .../venue/{venue}/{slug}-itemid-{itemId}.
 const PRODUCT_HREF_PATTERN =
   /^https:\/\/wolt\.com\/en\/deu\/munich\/venue\/wolt-market-schwabing\/[^/]+-itemid-([a-z0-9]+)$/i
 const PRODUCT_JSON_LD_SELECTOR = 'script[type="application/ld+json"]'
+const PRODUCT_SLUG_PATH_SEGMENT_COUNT = 1
 const PRODUCT_LINK_SELECTOR = 'a[href*="-itemid-"]'
 const PRODUCT_INFO_HEADING_SELECTOR = 'h3'
 // The "Product info" modal embeds this same standalone page in an iframe, whose hydration state
@@ -190,6 +192,7 @@ const scrapeProduct = async (context: CrawlContext, sourceUrl: string): Promise<
   return {
     site: 'wolt',
     sourceUrl,
+    slug: extractSlugFromUrlPath(sourceUrl, PRODUCT_SLUG_PATH_SEGMENT_COUNT),
     name,
     brand,
     quantityUnit: quantity?.unit ?? null,
