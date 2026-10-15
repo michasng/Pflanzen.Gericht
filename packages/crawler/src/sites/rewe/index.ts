@@ -15,6 +15,7 @@ import { resolveCategoryFromSlug } from './resolveCategoryFromSlug.js'
 import { resolveBaseFromIngredients } from '../../shared/resolveBaseFromIngredients.js'
 import { cleanReweProductName } from './cleanReweProductName.js'
 import { extractReweProductSlug } from './extractReweProductSlug.js'
+import { inferBrandFromContactName } from './inferBrandFromContactName.js'
 import type { ReweSiteDetails } from './reweSiteDetails.js'
 
 // Only dedicated vegan sections: the global vegan filter also lists coincidentally vegan items like spices.
@@ -45,6 +46,8 @@ const PRODUCT_TILE_SELECTOR = '.plrProductGrid li:not(.plrProductGrid__flagship)
 const PRODUCT_TRACKING_SCRIPT_SELECTOR = 'script[data-tracking-type="product"]'
 const PRODUCT_GRID_SELECTOR = '.plrProductGrid'
 const PROP_STORE_SELECTOR = 'script[id^="pdpr-propstore"]'
+const CONTACT_NAME_ATTRIBUTE = 'ContactName'
+const INGREDIENTS_ATTRIBUTE = 'ingredientStatement'
 
 // REWE embeds the full product record as JSON right in the page - far more
 // reliable than scraping visible DOM text, which uses CSS-module hashed classes.
@@ -161,7 +164,13 @@ const scrapeProduct = async (
   const propStore = await readPropStore(page)
   const productData = propStore?.productData ?? null
   const productName = productData?.productName ?? ''
-  const brand = productData?.brandKey ?? null
+  const findAttributeValue = (attributeName: string): string | null =>
+    productData?.attributeGroups
+      .flatMap((group) => group.attributes)
+      .find((attribute) => attribute.name === attributeName)?.value ?? null
+  const brand =
+    productData?.brandKey ??
+    inferBrandFromContactName(productName, findAttributeValue(CONTACT_NAME_ATTRIBUTE))
   const name = cleanReweProductName(productName, brand)
   const quantity = parseMultipackQuantity(parseGrammageSize(productData?.pricing.grammage))
   recordIncompleteProduct(logger, incompleteProducts, {
@@ -169,10 +178,7 @@ const scrapeProduct = async (
     name,
     missingFieldNames: listMissingRequiredFieldNames({ brand, quantity }),
   })
-  const ingredientsAttribute = productData?.attributeGroups
-    .flatMap((group) => group.attributes)
-    .find((attribute) => attribute.name === 'ingredientStatement')
-  const ingredientsRawText = ingredientsAttribute?.value ?? null
+  const ingredientsRawText = findAttributeValue(INGREDIENTS_ATTRIBUTE)
   const { energyKilojoules, nutrientsPer100g } = parseNutrientsPer100g(
     productData?.nutritionFacts ?? [],
   )
