@@ -4,6 +4,7 @@ import type { CrawledProduct } from '../../schema/crawledProduct.js'
 import type { Allergen, KnownNutrientName } from '@pflanzen-gericht/contracts'
 import { collectLinksByInfiniteScroll } from '../../shared/scraping/collectLinksByInfiniteScroll.js'
 import { resolveCategoryFromKeywords } from '../../shared/categoryKeywordMapping.js'
+import { resolveBaseFromIngredients } from '../../shared/resolveBaseFromIngredients.js'
 import { parseQuantity } from '../../shared/parsing/parseQuantity.js'
 import { parseEuroCents } from '../../shared/parsing/parseEuroCents.js'
 import type { ParsedNutrition } from '../../shared/parsing/parsedNutrition.js'
@@ -175,7 +176,7 @@ const scrapeProduct = async (
     quantityValue: quantity?.value ?? null,
     description: null,
     category,
-    base: null,
+    base: resolveBaseFromIngredients(ingredientsRawText),
     allergens: parseAllergens(allergenText),
     isOrganic: /\bbio\b/i.test(name),
     barcode: null,

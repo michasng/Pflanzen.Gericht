@@ -12,6 +12,7 @@ import {
   type ListingPage,
 } from './collectProductUrlsFromListings.js'
 import { resolveCategoryFromSlug } from './resolveCategoryFromSlug.js'
+import { resolveBaseFromIngredients } from '../../shared/resolveBaseFromIngredients.js'
 import { cleanReweProductName } from './cleanReweProductName.js'
 import { extractReweProductSlug } from './extractReweProductSlug.js'
 import type { ReweSiteDetails } from './reweSiteDetails.js'
@@ -196,7 +197,7 @@ const scrapeProduct = async (
     quantityValue: quantity?.value ?? null,
     description: buildDescription(productData),
     category,
-    base: null,
+    base: resolveBaseFromIngredients(ingredientsRawText),
     allergens: ingredientsRawText ? parseAllergensFromIngredients(ingredientsRawText) : [],
     isOrganic: productData?.bio ?? false,
     barcode: productData?.gtin ?? null,

@@ -46,14 +46,6 @@ pnpm crawl --site rewe --continue # skip already crawled products
 pnpm crawl --url https://www.rewe.de/shop/p/better-nature-tempeh-geraeuchert-vegan-220g/9006709
 ```
 
-REWE products whose category slug could not be mapped are saved with `category: null` and
-their `siteDetails.categorySlug`. After adding the slug to `resolveCategoryFromSlug.ts`, fix
-the existing output without re-crawling:
-
-```sh
-pnpm rewe:remap-categories
-```
-
 ## Upserting
 
 After crawling, review `output/<site>/*.json`. Then run:

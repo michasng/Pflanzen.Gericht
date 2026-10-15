@@ -4,6 +4,7 @@ import type { CrawledProduct } from '../../schema/crawledProduct.js'
 import type { Allergen, KnownNutrientName } from '@pflanzen-gericht/contracts'
 import { collectLinksByInfiniteScroll } from '../../shared/scraping/collectLinksByInfiniteScroll.js'
 import { resolveCategoryFromKeywords } from '../../shared/categoryKeywordMapping.js'
+import { resolveBaseFromIngredients } from '../../shared/resolveBaseFromIngredients.js'
 import { listMissingRequiredFieldNames } from '../../shared/parsing/listMissingRequiredFieldNames.js'
 import { parseEuroCents } from '../../shared/parsing/parseEuroCents.js'
 import type { ParsedNutrition } from '../../shared/parsing/parsedNutrition.js'
@@ -199,7 +200,7 @@ const scrapeProduct = async (context: CrawlContext, sourceUrl: string): Promise<
     quantityValue: quantity?.value ?? null,
     description,
     category,
-    base: null,
+    base: resolveBaseFromIngredients(productInfo?.ingredientsRawText ?? null),
     allergens: parseAllergens(productInfo?.allergenText ?? ''),
     isOrganic: /\bbio\b|\borganic\b/i.test(`${name} ${description ?? ''}`),
     barcode: null,
