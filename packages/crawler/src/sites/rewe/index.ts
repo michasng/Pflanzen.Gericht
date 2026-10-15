@@ -14,6 +14,7 @@ import {
 import { resolveCategoryFromSlug } from './resolveCategoryFromSlug.js'
 import { resolveBaseFromIngredients } from '../../shared/resolveBaseFromIngredients.js'
 import { cleanReweProductName } from './cleanReweProductName.js'
+import { replaceUnusualLineTerminators } from './replaceUnusualLineTerminators.js'
 import { extractReweProductSlug } from './extractReweProductSlug.js'
 import { inferBrandFromContactName } from './inferBrandFromContactName.js'
 import type { ReweSiteDetails } from './reweSiteDetails.js'
@@ -116,7 +117,7 @@ const buildDescription = (productData: RewePropStore['productData'] | null): str
     featureBullets.join('\n'),
     productData?.tradeItemMarketingMessage,
   ].filter((paragraph): paragraph is string => Boolean(paragraph))
-  return paragraphs.length ? paragraphs.join('\n\n') : null
+  return paragraphs.length ? replaceUnusualLineTerminators(paragraphs.join('\n\n')) : null
 }
 
 const readPropStore = async (page: Page): Promise<RewePropStore | null> => {
