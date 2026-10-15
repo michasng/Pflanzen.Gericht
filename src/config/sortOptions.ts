@@ -1,4 +1,5 @@
 export const SORT_OPTION_LABELS = {
+  latest_review: 'Neueste Bewertung',
   newest: 'Neueste',
   top_rated: 'Beste Bewertung',
   most_rated: 'Meiste Bewertungen',
@@ -15,3 +16,4 @@ export const SORT_OPTION_LABELS = {
 } as const
 export type SortOption = keyof typeof SORT_OPTION_LABELS
 export const SORT_OPTIONS = Object.keys(SORT_OPTION_LABELS) as SortOption[]
+export const DEFAULT_SORT_OPTION: SortOption = 'latest_review'

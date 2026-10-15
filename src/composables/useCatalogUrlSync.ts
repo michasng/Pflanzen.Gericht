@@ -1,7 +1,7 @@
 import { watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCatalogStore } from '@/stores/catalog'
-import { SORT_OPTIONS, type SortOption } from '@/config/sortOptions'
+import { DEFAULT_SORT_OPTION, SORT_OPTIONS, type SortOption } from '@/config/sortOptions'
 
 const asString = (v: unknown): string | null => (typeof v === 'string' && v ? v : null)
 
@@ -40,7 +40,9 @@ export const useCatalogUrlSync = (): void => {
     store.setMaxPriceCents(q.maxPrice ? asNumber(q.maxPrice) : null)
     const sortParam = asString(q.sort)
     store.setSort(
-      SORT_OPTIONS.includes(sortParam as SortOption) ? (sortParam as SortOption) : 'newest',
+      SORT_OPTIONS.includes(sortParam as SortOption)
+        ? (sortParam as SortOption)
+        : DEFAULT_SORT_OPTION,
     )
   }
 
@@ -54,7 +56,7 @@ export const useCatalogUrlSync = (): void => {
       q: store.search,
       category: store.category,
       base: store.base,
-      sort: store.sort === 'newest' ? undefined : store.sort,
+      sort: store.sort === DEFAULT_SORT_OPTION ? undefined : store.sort,
       store: store.store,
       city: store.city,
       minRating: store.minRating,

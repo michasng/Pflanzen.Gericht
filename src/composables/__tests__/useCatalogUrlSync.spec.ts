@@ -10,7 +10,7 @@ const makeStoreMock = () => {
     search: '',
     category: null,
     base: null,
-    sort: 'newest',
+    sort: 'latest_review',
     store: null,
     city: null,
     minRating: null,
@@ -93,8 +93,20 @@ describe('useCatalogUrlSync', () => {
     expect(storeMock.setSort).toHaveBeenCalledWith('top_rated')
   })
 
-  it('falls back to newest for unknown sort', () => {
+  it('falls back to latest review for unknown sort', () => {
     routeQuery = { sort: 'garbage' }
+    mountComposable()
+    expect(storeMock.setSort).toHaveBeenCalledWith('latest_review')
+  })
+
+  it('falls back to latest review when sort is absent', () => {
+    routeQuery = {}
+    mountComposable()
+    expect(storeMock.setSort).toHaveBeenCalledWith('latest_review')
+  })
+
+  it('hydrates the newest sort from query params', () => {
+    routeQuery = { sort: 'newest' }
     mountComposable()
     expect(storeMock.setSort).toHaveBeenCalledWith('newest')
   })

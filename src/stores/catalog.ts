@@ -8,6 +8,7 @@ import {
   type CatalogFilter,
   type SortOption,
 } from '@/services/catalog'
+import { DEFAULT_SORT_OPTION } from '@/config/sortOptions'
 
 export const useCatalogStore = defineStore('catalog', () => {
   const products = ref<ProductListItem[]>([])
@@ -20,7 +21,7 @@ export const useCatalogStore = defineStore('catalog', () => {
   const search = ref('')
   const category = ref<string | null>(null)
   const base = ref<string | null>(null)
-  const sort = ref<SortOption>('newest')
+  const sort = ref<SortOption>(DEFAULT_SORT_OPTION)
   const store = ref<string | null>(null)
   const city = ref<string | null>(null)
   const minPriceCents = ref<number | null>(null)
