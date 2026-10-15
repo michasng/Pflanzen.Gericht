@@ -17,16 +17,26 @@ const UNIT_CONVERSIONS: Readonly<Record<string, { unit: QuantityUnit; factor: nu
 }
 const PIECE_CONVERSION = { unit: QuantityUnit.Piece, factor: 1 }
 
-/** Parses a single-unit size like "1,5 l"; anything else (multipacks, approximations) yields null. */
-export const parseQuantity = (text: string): ParsedQuantity | null => {
+/** Like parseQuantity, but keeps fractional values like "37,5g", which only become whole in a multipack. */
+export const parseFractionalQuantity = (text: string): ParsedQuantity | null => {
   const match = QUANTITY_PATTERN.exec(text.trim())
   const amountText = match?.[1]
   const unitText = match?.[2]
   if (!amountText || !unitText) return null
 
   const conversion = UNIT_CONVERSIONS[unitText.toLowerCase()] ?? PIECE_CONVERSION
-  const rawValue = Number.parseFloat(amountText.replace(',', '.')) * conversion.factor
+  const value = Number.parseFloat(amountText.replace(',', '.')) * conversion.factor
+  if (value <= 0) return null
+  return { unit: conversion.unit, value }
+}
+
+/** Parses a single-unit size like "1,5 l"; anything else (multipacks, approximations) yields null. */
+export const parseQuantity = (text: string): ParsedQuantity | null => {
+  const fractionalQuantity = parseFractionalQuantity(text)
+  if (!fractionalQuantity) return null
+
+  const rawValue = fractionalQuantity.value
   const value = Math.round(rawValue)
   if (value <= 0 || Math.abs(rawValue - value) > WHOLE_NUMBER_TOLERANCE) return null
-  return { unit: conversion.unit, value }
+  return { unit: fractionalQuantity.unit, value }
 }

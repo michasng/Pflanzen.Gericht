@@ -3,7 +3,7 @@ import { removeTrailingQuantity } from '../../shared/parsing/removeTrailingQuant
 import { removeBrandPrefix } from './removeBrandPrefix.js'
 
 const TRAILING_MULTIPACK_QUANTITY_PATTERN = new RegExp(
-  String.raw`\s+\d+\s*x\s*${QUANTITY_TEXT_SOURCE}\s*$`,
+  String.raw`\s+\d+\s*x\s*(?:${QUANTITY_TEXT_SOURCE}|\d+)\s*$`,
   'i',
 )
 const TRAILING_VEGAN_PATTERN = /\s+vegan$/i

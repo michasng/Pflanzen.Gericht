@@ -1,4 +1,4 @@
-import { parseQuantity, type ParsedQuantity } from './parseQuantity.js'
+import { parseFractionalQuantity, parseQuantity, type ParsedQuantity } from './parseQuantity.js'
 
 const MULTIPACK_PATTERN = /^(\d+)\s*x\s*(.+)$/i
 
@@ -9,7 +9,10 @@ export const parseMultipackQuantity = (text: string): ParsedQuantity | null => {
   const packSizeText = match?.[2]
   if (!packCountText || !packSizeText) return parseQuantity(text)
 
-  const packSize = parseQuantity(packSizeText)
+  const packSize = parseFractionalQuantity(packSizeText)
   if (!packSize) return null
-  return { unit: packSize.unit, value: packSize.value * Number.parseInt(packCountText, 10) }
+  return {
+    unit: packSize.unit,
+    value: Math.round(packSize.value * Number.parseInt(packCountText, 10)),
+  }
 }

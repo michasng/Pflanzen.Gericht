@@ -18,6 +18,22 @@ describe('cleanReweProductName', () => {
     })
   })
 
+  describe('given a multipack with a decimal pack size cut off at the comma', () => {
+    it('removes the cut-off pack size', () => {
+      expect(cleanReweProductName('Mentos Kaubonbons Discovery vegan 3x37', 'Mentos')).toBe(
+        'Kaubonbons Discovery',
+      )
+    })
+  })
+
+  describe('given a multipack with a decimal pack size', () => {
+    it('removes the whole pack size', () => {
+      expect(cleanReweProductName('Mentos Kaubonbons Discovery vegan 3x37,5g', 'Mentos')).toBe(
+        'Kaubonbons Discovery',
+      )
+    })
+  })
+
   describe('given a single pack size', () => {
     it('removes brand, vegan postfix and size', () => {
       expect(cleanReweProductName('Alpro Not Mlk Haferdrink 1,8% vegan 1l', 'Alpro')).toBe(

@@ -21,6 +21,10 @@ describe('parseMultipackQuantity', () => {
       })
     })
 
+    it('given a decimal pack size, rounds the total to whole units', () => {
+      expect(parseMultipackQuantity('3x37,50g')).toEqual({ unit: QuantityUnit.Gram, value: 113 })
+    })
+
     it('given an unparseable pack size, returns null', () => {
       expect(parseMultipackQuantity('2x foo')).toBeNull()
     })
