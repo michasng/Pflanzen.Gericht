@@ -1,10 +1,8 @@
-import type { SiteCrawler } from './types.js'
-import { createReweCrawler } from './rewe/index.js'
 import { createKnusprCrawler } from './knuspr/index.js'
+import { createReweCrawler } from './rewe/index.js'
+import type { SiteCrawler } from './types.js'
 import { createWoltCrawler } from './wolt/index.js'
 
-// Registry order = crawl order. Add a new site by creating its own folder
-// implementing SiteCrawler and adding one line here.
 export const SITE_CRAWLERS: readonly SiteCrawler[] = [
   createReweCrawler(),
   createKnusprCrawler(),

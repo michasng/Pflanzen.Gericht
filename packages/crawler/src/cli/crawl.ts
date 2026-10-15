@@ -1,4 +1,4 @@
-import { Command, Option } from 'commander'
+import { parseCrawlArguments } from './parseCrawlArguments.js'
 import { launchBrowser } from '../shared/browser/launchBrowser.js'
 import { createInterruptionDetectingNavigator } from '../shared/browser/createInterruptionDetectingNavigator.js'
 import { waitForEnterKey } from '../shared/browser/waitForEnterKey.js'
@@ -15,7 +15,6 @@ import { createIncompleteProductCollector } from '../shared/logging/createIncomp
 import { logIncompleteProductSummary } from '../shared/logging/logIncompleteProductSummary.js'
 import { createUnmappedCategoryCollector } from '../shared/logging/createUnmappedCategoryCollector.js'
 import { logUnmappedCategorySummary } from '../shared/logging/logUnmappedCategorySummary.js'
-import { findSiteCrawlerByProductUrl, findSiteCrawlerById, SITE_CRAWLERS } from '../sites/index.js'
 import type { CrawlContext } from '../sites/types.js'
 import type { CrawledProduct } from '../schema/crawledProduct.js'
 
@@ -25,52 +24,7 @@ const INTERRUPTION_PROMPT =
 const CONTINUE_ANSWER = ''
 const EXPECTED_CONTENT_TIMEOUT_MILLISECONDS = 5_000
 
-interface CrawlCliOptions {
-  site?: string
-  url?: string
-  limit?: string
-  skip?: string
-  continue?: boolean
-}
-
-const program = new Command()
-program
-  .addOption(
-    new Option(
-      '--site <site>',
-      `which site to crawl (${SITE_CRAWLERS.map((c) => c.id).join('|')})`,
-    ).conflicts('url'),
-  )
-  .addOption(
-    new Option('--url <url>', 'crawl only this product page instead of a listing').conflicts([
-      'site',
-      'limit',
-      'skip',
-      'continue',
-    ]),
-  )
-  .option('--limit <count>', 'stop after this many products')
-  .option('--skip <count>', 'ignore this many of the first products')
-  .option('--continue', 'skip products already in the output')
-  .parse(process.argv)
-
-const options = program.opts<CrawlCliOptions>()
-if (!options.site && !options.url) {
-  console.error('Either --site or --url is required.')
-  process.exit(1)
-}
-
-const siteCrawler = options.url
-  ? findSiteCrawlerByProductUrl(options.url)
-  : findSiteCrawlerById(options.site ?? '')
-if (!siteCrawler) {
-  console.error(
-    options.url
-      ? `No site supports the URL "${options.url}".`
-      : `Unknown site "${options.site}". Available: ${SITE_CRAWLERS.map((c) => c.id).join(', ')}`,
-  )
-  process.exit(1)
-}
+const { options, siteCrawler } = parseCrawlArguments(process.argv.slice(2))
 
 const limit = options.limit ? Number.parseInt(options.limit, 10) : null
 const skip = options.skip ? Number.parseInt(options.skip, 10) : 0
@@ -113,8 +67,8 @@ const context: CrawlContext = {
   unmappedCategories,
 }
 
-const products = options.url
-  ? crawlProductUrls(siteCrawler, context, [options.url])
+const products = options.urls
+  ? crawlProductUrls(siteCrawler, context, options.urls)
   : crawlSite(siteCrawler, context, { limit, skip, excludedProductUrls })
 
 let count = 0

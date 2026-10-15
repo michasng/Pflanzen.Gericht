@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import { createConfirmingNavigator } from '../../browser/createConfirmingNavigator.js'
 import { crawlProductUrls } from '../crawlProductUrls.js'
 import { buildCrawledProduct } from './buildCrawledProduct.js'
 import { collectAsync } from './collectAsync.js'
@@ -41,6 +42,25 @@ describe('crawlProductUrls', () => {
         `navigate https://example.test/b expecting ${PRODUCT_PAGE_SELECTOR}`,
         'scrape https://example.test/b',
       ])
+    })
+
+    it('reuses the context and confirms session setup only once for all products', async () => {
+      const { context, productScraper } = setup()
+      const confirmSessionSetup = vi.fn<() => Promise<void>>(async () => {})
+      const sharedContext = {
+        navigateTo: createConfirmingNavigator(context.navigateTo, confirmSessionSetup),
+      }
+      const scrapeProduct = vi.fn<typeof productScraper.scrapeProduct>(productScraper.scrapeProduct)
+      const productUrls = ['https://example.test/a', 'https://example.test/b']
+
+      const products = await collectAsync(
+        crawlProductUrls({ ...productScraper, scrapeProduct }, sharedContext, productUrls),
+      )
+
+      expect(products.map((product) => product.sourceUrl)).toEqual(productUrls)
+      expect(confirmSessionSetup).toHaveBeenCalledTimes(1)
+      expect(scrapeProduct).toHaveBeenNthCalledWith(1, sharedContext, productUrls[0])
+      expect(scrapeProduct).toHaveBeenNthCalledWith(2, sharedContext, productUrls[1])
     })
   })
 

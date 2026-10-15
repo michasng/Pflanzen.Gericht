@@ -42,8 +42,8 @@ pnpm crawl --site rewe --limit 5  # stop early
 pnpm crawl --site rewe --skip 5   # skip some
 pnpm crawl --site rewe --continue # skip already crawled products
 
-# crawl a specific product, incompatible with other options
-pnpm crawl --url https://www.rewe.de/shop/p/better-nature-tempeh-geraeuchert-vegan-220g/9006709
+# crawl specific products from one site (incompatible with other arguments)
+pnpm crawl --urls https://www.rewe.de/shop/p/better-nature-tempeh-geraeuchert-vegan-220g/9006709 https://www.rewe.de/shop/p/zueger-bio-cottage-drops-vegan-200g/9012174
 ```
 
 ## Upserting
