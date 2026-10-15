@@ -23,7 +23,6 @@ import {
   askCityName,
   askFieldGroupDecisions,
   askImageDecision,
-  askShouldImportNew,
   askWhichExistingProduct,
 } from './promptDecisions.js'
 import { createSupabaseAdminClient } from './supabaseAdminClient.js'
@@ -103,11 +102,6 @@ for (const crawledProduct of crawledProducts) {
     const requiredFields = resolveRequiredProductFields(product)
     if (!requiredFields) {
       logger.error(`Skipping "${product.name}" - brand or quantity is missing.`)
-      continue
-    }
-    const shouldImport = await askShouldImportNew(product.name)
-    if (!shouldImport) {
-      logger.info(`Skipped "${product.name}".`)
       continue
     }
     const productId = await createNewProduct(supabase, product, requiredFields, env.importUserId)

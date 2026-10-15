@@ -17,19 +17,6 @@ export const askCityName = async (): Promise<string> => {
   return String(response.cityName ?? '').trim()
 }
 
-export const askShouldImportNew = async (productName: string): Promise<boolean> => {
-  const response = await prompts(
-    {
-      type: 'confirm',
-      name: 'shouldImport',
-      message: `"${productName}" has no existing match. Import as a new product?`,
-      initial: true,
-    },
-    { onCancel: () => process.exit(SIGINT_EXIT_CODE) },
-  )
-  return Boolean(response.shouldImport)
-}
-
 export const askWhichExistingProduct = async (
   productName: string,
   matches: readonly ExistingProductSummary[],
