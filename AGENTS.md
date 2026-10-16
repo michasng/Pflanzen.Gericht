@@ -89,3 +89,17 @@ Write out their names when discussing their trade-offs.
 - Suggest a non-technical commit message
   - Tiny first line, no commas or bullet points
   - Optionally a blank line, then more context if it helps
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live as local markdown files under `.scratch/<feature>/`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default triage vocabulary (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix), recorded as `Status:` lines. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one root `GLOSSARY.md` plus `docs/adr/`. See `docs/agents/domain.md`.
