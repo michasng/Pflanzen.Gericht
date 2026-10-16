@@ -20,12 +20,12 @@ Write out their names when discussing their trade-offs.
 - **Command-Query Separation (CQS)**: A method either has a side-effect or returns data, but never both; the name indicates which
 - **Composition over Inheritance**: Prefer "has a" over "is a"
 - **Deep Modules**: Hide complexity behind simple interfaces
-- **Self-Documenting Code**: Expressive naming, include units, no abbreviations (e.g. `timeoutSeconds`); don't use comments, unless you are asked to
+- **Self-Documenting Code**: Expressive naming, include units, no abbreviations (e.g. `timeoutSeconds`), avoid comments
 - **Flat Control Flow**: Use early returns to avoid nesting
 
 ## Code Style
 
-- English for code, comments, and commit messages
+- Use American English
 - One unit (class or function) per file; files names by their unit, e.g. `doSomething.ts` would contain a function called `doSomethint` (and maybe some constants)
 - TypeScript strict; no `any`, no non-null `!` assertions — model types honestly
 - Never suppress type or lint errors
