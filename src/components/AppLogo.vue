@@ -1,7 +1,18 @@
 <template>
-  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <path
-      d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 008 20c6 0 7-8 7-8 3 3 3 8 2 11h2c1-6-1-11-2-15z"
-    />
+  <svg
+    viewBox="0 0 64 64"
+    fill="currentColor"
+    stroke="currentColor"
+    stroke-width="1.5"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <rect x="10" y="49" width="20" height="4" rx="1" />
+    <rect x="6" y="53" width="28" height="7" rx="1.5" />
+    <g transform="translate(26 22) rotate(40)">
+      <path d="M2 -18Q-14 -18 -14 0Q-14 18 2 18Q-1 0 2 -18Z" />
+      <path d="M0 -4H30Q39 -7 39 0Q39 7 30 4H0Z" />
+      <path d="M5 -4L8 -7L10 -4V4L8 7L5 4Z" />
+    </g>
   </svg>
 </template>
