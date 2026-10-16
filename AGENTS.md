@@ -71,6 +71,7 @@ Write out their names when discussing their trade-offs.
 - Prefer dependency injection over intrusive mocking
 - Don't mock imports; pass simple stubs, fakes or spies directly to the tested code (dependency injection)
 - Never use `await flushPromises()` or `await nextTick()` in tests; await the specific concrete promise the code under test is waiting on, or the specific time being advanced (for example `vi.advanceTimersByTimeAsync(...)`)
+- Test database function logic with pgTAP in `supabase/tests/*.test.sql`; wrap each file in a rolled-back transaction and run with `pnpm test:db` (needs `supabase start`)
 
 ## Database
 

@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test:unit": "vitest",
     "test:unit:run": "vitest run",
+    "test:db": "supabase test db --local",
     "verify": "run-s build lint format:check test:unit:run",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",

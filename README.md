@@ -65,6 +65,14 @@ pnpm build
 pnpm test:unit
 ```
 
+### Run Database Tests with [pgTAP](https://pgtap.org/)
+
+Requires the local Supabase containers to be running.
+
+```sh
+pnpm test:db
+```
+
 ### Lint with [ESLint](https://eslint.org/)
 
 ```sh
