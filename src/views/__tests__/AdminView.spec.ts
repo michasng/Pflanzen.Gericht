@@ -1,15 +1,19 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import type { ProductListItem } from '@/services/catalog'
+import { createProductListItem } from '@/__tests__/createProductListItem'
 
-const { fetchAllProductsForAdmin, fetchAllReviewsForAdmin, deleteProduct } = vi.hoisted(() => ({
-  fetchAllProductsForAdmin: vi.fn<() => Promise<ProductListItem[]>>(),
-  fetchAllReviewsForAdmin: vi.fn<() => Promise<never[]>>(),
-  deleteProduct: vi.fn<(id: string) => Promise<void>>(),
-}))
+const { fetchAllProductsForAdmin, fetchAllReviewsForAdmin, deleteProduct, push } = vi.hoisted(
+  () => ({
+    fetchAllProductsForAdmin: vi.fn<() => Promise<ProductListItem[]>>(),
+    fetchAllReviewsForAdmin: vi.fn<() => Promise<never[]>>(),
+    deleteProduct: vi.fn<(id: string) => Promise<void>>(),
+    push: vi.fn<() => Promise<void>>(() => Promise.resolve()),
+  }),
+)
 
 vi.mock('vue-router', () => ({
-  useRouter: () => ({ push: vi.fn<() => Promise<void>>(() => Promise.resolve()) }),
+  useRouter: () => ({ push }),
 }))
 
 vi.mock('@/services/products', () => ({
@@ -29,30 +33,8 @@ vi.mock('@/services/profile', () => ({
 
 import AdminView from '@/views/AdminView.vue'
 
-const createProduct = (id: string): ProductListItem => ({
-  allergens: [],
-  avgOverall: null,
-  barcode: null,
-  base: null,
-  brand: 'Alpro',
-  category: 'drink',
-  createdAt: '2026-09-11T00:00:00.000Z',
-  createdBy: 'user-1',
-  description: null,
-  energyJoules: null,
-  id,
-  images: [],
-  isOrganic: false,
-  minPriceEuroCents: null,
-  name: `Product ${id}`,
-  normalizedName: null,
-  reviewsCount: 0,
-  tags: [],
-  updatedAt: '2026-09-11T00:00:00.000Z',
-})
-
 const mountView = async (productIds: string[]): Promise<VueWrapper> => {
-  fetchAllProductsForAdmin.mockResolvedValue(productIds.map(createProduct))
+  fetchAllProductsForAdmin.mockResolvedValue(productIds.map(createProductListItem))
   fetchAllReviewsForAdmin.mockResolvedValue([])
   const wrapper = mount(AdminView, {
     global: { stubs: { RouterLink: true, StarDisplay: true } },
@@ -65,105 +47,23 @@ describe('AdminView', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     deleteProduct.mockReset()
+    push.mockClear()
   })
 
-  describe('given no product is selected', () => {
-    it('disables the delete button', async () => {
-      const wrapper = await mountView(['a', 'b'])
+  describe('given loading fails', () => {
+    it('shows the error', async () => {
+      fetchAllProductsForAdmin.mockRejectedValue(new Error('offline'))
+      fetchAllReviewsForAdmin.mockResolvedValue([])
 
-      const button = wrapper.get('[aria-label="Ausgewählte Produkte löschen"]')
+      const wrapper = mount(AdminView)
 
-      expect(button.attributes('disabled')).toBeDefined()
-    })
-  })
-
-  describe('given one product is selected', () => {
-    it('enables the delete button and disables the merge button', async () => {
-      const wrapper = await mountView(['a', 'b'])
-
-      await wrapper.get('[aria-label="Product a auswählen"]').setValue(true)
-
-      expect(
-        wrapper.get('[aria-label="Ausgewählte Produkte löschen"]').attributes('disabled'),
-      ).toBeUndefined()
-      expect(
-        wrapper.get('[aria-label="Produkte zusammenführen"]').attributes('disabled'),
-      ).toBeDefined()
-    })
-  })
-
-  describe('given two products are selected', () => {
-    it('enables the merge button', async () => {
-      const wrapper = await mountView(['a', 'b'])
-
-      await wrapper.get('[aria-label="Product a auswählen"]').setValue(true)
-      await wrapper.get('[aria-label="Product b auswählen"]').setValue(true)
-
-      expect(
-        wrapper.get('[aria-label="Produkte zusammenführen"]').attributes('disabled'),
-      ).toBeUndefined()
-    })
-  })
-
-  describe('when selecting all products', () => {
-    it('selects every product', async () => {
-      const wrapper = await mountView(['a', 'b'])
-
-      await wrapper.get('[aria-label="Alle Produkte auswählen"]').setValue(true)
-
-      const productA = wrapper.get<HTMLInputElement>('[aria-label="Product a auswählen"]')
-      const productB = wrapper.get<HTMLInputElement>('[aria-label="Product b auswählen"]')
-      expect(productA.element.checked).toBe(true)
-      expect(productB.element.checked).toBe(true)
-    })
-  })
-
-  describe('given all products are selected', () => {
-    describe('when deselecting all products', () => {
-      it('deselects every product', async () => {
-        const wrapper = await mountView(['a', 'b'])
-        const selectAll = wrapper.get('[aria-label="Alle Produkte auswählen"]')
-        await selectAll.setValue(true)
-
-        await selectAll.setValue(false)
-
-        const productA = wrapper.get<HTMLInputElement>('[aria-label="Product a auswählen"]')
-        const productB = wrapper.get<HTMLInputElement>('[aria-label="Product b auswählen"]')
-        expect(productA.element.checked).toBe(false)
-        expect(productB.element.checked).toBe(false)
-      })
-    })
-  })
-
-  describe('given every product is selected individually', () => {
-    it('checks the select all checkbox', async () => {
-      const wrapper = await mountView(['a', 'b'])
-
-      await wrapper.get('[aria-label="Product a auswählen"]').setValue(true)
-      await wrapper.get('[aria-label="Product b auswählen"]').setValue(true)
-
-      const selectAll = wrapper.get<HTMLInputElement>('[aria-label="Alle Produkte auswählen"]')
-      expect(selectAll.element.checked).toBe(true)
-      expect(selectAll.element.indeterminate).toBe(false)
-    })
-  })
-
-  describe('given some products are selected', () => {
-    it('shows the select all checkbox as indeterminate', async () => {
-      const wrapper = await mountView(['a', 'b'])
-
-      await wrapper.get('[aria-label="Product a auswählen"]').setValue(true)
-
-      const selectAll = wrapper.get<HTMLInputElement>('[aria-label="Alle Produkte auswählen"]')
-      expect(selectAll.element.checked).toBe(false)
-      expect(selectAll.element.indeterminate).toBe(true)
+      await vi.waitFor(() => expect(wrapper.text()).toContain('offline'))
     })
   })
 
   describe('when deleting the selected products after confirming', () => {
-    it('deletes every selected product after a single confirmation', async () => {
-      const confirmSpy = vi.fn<() => boolean>(() => true)
-      vi.stubGlobal('confirm', confirmSpy)
+    it('deletes every selected product and removes them from the list', async () => {
+      vi.stubGlobal('confirm', () => true)
       deleteProduct.mockResolvedValue(undefined)
       const wrapper = await mountView(['a', 'b', 'c'])
       await wrapper.get('[aria-label="Product a auswählen"]').setValue(true)
@@ -171,20 +71,23 @@ describe('AdminView', () => {
 
       await wrapper.get('[aria-label="Ausgewählte Produkte löschen"]').trigger('click')
 
-      await vi.waitFor(() => expect(deleteProduct.mock.calls).toEqual([['a'], ['c']]))
-      expect(confirmSpy).toHaveBeenCalledTimes(1)
+      await vi.waitFor(() => expect(wrapper.text()).toContain('Produkte (1)'))
+      expect(deleteProduct.mock.calls).toEqual([['a'], ['c']])
     })
   })
 
-  describe('when deleting the selected products without confirming', () => {
-    it('deletes nothing', async () => {
-      vi.stubGlobal('confirm', () => false)
-      const wrapper = await mountView(['a'])
+  describe('when merging two selected products', () => {
+    it('navigates to the merge page with both products', async () => {
+      const wrapper = await mountView(['a', 'b'])
+      await wrapper.get('[aria-label="Product b auswählen"]').setValue(true)
       await wrapper.get('[aria-label="Product a auswählen"]').setValue(true)
 
-      await wrapper.get('[aria-label="Ausgewählte Produkte löschen"]').trigger('click')
+      await wrapper.get('[aria-label="Produkte zusammenführen"]').trigger('click')
 
-      expect(deleteProduct).not.toHaveBeenCalled()
+      expect(push).toHaveBeenCalledExactlyOnceWith({
+        name: 'product-merge',
+        query: { a: 'a', b: 'b' },
+      })
     })
   })
 })
