@@ -81,24 +81,11 @@ Write out their names when discussing their trade-offs.
 
 ## Workflow
 
+- Read a file before editing it; verify assumptions with tests rather than guessing
 - Atomic changes: reduce every task to the smallest change that makes sense and leaves the app runnable
 - Run `pnpm fix` to auto-fix lint and formatting issues before staging
 - Verify every change with `pnpm verify`
-
-### Commit messages
-
-- Non-technical messages as much as possible
-- Prefix with one of `chore|refactor|fix|patch|feat:` followed by a Capitalized Verb
-- Tiny first line, no commas or bullet points
-- Optionally a blank line, then more context if it helps
-- Examples:
-  - feat: Add settings menu
-  - patch: Change font size in profile
-  - fix: Prevent race condition
-  - refactor: Replace functions with arrow functions
-  - chore: Format README
-
-## For the Agent
-
 - Keep responses and diffs minimal; skip restating unchanged code
-- Read a file before editing it; verify assumptions with tests rather than guessing
+- Suggest a non-technical commit message
+  - Tiny first line, no commas or bullet points
+  - Optionally a blank line, then more context if it helps
