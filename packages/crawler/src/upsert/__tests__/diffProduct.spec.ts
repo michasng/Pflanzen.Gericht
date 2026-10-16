@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { QuantityUnit } from '@pflanzen-gericht/contracts'
 import type { CrawledProduct } from '../../schema/crawledProduct.js'
 import { diffProduct } from '../diffProduct.js'
-import type { ExistingProductSummary } from '../loadExistingProducts.js'
+import type { ExistingProductSummary } from '../loadExistingProductMatches.js'
 import type { ExistingProductDetail } from '../loadExistingProductDetail.js'
 
 const buildCandidate = (overrides: Partial<CrawledProduct> = {}): CrawledProduct => ({

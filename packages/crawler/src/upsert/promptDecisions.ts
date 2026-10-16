@@ -1,7 +1,7 @@
 import prompts from 'prompts'
 import { CATEGORIES, type Category } from '@pflanzen-gericht/contracts'
 import type { DiffEntry } from './diffProduct.js'
-import type { ExistingProductSummary } from './loadExistingProducts.js'
+import type { ExistingProductSummary } from './loadExistingProductMatches.js'
 
 const SIGINT_EXIT_CODE = 130
 

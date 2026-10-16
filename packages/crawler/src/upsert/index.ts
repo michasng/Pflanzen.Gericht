@@ -13,10 +13,9 @@ import {
 } from './applyImport.js'
 import { loadCrawlerEnv } from './config/env.js'
 import { diffProduct } from './diffProduct.js'
-import { findExistingProductMatches } from './findExistingProductMatches.js'
 import { loadCrawledOutputs } from '../shared/output/loadCrawledOutputs.js'
 import { loadExistingProductDetail } from './loadExistingProductDetail.js'
-import { loadExistingProducts } from './loadExistingProducts.js'
+import { loadExistingProductMatches } from './loadExistingProductMatches.js'
 import { resolveRequiredProductFields } from './resolveRequiredProductFields.js'
 import {
   askCategoryForUnresolved,
@@ -82,9 +81,8 @@ for (const crawledProduct of crawledProducts) {
     continue
   }
 
-  // Reloaded per product, so stores sharing an existing product see each other's changes.
-  const existingProducts = await loadExistingProducts(supabase)
-  const matches = findExistingProductMatches(product.sourceUrl, existingProducts)
+  // Looked up per product, so stores sharing an existing product see each other's changes.
+  const matches = await loadExistingProductMatches(supabase, product.sourceUrl)
   if (matches.length > 1) {
     logger.warn(
       `"${product.name}" shares its source URL with ${matches.length} existing products: ${matches.map((match) => match.id).join(', ')}.`,

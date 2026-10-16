@@ -7,12 +7,16 @@ export interface ExistingProductSummary extends ProductRow {
   sourceUrls: string[]
 }
 
-export const loadExistingProducts = async (
+export const loadExistingProductMatches = async (
   supabase: SupabaseClient<Database>,
+  sourceUrl: string,
 ): Promise<ExistingProductSummary[]> => {
-  const { data, error } = await supabase.from('product').select('*, product_source(url)')
+  const { data, error } = await supabase
+    .from('product_source')
+    .select('product(*, product_source(url))')
+    .eq('url', sourceUrl)
   if (error) throw error
-  return data.map(({ product_source, ...product }) => ({
+  return data.map(({ product: { product_source, ...product } }) => ({
     ...product,
     sourceUrls: product_source.map((source) => source.url),
   }))

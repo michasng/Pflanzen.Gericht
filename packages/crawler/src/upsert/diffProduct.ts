@@ -1,7 +1,7 @@
 import type { CrawledProduct } from '../schema/crawledProduct.js'
 import { convertGramsToMicrograms } from '../schema/convertGramsToMicrograms.js'
 import { convertKilojoulesToJoules } from '../schema/convertKilojoulesToJoules.js'
-import type { ExistingProductSummary } from './loadExistingProducts.js'
+import type { ExistingProductSummary } from './loadExistingProductMatches.js'
 import type { ExistingProductDetail } from './loadExistingProductDetail.js'
 
 export interface DiffEntry {
