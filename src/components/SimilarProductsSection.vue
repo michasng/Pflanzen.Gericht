@@ -23,7 +23,7 @@ import {
 import { toErrorMessage } from '@/lib/error'
 import { useAuthStore } from '@/stores/auth'
 
-const props = defineProps<{ productId: string }>()
+const props = defineProps<{ productId: string; productCategory: string }>()
 
 const authStore = useAuthStore()
 const route = useRoute()
@@ -220,7 +220,10 @@ watch(search, (nextSearch) => {
   const currentSearch = nextSearch
   searchTimeout = setTimeout(async () => {
     try {
-      const matches = await searchSimilarityCandidates(props.productId, currentSearch)
+      const matches = await searchSimilarityCandidates(
+        { id: props.productId, category: props.productCategory },
+        currentSearch,
+      )
       if (search.value === currentSearch) {
         suggestions.value = matches
         highlightedSuggestionIndex.value =

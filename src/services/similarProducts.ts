@@ -1,6 +1,5 @@
 import { canonicalizeProductPair } from '@/lib/canonicalizeProductPair'
 import { camelizeKeys } from '@/lib/camelizeKeys'
-import type { CamelCasedKeys } from '@/lib/CamelCasedKeys'
 import { snakeifyKeys } from '@/lib/snakeifyKeys'
 import type { ProductSimilarityVoteInsert } from '@/types'
 import type { TablesInsert } from '@/types/database'
@@ -27,15 +26,32 @@ export interface SimilarProduct {
   myVote: boolean | null
 }
 
-export type SimilarityCandidate = CamelCasedKeys<SimilarityCandidateRow>
-
-export interface SimilarityCandidateRow {
+export interface SimilarityCandidate {
   id: string
   name: string
   brand: string | null
   category: string
-  storage_path: string | null
+  storagePath: string | null
 }
+
+export interface SimilarityCandidateSource {
+  id: string
+  category: string
+}
+
+export interface CandidateProductRow {
+  id: string
+  name: string
+  brand: string | null
+  category: string
+}
+
+export interface CandidateImageRow {
+  product_id: string
+  storage_path: string
+}
+
+export const MAX_SIMILARITY_CANDIDATES = 8
 
 interface SimilarProductRow {
   agree_count: number
@@ -69,11 +85,13 @@ export interface SimilarProductsDependencies {
     data: SimilarProductRow[] | null
     error: unknown | null
   }>
-  searchSimilarityCandidatesRpc: (
-    productId: string,
-    search: string,
-  ) => Promise<{
-    data: SimilarityCandidateRow[] | null
+  searchProductsRpc: (query: { search: string; category: string; limit: number }) => Promise<{
+    data: CandidateProductRow[] | null
+    error: unknown | null
+  }>
+  /** Images must be ordered by their display order, so the first one per product is its cover */
+  fetchProductImages: (productIds: string[]) => Promise<{
+    data: CandidateImageRow[] | null
     error: unknown | null
   }>
   upsertVote: (
@@ -110,21 +128,46 @@ export const createSimilarProductsService = (dependencies: SimilarProductsDepend
     )
   }
 
+  const fetchCoverStoragePaths = async (productIds: string[]): Promise<Map<string, string>> => {
+    const { data, error } = await dependencies.fetchProductImages(productIds)
+    if (error) throw error
+    const coverStoragePathByProductId = new Map<string, string>()
+    for (const image of data ?? []) {
+      if (coverStoragePathByProductId.has(image.product_id)) continue
+      coverStoragePathByProductId.set(image.product_id, image.storage_path)
+    }
+    return coverStoragePathByProductId
+  }
+
   const searchSimilarityCandidates = async (
-    productId: string,
+    product: SimilarityCandidateSource,
     search: string,
   ): Promise<SimilarityCandidate[]> => {
     if (!search.trim()) return []
 
-    const { data, error } = await dependencies.searchSimilarityCandidatesRpc(productId, search)
+    const { data, error } = await dependencies.searchProductsRpc({
+      search,
+      category: product.category,
+      // One extra, because the product itself may be among the results
+      limit: MAX_SIMILARITY_CANDIDATES + 1,
+    })
     if (error) throw error
-    return camelizeKeys(
-      (data ?? []).map((row) => ({
-        ...row,
-        brand: row.brand ?? null,
-        storage_path: row.storage_path ?? null,
-      })),
+
+    const candidates = (data ?? [])
+      .filter((row) => row.id !== product.id)
+      .slice(0, MAX_SIMILARITY_CANDIDATES)
+    if (candidates.length === 0) return []
+
+    const coverStoragePathByProductId = await fetchCoverStoragePaths(
+      candidates.map((candidate) => candidate.id),
     )
+    return candidates.map((candidate) => ({
+      id: candidate.id,
+      name: candidate.name,
+      brand: candidate.brand ?? null,
+      category: candidate.category,
+      storagePath: coverStoragePathByProductId.get(candidate.id) ?? null,
+    }))
   }
 
   const voteSimilarity = async (
@@ -222,10 +265,11 @@ const getDefaultService = async (): Promise<ReturnType<typeof createSimilarProdu
         error,
       }
     },
-    searchSimilarityCandidatesRpc: async (productId, search) => {
-      const { data, error } = await supabase.rpc('search_similarity_candidates', {
-        p_product_id: productId,
+    searchProductsRpc: async ({ search, category, limit }) => {
+      const { data, error } = await supabase.rpc('search_products', {
         p_search: search,
+        p_category: category,
+        p_limit: limit,
       })
       return {
         data: (data ?? []).map((row) => ({
@@ -233,11 +277,18 @@ const getDefaultService = async (): Promise<ReturnType<typeof createSimilarProdu
           category: row.category,
           id: row.id,
           name: row.name,
-          storage_path: row.storage_path,
         })),
         error,
       }
     },
+    fetchProductImages: async (productIds) =>
+      supabase
+        .from('product_image')
+        .select('product_id, storage_path')
+        .in('product_id', productIds)
+        .order('sort_order')
+        .order('created_at')
+        .order('id'),
     upsertVote: async (vote, options) =>
       supabase.from('product_similarity_vote').upsert(vote, options),
   })
@@ -248,10 +299,10 @@ export const fetchSimilarProducts = async (productId: string): Promise<SimilarPr
   (await getDefaultService()).fetchSimilarProducts(productId)
 
 export const searchSimilarityCandidates = async (
-  productId: string,
+  product: SimilarityCandidateSource,
   search: string,
 ): Promise<SimilarityCandidate[]> =>
-  (await getDefaultService()).searchSimilarityCandidates(productId, search)
+  (await getDefaultService()).searchSimilarityCandidates(product, search)
 
 export const voteSimilarity = async (
   productId: string,

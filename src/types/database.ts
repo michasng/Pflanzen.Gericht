@@ -550,16 +550,6 @@ export type Database = {
           updated_at: string
         }[]
       }
-      search_similarity_candidates: {
-        Args: { p_product_id: string; p_search: string }
-        Returns: {
-          brand: string
-          category: string
-          id: string
-          name: string
-          storage_path: string
-        }[]
-      }
       show_limit: { Args: Record<PropertyKey, never>; Returns: number }
       show_trgm: { Args: { '': string }; Returns: string[] }
     }

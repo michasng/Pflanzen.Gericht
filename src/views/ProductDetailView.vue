@@ -339,7 +339,7 @@ watch(
         </template>
       </div>
 
-      <SimilarProductsSection :product-id="product.id" />
+      <SimilarProductsSection :product-id="product.id" :product-category="product.category" />
 
       <div class="mb-4 bg-white rounded-2xl border border-gray-100 p-4">
         <div class="flex items-center justify-between mb-3">

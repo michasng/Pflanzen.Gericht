@@ -2,16 +2,23 @@ import { describe, expect, it } from 'vitest'
 import type { TablesInsert } from '@/types/database'
 import {
   createSimilarProductsService,
+  MAX_SIMILARITY_CANDIDATES,
+  type CandidateImageRow,
+  type CandidateProductRow,
   type SimilarProductsDependencies,
-  type SimilarityCandidateRow,
 } from '../similarProducts'
 
 const PRODUCT_ID_A = 'a-product-id'
 const PRODUCT_ID_B = 'b-product-id'
+const PRODUCT_ID_C = 'c-product-id'
 const USER_ID = 'user-id'
+const CATEGORY = 'Milchalternative'
+const SOURCE_PRODUCT = { id: PRODUCT_ID_A, category: CATEGORY }
 
 const createService = () => {
-  const rpcCalls: Array<{ productId: string; search?: string }> = []
+  const rpcCalls: Array<{ productId: string }> = []
+  const searchCalls: Array<{ search: string; category: string; limit: number }> = []
+  const imageCalls: string[][] = []
   const upsertCalls: Array<{
     options: { onConflict: string }
     vote: TablesInsert<'product_similarity_vote'>
@@ -39,19 +46,24 @@ const createService = () => {
     storage_path: string | null
     total_count: number
   }> | null = null
-  let searchRows: SimilarityCandidateRow[] | null = null
+  let searchRows: CandidateProductRow[] | null = null
+  let imageRows: CandidateImageRow[] | null = null
 
   const dependencies: SimilarProductsDependencies = {
     deleteVote: async (query) => {
       matchCalls.push(query)
       return { error: null }
     },
+    fetchProductImages: async (productIds) => {
+      imageCalls.push(productIds)
+      return { data: imageRows, error: null }
+    },
     fetchSimilarProductsRpc: async (productId) => {
       rpcCalls.push({ productId })
       return { data: fetchRows, error: null }
     },
-    searchSimilarityCandidatesRpc: async (productId, search) => {
-      rpcCalls.push({ productId, search })
+    searchProductsRpc: async (query) => {
+      searchCalls.push(query)
       return { data: searchRows, error: null }
     },
     upsertVote: async (vote, options) => {
@@ -61,13 +73,18 @@ const createService = () => {
   }
 
   return {
+    imageCalls,
     matchCalls,
     rpcCalls,
+    searchCalls,
     service: createSimilarProductsService(dependencies),
     setFetchRows: (rows: typeof fetchRows) => {
       fetchRows = rows
     },
-    setSearchRows: (rows: SimilarityCandidateRow[] | null) => {
+    setImageRows: (rows: CandidateImageRow[] | null) => {
+      imageRows = rows
+    },
+    setSearchRows: (rows: CandidateProductRow[] | null) => {
       searchRows = rows
     },
     upsertCalls,
@@ -130,43 +147,81 @@ describe('createSimilarProductsService', () => {
   })
 
   it('given blank search, when searching candidates, skips rpc call', async () => {
-    const { rpcCalls, service } = createService()
+    const { searchCalls, service } = createService()
 
-    const result = await service.searchSimilarityCandidates(PRODUCT_ID_A, '   ')
+    const result = await service.searchSimilarityCandidates(SOURCE_PRODUCT, '   ')
 
     expect(result).toEqual([])
-    expect(rpcCalls).toEqual([])
+    expect(searchCalls).toEqual([])
   })
 
-  it('given search text, when searching candidates, calls rpc', async () => {
-    const { service, setSearchRows, rpcCalls } = createService()
+  it('given search text, when searching candidates, searches within the category', async () => {
+    const { searchCalls, service } = createService()
+
+    await service.searchSimilarityCandidates(SOURCE_PRODUCT, 'Hafer')
+
+    expect(searchCalls).toEqual([
+      { search: 'Hafer', category: CATEGORY, limit: MAX_SIMILARITY_CANDIDATES + 1 },
+    ])
+  })
+
+  it('given matches including the product itself, when searching candidates, returns only other products with their cover image', async () => {
+    const { service, setImageRows, setSearchRows } = createService()
     setSearchRows([
-      {
-        brand: null,
-        category: 'Milchalternative',
-        id: PRODUCT_ID_B,
-        name: 'Haferdrink',
-        storage_path: null,
-      },
+      { brand: 'Oatly', category: CATEGORY, id: PRODUCT_ID_A, name: 'Haferdrink' },
+      { brand: 'Alpro', category: CATEGORY, id: PRODUCT_ID_B, name: 'Haferdrink Barista' },
+      { brand: null, category: CATEGORY, id: PRODUCT_ID_C, name: 'Hafermilch' },
+    ])
+    setImageRows([
+      { product_id: PRODUCT_ID_B, storage_path: 'b-cover' },
+      { product_id: PRODUCT_ID_B, storage_path: 'b-second' },
     ])
 
-    const result = await service.searchSimilarityCandidates(PRODUCT_ID_A, 'Hafer')
+    const result = await service.searchSimilarityCandidates(SOURCE_PRODUCT, 'Hafer')
 
-    expect(rpcCalls).toEqual([
-      {
-        productId: PRODUCT_ID_A,
-        search: 'Hafer',
-      },
-    ])
     expect(result).toEqual([
       {
-        brand: null,
-        category: 'Milchalternative',
+        brand: 'Alpro',
+        category: CATEGORY,
         id: PRODUCT_ID_B,
-        name: 'Haferdrink',
+        name: 'Haferdrink Barista',
+        storagePath: 'b-cover',
+      },
+      {
+        brand: null,
+        category: CATEGORY,
+        id: PRODUCT_ID_C,
+        name: 'Hafermilch',
         storagePath: null,
       },
     ])
+  })
+
+  it('given more matches than the maximum, when searching candidates, returns only the maximum', async () => {
+    const { imageCalls, service, setSearchRows } = createService()
+    setSearchRows(
+      Array.from({ length: MAX_SIMILARITY_CANDIDATES + 1 }, (_, index) => ({
+        brand: null,
+        category: CATEGORY,
+        id: `candidate-${index}`,
+        name: `Hafer ${index}`,
+      })),
+    )
+
+    const result = await service.searchSimilarityCandidates(SOURCE_PRODUCT, 'Hafer')
+
+    expect(result).toHaveLength(MAX_SIMILARITY_CANDIDATES)
+    expect(imageCalls[0]).toHaveLength(MAX_SIMILARITY_CANDIDATES)
+  })
+
+  it('given only the product itself matches, when searching candidates, skips image lookup', async () => {
+    const { imageCalls, service, setSearchRows } = createService()
+    setSearchRows([{ brand: 'Oatly', category: CATEGORY, id: PRODUCT_ID_A, name: 'Haferdrink' }])
+
+    const result = await service.searchSimilarityCandidates(SOURCE_PRODUCT, 'Hafer')
+
+    expect(result).toEqual([])
+    expect(imageCalls).toEqual([])
   })
 
   it('given two different products, when voting, upserts canonical pair', async () => {
