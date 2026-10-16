@@ -26,7 +26,7 @@ Write out their names when discussing their trade-offs.
 ## Code Style
 
 - Use American English
-- One unit (class or function) per file; files names by their unit, e.g. `doSomething.ts` would contain a function called `doSomethint` (and maybe some constants)
+- One unit (class or function) per file; names files by their unit, e.g. `doSomething.ts` would contain a function called `doSomething` (and maybe some constants)
 - TypeScript strict; no `any`, no non-null `!` assertions — model types honestly
 - Never suppress type or lint errors
 - No type casts unless there is no better option; if unavoidable, add a short comment explaining why
