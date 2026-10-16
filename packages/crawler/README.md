@@ -53,6 +53,7 @@ After crawling, review `output/<site>/*.json`. Then run:
 ```sh
 pnpm upsert              # against .env.local
 pnpm upsert --env production
+pnpm upsert --update-prices  # update prices of existing products
 ```
 
 ## Run Unit Tests with [Vitest](https://vitest.dev/)

@@ -30,8 +30,14 @@ import { tryProbe } from './tryProbe.js'
 const SITE_ORDER: readonly SiteId[] = ['rewe', 'knuspr', 'wolt']
 
 const program = new Command()
-program.option('--env <target>', 'local | production', 'local').parse(process.argv)
-const { env: envTarget } = program.opts<{ env: 'local' | 'production' }>()
+program
+  .option('--env <target>', 'local | production', 'local')
+  .option('--update-prices', 'update price reports of existing products', false)
+  .parse(process.argv)
+const { env: envTarget, updatePrices } = program.opts<{
+  env: 'local' | 'production'
+  updatePrices: boolean
+}>()
 
 const logger = createLogger('upsert')
 const env = loadCrawlerEnv(envTarget)
@@ -130,8 +136,8 @@ for (const crawledProduct of crawledProducts) {
       await applyImageOverride(supabase, existingMatch.id, env.importUserId, product)
   }
 
-  await insertProductSource(supabase, existingMatch.id, product.sourceUrl)
-  await upsertPriceReport(supabase, existingMatch.id, env.importUserId, cityName, product)
+  if (updatePrices)
+    await upsertPriceReport(supabase, existingMatch.id, env.importUserId, cityName, product)
 }
 
 logger.info('Done.')
