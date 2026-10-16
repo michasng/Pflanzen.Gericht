@@ -1,8 +1,8 @@
 export const SORT_OPTION_LABELS = {
   latest_review: 'Neueste Bewertung',
-  newest: 'Neueste',
   top_rated: 'Beste Bewertung',
   most_rated: 'Meiste Bewertungen',
+  newest: 'Neueste',
   price_asc: 'Günstigste',
   price_desc: 'Teuerste',
   few_ingredients: 'Wenige Zutaten',
