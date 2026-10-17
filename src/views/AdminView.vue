@@ -1,13 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import {
-  fetchAllProductsForAdmin,
-  deleteProduct,
-  ADMIN_PAGE_SIZE as PRODUCT_PAGE_SIZE,
-} from '@/services/products'
-import { fetchAllReviewsForAdmin, ADMIN_PAGE_SIZE as REVIEW_PAGE_SIZE } from '@/services/reviews'
-import { deleteReview } from '@/services/profile'
+import { useAdminGateway } from '@/composables/useAdminGateway'
 import type { ProductListItem } from '@/services/catalog'
 import { orderProductPairByCreation } from '@/lib/orderProductPairByCreation'
 import { usePaginatedList } from '@/composables/usePaginatedList'
@@ -19,6 +13,7 @@ import AdminReviewList from '@/components/admin/AdminReviewList.vue'
 import { AdminTab } from '@/components/admin/AdminTab'
 
 const router = useRouter()
+const adminGateway = useAdminGateway()
 
 const activeTab = ref(AdminTab.Products)
 
@@ -33,9 +28,9 @@ const {
   loadMore: loadMoreProducts,
   remove: removeProduct,
 } = usePaginatedList({
-  fetchPage: fetchAllProductsForAdmin,
-  pageSize: PRODUCT_PAGE_SIZE,
-  deleteItem: deleteProduct,
+  fetchPage: adminGateway.fetchProductsPage,
+  pageSize: adminGateway.productPageSize,
+  deleteItem: adminGateway.deleteProduct,
   reportError: (message) => alert(message),
 })
 
@@ -50,9 +45,9 @@ const {
   loadMore: loadMoreReviews,
   remove: removeReview,
 } = usePaginatedList({
-  fetchPage: fetchAllReviewsForAdmin,
-  pageSize: REVIEW_PAGE_SIZE,
-  deleteItem: deleteReview,
+  fetchPage: adminGateway.fetchReviewsPage,
+  pageSize: adminGateway.reviewPageSize,
+  deleteItem: adminGateway.deleteReview,
   reportError: (message) => alert(message),
 })
 

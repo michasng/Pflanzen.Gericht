@@ -2,12 +2,13 @@
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { isUsernameAvailable } from '@/services/profile'
+import { useAuthGateway } from '@/composables/useAuthGateway'
 import { slugifyUsername } from '@/lib/slug'
 import AppLogo from '@/components/AppLogo.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const authGateway = useAuthGateway()
 
 const displayName = ref('')
 const username = ref('')
@@ -38,7 +39,7 @@ watch(username, (val) => {
   if (checkTimer) clearTimeout(checkTimer)
   usernameChecking.value = true
   checkTimer = setTimeout(async () => {
-    usernameAvailable.value = await isUsernameAvailable(val)
+    usernameAvailable.value = await authGateway.isUsernameAvailable(val)
     usernameChecking.value = false
   }, 350)
 })

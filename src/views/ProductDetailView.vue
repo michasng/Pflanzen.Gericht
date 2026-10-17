@@ -2,10 +2,9 @@
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { fetchProductDetail, getImageUrl, type ProductDetail } from '@/services/catalog'
+import { getImageUrl, type ProductDetail } from '@/services/catalog'
 import { ImageSize } from '@/config/imageSizes'
-import { upsertPriceReport, deletePriceReport } from '@/services/prices'
-import { deleteProduct } from '@/services/products'
+import { useProductDetailGateway } from '@/composables/useProductDetailGateway'
 import { formatEuroCents } from '@/lib/price'
 import { toErrorMessage } from '@/lib/error'
 import StarDisplay from '@/components/StarDisplay.vue'
@@ -34,6 +33,7 @@ import { NUTRIENT_PARENT_NAME } from '@/config/nutrientHierarchy'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const productDetailGateway = useProductDetailGateway()
 
 const product = ref<ProductDetail | null>(null)
 const loading = ref(true)
@@ -100,7 +100,7 @@ const submitPriceReport = async (values: PriceReportFormValues): Promise<void> =
   if (!product.value || !user) return
   priceFormError.value = null
   try {
-    const updated = await upsertPriceReport(
+    const updated = await productDetailGateway.upsertPriceReport(
       product.value.id,
       user.id,
       values.store,
@@ -127,7 +127,7 @@ const handleDeleteProduct = async (): Promise<void> => {
   )
     return
   try {
-    await deleteProduct(product.value.id)
+    await productDetailGateway.deleteProduct(product.value.id)
     await router.push({ name: 'home' })
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Fehler beim Löschen.'
@@ -137,7 +137,7 @@ const handleDeleteProduct = async (): Promise<void> => {
 const removePriceReport = async (id: string): Promise<void> => {
   if (!product.value) return
   try {
-    await deletePriceReport(id)
+    await productDetailGateway.deletePriceReport(id)
     const idx = product.value.priceReports.findIndex((r) => r.id === id)
     if (idx >= 0) product.value.priceReports.splice(idx, 1)
   } catch (err) {
@@ -159,7 +159,7 @@ watch(
     product.value = null
     activeImageIndex.value = 0
     try {
-      const data = await fetchProductDetail(id)
+      const data = await productDetailGateway.fetchProductDetail(id)
       if (isCurrentRequest) {
         if (!data) notFound.value = true
         else product.value = data

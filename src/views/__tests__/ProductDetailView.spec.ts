@@ -1,68 +1,9 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { describe, expect, it, vi } from 'vitest'
 import type { ProductDetail } from '@/services/catalog'
-
-const { fetchProductDetail } = vi.hoisted(() => ({
-  fetchProductDetail: vi.fn<(id: string) => Promise<ProductDetail | null>>(),
-}))
-
-vi.mock('vue-router', async () => {
-  const { reactive } = await import('vue')
-  const route = reactive({
-    params: {
-      id: 'product-1',
-    },
-    fullPath: '/product/product-1',
-  })
-
-  return {
-    useRoute: () => route,
-    useRouter: () => ({
-      push: vi.fn<() => Promise<void>>(() => Promise.resolve()),
-    }),
-  }
-})
-
-vi.mock('@/stores/auth', () => ({
-  useAuthStore: () => ({
-    user: null,
-    isAdmin: false,
-    isLoggedIn: false,
-  }),
-}))
-
-vi.mock('@/services/catalog', () => ({
-  fetchProductDetail,
-  getImageUrl: () => '',
-}))
-
-vi.mock('@/services/prices', () => ({
-  upsertPriceReport: vi.fn<(...args: never[]) => Promise<void>>(() => Promise.resolve()),
-  deletePriceReport: vi.fn<(...args: never[]) => Promise<void>>(() => Promise.resolve()),
-}))
-
-vi.mock('@/services/products', () => ({
-  deleteProduct: vi.fn<(id: string) => Promise<void>>(() => Promise.resolve()),
-}))
-
+import type { ProductDetailGateway } from '@/services/ProductDetailGateway'
 import ProductDetailView from '@/views/ProductDetailView.vue'
-import { useRoute } from 'vue-router'
-
-interface Deferred<T> {
-  promise: Promise<T>
-  reject: (reason?: unknown) => void
-  resolve: (value: T) => void
-}
-
-const createDeferred = <T>(): Deferred<T> => {
-  let resolve = (_value: T): void => {}
-  let reject = (_reason?: unknown): void => {}
-  const promise = new Promise<T>((innerResolve, innerReject) => {
-    resolve = innerResolve
-    reject = innerReject
-  })
-  return { promise, reject, resolve }
-}
+import { createDeferred } from '@/__tests__/createDeferred'
+import { EmptyRouteComponent, mountView } from '@/__tests__/mountView'
 
 const createProductDetail = (id: string, name: string): ProductDetail => ({
   allergens: [],
@@ -93,39 +34,50 @@ const createProductDetail = (id: string, name: string): ProductDetail => ({
   updatedAt: '2026-09-11T00:00:00.000Z',
 })
 
-describe('ProductDetailView', () => {
-  afterEach(() => {
-    const route = useRoute()
-    route.params.id = 'product-1'
-    route.fullPath = '/product/product-1'
-    fetchProductDetail.mockReset()
+const createFakeProductDetailGateway = (
+  overrides: Partial<ProductDetailGateway> = {},
+): ProductDetailGateway => ({
+  fetchProductDetail: () => Promise.resolve(null),
+  upsertPriceReport: () => Promise.reject(new Error('not expected')),
+  deletePriceReport: () => Promise.resolve(),
+  deleteProduct: () => Promise.resolve(),
+  ...overrides,
+})
+
+const mountProductDetailView = (productDetail: ProductDetailGateway) =>
+  mountView({
+    view: ProductDetailView,
+    routes: [
+      { path: '/', name: 'home', component: EmptyRouteComponent },
+      { path: '/login', name: 'login', component: EmptyRouteComponent },
+      { path: '/product/:id', name: 'product-detail', component: EmptyRouteComponent },
+    ],
+    initialPath: '/product/product-1',
+    gateways: { productDetail },
+    stubs: {
+      AlertMessage: true,
+      AppLogo: true,
+      PriceReportForm: true,
+      ReviewCard: true,
+      ReviewScoreDimensions: true,
+      SimilarProductsSection: true,
+      StarDisplay: true,
+    },
   })
 
+describe('ProductDetailView', () => {
   describe('given a product with sources', () => {
     it('links each source by its shortened hostname', async () => {
       const sourceUrl = 'https://www.rewe.de/shop/p/nutella/9946679'
-      fetchProductDetail.mockResolvedValue({
-        ...createProductDetail('product-1', 'First Product'),
-        sources: [{ id: 'source-1', productId: 'product-1', url: sourceUrl, createdAt: '' }],
-      })
-
-      const wrapper = mount(ProductDetailView, {
-        global: {
-          mocks: {
-            $route: useRoute(),
-          },
-          stubs: {
-            AlertMessage: true,
-            AppLogo: true,
-            PriceReportForm: true,
-            ReviewCard: true,
-            ReviewScoreDimensions: true,
-            RouterLink: true,
-            SimilarProductsSection: true,
-            StarDisplay: true,
-          },
-        },
-      })
+      const { wrapper } = await mountProductDetailView(
+        createFakeProductDetailGateway({
+          fetchProductDetail: () =>
+            Promise.resolve({
+              ...createProductDetail('product-1', 'First Product'),
+              sources: [{ id: 'source-1', productId: 'product-1', url: sourceUrl, createdAt: '' }],
+            }),
+        }),
+      )
 
       const link = await vi.waitFor(() => {
         const found = wrapper.find(`a[href="${sourceUrl}"]`)
@@ -139,50 +91,26 @@ describe('ProductDetailView', () => {
 
   describe('given a slower previous request resolves after navigation', () => {
     it('when the newer request finishes first then it keeps the newer product visible', async () => {
-      const firstRequest = createDeferred<ProductDetail | null>()
-      const secondRequest = createDeferred<ProductDetail | null>()
-
-      fetchProductDetail
-        .mockImplementationOnce(() => firstRequest.promise)
-        .mockImplementationOnce(() => secondRequest.promise)
-
-      const route = useRoute()
-      const wrapper = mount(ProductDetailView, {
-        global: {
-          mocks: {
-            $route: route,
+      const requestsById = new Map([
+        ['product-1', createDeferred<ProductDetail | null>()],
+        ['product-2', createDeferred<ProductDetail | null>()],
+      ])
+      const requestedIds: string[] = []
+      const { wrapper, router } = await mountProductDetailView(
+        createFakeProductDetailGateway({
+          fetchProductDetail: (id) => {
+            requestedIds.push(id)
+            return requestsById.get(id)?.promise ?? Promise.resolve(null)
           },
-          stubs: {
-            AlertMessage: true,
-            AppLogo: true,
-            PriceReportForm: true,
-            ReviewCard: true,
-            ReviewScoreDimensions: true,
-            RouterLink: true,
-            SimilarProductsSection: true,
-            StarDisplay: true,
-          },
-        },
-      })
+        }),
+      )
+      await vi.waitFor(() => expect(requestedIds).toContain('product-1'))
 
-      await vi.waitFor(() => {
-        expect(fetchProductDetail).toHaveBeenCalledWith('product-1')
-      })
-
-      route.params.id = 'product-2'
-      route.fullPath = '/product/product-2'
-
-      await vi.waitFor(() => {
-        expect(fetchProductDetail).toHaveBeenCalledWith('product-2')
-      })
-
-      secondRequest.resolve(createProductDetail('product-2', 'Second Product'))
-
-      await vi.waitFor(() => {
-        expect(wrapper.text()).toContain('Second Product')
-      })
-
-      firstRequest.resolve(createProductDetail('product-1', 'First Product'))
+      await router.push('/product/product-2')
+      await vi.waitFor(() => expect(requestedIds).toContain('product-2'))
+      requestsById.get('product-2')?.resolve(createProductDetail('product-2', 'Second Product'))
+      await vi.waitFor(() => expect(wrapper.text()).toContain('Second Product'))
+      requestsById.get('product-1')?.resolve(createProductDetail('product-1', 'First Product'))
 
       await vi.waitFor(() => {
         expect(wrapper.text()).toContain('Second Product')
