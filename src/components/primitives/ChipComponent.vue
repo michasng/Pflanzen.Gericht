@@ -32,6 +32,7 @@ const interactiveToneClass = computed(() => {
 const staticToneClass = computed(() => {
   if (props.tone === ChipTone.Danger) return 'bg-red-50 text-red-700'
   if (props.tone === ChipTone.Success) return 'bg-green-50 text-green-700'
+  if (props.tone === ChipTone.Warning) return 'bg-amber-50 text-amber-700'
   if (props.tone === ChipTone.Muted) return 'bg-gray-100 text-gray-400'
   if (props.tone === ChipTone.Primary || props.selected) return 'bg-primary-50 text-primary-700'
   return 'bg-gray-100 text-gray-600'

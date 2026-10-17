@@ -3,5 +3,6 @@ export enum ChipTone {
   Neutral = 'neutral',
   Danger = 'danger',
   Success = 'success',
+  Warning = 'warning',
   Muted = 'muted',
 }
