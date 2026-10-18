@@ -22,34 +22,43 @@ export const usePaginatedList = <T extends { id: string }>({
   const hasMore = ref(true)
   const loadingMore = ref(false)
   const { deletingId, remove } = useDeletableList({ items, deleteItem, reportError })
+  let listGeneration = 0
+  const isStale = (generation: number): boolean => generation !== listGeneration
 
   const loadFirstPage = async (): Promise<void> => {
+    const generation = ++listGeneration
     loading.value = true
+    loadingMore.value = false
     loadError.value = null
     try {
       const firstPage = await fetchPage(0)
+      if (isStale(generation)) return
       page.value = 0
       items.value = firstPage
       hasMore.value = firstPage.length === pageSize
     } catch (err) {
+      if (isStale(generation)) return
       loadError.value = toErrorMessage(err)
     } finally {
-      loading.value = false
+      if (!isStale(generation)) loading.value = false
     }
   }
 
   const loadMore = async (): Promise<void> => {
+    const generation = listGeneration
     loadingMore.value = true
     try {
       const nextPage = page.value + 1
       const more = await fetchPage(nextPage)
+      if (isStale(generation)) return
       page.value = nextPage
       items.value = [...items.value, ...more]
       hasMore.value = more.length === pageSize
     } catch (err) {
+      if (isStale(generation)) return
       reportError(toErrorMessage(err))
     } finally {
-      loadingMore.value = false
+      if (!isStale(generation)) loadingMore.value = false
     }
   }
 

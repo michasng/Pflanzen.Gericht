@@ -17,7 +17,6 @@ import type {
   ProductSource,
   ReviewImage,
 } from '@/types'
-import type { ProductListItem } from '@/services/catalog'
 import type { Tables } from '@/types/database'
 import type { IngredientWrite, NutrientWrite } from '@/types/productWrites'
 
@@ -388,21 +387,4 @@ export const deleteProduct = async (id: string): Promise<void> => {
 
   const { error } = await supabase.from('product').delete().eq('id', id)
   if (error) throw error
-}
-
-export const ADMIN_PAGE_SIZE = 50
-
-export const fetchAllProductsForAdmin = async (page = 0): Promise<ProductListItem[]> => {
-  const { data, error } = await supabase
-    .from('product')
-    .select('*, images:product_image(id, storage_path, sort_order)')
-    .order('created_at', { ascending: false })
-    .range(page * ADMIN_PAGE_SIZE, (page + 1) * ADMIN_PAGE_SIZE - 1)
-  if (error) throw error
-  return camelizeKeys(
-    (data ?? []).map((p) => ({
-      ...p,
-      images: (p.images as ProductImageRow[] | null) ?? [],
-    })),
-  )
 }

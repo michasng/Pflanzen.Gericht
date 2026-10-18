@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { ref } from 'vue'
 import { useSelection } from '../useSelection'
 
-const createItems = (...ids: string[]) => ids.map((id) => ({ id }))
+const createItem = (id: string) => ({ id })
+const createItems = (...ids: string[]) => ids.map(createItem)
 
 describe('useSelection', () => {
   describe('given nothing is selected', () => {
@@ -29,7 +30,7 @@ describe('useSelection', () => {
         createItems('a', 'b'),
       )
 
-      setSelected('a', true)
+      setSelected(createItem('a'), true)
 
       expect(selectedIds.value).toEqual(['a'])
       expect(allSelected.value).toBe(false)
@@ -41,8 +42,8 @@ describe('useSelection', () => {
     it('is fully selected', () => {
       const { allSelected, someSelected, setSelected } = useSelection(createItems('a', 'b'))
 
-      setSelected('a', true)
-      setSelected('b', true)
+      setSelected(createItem('a'), true)
+      setSelected(createItem('b'), true)
 
       expect(allSelected.value).toBe(true)
       expect(someSelected.value).toBe(false)
@@ -53,8 +54,8 @@ describe('useSelection', () => {
     it('selects it once', () => {
       const { selectedIds, setSelected } = useSelection(createItems('a'))
 
-      setSelected('a', true)
-      setSelected('a', true)
+      setSelected(createItem('a'), true)
+      setSelected(createItem('a'), true)
 
       expect(selectedIds.value).toEqual(['a'])
     })
@@ -63,10 +64,10 @@ describe('useSelection', () => {
   describe('when deselecting an item', () => {
     it('removes it from the selection', () => {
       const { selectedIds, setSelected } = useSelection(createItems('a', 'b'))
-      setSelected('a', true)
-      setSelected('b', true)
+      setSelected(createItem('a'), true)
+      setSelected(createItem('b'), true)
 
-      setSelected('a', false)
+      setSelected(createItem('a'), false)
 
       expect(selectedIds.value).toEqual(['b'])
     })
@@ -95,16 +96,43 @@ describe('useSelection', () => {
     })
   })
 
-  describe('given a selected item disappears', () => {
-    it('drops it from the selection', () => {
+  describe('given a selected item is no longer visible', () => {
+    it('keeps it selected', () => {
       const items = ref(createItems('a', 'b'))
-      const { selectedIds, allSelected } = useSelection(items)
+      const { selectedIds, selectedItems, allSelected, someSelected } = useSelection(items)
       allSelected.value = true
 
       items.value = createItems('b')
 
-      expect(selectedIds.value).toEqual(['b'])
+      expect(selectedIds.value).toEqual(['a', 'b'])
+      expect(selectedItems.value).toEqual(createItems('a', 'b'))
       expect(allSelected.value).toBe(true)
+      expect(someSelected.value).toBe(false)
+    })
+
+    describe('when selecting all and then deselecting all', () => {
+      it('only changes the visible items', () => {
+        const items = ref(createItems('a', 'b'))
+        const { selectedIds, allSelected } = useSelection(items)
+        allSelected.value = true
+        items.value = createItems('c')
+
+        allSelected.value = true
+        allSelected.value = false
+
+        expect(selectedIds.value).toEqual(['a', 'b'])
+      })
+    })
+  })
+
+  describe('when deselecting ids', () => {
+    it('removes them from the selection', () => {
+      const { selectedIds, allSelected, deselectIds } = useSelection(createItems('a', 'b', 'c'))
+      allSelected.value = true
+
+      deselectIds(['a', 'c'])
+
+      expect(selectedIds.value).toEqual(['b'])
     })
   })
 })

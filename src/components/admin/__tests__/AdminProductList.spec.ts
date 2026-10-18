@@ -3,10 +3,11 @@ import { mount, type VueWrapper } from '@vue/test-utils'
 import AdminProductList from '@/components/admin/AdminProductList.vue'
 import { createProductListItem } from '@/__tests__/createProductListItem'
 
-const mountList = (productIds: string[]): VueWrapper =>
+const mountList = (productIds: string[], searching = false): VueWrapper =>
   mount(AdminProductList, {
     props: {
       products: productIds.map(createProductListItem),
+      searching,
       hasMore: false,
       loadingMore: false,
       deletingId: null,
@@ -24,6 +25,58 @@ describe('AdminProductList', () => {
       const wrapper = mountList([])
 
       expect(wrapper.text()).toContain('Keine Produkte vorhanden.')
+    })
+  })
+
+  describe('given a search finds no products', () => {
+    it('says that nothing was found', () => {
+      const wrapper = mountList([], true)
+
+      expect(wrapper.text()).toContain('Keine Produkte gefunden.')
+    })
+  })
+
+  describe('given products were selected and then a search hides them', () => {
+    const mountWithHiddenSelection = async (): Promise<VueWrapper> => {
+      const wrapper = mountList(['a', 'b', 'c'])
+      await wrapper.get('[aria-label="Product a auswählen"]').setValue(true)
+      await wrapper.get('[aria-label="Product c auswählen"]').setValue(true)
+      await wrapper.setProps({ products: [createProductListItem('b')], searching: true })
+      return wrapper
+    }
+
+    it('still lists them as selected', async () => {
+      const wrapper = await mountWithHiddenSelection()
+
+      expect(wrapper.text()).toContain('Ausgewählt (2)')
+      const productA = wrapper.get<HTMLInputElement>('[aria-label="Product a auswählen"]')
+      expect(productA.element.checked).toBe(true)
+    })
+
+    it('merges them', async () => {
+      const wrapper = await mountWithHiddenSelection()
+
+      await wrapper.get('[aria-label="Produkte zusammenführen"]').trigger('click')
+
+      expect(wrapper.emitted('merge')).toEqual([
+        [createProductListItem('a'), createProductListItem('c')],
+      ])
+    })
+
+    it('keeps them selected when selecting all visible products', async () => {
+      const wrapper = await mountWithHiddenSelection()
+
+      await wrapper.get('[aria-label="Alle Produkte auswählen"]').setValue(true)
+
+      expect(wrapper.text()).toContain('Ausgewählt (3)')
+    })
+
+    it('can unselect one of them', async () => {
+      const wrapper = await mountWithHiddenSelection()
+
+      await wrapper.get('[aria-label="Product a auswählen"]').setValue(false)
+
+      expect(wrapper.text()).toContain('Ausgewählt (1)')
     })
   })
 
@@ -146,6 +199,16 @@ describe('AdminProductList', () => {
 
       expect(wrapper.emitted('delete')).toEqual([[['a', 'c']]])
       expect(confirmSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it('clears the selection', async () => {
+      vi.stubGlobal('confirm', () => true)
+      const wrapper = mountList(['a', 'b'])
+      await wrapper.get('[aria-label="Product a auswählen"]').setValue(true)
+
+      await wrapper.get('[aria-label="Ausgewählte Produkte löschen"]').trigger('click')
+
+      expect(wrapper.text()).not.toContain('Ausgewählt (')
     })
   })
 

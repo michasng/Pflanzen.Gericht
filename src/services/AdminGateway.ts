@@ -7,7 +7,7 @@ export const adminGatewayKey: InjectionKey<AdminGateway> = Symbol('adminGateway'
 export interface AdminGateway {
   productPageSize: number
   reviewPageSize: number
-  fetchProductsPage: (page: number) => Promise<ProductListItem[]>
+  fetchProductsPage: (page: number, search: string) => Promise<ProductListItem[]>
   fetchReviewsPage: (page: number) => Promise<AdminReviewItem[]>
   deleteProduct: (productId: string) => Promise<void>
   deleteReview: (reviewId: string) => Promise<void>

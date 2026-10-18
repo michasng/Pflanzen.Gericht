@@ -4,6 +4,7 @@ import type { Router } from 'vue-router'
 import type { AdminGateway } from '@/services/AdminGateway'
 import AdminView from '@/views/AdminView.vue'
 import { createProductListItem } from '@/__tests__/createProductListItem'
+import { SEARCH_DEBOUNCE_MILLISECONDS } from '@/config/catalogSearch'
 import { EmptyRouteComponent, mountView } from '@/__tests__/mountView'
 
 const PAGE_SIZE = 50
@@ -49,6 +50,52 @@ const mountWithProducts = async (
 describe('AdminView', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
+    vi.useRealTimers()
+  })
+
+  describe('when searching for products', () => {
+    it('shows the matching products and keeps selected ones that are hidden', async () => {
+      const fetchProductsPage = vi
+        .fn<AdminGateway['fetchProductsPage']>()
+        .mockImplementation((_page, search) =>
+          Promise.resolve([createProductListItem(search === 'milk' ? 'c' : 'a')]),
+        )
+      const { wrapper } = await mountWithProducts(['a'], { fetchProductsPage })
+      await wrapper.get('[aria-label="Product a auswählen"]').setValue(true)
+      vi.useFakeTimers()
+
+      await wrapper.get('input[type="search"]').setValue('milk')
+      await vi.advanceTimersByTimeAsync(SEARCH_DEBOUNCE_MILLISECONDS)
+
+      await vi.waitFor(() =>
+        expect(wrapper.find('[aria-label="Product c auswählen"]').exists()).toBe(true),
+      )
+      expect(fetchProductsPage).toHaveBeenLastCalledWith(0, 'milk')
+      expect(wrapper.text()).toContain('Ausgewählt (1)')
+      expect(wrapper.find('[aria-label="Product a auswählen"]').exists()).toBe(true)
+    })
+
+    it('merges a selected product hidden by the search with another result', async () => {
+      const fetchProductsPage = vi
+        .fn<AdminGateway['fetchProductsPage']>()
+        .mockImplementation((_page, search) =>
+          Promise.resolve([createProductListItem(search === 'milk' ? 'c' : 'a')]),
+        )
+      const { wrapper, router } = await mountWithProducts(['a'], { fetchProductsPage })
+      await wrapper.get('[aria-label="Product a auswählen"]').setValue(true)
+      vi.useFakeTimers()
+      await wrapper.get('input[type="search"]').setValue('milk')
+      await vi.advanceTimersByTimeAsync(SEARCH_DEBOUNCE_MILLISECONDS)
+      await vi.waitFor(() =>
+        expect(wrapper.find('[aria-label="Product c auswählen"]').exists()).toBe(true),
+      )
+      await wrapper.get('[aria-label="Product c auswählen"]').setValue(true)
+
+      await wrapper.get('[aria-label="Produkte zusammenführen"]').trigger('click')
+
+      await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('product-merge'))
+      expect(router.currentRoute.value.query).toEqual({ a: 'a', b: 'c' })
+    })
   })
 
   describe('given loading fails', () => {
@@ -110,8 +157,14 @@ describe('AdminView', () => {
   })
 
   describe('when merging two selected products', () => {
-    it('navigates to the merge page with both products', async () => {
-      const { wrapper, router } = await mountWithProducts(['a', 'b'])
+    it('navigates to the merge page with the older product first', async () => {
+      const olderProduct = {
+        ...createProductListItem('a'),
+        createdAt: '2026-01-01T00:00:00.000Z',
+      }
+      const { wrapper, router } = await mountWithProducts(['a', 'b'], {
+        fetchProductsPage: () => Promise.resolve([createProductListItem('b'), olderProduct]),
+      })
       await wrapper.get('[aria-label="Product b auswählen"]').setValue(true)
       await wrapper.get('[aria-label="Product a auswählen"]').setValue(true)
 

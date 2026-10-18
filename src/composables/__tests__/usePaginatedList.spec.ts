@@ -113,6 +113,47 @@ describe('usePaginatedList', () => {
     })
   })
 
+  describe('given a newer first page load starts while an older one is pending', () => {
+    it('keeps the items of the newer load', async () => {
+      const resolvers: Array<(items: FakeItem[]) => void> = []
+      const fetchPage = vi.fn<(page: number) => Promise<FakeItem[]>>(
+        () => new Promise((resolve) => resolvers.push(resolve)),
+      )
+      const { items, loading, loadFirstPage } = createList({ fetchPage })
+      const olderLoad = loadFirstPage()
+      const newerLoad = loadFirstPage()
+
+      resolvers[1]?.(createItems('new'))
+      await newerLoad
+      resolvers[0]?.(createItems('old'))
+      await olderLoad
+
+      expect(items.value).toEqual(createItems('new'))
+      expect(loading.value).toBe(false)
+    })
+  })
+
+  describe('given a first page load starts while loading more is pending', () => {
+    it('ignores the result of loading more', async () => {
+      const resolvers: Array<(items: FakeItem[]) => void> = []
+      const fetchPage = vi.fn<(page: number) => Promise<FakeItem[]>>()
+      fetchPage.mockResolvedValueOnce(createItems('a', 'b'))
+      const { items, loadingMore, loadFirstPage, loadMore } = createList({ fetchPage })
+      await loadFirstPage()
+      fetchPage.mockImplementation(() => new Promise((resolve) => resolvers.push(resolve)))
+      const pendingMore = loadMore()
+      const reload = loadFirstPage()
+
+      resolvers[1]?.(createItems('x'))
+      await reload
+      resolvers[0]?.(createItems('stale'))
+      await pendingMore
+
+      expect(items.value).toEqual(createItems('x'))
+      expect(loadingMore.value).toBe(false)
+    })
+  })
+
   describe('when removing an item', () => {
     it('deletes the item and drops it from the list', async () => {
       const fetchPage = vi.fn<(page: number) => Promise<FakeItem[]>>()

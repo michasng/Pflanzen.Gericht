@@ -11,6 +11,7 @@ import LoadingText from '@/components/LoadingText.vue'
 import TabBar from '@/components/primitives/TabBar.vue'
 import type { TabBarItem } from '@/components/primitives/TabBarItem'
 import AdminProductList from '@/components/admin/AdminProductList.vue'
+import CatalogSearchInput from '@/components/catalog/CatalogSearchInput.vue'
 import AdminReviewList from '@/components/admin/AdminReviewList.vue'
 import { AdminTab } from '@/components/admin/AdminTab'
 
@@ -19,6 +20,9 @@ const adminGateway = injectGateway(adminGatewayKey)
 
 const activeTab = ref(AdminTab.Products)
 const actionError = ref<string | null>(null)
+const productSearch = ref('')
+const initialized = ref(false)
+const initialLoadError = ref<string | null>(null)
 
 const reportError = (message: string): void => {
   actionError.value = message
@@ -26,7 +30,6 @@ const reportError = (message: string): void => {
 
 const {
   items: products,
-  loading: productsLoading,
   loadError: productsLoadError,
   hasMore: productsHaveMore,
   loadingMore: loadingMoreProducts,
@@ -35,7 +38,7 @@ const {
   loadMore: loadMoreProducts,
   remove: removeProduct,
 } = usePaginatedList({
-  fetchPage: adminGateway.fetchProductsPage,
+  fetchPage: (page) => adminGateway.fetchProductsPage(page, productSearch.value),
   pageSize: adminGateway.productPageSize,
   deleteItem: adminGateway.deleteProduct,
   reportError,
@@ -43,7 +46,6 @@ const {
 
 const {
   items: reviews,
-  loading: reviewsLoading,
   loadError: reviewsLoadError,
   hasMore: reviewsHaveMore,
   loadingMore: loadingMoreReviews,
@@ -58,9 +60,6 @@ const {
   reportError,
 })
 
-const loading = computed(() => productsLoading.value || reviewsLoading.value)
-const loadError = computed(() => productsLoadError.value ?? reviewsLoadError.value)
-
 const tabs = computed<TabBarItem<AdminTab>[]>(() => [
   {
     value: AdminTab.Products,
@@ -74,7 +73,16 @@ const tabs = computed<TabBarItem<AdminTab>[]>(() => [
   },
 ])
 
-void Promise.all([loadFirstProductPage(), loadFirstReviewPage()])
+void Promise.all([loadFirstProductPage(), loadFirstReviewPage()]).then(() => {
+  initialLoadError.value = productsLoadError.value ?? reviewsLoadError.value
+  initialized.value = true
+})
+
+const handleSearchProducts = async (search: string): Promise<void> => {
+  productSearch.value = search
+  actionError.value = null
+  await loadFirstProductPage()
+}
 
 const handleDeleteProducts = async (ids: string[]): Promise<void> => {
   actionError.value = null
@@ -111,24 +119,28 @@ const handleMergeProducts = async (
   <div class="max-w-2xl mx-auto">
     <h1 class="text-xl font-bold text-gray-900 mb-4">Administration</h1>
 
-    <LoadingText v-if="loading" />
-    <AlertMessage v-else-if="loadError" :message="loadError" />
+    <LoadingText v-if="!initialized" />
+    <AlertMessage v-else-if="initialLoadError" :message="initialLoadError" />
 
     <template v-else>
       <TabBar v-model="activeTab" :tabs="tabs" class="mb-4" />
 
       <AlertMessage v-if="actionError" :message="actionError" class="mb-4" />
 
-      <AdminProductList
-        v-if="activeTab === AdminTab.Products"
-        :products="products"
-        :hasMore="productsHaveMore"
-        :loadingMore="loadingMoreProducts"
-        :deletingId="deletingProductId"
-        @delete="handleDeleteProducts"
-        @merge="handleMergeProducts"
-        @loadMore="handleLoadMoreProducts"
-      />
+      <template v-if="activeTab === AdminTab.Products">
+        <CatalogSearchInput :search="productSearch" @search="handleSearchProducts" />
+        <AlertMessage v-if="productsLoadError" :message="productsLoadError" class="mb-4" />
+        <AdminProductList
+          :products="products"
+          :searching="productSearch.trim() !== ''"
+          :hasMore="productsHaveMore"
+          :loadingMore="loadingMoreProducts"
+          :deletingId="deletingProductId"
+          @delete="handleDeleteProducts"
+          @merge="handleMergeProducts"
+          @loadMore="handleLoadMoreProducts"
+        />
+      </template>
       <AdminReviewList
         v-else
         :reviews="reviews"
