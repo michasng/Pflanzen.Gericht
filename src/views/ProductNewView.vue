@@ -2,45 +2,38 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { injectGateway } from '@/composables/injectGateway'
+import { productEditingGatewayKey } from '@/services/productEditingGatewayKey'
+import { useSubmit } from '@/composables/useSubmit'
 import ProductForm from '@/components/ProductForm.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
-import {
-  createProduct,
-  uploadProductImage,
-  replaceProductIngredients,
-  replaceProductNutrients,
-  replaceProductSources,
-} from '@/services/products'
-import { toErrorMessage } from '@/lib/error'
 import type { ProductFormValues } from '@/types/productForm'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const productEditingGateway = injectGateway(productEditingGatewayKey)
 
-const submitting = ref(false)
-const error = ref<string | null>(null)
 const pendingFiles = ref<File[]>([])
 
-const handleSubmit = async (values: ProductFormValues): Promise<void> => {
+const {
+  submitting,
+  errorMessage: error,
+  submit,
+} = useSubmit(async (values: ProductFormValues): Promise<void> => {
   const user = authStore.user
   if (!user) return
-  submitting.value = true
-  error.value = null
-  try {
-    const { ingredients, nutrients, sourceUrls, ...fields } = values
-    const product = await createProduct(fields, user.id)
-    await Promise.all([
-      replaceProductIngredients(product.id, ingredients),
-      replaceProductNutrients(product.id, nutrients),
-      replaceProductSources(product.id, sourceUrls),
-      ...pendingFiles.value.map((file, i) => uploadProductImage(product.id, user.id, file, i)),
-    ])
-    await router.push({ name: 'product-detail', params: { id: product.id } })
-  } catch (err) {
-    error.value = toErrorMessage(err)
-    submitting.value = false
-  }
-}
+  const { ingredients, nutrients, sourceUrls, ...fields } = values
+  const product = await productEditingGateway.createProduct(fields, user.id)
+  await Promise.all([
+    productEditingGateway.replaceProductIngredients(product.id, ingredients),
+    productEditingGateway.replaceProductNutrients(product.id, nutrients),
+    productEditingGateway.replaceProductSources(product.id, sourceUrls),
+    ...pendingFiles.value.map((file, i) =>
+      productEditingGateway.uploadProductImage(product.id, user.id, file, i),
+    ),
+  ])
+  await router.push({ name: 'product-detail', params: { id: product.id } })
+})
 </script>
 
 <template>
@@ -49,10 +42,6 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
 
     <AlertMessage :message="error" class="mb-4" />
 
-    <ProductForm
-      :submitting="submitting"
-      @submit="handleSubmit"
-      @files-changed="pendingFiles = $event"
-    />
+    <ProductForm :submitting="submitting" @submit="submit" @files-changed="pendingFiles = $event" />
   </div>
 </template>

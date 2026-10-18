@@ -35,6 +35,8 @@ export interface ProductFormValues {
   sourceUrls: string[]
 }
 
+export type ProductFields = Omit<ProductFormValues, 'ingredients' | 'nutrients' | 'sourceUrls'>
+
 export interface ProductFormInitialNutrient {
   name: string
   amountMicrograms: number | null

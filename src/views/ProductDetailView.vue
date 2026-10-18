@@ -3,7 +3,8 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAsyncData } from '@/composables/useAsyncData'
-import { useProductDetailGateway } from '@/composables/useProductDetailGateway'
+import { injectGateway } from '@/composables/injectGateway'
+import { productDetailGatewayKey } from '@/services/productDetailGatewayKey'
 import { toErrorMessage } from '@/lib/error'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
@@ -22,7 +23,7 @@ import ProductSources from '@/components/product/ProductSources.vue'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-const productDetailGateway = useProductDetailGateway()
+const productDetailGateway = injectGateway(productDetailGatewayKey)
 
 const {
   data: product,

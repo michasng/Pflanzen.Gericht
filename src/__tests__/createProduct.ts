@@ -1,0 +1,25 @@
+import type { Product } from '@/types'
+
+export const createProduct = (overrides: Partial<Product> = {}): Product => ({
+  allergens: [],
+  avgOverall: null,
+  barcode: null,
+  base: null,
+  brand: 'Alpro',
+  category: 'drink',
+  createdAt: '2026-09-11T00:00:00.000Z',
+  createdBy: 'user-1',
+  description: null,
+  energyJoules: null,
+  id: 'product-1',
+  isOrganic: false,
+  minPriceEuroCents: null,
+  name: 'Hafermilch',
+  normalizedName: null,
+  quantityUnit: 'piece',
+  quantityValue: 1,
+  reviewsCount: 0,
+  tags: [],
+  updatedAt: '2026-09-11T00:00:00.000Z',
+  ...overrides,
+})

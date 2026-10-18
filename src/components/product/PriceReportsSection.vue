@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { useProductDetailGateway } from '@/composables/useProductDetailGateway'
+import { injectGateway } from '@/composables/injectGateway'
+import { productDetailGatewayKey } from '@/services/productDetailGatewayKey'
 import { usePriceReports } from '@/composables/usePriceReports'
 import { formatEuroCents } from '@/lib/price'
 import type { PriceReportWithProfile } from '@/services/prices'
@@ -20,7 +21,7 @@ const props = defineProps<{
 const route = useRoute()
 
 const { priceReports, isFormVisible, errorMessage, showForm, save, remove } = usePriceReports({
-  gateway: useProductDetailGateway(),
+  gateway: injectGateway(productDetailGatewayKey),
   productId: props.productId,
   currentUserId: () => props.currentUserId,
   initialReports: props.initialReports,

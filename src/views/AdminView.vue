@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAdminGateway } from '@/composables/useAdminGateway'
+import { injectGateway } from '@/composables/injectGateway'
+import { adminGatewayKey } from '@/services/adminGatewayKey'
 import type { ProductListItem } from '@/services/catalog'
 import { orderProductPairByCreation } from '@/lib/orderProductPairByCreation'
 import { usePaginatedList } from '@/composables/usePaginatedList'
@@ -13,7 +14,7 @@ import AdminReviewList from '@/components/admin/AdminReviewList.vue'
 import { AdminTab } from '@/components/admin/AdminTab'
 
 const router = useRouter()
-const adminGateway = useAdminGateway()
+const adminGateway = injectGateway(adminGatewayKey)
 
 const activeTab = ref(AdminTab.Products)
 

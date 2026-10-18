@@ -1,73 +1,67 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { fetchProduct } from '@/services/products'
-import { createReview, uploadReviewImage } from '@/services/reviews'
-import { toErrorMessage } from '@/lib/error'
+import { useAsyncData } from '@/composables/useAsyncData'
+import { injectGateway } from '@/composables/injectGateway'
+import { reviewEditingGatewayKey } from '@/services/reviewEditingGatewayKey'
+import { useSubmit } from '@/composables/useSubmit'
 import ReviewForm from '@/components/ReviewForm.vue'
+import ReviewFormHeading from '@/components/ReviewFormHeading.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
 import type { ReviewFormValues } from '@/components/ReviewForm.vue'
-import type { Product } from '@/types'
+
+const NOT_FOUND_MESSAGE = 'Produkt nicht gefunden.'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const reviewEditingGateway = injectGateway(reviewEditingGatewayKey)
 
-const product = ref<Product | null>(null)
-const loading = ref(true)
-const loadError = ref<string | null>(null)
-const submitting = ref(false)
-const submitError = ref<string | null>(null)
+const {
+  data: product,
+  loading,
+  errorMessage: loadError,
+  notFound,
+} = useAsyncData(
+  (productId: string) => reviewEditingGateway.fetchProduct(productId),
+  () => String(route.params.id),
+)
+
 const pendingFiles = ref<File[]>([])
 
-onMounted(async () => {
-  try {
-    product.value = await fetchProduct(route.params.id as string)
-    if (!product.value) loadError.value = 'Produkt nicht gefunden.'
-  } catch (err) {
-    loadError.value = toErrorMessage(err)
-  } finally {
-    loading.value = false
-  }
-})
-
-const handleSubmit = async (values: ReviewFormValues): Promise<void> => {
+const {
+  submitting,
+  errorMessage: submitError,
+  submit,
+} = useSubmit(async (values: ReviewFormValues): Promise<void> => {
   const user = authStore.user
   if (!product.value || !user) return
-  submitting.value = true
-  submitError.value = null
-  try {
-    const { tags, ...fields } = values
-    const review = await createReview(product.value.id, user.id, fields, tags)
-    await Promise.all(
-      pendingFiles.value.map((file, i) => uploadReviewImage(review.id, user.id, file, i)),
-    )
-    await router.push({ name: 'product-detail', params: { id: product.value.id } })
-  } catch (err) {
-    submitError.value = toErrorMessage(err)
-    submitting.value = false
-  }
-}
+  const { tags, ...fields } = values
+  const review = await reviewEditingGateway.createReview(product.value.id, user.id, fields, tags)
+  await Promise.all(
+    pendingFiles.value.map((file, i) =>
+      reviewEditingGateway.uploadReviewImage(review.id, user.id, file, i),
+    ),
+  )
+  await router.push({ name: 'product-detail', params: { id: product.value.id } })
+})
 </script>
 
 <template>
   <div class="max-w-lg mx-auto">
     <LoadingText v-if="loading" />
+    <AlertMessage v-else-if="notFound" :message="NOT_FOUND_MESSAGE" />
     <AlertMessage v-else-if="loadError" :message="loadError" />
     <template v-else-if="product">
-      <div class="mb-6">
-        <p class="text-sm text-gray-500 mb-1">Bewertung für</p>
-        <h1 class="text-xl font-bold text-gray-900 leading-tight">{{ product.name }}</h1>
-        <p v-if="product.brand" class="text-sm text-gray-500 mt-0.5">{{ product.brand }}</p>
-      </div>
+      <ReviewFormHeading :product-name="product.name" :brand="product.brand" />
 
       <AlertMessage :message="submitError" class="mb-4" />
 
       <ReviewForm
         :submitting="submitting"
-        @submit="handleSubmit"
+        @submit="submit"
         @files-changed="pendingFiles = $event"
       />
     </template>

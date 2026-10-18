@@ -1,196 +1,135 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useAsyncData } from '@/composables/useAsyncData'
+import { useImageUpload } from '@/composables/useImageUpload'
+import { injectGateway } from '@/composables/injectGateway'
+import { productEditingGatewayKey } from '@/services/productEditingGatewayKey'
+import { useSubmit } from '@/composables/useSubmit'
 import ProductForm from '@/components/ProductForm.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
-import { ALLERGENS } from '@/config/allergens'
-import {
-  fetchProduct,
-  fetchProductImages,
-  fetchProductIngredients,
-  fetchProductNutrients,
-  fetchProductSources,
-  updateProduct,
-  uploadProductImage,
-  deleteProductImage,
-  copyReviewImageToProduct,
-  replaceProductIngredients,
-  replaceProductNutrients,
-  replaceProductSources,
-} from '@/services/products'
-import { fetchProductReviewImages, type ProductReviewImages } from '@/services/reviews'
 import { formatDate } from '@/lib/date'
-import { toErrorMessage } from '@/lib/error'
-import { toQuantityUnit } from '@/lib/toQuantityUnit'
-import { useImageUpload } from '@/composables/useImageUpload'
+import { hasProductFieldsChanged } from '@/lib/hasProductFieldsChanged'
+import { haveSameElements } from '@/lib/haveSameElements'
+import { toProductFormValues } from '@/lib/toProductFormValues'
+import type { ProductReviewImages } from '@/services/reviews'
 import type { Product, ProductImage, ReviewImage } from '@/types'
 import type { ProductFormValues } from '@/types/productForm'
+
+interface ProductEditData {
+  product: Product
+  initialValues: ProductFormValues
+  reviewImageGroups: ProductReviewImages[]
+}
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const productEditingGateway = injectGateway(productEditingGatewayKey)
 
-const product = ref<Product | null>(null)
-const initialIngredients = ref<ProductFormValues['ingredients']>([])
-const initialNutrients = ref<ProductFormValues['nutrients']>([])
-const initialSourceUrls = ref<ProductFormValues['sourceUrls']>([])
-const loading = ref(true)
-const loadError = ref<string | null>(null)
-const submitting = ref(false)
-const submitError = ref<string | null>(null)
-const knownAllergens = new Set<string>(ALLERGENS)
-const reviewImageGroups = ref<ProductReviewImages[]>([])
+const { pendingFiles, selectCopies, existingImages, handleDeleteImage, commitImageChanges } =
+  useImageUpload<ProductImage, ReviewImage>(
+    (file, sortOrder) => {
+      if (!editData.value || !authStore.user) return Promise.resolve()
+      return productEditingGateway.uploadProductImage(
+        editData.value.product.id,
+        authStore.user.id,
+        file,
+        sortOrder,
+      )
+    },
+    (image) => productEditingGateway.deleteProductImage(image.id, image.storagePath),
+    (reviewImage, sortOrder) => {
+      if (!editData.value || !authStore.user) return Promise.resolve()
+      return productEditingGateway.copyReviewImageToProduct(
+        reviewImage,
+        editData.value.product.id,
+        authStore.user.id,
+        sortOrder,
+      )
+    },
+  )
+
+const loadProductEditData = async (productId: string): Promise<ProductEditData | null> => {
+  const [product, images, ingredients, nutrients, sources, reviewImageGroups] = await Promise.all([
+    productEditingGateway.fetchProduct(productId),
+    productEditingGateway.fetchProductImages(productId),
+    productEditingGateway.fetchProductIngredients(productId),
+    productEditingGateway.fetchProductNutrients(productId),
+    productEditingGateway.fetchProductSources(productId),
+    authStore.isAdmin
+      ? productEditingGateway.fetchProductReviewImages(productId)
+      : Promise.resolve([]),
+  ])
+  if (!product) throw new Error('Produkt nicht gefunden.')
+  if (product.createdBy !== authStore.user?.id && !authStore.isAdmin) {
+    await router.replace({ name: 'product-detail', params: { id: productId } })
+    return null
+  }
+  existingImages.value = [...images].sort((a, b) => a.sortOrder - b.sortOrder)
+  return {
+    product,
+    initialValues: toProductFormValues(product, ingredients, nutrients, sources),
+    reviewImageGroups,
+  }
+}
+
+const {
+  data: editData,
+  loading,
+  errorMessage: loadError,
+} = useAsyncData(loadProductEditData, () => String(route.params.id))
+
 const imageCopySources = computed(() =>
   authStore.isAdmin
-    ? reviewImageGroups.value.map((group) => ({
+    ? (editData.value?.reviewImageGroups ?? []).map((group) => ({
         label: `${group.reviewerName} · ${formatDate(group.createdAt)}`,
         images: group.images,
       }))
     : [],
 )
-const { pendingFiles, selectCopies, existingImages, handleDeleteImage, commitImageChanges } =
-  useImageUpload<ProductImage, ReviewImage>(
-    (file, sortOrder) => {
-      if (!product.value || !authStore.user) return Promise.resolve()
-      return uploadProductImage(product.value.id, authStore.user.id, file, sortOrder)
-    },
-    (img) => deleteProductImage(img.id, img.storagePath),
-    (reviewImage, sortOrder) => {
-      if (!product.value || !authStore.user) return Promise.resolve()
-      return copyReviewImageToProduct(reviewImage, product.value.id, authStore.user.id, sortOrder)
-    },
-  )
 
 const handleCopySelectionChanged = (imageIds: string[]): void => {
   selectCopies(
-    reviewImageGroups.value
+    (editData.value?.reviewImageGroups ?? [])
       .flatMap((group) => group.images)
       .filter((image) => imageIds.includes(image.id)),
   )
 }
 
-const toIngredientSignature = (ingredient: ProductFormValues['ingredients'][number]): string =>
-  `${ingredient.name}|${ingredient.comparator}|${ingredient.fractionBasisPoints === null ? '' : ingredient.fractionBasisPoints}`
+const toIngredientKey = (ingredient: ProductFormValues['ingredients'][number]): string =>
+  `${ingredient.name}|${ingredient.comparator}|${ingredient.fractionBasisPoints ?? ''}`
 
-const haveSameIngredients = (
-  currentIngredients: ProductFormValues['ingredients'],
-  nextIngredients: ProductFormValues['ingredients'],
-): boolean => {
-  if (currentIngredients.length !== nextIngredients.length) return false
-  const currentSignatures = currentIngredients.map(toIngredientSignature).sort()
-  const nextSignatures = nextIngredients.map(toIngredientSignature).sort()
-  return currentSignatures.every((signature, index) => signature === nextSignatures[index])
-}
-
-const toNutrientSignature = (nutrient: ProductFormValues['nutrients'][number]): string =>
+const toNutrientKey = (nutrient: ProductFormValues['nutrients'][number]): string =>
   `${nutrient.name}|${nutrient.amountMicrograms}`
 
-const isKnownAllergen = (allergen: string): allergen is ProductFormValues['allergens'][number] =>
-  knownAllergens.has(allergen)
+const toSourceKey = (url: string): string => url
 
-const haveSameNutrients = (
-  currentNutrients: ProductFormValues['nutrients'],
-  nextNutrients: ProductFormValues['nutrients'],
-): boolean => {
-  if (currentNutrients.length !== nextNutrients.length) return false
-  const currentSignatures = currentNutrients.map(toNutrientSignature).sort()
-  const nextSignatures = nextNutrients.map(toNutrientSignature).sort()
-  return currentSignatures.every((signature, index) => signature === nextSignatures[index])
-}
-
-const haveSameSourceUrls = (
-  currentUrls: ProductFormValues['sourceUrls'],
-  nextUrls: ProductFormValues['sourceUrls'],
-): boolean => {
-  if (currentUrls.length !== nextUrls.length) return false
-  const currentSorted = [...currentUrls].sort()
-  const nextSorted = [...nextUrls].sort()
-  return currentSorted.every((url, index) => url === nextSorted[index])
-}
-
-onMounted(async () => {
-  const id = route.params.id as string
-  try {
-    const [p, imgs, ingredients, nutrients, sources, reviewImages] = await Promise.all([
-      fetchProduct(id),
-      fetchProductImages(id),
-      fetchProductIngredients(id),
-      fetchProductNutrients(id),
-      fetchProductSources(id),
-      authStore.isAdmin ? fetchProductReviewImages(id) : Promise.resolve([]),
-    ])
-    if (!p) {
-      loadError.value = 'Produkt nicht gefunden.'
-      return
-    }
-    if (p.createdBy !== authStore.user?.id && !authStore.isAdmin) {
-      await router.replace({ name: 'product-detail', params: { id } })
-      return
-    }
-    product.value = p
-    reviewImageGroups.value = reviewImages
-    existingImages.value = imgs.sort((a, b) => a.sortOrder - b.sortOrder)
-    initialIngredients.value = ingredients.map((ingredient) => ({
-      name: ingredient.name,
-      fractionBasisPoints: ingredient.fractionBasisPoints,
-      comparator: ingredient.comparator as ProductFormValues['ingredients'][number]['comparator'],
-    }))
-    initialNutrients.value = nutrients.map((nutrient) => ({
-      name: nutrient.name,
-      amountMicrograms: nutrient.amountMicrograms,
-    }))
-    initialSourceUrls.value = sources.map((source) => source.url)
-  } catch (err) {
-    loadError.value = toErrorMessage(err)
-  } finally {
-    loading.value = false
+const {
+  submitting,
+  errorMessage: submitError,
+  submit,
+} = useSubmit(async (values: ProductFormValues): Promise<void> => {
+  if (!editData.value || !authStore.user) return
+  const { product, initialValues } = editData.value
+  const { ingredients, nutrients, sourceUrls, ...fields } = values
+  if (hasProductFieldsChanged(product, fields)) {
+    await productEditingGateway.updateProduct(product.id, fields)
   }
+  if (!haveSameElements(initialValues.ingredients, ingredients, toIngredientKey)) {
+    await productEditingGateway.replaceProductIngredients(product.id, ingredients)
+  }
+  if (!haveSameElements(initialValues.nutrients, nutrients, toNutrientKey)) {
+    await productEditingGateway.replaceProductNutrients(product.id, nutrients)
+  }
+  if (!haveSameElements(initialValues.sourceUrls, sourceUrls, toSourceKey)) {
+    await productEditingGateway.replaceProductSources(product.id, sourceUrls)
+  }
+  await commitImageChanges()
+  await router.push({ name: 'product-detail', params: { id: product.id } })
 })
-
-const handleSubmit = async (values: ProductFormValues): Promise<void> => {
-  if (!product.value || !authStore.user) return
-  submitting.value = true
-  submitError.value = null
-  try {
-    const { ingredients, nutrients, sourceUrls, ...fields } = values
-    const submittedAllergens = new Set<string>(fields.allergens)
-    const shouldUpdateProductFields =
-      product.value.name !== fields.name ||
-      product.value.category !== fields.category ||
-      product.value.base !== fields.base ||
-      product.value.brand !== fields.brand ||
-      product.value.description !== fields.description ||
-      product.value.energyJoules !== fields.energyJoules ||
-      product.value.isOrganic !== fields.isOrganic ||
-      product.value.barcode !== fields.barcode ||
-      product.value.quantityUnit !== fields.quantityUnit ||
-      product.value.quantityValue !== fields.quantityValue ||
-      product.value.allergens.length !== fields.allergens.length ||
-      product.value.allergens.some((allergen) => !submittedAllergens.has(allergen))
-    if (shouldUpdateProductFields) {
-      await updateProduct(product.value.id, fields)
-    }
-    const shouldReplaceIngredients = !haveSameIngredients(initialIngredients.value, ingredients)
-    if (shouldReplaceIngredients) {
-      await replaceProductIngredients(product.value.id, ingredients)
-    }
-    const shouldReplaceNutrients = !haveSameNutrients(initialNutrients.value, nutrients)
-    if (shouldReplaceNutrients) {
-      await replaceProductNutrients(product.value.id, nutrients)
-    }
-    const shouldReplaceSources = !haveSameSourceUrls(initialSourceUrls.value, sourceUrls)
-    if (shouldReplaceSources) {
-      await replaceProductSources(product.value.id, sourceUrls)
-    }
-    await commitImageChanges()
-    await router.push({ name: 'product-detail', params: { id: product.value.id } })
-  } catch (err) {
-    submitError.value = toErrorMessage(err)
-    submitting.value = false
-  }
-}
 </script>
 
 <template>
@@ -199,30 +138,15 @@ const handleSubmit = async (values: ProductFormValues): Promise<void> => {
 
     <LoadingText v-if="loading" />
     <AlertMessage v-else-if="loadError" :message="loadError" />
-    <template v-else-if="product">
+    <template v-else-if="editData">
       <AlertMessage :message="submitError" class="mb-4" />
       <ProductForm
-        :initial="{
-          name: product.name,
-          category: product.category,
-          base: product.base,
-          brand: product.brand,
-          description: product.description,
-          energyJoules: product.energyJoules,
-          allergens: product.allergens.filter(isKnownAllergen),
-          isOrganic: product.isOrganic,
-          barcode: product.barcode,
-          quantityUnit: toQuantityUnit(product.quantityUnit),
-          quantityValue: product.quantityValue,
-          ingredients: initialIngredients,
-          nutrients: initialNutrients,
-          sourceUrls: initialSourceUrls,
-        }"
+        :initial="editData.initialValues"
         :existing-images="existingImages"
         :submitting="submitting"
-        @submit="handleSubmit"
-        @files-changed="pendingFiles = $event"
         :image-copy-sources="imageCopySources"
+        @submit="submit"
+        @files-changed="pendingFiles = $event"
         @delete-image="handleDeleteImage"
         @copy-selection-changed="handleCopySelectionChanged"
       />

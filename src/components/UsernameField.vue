@@ -3,7 +3,8 @@ import { computed, watch } from 'vue'
 import FormField from '@/components/primitives/FormField.vue'
 import TextInput from '@/components/primitives/TextInput.vue'
 import { TextInputState } from '@/components/primitives/TextInputState'
-import { useAuthGateway } from '@/composables/useAuthGateway'
+import { injectGateway } from '@/composables/injectGateway'
+import { authGatewayKey } from '@/services/authGatewayKey'
 import {
   USERNAME_FORMAT_PATTERN,
   USERNAME_MAX_LENGTH,
@@ -19,7 +20,7 @@ defineEmits<{ edit: [] }>()
 const username = defineModel<string>({ required: true })
 const available = defineModel<boolean | null>('available', { default: null })
 
-const authGateway = useAuthGateway()
+const authGateway = injectGateway(authGatewayKey)
 const { isAvailable, isChecking, checkError } = useUsernameAvailability(username, (name) =>
   authGateway.isUsernameAvailable(name),
 )
