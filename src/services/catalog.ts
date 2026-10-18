@@ -13,6 +13,7 @@ import type { Tables } from '@/types/database'
 import { fetchPriceReports, type PriceReportWithProfile } from '@/services/prices'
 import type { SortOption } from '@/config/sortOptions'
 import { ImageSize } from '@/config/imageSizes'
+import { CATALOG_PAGE_SIZE } from '@/config/catalogPageSize'
 
 export type { SortOption }
 
@@ -57,8 +58,6 @@ export type ProductDetail = Product & {
   priceReports: PriceReportWithProfile[]
 }
 
-export const PAGE_SIZE = 20
-
 export const fetchProducts = async (filter: CatalogFilter, page = 0): Promise<ProductPage> => {
   const { data, error } = await supabase.rpc('search_products', {
     p_search: filter.search || undefined,
@@ -71,8 +70,8 @@ export const fetchProducts = async (filter: CatalogFilter, page = 0): Promise<Pr
     p_max_price: filter.maxPriceCents ?? undefined,
     p_tags: filter.tags.length ? filter.tags : undefined,
     p_sort: filter.sort,
-    p_limit: PAGE_SIZE,
-    p_offset: page * PAGE_SIZE,
+    p_limit: CATALOG_PAGE_SIZE,
+    p_offset: page * CATALOG_PAGE_SIZE,
     p_include_ingredients: filter.includeIngredients.length ? filter.includeIngredients : undefined,
     p_exclude_ingredients: filter.excludeIngredients.length ? filter.excludeIngredients : undefined,
     p_exclude_allergens: filter.excludeAllergens.length ? filter.excludeAllergens : undefined,

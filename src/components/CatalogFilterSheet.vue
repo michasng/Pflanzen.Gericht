@@ -165,7 +165,6 @@ const apply = (): void => {
   catalogStore.setOrganic(draftOrganic.value)
   catalogStore.setMinPriceCents(parseEurosToCents(draftMinPriceInput.value) ?? null)
   catalogStore.setMaxPriceCents(parseEurosToCents(draftMaxPriceInput.value) ?? null)
-  catalogStore.load(true)
   emit('close')
 }
 
@@ -182,7 +181,6 @@ const reset = (): void => {
   draftMinPriceInput.value = ''
   draftMaxPriceInput.value = ''
   catalogStore.resetFilters()
-  catalogStore.load(true)
   emit('close')
 }
 </script>

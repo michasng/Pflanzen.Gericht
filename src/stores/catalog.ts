@@ -1,16 +1,17 @@
-import { ref, computed } from 'vue'
+import { ref, computed, watch, type Ref } from 'vue'
 import { defineStore } from 'pinia'
+import { injectGateway } from '@/composables/injectGateway'
 import { toErrorMessage } from '@/lib/error'
-import {
-  fetchProducts,
-  PAGE_SIZE,
-  type ProductListItem,
-  type CatalogFilter,
-  type SortOption,
-} from '@/services/catalog'
+import type { ProductListItem, CatalogFilter, SortOption } from '@/services/catalog'
+import { catalogGatewayKey } from '@/services/CatalogGateway'
+import { CATALOG_PAGE_SIZE } from '@/config/catalogPageSize'
 import { DEFAULT_SORT_OPTION } from '@/config/sortOptions'
+import { CatalogListFilter } from '@/config/CatalogListFilter'
+import { CatalogSingleFilter } from '@/config/CatalogSingleFilter'
 
 export const useCatalogStore = defineStore('catalog', () => {
+  const catalogGateway = injectGateway(catalogGatewayKey)
+
   const products = ref<ProductListItem[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -59,10 +60,10 @@ export const useCatalogStore = defineStore('catalog', () => {
     loading.value = true
     error.value = null
     try {
-      const result = await fetchProducts(filter.value, page.value)
+      const result = await catalogGateway.fetchProducts(filter.value, page.value)
       products.value = reset ? result.items : [...products.value, ...result.items]
       totalCount.value = result.total
-      hasMore.value = result.items.length === PAGE_SIZE
+      hasMore.value = result.items.length === CATALOG_PAGE_SIZE
       page.value++
     } catch (err) {
       error.value = toErrorMessage(err)
@@ -144,6 +145,44 @@ export const useCatalogStore = defineStore('catalog', () => {
     return n
   })
 
+  const listFilters: Record<CatalogListFilter, Ref<string[]>> = {
+    [CatalogListFilter.Tags]: tags,
+    [CatalogListFilter.IncludeIngredients]: includeIngredients,
+    [CatalogListFilter.ExcludeIngredients]: excludeIngredients,
+    [CatalogListFilter.ExcludeAllergens]: excludeAllergens,
+  }
+
+  const removeFilterValue = (filterName: CatalogListFilter, value: string): void => {
+    const values = listFilters[filterName]
+    values.value = values.value.filter((existing) => existing !== value)
+  }
+
+  const singleFilterClearers: Record<CatalogSingleFilter, () => void> = {
+    [CatalogSingleFilter.MinRating]: () => {
+      minRating.value = null
+    },
+    [CatalogSingleFilter.Organic]: () => {
+      organic.value = false
+    },
+    [CatalogSingleFilter.Base]: () => {
+      base.value = null
+    },
+    [CatalogSingleFilter.Store]: () => {
+      store.value = null
+      city.value = null
+    },
+    [CatalogSingleFilter.Price]: () => {
+      minPriceCents.value = null
+      maxPriceCents.value = null
+    },
+  }
+
+  const clearFilter = (filterName: CatalogSingleFilter): void => {
+    singleFilterClearers[filterName]()
+  }
+
+  watch(filter, () => load(true))
+
   const resetFilters = (): void => {
     base.value = null
     store.value = null
@@ -195,5 +234,7 @@ export const useCatalogStore = defineStore('catalog', () => {
     setExcludeAllergens,
     setOrganic,
     resetFilters,
+    removeFilterValue,
+    clearFilter,
   }
 })

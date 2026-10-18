@@ -4,6 +4,7 @@ import { mount, type VueWrapper } from '@vue/test-utils'
 import { createMemoryHistory, createRouter, type RouteRecordRaw, type Router } from 'vue-router'
 import { adminGatewayKey, type AdminGateway } from '@/services/AdminGateway'
 import { authGatewayKey, type AuthGateway } from '@/services/AuthGateway'
+import { catalogGatewayKey, type CatalogGateway } from '@/services/CatalogGateway'
 import { productDetailGatewayKey, type ProductDetailGateway } from '@/services/ProductDetailGateway'
 import {
   productEditingGatewayKey,
@@ -18,6 +19,7 @@ export const EmptyRouteComponent = defineComponent({ render: () => null })
 interface FakeGateways {
   admin?: AdminGateway
   auth?: AuthGateway
+  catalog?: CatalogGateway
   productDetail?: ProductDetailGateway
   productEditing?: ProductEditingGateway
   profile?: ProfileGateway
@@ -51,6 +53,7 @@ export const mountView = async ({
     [authGatewayKey]: gateways.auth ?? createFakeAuthGateway(),
   }
   if (gateways.admin) provide[adminGatewayKey] = gateways.admin
+  if (gateways.catalog) provide[catalogGatewayKey] = gateways.catalog
   if (gateways.productDetail) provide[productDetailGatewayKey] = gateways.productDetail
   if (gateways.productEditing) provide[productEditingGatewayKey] = gateways.productEditing
   if (gateways.profile) provide[profileGatewayKey] = gateways.profile

@@ -1,172 +1,147 @@
-import { describe, it, expect, vi, beforeEach, type MockInstance } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { defineComponent } from 'vue'
-import { mount } from '@vue/test-utils'
 import { useCatalogUrlSync } from '@/composables/useCatalogUrlSync'
+import { useCatalogStore } from '@/stores/catalog'
+import type { CatalogGateway } from '@/services/CatalogGateway'
+import { createFakeCatalogGateway } from '@/__tests__/createFakeCatalogGateway'
+import { EmptyRouteComponent, mountView } from '@/__tests__/mountView'
 
-type StoreSpy = { fn: MockInstance; value: unknown }
-
-const makeStoreMock = () => {
-  const state: Record<string, unknown> = {
-    search: '',
-    category: null,
-    base: null,
-    sort: 'latest_review',
-    store: null,
-    city: null,
-    minRating: null,
-    tags: [],
-    includeIngredients: [],
-    excludeIngredients: [],
-    excludeAllergens: [],
-    organic: false,
-    minPriceCents: null,
-    maxPriceCents: null,
-  }
-  const spies: Record<string, StoreSpy> = {}
-  const makeSetter = (key: string) => {
-    const spy = vi.fn<(v: unknown) => void>((v) => {
-      state[key] = v
-    })
-    spies[key] = { fn: spy, value: undefined }
-    return spy
-  }
-  return {
-    ...state,
-    setSearch: makeSetter('search'),
-    setCategory: makeSetter('category'),
-    setBase: makeSetter('base'),
-    setSort: makeSetter('sort'),
-    setStore: makeSetter('store'),
-    setCity: makeSetter('city'),
-    setMinRating: makeSetter('minRating'),
-    setTags: makeSetter('tags'),
-    setIncludeIngredients: makeSetter('includeIngredients'),
-    setExcludeIngredients: makeSetter('excludeIngredients'),
-    setExcludeAllergens: makeSetter('excludeAllergens'),
-    setOrganic: makeSetter('organic'),
-    setMinPriceCents: makeSetter('minPriceCents'),
-    setMaxPriceCents: makeSetter('maxPriceCents'),
-    load: vi.fn<(reset?: boolean) => void>(),
-    get state() {
-      return state
-    },
-  }
-}
-
-type StoreMock = ReturnType<typeof makeStoreMock>
-
-let storeMock: StoreMock
-let routeQuery: Record<string, string | string[]>
-const routerReplace = vi.fn<() => void>()
-
-vi.mock('@/stores/catalog', () => ({
-  useCatalogStore: () => storeMock,
-}))
-
-vi.mock('vue-router', () => ({
-  useRoute: () => ({ query: routeQuery }),
-  useRouter: () => ({ replace: routerReplace }),
-}))
-
-const mountComposable = () => {
-  const Wrapper = defineComponent({
-    setup() {
+const mountUrlSync = async (initialPath = '/') => {
+  const fetchProducts = vi
+    .fn<CatalogGateway['fetchProducts']>()
+    .mockResolvedValue({ items: [], total: 0 })
+  let store: ReturnType<typeof useCatalogStore> | undefined
+  const Host = defineComponent({
+    setup: () => {
+      store = useCatalogStore()
       useCatalogUrlSync()
+      return () => null
     },
-    template: '<div />',
   })
-  return mount(Wrapper)
+  const { router } = await mountView({
+    view: Host,
+    routes: [{ path: '/', name: 'home', component: EmptyRouteComponent }],
+    initialPath,
+    gateways: { catalog: createFakeCatalogGateway({ fetchProducts }) },
+  })
+  if (!store) throw new Error('The host did not set up the store.')
+  return { store, router, fetchProducts }
 }
 
 describe('useCatalogUrlSync', () => {
-  beforeEach(() => {
-    storeMock = makeStoreMock()
-    routeQuery = {}
-    routerReplace.mockClear()
+  describe('given the query contains search, category and sort', () => {
+    it('hydrates them into the store', async () => {
+      const { store } = await mountUrlSync('/?q=tofu&category=meat&sort=top_rated')
+
+      expect(store.search).toBe('tofu')
+      expect(store.category).toBe('meat')
+      expect(store.sort).toBe('top_rated')
+    })
   })
 
-  it('hydrates search, category and sort from query params', () => {
-    routeQuery = { q: 'tofu', category: 'meat', sort: 'top_rated' }
-    mountComposable()
-    expect(storeMock.setSearch).toHaveBeenCalledWith('tofu')
-    expect(storeMock.setCategory).toHaveBeenCalledWith('meat')
-    expect(storeMock.setSort).toHaveBeenCalledWith('top_rated')
+  describe('given the query has an unknown sort', () => {
+    it('falls back to the latest review', async () => {
+      const { store } = await mountUrlSync('/?sort=garbage')
+
+      expect(store.sort).toBe('latest_review')
+    })
   })
 
-  it('falls back to latest review for unknown sort', () => {
-    routeQuery = { sort: 'garbage' }
-    mountComposable()
-    expect(storeMock.setSort).toHaveBeenCalledWith('latest_review')
+  describe('given the query has no sort', () => {
+    it('uses the latest review', async () => {
+      const { store } = await mountUrlSync()
+
+      expect(store.sort).toBe('latest_review')
+    })
   })
 
-  it('falls back to latest review when sort is absent', () => {
-    routeQuery = {}
-    mountComposable()
-    expect(storeMock.setSort).toHaveBeenCalledWith('latest_review')
+  describe.each(['newest', 'few_ingredients'])('given the query sorts by %s', (sort) => {
+    it('hydrates that sort', async () => {
+      const { store } = await mountUrlSync(`/?sort=${sort}`)
+
+      expect(store.sort).toBe(sort)
+    })
   })
 
-  it('hydrates the newest sort from query params', () => {
-    routeQuery = { sort: 'newest' }
-    mountComposable()
-    expect(storeMock.setSort).toHaveBeenCalledWith('newest')
+  describe('given the query contains numeric filters', () => {
+    it('maps the minimum rating and the price range', async () => {
+      const { store } = await mountUrlSync('/?minRating=4&minPrice=199&maxPrice=499')
+
+      expect(store.minRating).toBe(4)
+      expect(store.minPriceCents).toBe(199)
+      expect(store.maxPriceCents).toBe(499)
+    })
   })
 
-  it('hydrates the few ingredients sort from query params', () => {
-    routeQuery = { sort: 'few_ingredients' }
-    mountComposable()
-    expect(storeMock.setSort).toHaveBeenCalledWith('few_ingredients')
+  describe('given the query contains list filters', () => {
+    it('maps a single value to an array', async () => {
+      const { store } = await mountUrlSync('/?tags=organic&excludeIngredients=Milch')
+
+      expect(store.tags).toEqual(['organic'])
+      expect(store.excludeIngredients).toEqual(['Milch'])
+    })
+
+    it('maps repeated values to an array', async () => {
+      const { store } = await mountUrlSync('/?includeIngredients=Hafer&includeIngredients=Soja')
+
+      expect(store.includeIngredients).toEqual(['Hafer', 'Soja'])
+    })
+
+    it('maps allergens and the organic flag', async () => {
+      const { store } = await mountUrlSync('/?excludeAllergens=gluten&organic=1')
+
+      expect(store.excludeAllergens).toEqual(['gluten'])
+      expect(store.organic).toBe(true)
+    })
   })
 
-  it('maps minRating as number', () => {
-    routeQuery = { minRating: '4' }
-    mountComposable()
-    expect(storeMock.setMinRating).toHaveBeenCalledWith(4)
+  describe('given the query is empty', () => {
+    it('leaves all optional filters unset', async () => {
+      const { store } = await mountUrlSync()
+
+      expect(store.category).toBeNull()
+      expect(store.base).toBeNull()
+      expect(store.minRating).toBeNull()
+      expect(store.tags).toEqual([])
+      expect(store.organic).toBe(false)
+    })
   })
 
-  it('maps tags as array when a single string', () => {
-    routeQuery = { tags: 'organic' }
-    mountComposable()
-    expect(storeMock.setTags).toHaveBeenCalledWith(['organic'])
+  describe('when mounted', () => {
+    it('loads the catalog with the hydrated filters', async () => {
+      const { fetchProducts } = await mountUrlSync('/?q=tofu')
+
+      await vi.waitFor(() =>
+        expect(fetchProducts).toHaveBeenCalledWith(expect.objectContaining({ search: 'tofu' }), 0),
+      )
+    })
   })
 
-  it('maps ingredient filters as arrays', () => {
-    routeQuery = { includeIngredients: ['Hafer'], excludeIngredients: 'Milch' }
-    mountComposable()
-    expect(storeMock.setIncludeIngredients).toHaveBeenCalledWith(['Hafer'])
-    expect(storeMock.setExcludeIngredients).toHaveBeenCalledWith(['Milch'])
-  })
+  describe('when a filter changes', () => {
+    it('writes the non-default filters into the query', async () => {
+      const { store, router } = await mountUrlSync()
 
-  it('maps allergen and organic filters', () => {
-    routeQuery = { excludeAllergens: 'gluten', organic: '1' }
-    mountComposable()
-    expect(storeMock.setExcludeAllergens).toHaveBeenCalledWith(['gluten'])
-    expect(storeMock.setOrganic).toHaveBeenCalledWith(true)
-  })
+      store.setSearch('tofu')
+      store.setSort('newest')
+      store.setTags(['sweet'])
+      store.setOrganic(true)
 
-  it('defaults organic to false when absent', () => {
-    routeQuery = {}
-    mountComposable()
-    expect(storeMock.setOrganic).toHaveBeenCalledWith(false)
-  })
+      await vi.waitFor(() =>
+        expect(router.currentRoute.value.query).toEqual({
+          q: 'tofu',
+          sort: 'newest',
+          tags: ['sweet'],
+          organic: '1',
+        }),
+      )
+    })
 
-  it('maps minPrice and maxPrice as raw cents numbers', () => {
-    routeQuery = { minPrice: '199', maxPrice: '499' }
-    mountComposable()
-    expect(storeMock.setMinPriceCents).toHaveBeenCalledWith(199)
-    expect(storeMock.setMaxPriceCents).toHaveBeenCalledWith(499)
-  })
+    it('omits the default sort from the query', async () => {
+      const { store, router } = await mountUrlSync('/?sort=newest')
 
-  it('sets null for absent optional params', () => {
-    routeQuery = {}
-    mountComposable()
-    expect(storeMock.setCategory).toHaveBeenCalledWith(null)
-    expect(storeMock.setBase).toHaveBeenCalledWith(null)
-    expect(storeMock.setMinRating).toHaveBeenCalledWith(null)
-    expect(storeMock.setTags).toHaveBeenCalledWith([])
-  })
+      store.setSort('latest_review')
 
-  it('calls load after hydrating', () => {
-    mountComposable()
-    expect(storeMock.load).toHaveBeenCalledWith(true)
+      await vi.waitFor(() => expect(router.currentRoute.value.query).toEqual({}))
+    })
   })
 })
