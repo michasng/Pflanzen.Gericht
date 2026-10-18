@@ -6,9 +6,11 @@ import { DEFAULT_ENERGY_UNIT, EnergyUnit } from '@/config/energy'
 
 import { createFakeImageUrlGateway } from '@/__tests__/createFakeImageUrlGateway'
 import { createFakeNameSuggestionGateway } from '@/__tests__/createFakeNameSuggestionGateway'
+import { createFakeOpenFoodFactsGateway } from '@/__tests__/createFakeOpenFoodFactsGateway'
 import { createFakeProductEditingGateway } from '@/__tests__/createFakeProductEditingGateway'
 import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 import { nameSuggestionGatewayKey } from '@/services/NameSuggestionGateway'
+import { openFoodFactsGatewayKey } from '@/services/OpenFoodFactsGateway'
 import { productEditingGatewayKey } from '@/services/ProductEditingGateway'
 import ProductForm from '../ProductForm.vue'
 import type { ProductFormValues } from '@/types/productForm'
@@ -16,6 +18,7 @@ import type { ProductFormValues } from '@/types/productForm'
 const provide = {
   [imageUrlGatewayKey]: createFakeImageUrlGateway(),
   [nameSuggestionGatewayKey]: createFakeNameSuggestionGateway(),
+  [openFoodFactsGatewayKey]: createFakeOpenFoodFactsGateway(),
   [productEditingGatewayKey]: createFakeProductEditingGateway(),
 }
 

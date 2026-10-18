@@ -12,21 +12,21 @@ import Grid from '@/components/primitives/GridComponent.vue'
 import { ImageSize } from '@/config/imageSizes'
 import { injectGateway } from '@/composables/injectGateway'
 import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
-import {
-  adminRemoveSimilarity,
-  fetchSimilarProducts,
-  removeSimilarityVote,
-  searchSimilarityCandidates,
-  type SimilarityCandidate,
-  type SimilarProduct,
-  voteSimilarity,
-} from '@/services/similarProducts'
+import type { SimilarityCandidate, SimilarProduct } from '@/services/similarProducts'
+import { similarProductsGatewayKey } from '@/services/SimilarProductsGateway'
 import { toErrorMessage } from '@/lib/error'
 import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps<{ productId: string; productCategory: string }>()
 
 const { getImageUrl } = injectGateway(imageUrlGatewayKey)
+const {
+  adminRemoveSimilarity,
+  fetchSimilarProducts,
+  removeSimilarityVote,
+  searchSimilarityCandidates,
+  voteSimilarity,
+} = injectGateway(similarProductsGatewayKey)
 
 const authStore = useAuthStore()
 const route = useRoute()

@@ -55,6 +55,28 @@ export default defineConfigWithVueTs(
     },
   },
 
+  {
+    name: 'app/gateways-outside-composition-root',
+    files: ['src/**/*.{vue,ts}'],
+    ignores: ['src/services/**', 'src/main.ts'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '^@/(lib/supabase|services/(?![A-Z]\\w*Gateway$|loadMergeSource$).+)$',
+              caseSensitive: true,
+              allowTypeImports: true,
+              message:
+                'Inject a gateway with injectGateway instead; only main.ts wires the real implementations.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
   ...pluginOxlint.buildFromOxlintConfigFile('.oxlintrc.json'),
 
   skipFormatting,

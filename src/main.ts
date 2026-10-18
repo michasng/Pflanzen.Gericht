@@ -10,10 +10,13 @@ import { authGatewayKey } from '@/services/AuthGateway'
 import { catalogGatewayKey } from '@/services/CatalogGateway'
 import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 import { nameSuggestionGatewayKey } from '@/services/NameSuggestionGateway'
+import { openFoodFactsGatewayKey } from '@/services/OpenFoodFactsGateway'
 import { productDetailGatewayKey } from '@/services/ProductDetailGateway'
 import { productEditingGatewayKey } from '@/services/ProductEditingGateway'
 import { profileGatewayKey } from '@/services/ProfileGateway'
 import { reviewEditingGatewayKey } from '@/services/ReviewEditingGateway'
+import { similarProductsGatewayKey } from '@/services/SimilarProductsGateway'
+import { httpOpenFoodFactsGateway } from '@/services/httpOpenFoodFactsGateway'
 import { supabaseAdminGateway } from '@/services/supabaseAdminGateway'
 import { supabaseAuthGateway } from '@/services/supabaseAuthGateway'
 import { supabaseCatalogGateway } from '@/services/supabaseCatalogGateway'
@@ -23,6 +26,7 @@ import { supabaseProductDetailGateway } from '@/services/supabaseProductDetailGa
 import { supabaseProductEditingGateway } from '@/services/supabaseProductEditingGateway'
 import { supabaseProfileGateway } from '@/services/supabaseProfileGateway'
 import { supabaseReviewEditingGateway } from '@/services/supabaseReviewEditingGateway'
+import { supabaseSimilarProductsGateway } from '@/services/supabaseSimilarProductsGateway'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -32,10 +36,12 @@ app.provide(authGatewayKey, supabaseAuthGateway)
 app.provide(catalogGatewayKey, supabaseCatalogGateway)
 app.provide(imageUrlGatewayKey, supabaseImageUrlGateway)
 app.provide(nameSuggestionGatewayKey, supabaseNameSuggestionGateway)
+app.provide(openFoodFactsGatewayKey, httpOpenFoodFactsGateway)
 app.provide(productDetailGatewayKey, supabaseProductDetailGateway)
 app.provide(productEditingGatewayKey, supabaseProductEditingGateway)
 app.provide(profileGatewayKey, supabaseProfileGateway)
 app.provide(reviewEditingGatewayKey, supabaseReviewEditingGateway)
+app.provide(similarProductsGatewayKey, supabaseSimilarProductsGateway)
 
 app.use(pinia)
 app.use(router)

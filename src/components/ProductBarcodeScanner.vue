@@ -9,10 +9,11 @@ import {
   type ProductBarcodeScannerDependencies,
 } from '@/composables/useProductBarcodeScanner'
 import type { BarcodeReader } from '@/composables/useBarcodeScanner'
+import { injectGateway } from '@/composables/injectGateway'
 import { toErrorMessage } from '@/lib/error'
 import { isPlausibleBarcode } from '@/lib/isPlausibleBarcode'
 import { mapOpenFoodFactsProductToFormValues } from '@/lib/mapOpenFoodFactsProductToFormValues'
-import { fetchOpenFoodFactsProduct, fetchOpenFoodFactsProductImage } from '@/services/openFoodFacts'
+import { openFoodFactsGatewayKey, type OpenFoodFactsGateway } from '@/services/OpenFoodFactsGateway'
 import type { ProductFormValues } from '@/types/productForm'
 
 interface ProductBarcodeScannerComponentDependencies extends ProductBarcodeScannerDependencies {
@@ -23,18 +24,21 @@ const BarcodeScannerDialog = defineAsyncComponent(
   () => import('@/components/BarcodeScannerDialog.vue'),
 )
 
-const createDefaultDependencies = (): ProductBarcodeScannerComponentDependencies => ({
+const createDefaultDependencies = (
+  openFoodFactsGateway: OpenFoodFactsGateway,
+): ProductBarcodeScannerComponentDependencies => ({
   isPlausibleBarcode,
-  fetchProduct: fetchOpenFoodFactsProduct,
+  fetchProduct: openFoodFactsGateway.fetchProduct,
   mapProductToFormValues: mapOpenFoodFactsProductToFormValues,
-  fetchProductImage: fetchOpenFoodFactsProductImage,
+  fetchProductImage: openFoodFactsGateway.fetchProductImage,
   toErrorMessage,
 })
 
 const props = defineProps<{
   dependencies?: ProductBarcodeScannerComponentDependencies
 }>()
-const dependencies = props.dependencies ?? createDefaultDependencies()
+const dependencies =
+  props.dependencies ?? createDefaultDependencies(injectGateway(openFoodFactsGatewayKey))
 
 const emit = defineEmits<{
   scanned: [values: Partial<ProductFormValues>]

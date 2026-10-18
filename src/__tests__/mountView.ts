@@ -10,6 +10,7 @@ import {
   nameSuggestionGatewayKey,
   type NameSuggestionGateway,
 } from '@/services/NameSuggestionGateway'
+import { openFoodFactsGatewayKey, type OpenFoodFactsGateway } from '@/services/OpenFoodFactsGateway'
 import { productDetailGatewayKey, type ProductDetailGateway } from '@/services/ProductDetailGateway'
 import {
   productEditingGatewayKey,
@@ -20,6 +21,7 @@ import { reviewEditingGatewayKey, type ReviewEditingGateway } from '@/services/R
 import { createFakeAuthGateway } from '@/__tests__/createFakeAuthGateway'
 import { createFakeImageUrlGateway } from '@/__tests__/createFakeImageUrlGateway'
 import { createFakeNameSuggestionGateway } from '@/__tests__/createFakeNameSuggestionGateway'
+import { createFakeOpenFoodFactsGateway } from '@/__tests__/createFakeOpenFoodFactsGateway'
 
 export const EmptyRouteComponent = defineComponent({ render: () => null })
 
@@ -29,6 +31,7 @@ interface FakeGateways {
   catalog?: CatalogGateway
   imageUrl?: ImageUrlGateway
   nameSuggestion?: NameSuggestionGateway
+  openFoodFacts?: OpenFoodFactsGateway
   productDetail?: ProductDetailGateway
   productEditing?: ProductEditingGateway
   profile?: ProfileGateway
@@ -62,6 +65,7 @@ export const mountView = async ({
     [authGatewayKey]: gateways.auth ?? createFakeAuthGateway(),
     [imageUrlGatewayKey]: gateways.imageUrl ?? createFakeImageUrlGateway(),
     [nameSuggestionGatewayKey]: gateways.nameSuggestion ?? createFakeNameSuggestionGateway(),
+    [openFoodFactsGatewayKey]: gateways.openFoodFacts ?? createFakeOpenFoodFactsGateway(),
   }
   if (gateways.admin) provide[adminGatewayKey] = gateways.admin
   if (gateways.catalog) provide[catalogGatewayKey] = gateways.catalog
