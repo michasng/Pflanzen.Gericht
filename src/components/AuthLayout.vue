@@ -8,7 +8,7 @@ import AppLogo from '@/components/AppLogo.vue'
       :to="{ name: 'home' }"
       class="flex items-center gap-2 font-bold text-xl text-primary-700 mb-8"
     >
-      <AppLogo class="w-8 h-8 text-primary-600" />
+      <AppLogo class="w-8 h-8 text-primary-700" />
       Pflanzen.Gericht
     </RouterLink>
 

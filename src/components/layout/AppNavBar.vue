@@ -195,7 +195,7 @@ const isActive = (routeName: string): boolean => route.name === routeName
       :to="{ name: 'home' }"
       class="flex items-center gap-2 font-bold text-lg text-primary-700 shrink-0 mr-4"
     >
-      <AppLogo class="w-7 h-7 text-primary-600" />
+      <AppLogo class="w-7 h-7 text-primary-700" />
       Pflanzen.Gericht
     </RouterLink>
 
