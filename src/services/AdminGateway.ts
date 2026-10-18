@@ -1,5 +1,8 @@
+import type { InjectionKey } from 'vue'
 import type { ProductListItem } from '@/services/catalog'
 import type { AdminReviewItem } from '@/services/reviews'
+
+export const adminGatewayKey: InjectionKey<AdminGateway> = Symbol('adminGateway')
 
 export interface AdminGateway {
   productPageSize: number

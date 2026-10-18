@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { injectGateway } from '@/composables/injectGateway'
-import { productDetailGatewayKey } from '@/services/productDetailGatewayKey'
+import { productDetailGatewayKey } from '@/services/ProductDetailGateway'
 import { usePriceReports } from '@/composables/usePriceReports'
 import { formatEuroCents } from '@/lib/price'
 import type { PriceReportWithProfile } from '@/services/prices'

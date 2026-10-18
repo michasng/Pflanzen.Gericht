@@ -1,3 +1,4 @@
+import type { InjectionKey } from 'vue'
 import type {
   Product,
   ProductImage,
@@ -12,6 +13,9 @@ import type { IngredientWrite, NutrientWrite } from '@/types/productWrites'
 import type { ProductActivityCounts } from '@/services/fetchProductActivityCounts'
 import type { MergeProductsInput } from '@/services/mergeProducts'
 import type { PublicProfile } from '@/services/profile'
+
+export const productEditingGatewayKey: InjectionKey<ProductEditingGateway> =
+  Symbol('productEditingGateway')
 
 export interface ProductEditingGateway {
   fetchProduct: (productId: string) => Promise<Product | null>

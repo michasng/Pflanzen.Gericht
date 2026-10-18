@@ -1,5 +1,8 @@
+import type { InjectionKey } from 'vue'
 import type { Session } from '@supabase/supabase-js'
 import type { Profile } from '@/types'
+
+export const authGatewayKey: InjectionKey<AuthGateway> = Symbol('authGateway')
 
 export interface AuthResult {
   session: Session | null

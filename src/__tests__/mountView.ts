@@ -2,18 +2,15 @@ import { defineComponent, type Component } from 'vue'
 import { createPinia } from 'pinia'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { createMemoryHistory, createRouter, type RouteRecordRaw, type Router } from 'vue-router'
-import { adminGatewayKey } from '@/services/adminGatewayKey'
-import { authGatewayKey } from '@/services/authGatewayKey'
-import { productDetailGatewayKey } from '@/services/productDetailGatewayKey'
-import { productEditingGatewayKey } from '@/services/productEditingGatewayKey'
-import { profileGatewayKey } from '@/services/profileGatewayKey'
-import { reviewEditingGatewayKey } from '@/services/reviewEditingGatewayKey'
-import type { AdminGateway } from '@/services/AdminGateway'
-import type { AuthGateway } from '@/services/AuthGateway'
-import type { ProductDetailGateway } from '@/services/ProductDetailGateway'
-import type { ProductEditingGateway } from '@/services/ProductEditingGateway'
-import type { ProfileGateway } from '@/services/ProfileGateway'
-import type { ReviewEditingGateway } from '@/services/ReviewEditingGateway'
+import { adminGatewayKey, type AdminGateway } from '@/services/AdminGateway'
+import { authGatewayKey, type AuthGateway } from '@/services/AuthGateway'
+import { productDetailGatewayKey, type ProductDetailGateway } from '@/services/ProductDetailGateway'
+import {
+  productEditingGatewayKey,
+  type ProductEditingGateway,
+} from '@/services/ProductEditingGateway'
+import { profileGatewayKey, type ProfileGateway } from '@/services/ProfileGateway'
+import { reviewEditingGatewayKey, type ReviewEditingGateway } from '@/services/ReviewEditingGateway'
 import { createFakeAuthGateway } from '@/__tests__/createFakeAuthGateway'
 
 export const EmptyRouteComponent = defineComponent({ render: () => null })

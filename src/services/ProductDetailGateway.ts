@@ -1,5 +1,9 @@
+import type { InjectionKey } from 'vue'
 import type { PriceReportWithProfile } from '@/services/prices'
 import type { ProductDetail } from '@/services/catalog'
+
+export const productDetailGatewayKey: InjectionKey<ProductDetailGateway> =
+  Symbol('productDetailGateway')
 
 export interface ProductDetailGateway {
   fetchProductDetail: (productId: string) => Promise<ProductDetail | null>

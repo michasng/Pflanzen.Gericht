@@ -2,8 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { Session } from '@supabase/supabase-js'
 import { injectGateway } from '@/composables/injectGateway'
-import { authGatewayKey } from '@/services/authGatewayKey'
-import type { AuthSubscription } from '@/services/AuthGateway'
+import { authGatewayKey, type AuthSubscription } from '@/services/AuthGateway'
 import type { Profile } from '@/types'
 
 export const useAuthStore = defineStore('auth', () => {

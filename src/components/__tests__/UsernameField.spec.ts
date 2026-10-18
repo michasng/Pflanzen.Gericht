@@ -1,7 +1,6 @@
 ﻿import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { authGatewayKey } from '@/services/authGatewayKey'
-import type { AuthGateway } from '@/services/AuthGateway'
+import { authGatewayKey, type AuthGateway } from '@/services/AuthGateway'
 import UsernameField from '@/components/UsernameField.vue'
 import { USERNAME_CHECK_DEBOUNCE_MILLISECONDS } from '@/composables/useUsernameAvailability'
 import { createDeferred } from '@/__tests__/createDeferred'

@@ -1,5 +1,8 @@
+import type { InjectionKey } from 'vue'
 import type { Product } from '@/types'
 import type { PublicProfile, ReviewWithMeta } from '@/services/profile'
+
+export const profileGatewayKey: InjectionKey<ProfileGateway> = Symbol('profileGateway')
 
 export interface ProfileUpdates {
   displayName: string | null

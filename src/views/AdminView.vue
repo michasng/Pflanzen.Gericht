@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { injectGateway } from '@/composables/injectGateway'
-import { adminGatewayKey } from '@/services/adminGatewayKey'
+import { adminGatewayKey } from '@/services/AdminGateway'
 import type { ProductListItem } from '@/services/catalog'
 import { orderProductPairByCreation } from '@/lib/orderProductPairByCreation'
 import { usePaginatedList } from '@/composables/usePaginatedList'

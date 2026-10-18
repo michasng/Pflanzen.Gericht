@@ -4,7 +4,7 @@ import FormField from '@/components/primitives/FormField.vue'
 import TextInput from '@/components/primitives/TextInput.vue'
 import { TextInputState } from '@/components/primitives/TextInputState'
 import { injectGateway } from '@/composables/injectGateway'
-import { authGatewayKey } from '@/services/authGatewayKey'
+import { authGatewayKey } from '@/services/AuthGateway'
 import {
   USERNAME_FORMAT_PATTERN,
   USERNAME_MAX_LENGTH,

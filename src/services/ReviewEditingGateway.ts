@@ -1,5 +1,9 @@
+import type { InjectionKey } from 'vue'
 import type { Product, ProductImage, Review, ReviewImage } from '@/types'
 import type { ReviewFields, ReviewWithDetails } from '@/services/reviews'
+
+export const reviewEditingGatewayKey: InjectionKey<ReviewEditingGateway> =
+  Symbol('reviewEditingGateway')
 
 export interface ReviewEditingGateway {
   fetchProduct: (productId: string) => Promise<Product | null>
