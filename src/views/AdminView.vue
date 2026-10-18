@@ -18,6 +18,11 @@ const router = useRouter()
 const adminGateway = injectGateway(adminGatewayKey)
 
 const activeTab = ref(AdminTab.Products)
+const actionError = ref<string | null>(null)
+
+const reportError = (message: string): void => {
+  actionError.value = message
+}
 
 const {
   items: products,
@@ -33,7 +38,7 @@ const {
   fetchPage: adminGateway.fetchProductsPage,
   pageSize: adminGateway.productPageSize,
   deleteItem: adminGateway.deleteProduct,
-  reportError: (message) => alert(message),
+  reportError,
 })
 
 const {
@@ -50,7 +55,7 @@ const {
   fetchPage: adminGateway.fetchReviewsPage,
   pageSize: adminGateway.reviewPageSize,
   deleteItem: adminGateway.deleteReview,
-  reportError: (message) => alert(message),
+  reportError,
 })
 
 const loading = computed(() => productsLoading.value || reviewsLoading.value)
@@ -72,9 +77,25 @@ const tabs = computed<TabBarItem<AdminTab>[]>(() => [
 void Promise.all([loadFirstProductPage(), loadFirstReviewPage()])
 
 const handleDeleteProducts = async (ids: string[]): Promise<void> => {
+  actionError.value = null
   for (const id of ids) {
     await removeProduct(id)
   }
+}
+
+const handleDeleteReview = async (id: string): Promise<void> => {
+  actionError.value = null
+  await removeReview(id)
+}
+
+const handleLoadMoreProducts = async (): Promise<void> => {
+  actionError.value = null
+  await loadMoreProducts()
+}
+
+const handleLoadMoreReviews = async (): Promise<void> => {
+  actionError.value = null
+  await loadMoreReviews()
 }
 
 const handleMergeProducts = async (
@@ -96,6 +117,8 @@ const handleMergeProducts = async (
     <template v-else>
       <TabBar v-model="activeTab" :tabs="tabs" class="mb-4" />
 
+      <AlertMessage v-if="actionError" :message="actionError" class="mb-4" />
+
       <AdminProductList
         v-if="activeTab === AdminTab.Products"
         :products="products"
@@ -104,7 +127,7 @@ const handleMergeProducts = async (
         :deletingId="deletingProductId"
         @delete="handleDeleteProducts"
         @merge="handleMergeProducts"
-        @loadMore="loadMoreProducts"
+        @loadMore="handleLoadMoreProducts"
       />
       <AdminReviewList
         v-else
@@ -112,8 +135,8 @@ const handleMergeProducts = async (
         :hasMore="reviewsHaveMore"
         :loadingMore="loadingMoreReviews"
         :deletingId="deletingReviewId"
-        @delete="removeReview"
-        @loadMore="loadMoreReviews"
+        @delete="handleDeleteReview"
+        @loadMore="handleLoadMoreReviews"
       />
     </template>
   </div>

@@ -81,6 +81,34 @@ describe('AdminView', () => {
     })
   })
 
+  describe('given deleting a product fails', () => {
+    it('shows the error on the page and keeps the product', async () => {
+      vi.stubGlobal('confirm', () => true)
+      const { wrapper } = await mountWithProducts(['a'], {
+        deleteProduct: () => Promise.reject(new Error('denied')),
+      })
+
+      await wrapper.get('[aria-label="Produkt löschen"]').trigger('click')
+
+      await vi.waitFor(() => expect(wrapper.get('[role="alert"]').text()).toBe('denied'))
+      expect(wrapper.text()).toContain('Produkte (1)')
+    })
+  })
+
+  describe('given loading more products fails', () => {
+    it('shows the error on the page', async () => {
+      const fetchProductsPage = vi
+        .fn<AdminGateway['fetchProductsPage']>()
+        .mockResolvedValueOnce([createProductListItem('a')])
+        .mockRejectedValueOnce(new Error('offline'))
+      const { wrapper } = await mountWithProducts(['a'], { productPageSize: 1, fetchProductsPage })
+
+      await wrapper.get('[aria-label="Mehr Produkte laden"]').trigger('click')
+
+      await vi.waitFor(() => expect(wrapper.get('[role="alert"]').text()).toBe('offline'))
+    })
+  })
+
   describe('when merging two selected products', () => {
     it('navigates to the merge page with both products', async () => {
       const { wrapper, router } = await mountWithProducts(['a', 'b'])

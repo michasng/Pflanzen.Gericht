@@ -182,16 +182,15 @@ describe('ProfileView', () => {
   })
 
   describe('when deleting a review after confirming', () => {
-    it('deletes it and reloads the reviews', async () => {
+    it('deletes it and removes it from the list', async () => {
       vi.stubGlobal('confirm', () => true)
       const deletedIds: string[] = []
-      let reviews = [createReviewWithMeta({ id: 'review-1' })]
+      const reviews = [createReviewWithMeta({ id: 'review-1' })]
       const { wrapper } = await mountProfileView({
         profile: {
           fetchUserReviews: () => Promise.resolve(reviews),
           deleteReview: (id) => {
             deletedIds.push(id)
-            reviews = []
             return Promise.resolve()
           },
         },
@@ -225,6 +224,42 @@ describe('ProfileView', () => {
 
       await vi.waitFor(() => expect(wrapper.text()).toContain('Noch keine Produkte hinzugefügt.'))
       expect(deletedIds).toEqual(['product-9'])
+    })
+  })
+
+  describe('given deleting a review fails', () => {
+    it('shows the error and keeps the review', async () => {
+      vi.stubGlobal('confirm', () => true)
+      const { wrapper } = await mountProfileView({
+        profile: {
+          fetchUserReviews: () => Promise.resolve([createReviewWithMeta({ id: 'review-1' })]),
+          deleteReview: () => Promise.reject(new Error('denied')),
+        },
+      })
+      await vi.waitFor(() => expect(wrapper.text()).toContain('Hafermilch'))
+
+      await wrapper.get('[aria-label="Bewertung löschen"]').trigger('click')
+
+      await vi.waitFor(() => expect(wrapper.get('[role="alert"]').text()).toBe('denied'))
+      expect(wrapper.text()).toContain('Hafermilch')
+    })
+  })
+
+  describe('given deleting a product fails', () => {
+    it('shows the error and keeps the product', async () => {
+      vi.stubGlobal('confirm', () => true)
+      const { wrapper } = await mountProfileView({
+        profile: {
+          fetchUserProducts: () => Promise.resolve([createProduct({ name: 'Mandelmilch' })]),
+          deleteProduct: () => Promise.reject(new Error('denied')),
+        },
+      })
+      await wrapper.get('[role="tab"][aria-label="Meine Produkte"]').trigger('click')
+
+      await wrapper.get('[aria-label="Produkt löschen"]').trigger('click')
+
+      await vi.waitFor(() => expect(wrapper.get('[role="alert"]').text()).toBe('denied'))
+      expect(wrapper.text()).toContain('Mandelmilch')
     })
   })
 

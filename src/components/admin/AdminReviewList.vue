@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import type { AdminReviewItem } from '@/services/reviews'
-import AdminReviewCard from '@/components/admin/AdminReviewCard.vue'
+import ReviewSummaryCard from '@/components/ReviewSummaryCard.vue'
 import LoadMoreButton from '@/components/LoadMoreButton.vue'
+import Button from '@/components/primitives/ButtonComponent.vue'
+import ButtonLink from '@/components/primitives/ButtonLink.vue'
+import { ButtonVariant } from '@/components/primitives/ButtonVariant'
+import { ButtonSize } from '@/components/primitives/ButtonSize'
+import { ButtonTone } from '@/components/primitives/ButtonTone'
+import Chip from '@/components/primitives/ChipComponent.vue'
+import { ChipSize } from '@/components/primitives/ChipSize'
+import { ChipTone } from '@/components/primitives/ChipTone'
 
 defineProps<{
   reviews: AdminReviewItem[]
@@ -27,11 +35,35 @@ const handleDeleteReview = (id: string): void => {
   </p>
   <ul v-else class="space-y-2">
     <li v-for="review in reviews" :key="review.id">
-      <AdminReviewCard
+      <ReviewSummaryCard
         :review="review"
-        :deleting="deletingId === review.id"
-        @delete="handleDeleteReview(review.id)"
-      />
+        :author="{ id: review.userId, username: review.profile.username }"
+      >
+        <template #status>
+          <Chip v-if="!review.isCurrent" :size="ChipSize.Compact" :tone="ChipTone.Muted">
+            Veraltet
+          </Chip>
+        </template>
+        <template #actions>
+          <ButtonLink
+            :to="{ name: 'review-edit', params: { reviewId: review.id } }"
+            :variant="ButtonVariant.Text"
+            :size="ButtonSize.Small"
+          >
+            Bearbeiten
+          </ButtonLink>
+          <Button
+            ariaLabel="Bewertung löschen"
+            :variant="ButtonVariant.Text"
+            :size="ButtonSize.Small"
+            :tone="ButtonTone.Danger"
+            :disabled="deletingId === review.id"
+            @click="handleDeleteReview(review.id)"
+          >
+            {{ deletingId === review.id ? 'Löscht …' : 'Löschen' }}
+          </Button>
+        </template>
+      </ReviewSummaryCard>
     </li>
   </ul>
   <div v-if="hasMore" class="mt-4 text-center">

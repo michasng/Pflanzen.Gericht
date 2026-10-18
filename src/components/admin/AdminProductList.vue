@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { ProductListItem } from '@/services/catalog'
 import { useSelection } from '@/composables/useSelection'
-import AdminProductCard from '@/components/admin/AdminProductCard.vue'
+import ProductSummaryCard from '@/components/ProductSummaryCard.vue'
 import LoadMoreButton from '@/components/LoadMoreButton.vue'
 import Button from '@/components/primitives/ButtonComponent.vue'
+import ButtonLink from '@/components/primitives/ButtonLink.vue'
 import { ButtonVariant } from '@/components/primitives/ButtonVariant'
 import { ButtonSize } from '@/components/primitives/ButtonSize'
 import { ButtonTone } from '@/components/primitives/ButtonTone'
@@ -83,13 +84,36 @@ const handleMergeProducts = (): void => {
     </div>
     <ul class="space-y-2">
       <li v-for="product in products" :key="product.id">
-        <AdminProductCard
-          :product="product"
-          :deleting="deletingId === product.id"
-          :selected="selectedIds.includes(product.id)"
-          @update:selected="(selected) => setSelected(product.id, selected)"
-          @delete="handleDeleteProduct(product.id)"
-        />
+        <ProductSummaryCard :product="product" :reviewsCount="product.reviewsCount">
+          <template #leading>
+            <input
+              type="checkbox"
+              :checked="selectedIds.includes(product.id)"
+              :aria-label="`${product.name} auswählen`"
+              class="mt-1 h-4 w-4 shrink-0 rounded"
+              @change="setSelected(product.id, !selectedIds.includes(product.id))"
+            />
+          </template>
+          <template #actions>
+            <ButtonLink
+              :to="{ name: 'product-edit', params: { id: product.id } }"
+              :variant="ButtonVariant.Text"
+              :size="ButtonSize.Small"
+            >
+              Bearbeiten
+            </ButtonLink>
+            <Button
+              ariaLabel="Produkt löschen"
+              :variant="ButtonVariant.Text"
+              :size="ButtonSize.Small"
+              :tone="ButtonTone.Danger"
+              :disabled="deletingId === product.id"
+              @click="handleDeleteProduct(product.id)"
+            >
+              {{ deletingId === product.id ? 'Löscht …' : 'Löschen' }}
+            </Button>
+          </template>
+        </ProductSummaryCard>
       </li>
     </ul>
   </template>

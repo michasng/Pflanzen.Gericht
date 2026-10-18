@@ -1,5 +1,6 @@
 import { ref, shallowRef } from 'vue'
 import { toErrorMessage } from '@/lib/error'
+import { useDeletableList } from '@/composables/useDeletableList'
 
 interface PaginatedListOptions<T> {
   fetchPage: (page: number) => Promise<T[]>
@@ -20,7 +21,7 @@ export const usePaginatedList = <T extends { id: string }>({
   const page = ref(0)
   const hasMore = ref(true)
   const loadingMore = ref(false)
-  const deletingId = ref<string | null>(null)
+  const { deletingId, remove } = useDeletableList({ items, deleteItem, reportError })
 
   const loadFirstPage = async (): Promise<void> => {
     loading.value = true
@@ -49,18 +50,6 @@ export const usePaginatedList = <T extends { id: string }>({
       reportError(toErrorMessage(err))
     } finally {
       loadingMore.value = false
-    }
-  }
-
-  const remove = async (id: string): Promise<void> => {
-    deletingId.value = id
-    try {
-      await deleteItem(id)
-      items.value = items.value.filter((item) => item.id !== id)
-    } catch (err) {
-      reportError(toErrorMessage(err))
-    } finally {
-      deletingId.value = null
     }
   }
 

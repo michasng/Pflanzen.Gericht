@@ -4,16 +4,17 @@ import { useRouter } from 'vue-router'
 import { toErrorMessage } from '@/lib/error'
 import { useAuthStore } from '@/stores/auth'
 import { useAsyncData } from '@/composables/useAsyncData'
+import { useDeletableList } from '@/composables/useDeletableList'
 import { injectGateway } from '@/composables/injectGateway'
 import { profileGatewayKey, type ProfileUpdates } from '@/services/ProfileGateway'
 import type { ReviewWithMeta } from '@/services/profile'
 import type { Product } from '@/types'
-import StarDisplay from '@/components/StarDisplay.vue'
+import ProductSummaryCard from '@/components/ProductSummaryCard.vue'
+import ReviewSummaryCard from '@/components/ReviewSummaryCard.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import LoadingText from '@/components/LoadingText.vue'
 import NotFoundMessage from '@/components/NotFoundMessage.vue'
-import TagList from '@/components/TagList.vue'
 import ProfileEditForm from '@/components/profile/ProfileEditForm.vue'
 import ProfileHeader from '@/components/profile/ProfileHeader.vue'
 import ProfileStats from '@/components/profile/ProfileStats.vue'
@@ -25,12 +26,9 @@ import { ButtonSize } from '@/components/primitives/ButtonSize'
 import { ButtonTone } from '@/components/primitives/ButtonTone'
 import TabBar from '@/components/primitives/TabBar.vue'
 import type { TabBarItem } from '@/components/primitives/TabBarItem'
-import Card from '@/components/primitives/CardComponent.vue'
 import Chip from '@/components/primitives/ChipComponent.vue'
 import { ChipSize } from '@/components/primitives/ChipSize'
 import { ChipTone } from '@/components/primitives/ChipTone'
-import { categoryToLabel } from '@/config/categories'
-import { formatDate } from '@/lib/date'
 
 const TABS: TabBarItem<ProfileTab>[] = [
   { value: ProfileTab.Reviews, label: 'Meine Bewertungen', ariaLabel: 'Meine Bewertungen' },
@@ -49,8 +47,7 @@ const isEditing = ref(false)
 const saving = ref(false)
 const saveError = ref<string | null>(null)
 
-const deletingId = ref<string | null>(null)
-const deletingProductId = ref<string | null>(null)
+const deleteError = ref<string | null>(null)
 
 const {
   data: userContent,
@@ -78,6 +75,22 @@ watch(
   },
   { immediate: true },
 )
+
+const reportDeleteError = (message: string): void => {
+  deleteError.value = message
+}
+
+const { deletingId: deletingReviewId, remove: removeReview } = useDeletableList({
+  items: reviews,
+  deleteItem: profileGateway.deleteReview,
+  reportError: reportDeleteError,
+})
+
+const { deletingId: deletingProductId, remove: removeProduct } = useDeletableList({
+  items: products,
+  deleteItem: profileGateway.deleteProduct,
+  reportError: reportDeleteError,
+})
 
 const currentReviewsCount = computed(() => reviews.value.filter((r) => r.isCurrent).length)
 
@@ -113,30 +126,14 @@ const handleSignOut = async (): Promise<void> => {
 const handleDeleteProduct = async (id: string): Promise<void> => {
   if (!confirm('Produkt wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.'))
     return
-  deletingProductId.value = id
-  try {
-    await profileGateway.deleteProduct(id)
-    products.value = products.value.filter((p) => p.id !== id)
-  } catch (err) {
-    alert(toErrorMessage(err))
-  } finally {
-    deletingProductId.value = null
-  }
+  deleteError.value = null
+  await removeProduct(id)
 }
 
 const handleDeleteReview = async (id: string): Promise<void> => {
   if (!confirm('Bewertung wirklich löschen?')) return
-  const user = authStore.user
-  if (!user) return
-  deletingId.value = id
-  try {
-    await profileGateway.deleteReview(id)
-    reviews.value = await profileGateway.fetchUserReviews(user.id)
-  } catch (err) {
-    alert(toErrorMessage(err))
-  } finally {
-    deletingId.value = null
-  }
+  deleteError.value = null
+  await removeReview(id)
 }
 </script>
 
@@ -193,38 +190,20 @@ const handleDeleteReview = async (id: string): Promise<void> => {
     <AlertMessage v-else-if="loadError" :message="loadError" />
 
     <template v-else-if="activeTab === ProfileTab.Reviews">
+      <AlertMessage :message="deleteError" />
       <EmptyState v-if="reviews.length === 0" compact title="Noch keine Bewertungen abgegeben." />
       <ul v-else class="space-y-3">
         <li v-for="review in reviews" :key="review.id">
-          <Card>
-            <div class="flex items-start justify-between gap-2 mb-2">
-              <RouterLink
-                :to="{ name: 'product-detail', params: { id: review.product.id } }"
-                class="font-semibold text-gray-900 hover:text-primary-600 transition-colors leading-tight"
-              >
-                {{ review.product.name }}
-              </RouterLink>
+          <ReviewSummaryCard :review="review">
+            <template #status>
               <Chip
-                class="shrink-0"
                 :size="ChipSize.Compact"
                 :tone="review.isCurrent ? ChipTone.Success : ChipTone.Muted"
               >
                 {{ review.isCurrent ? 'Aktuell' : 'Veraltet' }}
               </Chip>
-            </div>
-
-            <div class="flex items-center gap-2 mb-2">
-              <StarDisplay :value="review.overall" />
-              <span class="text-xs text-gray-400">{{ formatDate(review.createdAt) }}</span>
-            </div>
-
-            <TagList :tags="review.tags" class="mb-2" />
-
-            <p v-if="review.comment" class="text-sm text-gray-600 mb-2 line-clamp-2">
-              {{ review.comment }}
-            </p>
-
-            <div class="flex gap-3 pt-2 border-t border-gray-50">
+            </template>
+            <template #actions>
               <ButtonLink
                 v-if="review.isCurrent"
                 :to="{ name: 'review-edit', params: { reviewId: review.id } }"
@@ -245,34 +224,24 @@ const handleDeleteReview = async (id: string): Promise<void> => {
                 :variant="ButtonVariant.Text"
                 :size="ButtonSize.Small"
                 :tone="ButtonTone.Danger"
-                :disabled="deletingId === review.id"
+                :disabled="deletingReviewId === review.id"
                 @click="handleDeleteReview(review.id)"
               >
-                {{ deletingId === review.id ? 'Löscht …' : 'Löschen' }}
+                {{ deletingReviewId === review.id ? 'Löscht …' : 'Löschen' }}
               </Button>
-            </div>
-          </Card>
+            </template>
+          </ReviewSummaryCard>
         </li>
       </ul>
     </template>
 
     <template v-else>
+      <AlertMessage :message="deleteError" />
       <EmptyState v-if="products.length === 0" compact title="Noch keine Produkte hinzugefügt." />
       <ul v-else class="space-y-2">
         <li v-for="product in products" :key="product.id">
-          <Card>
-            <RouterLink
-              :to="{ name: 'product-detail', params: { id: product.id } }"
-              class="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
-            >
-              {{ product.name }}
-            </RouterLink>
-            <p class="text-sm text-gray-500 mt-0.5">
-              {{ categoryToLabel(product.category) }}
-              <span v-if="product.brand"> · {{ product.brand }}</span>
-            </p>
-            <p class="text-xs text-gray-400 mt-1">{{ formatDate(product.createdAt) }}</p>
-            <div class="flex gap-3 pt-2 border-t border-gray-50 mt-2">
+          <ProductSummaryCard :product="product">
+            <template #actions>
               <ButtonLink
                 :to="{ name: 'product-edit', params: { id: product.id } }"
                 :variant="ButtonVariant.Text"
@@ -290,8 +259,8 @@ const handleDeleteReview = async (id: string): Promise<void> => {
               >
                 {{ deletingProductId === product.id ? 'Löscht …' : 'Löschen' }}
               </Button>
-            </div>
-          </Card>
+            </template>
+          </ProductSummaryCard>
         </li>
       </ul>
     </template>
