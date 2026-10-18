@@ -8,7 +8,8 @@ import { orderProductPairByCreation } from '@/lib/orderProductPairByCreation'
 import { usePaginatedList } from '@/composables/usePaginatedList'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
-import TabButton from '@/components/primitives/TabButton.vue'
+import TabBar from '@/components/primitives/TabBar.vue'
+import type { TabBarItem } from '@/components/primitives/TabBarItem'
 import AdminProductList from '@/components/admin/AdminProductList.vue'
 import AdminReviewList from '@/components/admin/AdminReviewList.vue'
 import { AdminTab } from '@/components/admin/AdminTab'
@@ -55,6 +56,19 @@ const {
 const loading = computed(() => productsLoading.value || reviewsLoading.value)
 const loadError = computed(() => productsLoadError.value ?? reviewsLoadError.value)
 
+const tabs = computed<TabBarItem<AdminTab>[]>(() => [
+  {
+    value: AdminTab.Products,
+    label: `Produkte (${products.value.length})`,
+    ariaLabel: 'Produkte',
+  },
+  {
+    value: AdminTab.Reviews,
+    label: `Bewertungen (${reviews.value.length})`,
+    ariaLabel: 'Bewertungen',
+  },
+])
+
 void Promise.all([loadFirstProductPage(), loadFirstReviewPage()])
 
 const handleDeleteProducts = async (ids: string[]): Promise<void> => {
@@ -80,22 +94,7 @@ const handleMergeProducts = async (
     <AlertMessage v-else-if="loadError" :message="loadError" />
 
     <template v-else>
-      <div role="tablist" class="flex border-b border-gray-200 mb-4">
-        <TabButton
-          ariaLabel="Produkte"
-          :active="activeTab === AdminTab.Products"
-          @click="activeTab = AdminTab.Products"
-        >
-          Produkte ({{ products.length }})
-        </TabButton>
-        <TabButton
-          ariaLabel="Bewertungen"
-          :active="activeTab === AdminTab.Reviews"
-          @click="activeTab = AdminTab.Reviews"
-        >
-          Bewertungen ({{ reviews.length }})
-        </TabButton>
-      </div>
+      <TabBar v-model="activeTab" :tabs="tabs" class="mb-4" />
 
       <AdminProductList
         v-if="activeTab === AdminTab.Products"

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import AppLogo from '@/components/AppLogo.vue'
 
-defineProps<{ title: string; description?: string }>()
+defineProps<{ title: string; description?: string; compact?: boolean }>()
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center py-20 text-center">
+  <div v-if="compact" class="py-12 text-center text-gray-400 text-sm">{{ title }}</div>
+  <div v-else class="flex flex-col items-center justify-center py-20 text-center">
     <slot name="icon">
       <AppLogo class="mb-4 h-20 w-20 text-gray-200" />
     </slot>

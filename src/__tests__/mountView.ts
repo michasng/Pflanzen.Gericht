@@ -6,11 +6,13 @@ import { adminGatewayKey } from '@/services/adminGatewayKey'
 import { authGatewayKey } from '@/services/authGatewayKey'
 import { productDetailGatewayKey } from '@/services/productDetailGatewayKey'
 import { productEditingGatewayKey } from '@/services/productEditingGatewayKey'
+import { profileGatewayKey } from '@/services/profileGatewayKey'
 import { reviewEditingGatewayKey } from '@/services/reviewEditingGatewayKey'
 import type { AdminGateway } from '@/services/AdminGateway'
 import type { AuthGateway } from '@/services/AuthGateway'
 import type { ProductDetailGateway } from '@/services/ProductDetailGateway'
 import type { ProductEditingGateway } from '@/services/ProductEditingGateway'
+import type { ProfileGateway } from '@/services/ProfileGateway'
 import type { ReviewEditingGateway } from '@/services/ReviewEditingGateway'
 import { createFakeAuthGateway } from '@/__tests__/createFakeAuthGateway'
 
@@ -21,6 +23,7 @@ interface FakeGateways {
   auth?: AuthGateway
   productDetail?: ProductDetailGateway
   productEditing?: ProductEditingGateway
+  profile?: ProfileGateway
   reviewEditing?: ReviewEditingGateway
 }
 
@@ -53,6 +56,7 @@ export const mountView = async ({
   if (gateways.admin) provide[adminGatewayKey] = gateways.admin
   if (gateways.productDetail) provide[productDetailGatewayKey] = gateways.productDetail
   if (gateways.productEditing) provide[productEditingGatewayKey] = gateways.productEditing
+  if (gateways.profile) provide[profileGatewayKey] = gateways.profile
   if (gateways.reviewEditing) provide[reviewEditingGatewayKey] = gateways.reviewEditing
 
   const wrapper = mount(view, { global: { plugins: [createPinia(), router], provide, stubs } })

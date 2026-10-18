@@ -1,122 +1,77 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import {
-  fetchPublicProfile,
-  fetchUserReviews,
-  fetchUserProducts,
-  type PublicProfile,
-  type ReviewWithMeta,
-} from '@/services/profile'
-import type { Product } from '@/types'
+import { useAsyncData } from '@/composables/useAsyncData'
+import { injectGateway } from '@/composables/injectGateway'
+import { profileGatewayKey } from '@/services/profileGatewayKey'
 import StarDisplay from '@/components/StarDisplay.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import LoadingText from '@/components/LoadingText.vue'
+import NotFoundMessage from '@/components/NotFoundMessage.vue'
 import TagList from '@/components/TagList.vue'
-import TabButton from '@/components/primitives/TabButton.vue'
+import ProfileHeader from '@/components/profile/ProfileHeader.vue'
+import ProfileStats from '@/components/profile/ProfileStats.vue'
+import { ProfileTab } from '@/components/profile/ProfileTab'
+import TabBar from '@/components/primitives/TabBar.vue'
+import type { TabBarItem } from '@/components/primitives/TabBarItem'
 import Card from '@/components/primitives/CardComponent.vue'
 import { categoryToLabel } from '@/config/categories'
-import { toErrorMessage } from '@/lib/error'
 import { formatDate } from '@/lib/date'
 
+const TABS: TabBarItem<ProfileTab>[] = [
+  { value: ProfileTab.Reviews, label: 'Bewertungen', ariaLabel: 'Bewertungen' },
+  { value: ProfileTab.Products, label: 'Produkte', ariaLabel: 'Produkte' },
+]
+
 const route = useRoute()
+const profileGateway = injectGateway(profileGatewayKey)
 
-const profile = ref<PublicProfile | null>(null)
-const reviews = ref<ReviewWithMeta[]>([])
-const products = ref<Product[]>([])
-const loading = ref(true)
-const notFound = ref(false)
-const error = ref<string | null>(null)
-const activeTab = ref<'reviews' | 'products'>('reviews')
+const activeTab = ref(ProfileTab.Reviews)
 
-onMounted(async () => {
-  const userId = route.params.id as string
-  try {
-    const p = await fetchPublicProfile(userId)
-    if (!p) {
-      notFound.value = true
-      return
-    }
-    profile.value = p
-    const [r, prods] = await Promise.all([
-      fetchUserReviews(userId, true),
-      fetchUserProducts(userId),
+const {
+  data: pageData,
+  loading,
+  errorMessage,
+  notFound,
+} = useAsyncData(
+  async (userId: string) => {
+    const profile = await profileGateway.fetchPublicProfile(userId)
+    if (!profile) return null
+
+    const [reviews, products] = await Promise.all([
+      profileGateway.fetchUserReviews(userId, true),
+      profileGateway.fetchUserProducts(userId),
     ])
-    reviews.value = r
-    products.value = prods
-  } catch (err) {
-    error.value = toErrorMessage(err)
-  } finally {
-    loading.value = false
-  }
-})
+    return { profile, reviews, products }
+  },
+  () => String(route.params.id),
+)
+
+const profile = computed(() => pageData.value?.profile ?? null)
+const reviews = computed(() => pageData.value?.reviews ?? [])
+const products = computed(() => pageData.value?.products ?? [])
 </script>
 
 <template>
   <div class="max-w-lg mx-auto space-y-4">
-    <div v-if="loading" class="py-20 text-center text-gray-400 text-sm">Wird geladen …</div>
-
-    <div v-else-if="notFound" class="py-20 text-center">
-      <p class="font-semibold text-gray-600 mb-2">Profil nicht gefunden.</p>
-      <RouterLink :to="{ name: 'home' }" class="text-sm text-primary-600 hover:underline">
-        Zur Startseite
-      </RouterLink>
-    </div>
-
-    <AlertMessage v-else-if="error" :message="error" />
+    <LoadingText v-if="loading" />
+    <NotFoundMessage v-else-if="notFound" message="Profil nicht gefunden." />
+    <AlertMessage v-else-if="errorMessage" :message="errorMessage" />
 
     <template v-else-if="profile">
-      <div class="flex items-center gap-4 pt-2">
-        <div
-          class="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-2xl font-bold shrink-0"
-          aria-hidden="true"
-        >
-          {{ profile.username.charAt(0).toUpperCase() }}
-        </div>
-        <div class="min-w-0">
-          <p class="font-bold text-gray-900 text-lg leading-tight truncate">
-            {{ profile.displayName || profile.username }}
-          </p>
-          <p v-if="profile.displayName" class="text-sm text-gray-500 truncate">
-            @{{ profile.username }}
-          </p>
-          <p class="text-xs text-gray-400 mt-0.5">Dabei seit {{ formatDate(profile.createdAt) }}</p>
-        </div>
-      </div>
+      <ProfileHeader :username="profile.username" :displayName="profile.displayName">
+        <template #subtitle>Dabei seit {{ formatDate(profile.createdAt) }}</template>
+      </ProfileHeader>
 
       <p v-if="profile.bio" class="text-sm text-gray-600">{{ profile.bio }}</p>
 
-      <div class="flex gap-6 py-3 border-t border-b border-gray-100">
-        <div class="text-center">
-          <p class="text-xl font-bold text-gray-900">{{ reviews.length }}</p>
-          <p class="text-xs text-gray-500">Bewertungen</p>
-        </div>
-        <div class="text-center">
-          <p class="text-xl font-bold text-gray-900">{{ products.length }}</p>
-          <p class="text-xs text-gray-500">Produkte</p>
-        </div>
-      </div>
+      <ProfileStats :reviewsCount="reviews.length" :productsCount="products.length" />
 
-      <div role="tablist" class="flex border-b border-gray-200 -mx-4 px-4">
-        <TabButton
-          ariaLabel="Bewertungen"
-          :active="activeTab === 'reviews'"
-          @click="activeTab = 'reviews'"
-        >
-          Bewertungen
-        </TabButton>
-        <TabButton
-          ariaLabel="Produkte"
-          :active="activeTab === 'products'"
-          @click="activeTab = 'products'"
-        >
-          Produkte
-        </TabButton>
-      </div>
+      <TabBar v-model="activeTab" :tabs="TABS" class="-mx-4 px-4" />
 
-      <template v-if="activeTab === 'reviews'">
-        <p v-if="reviews.length === 0" class="py-12 text-center text-gray-400 text-sm">
-          Noch keine Bewertungen.
-        </p>
+      <template v-if="activeTab === ProfileTab.Reviews">
+        <EmptyState v-if="reviews.length === 0" compact title="Noch keine Bewertungen." />
         <ul v-else class="space-y-3">
           <li v-for="review in reviews" :key="review.id">
             <Card>
@@ -143,9 +98,7 @@ onMounted(async () => {
       </template>
 
       <template v-else>
-        <p v-if="products.length === 0" class="py-12 text-center text-gray-400 text-sm">
-          Noch keine Produkte hinzugefügt.
-        </p>
+        <EmptyState v-if="products.length === 0" compact title="Noch keine Produkte hinzugefügt." />
         <ul v-else class="space-y-2">
           <li v-for="product in products" :key="product.id">
             <Card>

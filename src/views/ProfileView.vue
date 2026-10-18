@@ -1,26 +1,31 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { toErrorMessage } from '@/lib/error'
 import { useAuthStore } from '@/stores/auth'
-import {
-  fetchUserReviews,
-  fetchUserProducts,
-  updateProfile,
-  deleteReview,
-  type ReviewWithMeta,
-} from '@/services/profile'
-import { deleteProduct } from '@/services/products'
+import { useAsyncData } from '@/composables/useAsyncData'
+import { injectGateway } from '@/composables/injectGateway'
+import { profileGatewayKey } from '@/services/profileGatewayKey'
+import type { ProfileUpdates } from '@/services/ProfileGateway'
+import type { ReviewWithMeta } from '@/services/profile'
 import type { Product } from '@/types'
 import StarDisplay from '@/components/StarDisplay.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
+import EmptyState from '@/components/EmptyState.vue'
 import LoadingText from '@/components/LoadingText.vue'
+import NotFoundMessage from '@/components/NotFoundMessage.vue'
 import TagList from '@/components/TagList.vue'
+import ProfileEditForm from '@/components/profile/ProfileEditForm.vue'
+import ProfileHeader from '@/components/profile/ProfileHeader.vue'
+import ProfileStats from '@/components/profile/ProfileStats.vue'
+import { ProfileTab } from '@/components/profile/ProfileTab'
 import Button from '@/components/primitives/ButtonComponent.vue'
+import ButtonLink from '@/components/primitives/ButtonLink.vue'
 import { ButtonVariant } from '@/components/primitives/ButtonVariant'
 import { ButtonSize } from '@/components/primitives/ButtonSize'
 import { ButtonTone } from '@/components/primitives/ButtonTone'
-import TabButton from '@/components/primitives/TabButton.vue'
+import TabBar from '@/components/primitives/TabBar.vue'
+import type { TabBarItem } from '@/components/primitives/TabBarItem'
 import Card from '@/components/primitives/CardComponent.vue'
 import Chip from '@/components/primitives/ChipComponent.vue'
 import { ChipSize } from '@/components/primitives/ChipSize'
@@ -28,30 +33,56 @@ import { ChipTone } from '@/components/primitives/ChipTone'
 import { categoryToLabel } from '@/config/categories'
 import { formatDate } from '@/lib/date'
 
+const TABS: TabBarItem<ProfileTab>[] = [
+  { value: ProfileTab.Reviews, label: 'Meine Bewertungen', ariaLabel: 'Meine Bewertungen' },
+  { value: ProfileTab.Products, label: 'Meine Produkte', ariaLabel: 'Meine Produkte' },
+]
+
 const router = useRouter()
 const authStore = useAuthStore()
+const profileGateway = injectGateway(profileGatewayKey)
 
 const reviews = ref<ReviewWithMeta[]>([])
 const products = ref<Product[]>([])
-const loading = ref(true)
-const loadError = ref<string | null>(null)
-const activeTab = ref<'reviews' | 'products'>('reviews')
+const activeTab = ref(ProfileTab.Reviews)
 
 const isEditing = ref(false)
-const displayName = ref('')
-const bio = ref('')
 const saving = ref(false)
 const saveError = ref<string | null>(null)
 
 const deletingId = ref<string | null>(null)
 const deletingProductId = ref<string | null>(null)
 
+const {
+  data: userContent,
+  loading,
+  errorMessage: loadError,
+  notFound,
+} = useAsyncData(
+  async (userId: string | undefined) => {
+    if (!userId) return null
+
+    const [userReviews, userProducts] = await Promise.all([
+      profileGateway.fetchUserReviews(userId),
+      profileGateway.fetchUserProducts(userId),
+    ])
+    return { reviews: userReviews, products: userProducts }
+  },
+  () => authStore.user?.id,
+)
+
+watch(
+  userContent,
+  (content) => {
+    reviews.value = content?.reviews ?? []
+    products.value = content?.products ?? []
+  },
+  { immediate: true },
+)
+
 const currentReviewsCount = computed(() => reviews.value.filter((r) => r.isCurrent).length)
-const initials = computed(() => authStore.profile?.username?.charAt(0).toUpperCase() ?? '?')
 
 const startEdit = (): void => {
-  displayName.value = authStore.profile?.displayName ?? ''
-  bio.value = authStore.profile?.bio ?? ''
   isEditing.value = true
   saveError.value = null
 }
@@ -60,15 +91,12 @@ const cancelEdit = (): void => {
   isEditing.value = false
 }
 
-const saveProfileData = async (): Promise<void> => {
+const saveProfileData = async (updates: ProfileUpdates): Promise<void> => {
   if (!authStore.user) return
   saving.value = true
   saveError.value = null
   try {
-    await updateProfile(authStore.user.id, {
-      displayName: displayName.value.trim() || null,
-      bio: bio.value.trim() || null,
-    })
+    await profileGateway.updateProfile(authStore.user.id, updates)
     await authStore.fetchProfile(authStore.user.id)
     isEditing.value = false
   } catch (err) {
@@ -88,7 +116,7 @@ const handleDeleteProduct = async (id: string): Promise<void> => {
     return
   deletingProductId.value = id
   try {
-    await deleteProduct(id)
+    await profileGateway.deleteProduct(id)
     products.value = products.value.filter((p) => p.id !== id)
   } catch (err) {
     alert(toErrorMessage(err))
@@ -103,103 +131,39 @@ const handleDeleteReview = async (id: string): Promise<void> => {
   if (!user) return
   deletingId.value = id
   try {
-    await deleteReview(id)
-    reviews.value = await fetchUserReviews(user.id)
+    await profileGateway.deleteReview(id)
+    reviews.value = await profileGateway.fetchUserReviews(user.id)
   } catch (err) {
     alert(toErrorMessage(err))
   } finally {
     deletingId.value = null
   }
 }
-
-onMounted(async () => {
-  if (!authStore.user) return
-  try {
-    const [r, p] = await Promise.all([
-      fetchUserReviews(authStore.user.id),
-      fetchUserProducts(authStore.user.id),
-    ])
-    reviews.value = r
-    products.value = p
-  } catch (err) {
-    loadError.value = toErrorMessage(err)
-  } finally {
-    loading.value = false
-  }
-})
 </script>
 
 <template>
   <div class="max-w-lg mx-auto space-y-4">
-    <div class="flex items-center gap-4 pt-2">
-      <div
-        class="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-2xl font-bold shrink-0"
-        aria-hidden="true"
-      >
-        {{ initials }}
-      </div>
-      <div class="min-w-0">
-        <p class="font-bold text-gray-900 text-lg leading-tight truncate">
-          {{ authStore.profile?.displayName || authStore.profile?.username }}
-        </p>
-        <p v-if="authStore.profile?.displayName" class="text-sm text-gray-500 truncate">
-          @{{ authStore.profile.username }}
-        </p>
-        <p class="text-xs text-gray-400 mt-0.5">{{ authStore.user?.email }}</p>
-      </div>
-    </div>
+    <ProfileHeader
+      v-if="authStore.profile"
+      :username="authStore.profile.username"
+      :displayName="authStore.profile.displayName"
+    >
+      <template #subtitle>{{ authStore.user?.email }}</template>
+    </ProfileHeader>
 
     <p v-if="authStore.profile?.bio && !isEditing" class="text-sm text-gray-600">
       {{ authStore.profile.bio }}
     </p>
 
-    <form v-if="isEditing" class="space-y-3" @submit.prevent="saveProfileData">
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1" for="displayName">
-          Anzeigename
-        </label>
-        <input
-          id="displayName"
-          v-model="displayName"
-          type="text"
-          maxlength="60"
-          placeholder="z. B. Grüne Gabel"
-          class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-        />
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1" for="bio">Bio</label>
-        <textarea
-          id="bio"
-          v-model="bio"
-          rows="2"
-          maxlength="200"
-          placeholder="Ein paar Worte über dich …"
-          class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
-        />
-      </div>
-      <AlertMessage :message="saveError" />
-      <div class="flex gap-2">
-        <Button
-          ariaLabel="Speichern"
-          type="submit"
-          :variant="ButtonVariant.Filled"
-          full-width
-          :disabled="saving"
-        >
-          {{ saving ? 'Speichert …' : 'Speichern' }}
-        </Button>
-        <Button
-          ariaLabel="Abbrechen"
-          :variant="ButtonVariant.Outlined"
-          full-width
-          type="button"
-          @click="cancelEdit"
-        >
-          Abbrechen
-        </Button>
-      </div>
-    </form>
+    <ProfileEditForm
+      v-if="isEditing"
+      :initialDisplayName="authStore.profile?.displayName ?? null"
+      :initialBio="authStore.profile?.bio ?? null"
+      :saving="saving"
+      :errorMessage="saveError"
+      @save="saveProfileData"
+      @cancel="cancelEdit"
+    />
 
     <div v-else class="flex gap-2">
       <Button
@@ -221,41 +185,16 @@ onMounted(async () => {
       </Button>
     </div>
 
-    <div class="flex gap-6 py-3 border-t border-b border-gray-100">
-      <div class="text-center">
-        <p class="text-xl font-bold text-gray-900">{{ currentReviewsCount }}</p>
-        <p class="text-xs text-gray-500">Bewertungen</p>
-      </div>
-      <div class="text-center">
-        <p class="text-xl font-bold text-gray-900">{{ products.length }}</p>
-        <p class="text-xs text-gray-500">Produkte</p>
-      </div>
-    </div>
+    <ProfileStats :reviewsCount="currentReviewsCount" :productsCount="products.length" />
 
-    <div role="tablist" class="flex border-b border-gray-200 -mx-4 px-4">
-      <TabButton
-        ariaLabel="Meine Bewertungen"
-        :active="activeTab === 'reviews'"
-        @click="activeTab = 'reviews'"
-      >
-        Meine Bewertungen
-      </TabButton>
-      <TabButton
-        ariaLabel="Meine Produkte"
-        :active="activeTab === 'products'"
-        @click="activeTab = 'products'"
-      >
-        Meine Produkte
-      </TabButton>
-    </div>
+    <TabBar v-model="activeTab" :tabs="TABS" class="-mx-4 px-4" />
 
     <LoadingText v-if="loading" />
+    <NotFoundMessage v-else-if="notFound" message="Profil nicht gefunden." />
     <AlertMessage v-else-if="loadError" :message="loadError" />
 
-    <template v-else-if="activeTab === 'reviews'">
-      <p v-if="reviews.length === 0" class="py-12 text-center text-gray-400 text-sm">
-        Noch keine Bewertungen abgegeben.
-      </p>
+    <template v-else-if="activeTab === ProfileTab.Reviews">
+      <EmptyState v-if="reviews.length === 0" compact title="Noch keine Bewertungen abgegeben." />
       <ul v-else class="space-y-3">
         <li v-for="review in reviews" :key="review.id">
           <Card>
@@ -287,19 +226,21 @@ onMounted(async () => {
             </p>
 
             <div class="flex gap-3 pt-2 border-t border-gray-50">
-              <RouterLink
+              <ButtonLink
                 v-if="review.isCurrent"
                 :to="{ name: 'review-edit', params: { reviewId: review.id } }"
-                class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
+                :variant="ButtonVariant.Text"
+                :size="ButtonSize.Small"
               >
                 Bearbeiten
-              </RouterLink>
-              <RouterLink
+              </ButtonLink>
+              <ButtonLink
                 :to="{ name: 'review-new', params: { id: review.product.id } }"
-                class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
+                :variant="ButtonVariant.Text"
+                :size="ButtonSize.Small"
               >
                 Neu bewerten
-              </RouterLink>
+              </ButtonLink>
               <Button
                 ariaLabel="Bewertung löschen"
                 :variant="ButtonVariant.Text"
@@ -317,9 +258,7 @@ onMounted(async () => {
     </template>
 
     <template v-else>
-      <p v-if="products.length === 0" class="py-12 text-center text-gray-400 text-sm">
-        Noch keine Produkte hinzugefügt.
-      </p>
+      <EmptyState v-if="products.length === 0" compact title="Noch keine Produkte hinzugefügt." />
       <ul v-else class="space-y-2">
         <li v-for="product in products" :key="product.id">
           <Card>
@@ -335,12 +274,13 @@ onMounted(async () => {
             </p>
             <p class="text-xs text-gray-400 mt-1">{{ formatDate(product.createdAt) }}</p>
             <div class="flex gap-3 pt-2 border-t border-gray-50 mt-2">
-              <RouterLink
+              <ButtonLink
                 :to="{ name: 'product-edit', params: { id: product.id } }"
-                class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
+                :variant="ButtonVariant.Text"
+                :size="ButtonSize.Small"
               >
                 Bearbeiten
-              </RouterLink>
+              </ButtonLink>
               <Button
                 ariaLabel="Produkt löschen"
                 :variant="ButtonVariant.Text"
