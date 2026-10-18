@@ -26,7 +26,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="mb-5">
+  <div>
     <div class="flex flex-wrap gap-1.5 mb-2">
       <Chip :tone="ChipTone.Primary" :size="ChipSize.Compact">
         {{ categoryToLabel(product.category) }}
@@ -53,7 +53,7 @@ defineProps<{
         })
       }}
     </h1>
-    <p class="text-sm text-gray-500 mb-3">von {{ product.brand }}</p>
-    <p v-if="product.description" class="text-sm text-gray-600">{{ product.description }}</p>
+    <p class="text-sm text-gray-500">von {{ product.brand }}</p>
+    <p v-if="product.description" class="mt-3 text-sm text-gray-600">{{ product.description }}</p>
   </div>
 </template>

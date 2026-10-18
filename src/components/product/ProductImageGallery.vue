@@ -15,7 +15,7 @@ const activeImage = computed(() => sortedImages.value[activeImageIndex.value] ??
 </script>
 
 <template>
-  <div class="-mx-4 mb-4">
+  <div class="-mx-4">
     <div class="aspect-square bg-gray-100">
       <Image
         v-if="activeImage"

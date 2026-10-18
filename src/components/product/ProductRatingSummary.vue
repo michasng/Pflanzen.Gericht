@@ -20,7 +20,7 @@ const criteriaAverages = computed(() => averageReviewCriteria(props.reviews))
       Noch keine Bewertungen — sei der Erste!
     </p>
     <template v-else>
-      <div class="flex items-center gap-4 mb-4">
+      <div class="flex items-center gap-4">
         <span class="text-4xl font-bold text-gray-900 tabular-nums">
           {{ averageOverall?.toFixed(1) }}
         </span>
@@ -33,7 +33,11 @@ const criteriaAverages = computed(() => averageReviewCriteria(props.reviews))
         </div>
       </div>
 
-      <ReviewScoreDimensions v-if="criteriaAverages.length" :scores="criteriaAverages" />
+      <ReviewScoreDimensions
+        v-if="criteriaAverages.length"
+        class="mt-4"
+        :scores="criteriaAverages"
+      />
     </template>
   </SectionCard>
 </template>

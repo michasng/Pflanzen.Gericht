@@ -249,14 +249,14 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="mb-4 rounded-2xl border border-gray-100 bg-white p-4">
+  <div class="rounded-2xl border border-gray-100 bg-white p-4">
     <div class="mb-3 flex items-center justify-between gap-3">
-      <h2 class="text-base font-bold text-gray-900">
+      <h3 class="text-base font-bold text-gray-900">
         Ähnliche Produkte
         <span v-if="similarProducts.length" class="text-sm font-normal text-gray-400">
           ({{ similarProducts.length }})
         </span>
-      </h2>
+      </h3>
       <Button
         v-if="authStore.isLoggedIn && !showSuggestionSearch"
         ariaLabel="Vorschlag hinzufügen"

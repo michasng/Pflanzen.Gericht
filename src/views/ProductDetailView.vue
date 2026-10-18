@@ -9,16 +9,17 @@ import { toErrorMessage } from '@/lib/error'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
 import NotFoundMessage from '@/components/NotFoundMessage.vue'
+import SectionHeading from '@/components/SectionHeading.vue'
 import SimilarProductsSection from '@/components/SimilarProductsSection.vue'
 import PriceReportsSection from '@/components/product/PriceReportsSection.vue'
 import ProductActions from '@/components/product/ProductActions.vue'
+import ProductFooter from '@/components/product/ProductFooter.vue'
 import ProductHeading from '@/components/product/ProductHeading.vue'
 import ProductImageGallery from '@/components/product/ProductImageGallery.vue'
 import ProductIngredients from '@/components/product/ProductIngredients.vue'
 import ProductNutritionTable from '@/components/product/ProductNutritionTable.vue'
 import ProductRatingSummary from '@/components/product/ProductRatingSummary.vue'
 import ProductReviewsSection from '@/components/product/ProductReviewsSection.vue'
-import ProductSources from '@/components/product/ProductSources.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -63,39 +64,46 @@ const deleteProduct = async (productId: string): Promise<void> => {
     <NotFoundMessage v-else-if="notFound" message="Produkt nicht gefunden." />
     <AlertMessage v-else-if="errorMessage" :message="errorMessage" />
 
-    <template v-else-if="product">
-      <ProductImageGallery :images="product.images" :product-name="product.name" />
-      <ProductHeading :product="product" />
-      <ProductIngredients :ingredients="product.ingredients" />
-      <ProductNutritionTable :energy-joules="product.energyJoules" :nutrients="product.nutrients" />
-      <ProductSources :sources="product.sources" />
+    <div v-else-if="product" class="flex flex-col gap-4">
+      <header class="flex flex-col gap-4">
+        <ProductImageGallery :images="product.images" :product-name="product.name" />
+        <ProductHeading :product="product" />
+      </header>
       <ProductRatingSummary
         :average-overall="product.avgOverall"
         :reviews-count="product.reviewsCount"
         :reviews="product.reviews"
       />
-      <SimilarProductsSection :product-id="product.id" :product-category="product.category" />
-      <PriceReportsSection
-        :product-id="product.id"
-        :initial-reports="product.priceReports"
-        :current-user-id="currentUserId"
-      />
-      <ProductActions
-        :product-id="product.id"
-        :is-logged-in="authStore.isLoggedIn"
-        :can-manage="canManageProduct"
-        :error-message="deleteErrorMessage"
-        @delete="deleteProduct(product.id)"
-      />
-      <ProductReviewsSection
-        :reviews="product.reviews"
-        :current-user-id="currentUserId"
-        :is-admin="authStore.isAdmin"
-      />
-
-      <p v-if="product.barcode" class="mt-6 text-center text-xs text-gray-500">
-        Barcode: {{ product.barcode }}
-      </p>
-    </template>
+      <section class="flex flex-col gap-4">
+        <SectionHeading>Bewertungen</SectionHeading>
+        <ProductReviewsSection
+          :reviews="product.reviews"
+          :current-user-id="currentUserId"
+          :is-admin="authStore.isAdmin"
+        />
+        <ProductActions
+          :product-id="product.id"
+          :is-logged-in="authStore.isLoggedIn"
+          :can-manage="canManageProduct"
+          :error-message="deleteErrorMessage"
+          @delete="deleteProduct(product.id)"
+        />
+      </section>
+      <section class="flex flex-col gap-4">
+        <SectionHeading>Produktinfos</SectionHeading>
+        <SimilarProductsSection :product-id="product.id" :product-category="product.category" />
+        <PriceReportsSection
+          :product-id="product.id"
+          :initial-reports="product.priceReports"
+          :current-user-id="currentUserId"
+        />
+        <ProductIngredients :ingredients="product.ingredients" />
+        <ProductNutritionTable
+          :energy-joules="product.energyJoules"
+          :nutrients="product.nutrients"
+        />
+      </section>
+      <ProductFooter :sources="product.sources" :barcode="product.barcode" />
+    </div>
   </div>
 </template>

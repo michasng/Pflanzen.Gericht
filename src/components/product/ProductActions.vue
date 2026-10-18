@@ -20,7 +20,7 @@ const route = useRoute()
 </script>
 
 <template>
-  <div class="mb-6 flex flex-col gap-2">
+  <div class="flex flex-col gap-2">
     <ButtonLink
       v-if="isLoggedIn"
       :to="{ name: 'review-new', params: { id: productId } }"

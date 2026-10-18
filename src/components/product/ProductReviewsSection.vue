@@ -14,15 +14,12 @@ const isEditable = (review: ReviewWithDetails): boolean =>
 </script>
 
 <template>
-  <div v-if="reviews.length">
-    <h2 class="text-base font-bold text-gray-900 mb-3">Bewertungen ({{ reviews.length }})</h2>
-    <div class="space-y-3">
-      <ReviewCard
-        v-for="review in reviews"
-        :key="review.id"
-        :review="review"
-        :editable="isEditable(review)"
-      />
-    </div>
+  <div v-if="reviews.length" class="space-y-3">
+    <ReviewCard
+      v-for="review in reviews"
+      :key="review.id"
+      :review="review"
+      :editable="isEditable(review)"
+    />
   </div>
 </template>
