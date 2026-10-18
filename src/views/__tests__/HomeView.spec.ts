@@ -78,6 +78,16 @@ describe('HomeView', () => {
     })
   })
 
+  describe('given the query contains a search', () => {
+    it('shows it in the search input', async () => {
+      const { wrapper } = await mountHomeView(createFetchProducts(['a']), '/?q=tofu')
+
+      await vi.waitFor(() =>
+        expect(wrapper.get<HTMLInputElement>('input[type="search"]').element.value).toBe('tofu'),
+      )
+    })
+  })
+
   describe('given no products exist and no filter is active', () => {
     it('invites to add the first product', async () => {
       const { wrapper } = await mountHomeView(createFetchProducts())

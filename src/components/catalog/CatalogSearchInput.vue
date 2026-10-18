@@ -2,14 +2,22 @@
 import { ref, watch } from 'vue'
 import { SEARCH_DEBOUNCE_MILLISECONDS } from '@/config/catalogSearch'
 
-const props = defineProps<{ initialSearch: string }>()
+const props = defineProps<{ search: string }>()
 const emit = defineEmits<{ search: [value: string] }>()
 
-const searchInput = ref(props.initialSearch)
+const searchInput = ref(props.search)
 let searchTimer: ReturnType<typeof setTimeout> | undefined
+
+watch(
+  () => props.search,
+  (value) => {
+    searchInput.value = value
+  },
+)
 
 watch(searchInput, (value) => {
   clearTimeout(searchTimer)
+  if (value === props.search) return
   searchTimer = setTimeout(() => emit('search', value), SEARCH_DEBOUNCE_MILLISECONDS)
 })
 </script>

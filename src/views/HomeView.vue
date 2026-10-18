@@ -21,7 +21,7 @@ const filterSheetOpen = ref(false)
 
 <template>
   <div>
-    <CatalogSearchInput :initial-search="catalogStore.search" @search="catalogStore.setSearch" />
+    <CatalogSearchInput :search="catalogStore.search" @search="catalogStore.setSearch" />
 
     <CatalogCategoryChips :selected="catalogStore.category" @select="catalogStore.setCategory" />
 
