@@ -9,6 +9,9 @@ import type {
 import type { ProductReviewImages } from '@/services/reviews'
 import type { ProductFields } from '@/types/productForm'
 import type { IngredientWrite, NutrientWrite } from '@/types/productWrites'
+import type { ProductActivityCounts } from '@/services/fetchProductActivityCounts'
+import type { MergeProductsInput } from '@/services/mergeProducts'
+import type { PublicProfile } from '@/services/profile'
 
 export interface ProductEditingGateway {
   fetchProduct: (productId: string) => Promise<Product | null>
@@ -17,6 +20,9 @@ export interface ProductEditingGateway {
   fetchProductNutrients: (productId: string) => Promise<ProductNutrient[]>
   fetchProductSources: (productId: string) => Promise<ProductSource[]>
   fetchProductReviewImages: (productId: string) => Promise<ProductReviewImages[]>
+  fetchProductActivityCounts: (productId: string) => Promise<ProductActivityCounts>
+  fetchPublicProfile: (userId: string) => Promise<PublicProfile | null>
+  mergeProducts: (input: MergeProductsInput) => Promise<Product>
   createProduct: (fields: ProductFields, ownerId: string) => Promise<Product>
   updateProduct: (productId: string, fields: ProductFields) => Promise<void>
   replaceProductIngredients: (productId: string, ingredients: IngredientWrite[]) => Promise<void>

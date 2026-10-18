@@ -9,6 +9,10 @@ export const createFakeProductEditingGateway = (
   fetchProductNutrients: () => Promise.resolve([]),
   fetchProductSources: () => Promise.resolve([]),
   fetchProductReviewImages: () => Promise.resolve([]),
+  fetchProductActivityCounts: () =>
+    Promise.resolve({ reviewsCount: 0, priceReportsCount: 0, similarityVotesCount: 0 }),
+  fetchPublicProfile: () => Promise.resolve(null),
+  mergeProducts: () => Promise.reject(new Error('not expected')),
   createProduct: () => Promise.reject(new Error('not expected')),
   updateProduct: () => Promise.resolve(),
   replaceProductIngredients: () => Promise.resolve(),
