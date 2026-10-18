@@ -8,7 +8,8 @@ import StarDisplay from '@/components/StarDisplay.vue'
 import { allergenToLabel } from '@/config/allergens'
 import { baseToLabel } from '@/config/bases'
 import { ImageSize } from '@/config/imageSizes'
-import { getImageUrl } from '@/services/catalog'
+import { injectGateway } from '@/composables/injectGateway'
+import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 import type { SimilarProduct } from '@/services/similarProducts'
 
 const props = defineProps<{
@@ -25,6 +26,8 @@ defineEmits<{
   remove: []
   vote: [agreed: boolean]
 }>()
+
+const { getImageUrl } = injectGateway(imageUrlGatewayKey)
 
 const coverUrl = computed(() =>
   props.product?.storagePath

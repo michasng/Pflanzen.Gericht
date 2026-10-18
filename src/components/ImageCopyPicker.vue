@@ -2,12 +2,15 @@
 import { ref } from 'vue'
 import Image from '@/components/primitives/ImageComponent.vue'
 import { ImageSize } from '@/config/imageSizes'
-import { getImageUrl } from '@/services/catalog'
+import { injectGateway } from '@/composables/injectGateway'
+import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 import type { ImageCopyGroup } from '@/types/ImageCopyGroup'
 
 defineProps<{ title: string; bucket: string; groups: ImageCopyGroup[] }>()
 
 const emit = defineEmits<{ change: [selectedIds: string[]] }>()
+
+const { getImageUrl } = injectGateway(imageUrlGatewayKey)
 
 const selectedIds = ref<string[]>([])
 

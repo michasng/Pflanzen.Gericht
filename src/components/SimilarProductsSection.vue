@@ -10,7 +10,8 @@ import { ButtonVariant } from '@/components/primitives/ButtonVariant'
 import { ButtonSize } from '@/components/primitives/ButtonSize'
 import Grid from '@/components/primitives/GridComponent.vue'
 import { ImageSize } from '@/config/imageSizes'
-import { getImageUrl } from '@/services/catalog'
+import { injectGateway } from '@/composables/injectGateway'
+import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 import {
   adminRemoveSimilarity,
   fetchSimilarProducts,
@@ -24,6 +25,8 @@ import { toErrorMessage } from '@/lib/error'
 import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps<{ productId: string; productCategory: string }>()
+
+const { getImageUrl } = injectGateway(imageUrlGatewayKey)
 
 const authStore = useAuthStore()
 const route = useRoute()

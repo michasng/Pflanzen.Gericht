@@ -21,7 +21,8 @@ import { TAG_GROUPS } from '@/config/reviewTags'
 import { ImageSize } from '@/config/imageSizes'
 import type { ReviewImage } from '@/types'
 import type { ImageCopyGroup } from '@/types/ImageCopyGroup'
-import { getImageUrl } from '@/services/catalog'
+import { injectGateway } from '@/composables/injectGateway'
+import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 
 const CRITERIA_KEYS = ['taste', 'consistency', 'appearance', 'nutrition', 'value'] as const
 type CriteriaKey = (typeof CRITERIA_KEYS)[number]
@@ -49,6 +50,8 @@ const emit = defineEmits<{
   deleteImage: [image: ReviewImage]
   copySelectionChanged: [imageIds: string[]]
 }>()
+
+const { getImageUrl } = injectGateway(imageUrlGatewayKey)
 
 const overall = ref<number | null>(props.initial?.overall ?? null)
 

@@ -26,6 +26,9 @@ export interface ProductEditingGateway {
   fetchProductReviewImages: (productId: string) => Promise<ProductReviewImages[]>
   fetchProductActivityCounts: (productId: string) => Promise<ProductActivityCounts>
   fetchPublicProfile: (userId: string) => Promise<PublicProfile | null>
+  searchSimilarProducts: (
+    name: string,
+  ) => Promise<Pick<Product, 'id' | 'name' | 'brand' | 'category'>[]>
   mergeProducts: (input: MergeProductsInput) => Promise<Product>
   createProduct: (fields: ProductFields, ownerId: string) => Promise<Product>
   updateProduct: (productId: string, fields: ProductFields) => Promise<void>

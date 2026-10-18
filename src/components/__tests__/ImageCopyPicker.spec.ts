@@ -1,10 +1,10 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-vi.mock('@/services/catalog', () => ({
-  getImageUrl: (bucket: string, path: string) => `${bucket}/${path}`,
-}))
-
+import { createFakeImageUrlGateway } from '@/__tests__/createFakeImageUrlGateway'
+import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 import ImageCopyPicker from '../ImageCopyPicker.vue'
+
+const provide = { [imageUrlGatewayKey]: createFakeImageUrlGateway() }
 
 const mountPicker = () =>
   mount(ImageCopyPicker, {
@@ -13,6 +13,7 @@ const mountPicker = () =>
       bucket: 'review-images',
       groups: [{ label: 'Anna', images: [{ id: 'a', storagePath: 'u/r/a' }] }],
     },
+    global: { provide },
   })
 
 describe('ImageCopyPicker', () => {
@@ -32,6 +33,7 @@ describe('ImageCopyPicker', () => {
     it('when rendered, shows nothing', () => {
       const wrapper = mount(ImageCopyPicker, {
         props: { title: 'Bilder', bucket: 'review-images', groups: [] },
+        global: { provide },
       })
 
       expect(wrapper.find('button').exists()).toBe(false)

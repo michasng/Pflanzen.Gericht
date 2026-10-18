@@ -1,13 +1,11 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { DOMWrapper, mount } from '@vue/test-utils'
-
-vi.mock('@/services/catalog', () => ({
-  getImageUrl: (bucket: string, path: string, size: string) =>
-    `https://cdn.test/${bucket}/${path}/${size}.webp`,
-}))
-
+import { createFakeImageUrlGateway } from '@/__tests__/createFakeImageUrlGateway'
+import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 import ReviewImageGallery from '@/components/ReviewImageGallery.vue'
 import type { ReviewImage } from '@/types'
+
+const global = { provide: { [imageUrlGatewayKey]: createFakeImageUrlGateway() } }
 
 const images: ReviewImage[] = [
   {
@@ -29,7 +27,7 @@ const images: ReviewImage[] = [
 describe('ReviewImageGallery', () => {
   describe('given a review without images', () => {
     it('renders nothing', () => {
-      const wrapper = mount(ReviewImageGallery, { props: { images: [] } })
+      const wrapper = mount(ReviewImageGallery, { props: { images: [] }, global })
 
       expect(wrapper.find('img').exists()).toBe(false)
     })
@@ -37,7 +35,7 @@ describe('ReviewImageGallery', () => {
 
   describe('given a review with images', () => {
     it('shows a preview for each image', () => {
-      const wrapper = mount(ReviewImageGallery, { props: { images } })
+      const wrapper = mount(ReviewImageGallery, { props: { images }, global })
 
       expect(wrapper.findAll('img')).toHaveLength(2)
     })
@@ -45,6 +43,7 @@ describe('ReviewImageGallery', () => {
     it('sorts previews by sort order', () => {
       const wrapper = mount(ReviewImageGallery, {
         props: { images: [...images].reverse() },
+        global,
       })
 
       const previewImages = wrapper.findAll('img')
@@ -57,14 +56,18 @@ describe('ReviewImageGallery', () => {
     })
 
     it('does not show the enlarged dialog initially', () => {
-      const wrapper = mount(ReviewImageGallery, { props: { images } })
+      const wrapper = mount(ReviewImageGallery, { props: { images }, global })
 
       expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
     })
 
     describe('when a preview is clicked', () => {
       it('opens a dialog with the full-size image', async () => {
-        const wrapper = mount(ReviewImageGallery, { props: { images }, attachTo: document.body })
+        const wrapper = mount(ReviewImageGallery, {
+          props: { images },
+          global,
+          attachTo: document.body,
+        })
 
         await wrapper.find('button').trigger('click')
 
@@ -80,7 +83,11 @@ describe('ReviewImageGallery', () => {
 
     describe('when the dialog close button is clicked', () => {
       it('closes the dialog', async () => {
-        const wrapper = mount(ReviewImageGallery, { props: { images }, attachTo: document.body })
+        const wrapper = mount(ReviewImageGallery, {
+          props: { images },
+          global,
+          attachTo: document.body,
+        })
         await wrapper.find('button').trigger('click')
 
         await new DOMWrapper(document.body).find('[aria-label="Schließen"]').trigger('click')

@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { getImageUrl } from '@/services/catalog'
+import { injectGateway } from '@/composables/injectGateway'
+import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 import { ImageSize } from '@/config/imageSizes'
 import type { ProductImage } from '@/types'
 import AppLogo from '@/components/AppLogo.vue'
 import Image from '@/components/primitives/ImageComponent.vue'
 
 const props = defineProps<{ images: readonly ProductImage[]; productName: string }>()
+
+const { getImageUrl } = injectGateway(imageUrlGatewayKey)
 
 const activeImageIndex = ref(0)
 

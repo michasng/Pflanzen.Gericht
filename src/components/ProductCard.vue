@@ -6,9 +6,13 @@ import AppLogo from '@/components/AppLogo.vue'
 import Image from '@/components/primitives/ImageComponent.vue'
 import { categoryToLabel } from '@/config/categories'
 import { ImageSize } from '@/config/imageSizes'
-import { getImageUrl, type ProductListItem } from '@/services/catalog'
+import { injectGateway } from '@/composables/injectGateway'
+import type { ProductListItem } from '@/services/catalog'
+import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 
 const props = defineProps<{ product: ProductListItem }>()
+
+const { getImageUrl } = injectGateway(imageUrlGatewayKey)
 
 const coverUrl = computed(() => {
   const sorted = [...props.product.images].sort((a, b) => a.sortOrder - b.sortOrder)

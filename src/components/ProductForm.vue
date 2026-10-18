@@ -40,12 +40,10 @@ import { isHttpUrlString } from '@/lib/isHttpUrlString'
 import { parseQuantityInput } from '@/lib/parseQuantityInput'
 import { parseEnergyInputToJoules } from '@/lib/parseEnergyInputToJoules'
 import { useNameSuggestions } from '@/composables/useNameSuggestions'
-import {
-  searchSimilarProducts,
-  fetchIngredientNameSuggestions,
-  fetchNutrientNameSuggestions,
-} from '@/services/products'
-import { getImageUrl } from '@/services/catalog'
+import { injectGateway } from '@/composables/injectGateway'
+import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
+import { nameSuggestionGatewayKey } from '@/services/NameSuggestionGateway'
+import { productEditingGatewayKey } from '@/services/ProductEditingGateway'
 import { ImageSize } from '@/config/imageSizes'
 import type { Product, ProductImage } from '@/types'
 import type { ImageCopyGroup } from '@/types/ImageCopyGroup'
@@ -85,6 +83,11 @@ const emit = defineEmits<{
   deleteImage: [image: ProductImage]
   copySelectionChanged: [imageIds: string[]]
 }>()
+
+const { getImageUrl } = injectGateway(imageUrlGatewayKey)
+const { fetchIngredientNameSuggestions, fetchNutrientNameSuggestions } =
+  injectGateway(nameSuggestionGatewayKey)
+const { searchSimilarProducts } = injectGateway(productEditingGatewayKey)
 
 const name = ref(props.initial?.name ?? '')
 const category = ref(props.initial?.category ?? '')

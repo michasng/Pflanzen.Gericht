@@ -2,12 +2,15 @@
 import { computed, ref } from 'vue'
 import Image from '@/components/primitives/ImageComponent.vue'
 import { ImageSize } from '@/config/imageSizes'
-import { getImageUrl } from '@/services/catalog'
+import { injectGateway } from '@/composables/injectGateway'
+import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 import type { ReviewImage } from '@/types'
 
 const REVIEW_IMAGE_BUCKET = 'review-images'
 
 const props = defineProps<{ images: ReviewImage[] }>()
+
+const { getImageUrl } = injectGateway(imageUrlGatewayKey)
 
 const sortedImages = computed(() =>
   [...props.images].sort((firstImage, secondImage) => firstImage.sortOrder - secondImage.sortOrder),

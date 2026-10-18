@@ -1,10 +1,7 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
-
-vi.mock('@/services/catalog', () => ({
-  getImageUrl: () => '',
-}))
-
+import { createFakeImageUrlGateway } from '@/__tests__/createFakeImageUrlGateway'
+import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 import SimilarProductDialog from '@/components/SimilarProductDialog.vue'
 import type { SimilarProduct } from '@/services/similarProducts'
 
@@ -30,6 +27,8 @@ const similarProduct: SimilarProduct = {
   totalCount: 5,
 }
 
+const provide = { [imageUrlGatewayKey]: createFakeImageUrlGateway() }
+
 describe('SimilarProductDialog', () => {
   describe('given the user previously agreed', () => {
     it('marks the thumbs-up button as pressed', () => {
@@ -43,6 +42,7 @@ describe('SimilarProductDialog', () => {
           product: similarProduct,
         },
         global: {
+          provide,
           stubs: {
             RouterLink: true,
             Teleport: true,
@@ -67,6 +67,7 @@ describe('SimilarProductDialog', () => {
           product: { ...similarProduct, myVote: null },
         },
         global: {
+          provide,
           stubs: {
             RouterLink: true,
             Teleport: true,
@@ -93,6 +94,7 @@ describe('SimilarProductDialog', () => {
           product: similarProduct,
         },
         global: {
+          provide,
           stubs: {
             RouterLink: true,
             Teleport: true,
@@ -120,6 +122,7 @@ describe('SimilarProductDialog', () => {
           product: similarProduct,
         },
         global: {
+          provide,
           stubs: {
             RouterLink: true,
             Teleport: true,
@@ -145,6 +148,7 @@ describe('SimilarProductDialog', () => {
           product: similarProduct,
         },
         global: {
+          provide,
           stubs: {
             RouterLink: true,
             Teleport: true,

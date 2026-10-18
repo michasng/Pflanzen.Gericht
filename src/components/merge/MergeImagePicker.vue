@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { getImageUrl } from '@/services/catalog'
+import { injectGateway } from '@/composables/injectGateway'
+import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 import { ImageSize } from '@/config/imageSizes'
 import Image from '@/components/primitives/ImageComponent.vue'
 import type { ProductImage } from '@/types'
 
 defineProps<{ images: readonly ProductImage[] }>()
+
+const { getImageUrl } = injectGateway(imageUrlGatewayKey)
 
 const acceptedImageIds = defineModel<string[]>({ required: true })
 </script>

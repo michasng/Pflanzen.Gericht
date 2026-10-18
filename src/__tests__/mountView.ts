@@ -5,6 +5,11 @@ import { createMemoryHistory, createRouter, type RouteRecordRaw, type Router } f
 import { adminGatewayKey, type AdminGateway } from '@/services/AdminGateway'
 import { authGatewayKey, type AuthGateway } from '@/services/AuthGateway'
 import { catalogGatewayKey, type CatalogGateway } from '@/services/CatalogGateway'
+import { imageUrlGatewayKey, type ImageUrlGateway } from '@/services/ImageUrlGateway'
+import {
+  nameSuggestionGatewayKey,
+  type NameSuggestionGateway,
+} from '@/services/NameSuggestionGateway'
 import { productDetailGatewayKey, type ProductDetailGateway } from '@/services/ProductDetailGateway'
 import {
   productEditingGatewayKey,
@@ -13,6 +18,8 @@ import {
 import { profileGatewayKey, type ProfileGateway } from '@/services/ProfileGateway'
 import { reviewEditingGatewayKey, type ReviewEditingGateway } from '@/services/ReviewEditingGateway'
 import { createFakeAuthGateway } from '@/__tests__/createFakeAuthGateway'
+import { createFakeImageUrlGateway } from '@/__tests__/createFakeImageUrlGateway'
+import { createFakeNameSuggestionGateway } from '@/__tests__/createFakeNameSuggestionGateway'
 
 export const EmptyRouteComponent = defineComponent({ render: () => null })
 
@@ -20,6 +27,8 @@ interface FakeGateways {
   admin?: AdminGateway
   auth?: AuthGateway
   catalog?: CatalogGateway
+  imageUrl?: ImageUrlGateway
+  nameSuggestion?: NameSuggestionGateway
   productDetail?: ProductDetailGateway
   productEditing?: ProductEditingGateway
   profile?: ProfileGateway
@@ -51,6 +60,8 @@ export const mountView = async ({
 
   const provide: Record<symbol, unknown> = {
     [authGatewayKey]: gateways.auth ?? createFakeAuthGateway(),
+    [imageUrlGatewayKey]: gateways.imageUrl ?? createFakeImageUrlGateway(),
+    [nameSuggestionGatewayKey]: gateways.nameSuggestion ?? createFakeNameSuggestionGateway(),
   }
   if (gateways.admin) provide[adminGatewayKey] = gateways.admin
   if (gateways.catalog) provide[catalogGatewayKey] = gateways.catalog

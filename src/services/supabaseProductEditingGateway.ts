@@ -10,6 +10,7 @@ import {
   replaceProductIngredients,
   replaceProductNutrients,
   replaceProductSources,
+  searchSimilarProducts,
   updateProduct,
   uploadProductImage,
 } from '@/services/products'
@@ -29,6 +30,7 @@ export const supabaseProductEditingGateway: ProductEditingGateway = {
   fetchProductReviewImages,
   fetchProductActivityCounts,
   fetchPublicProfile,
+  searchSimilarProducts,
   mergeProducts: (input) => mergeProducts(supabaseProductMergeGateway, input),
   createProduct,
   updateProduct,

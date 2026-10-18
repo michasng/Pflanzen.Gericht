@@ -4,18 +4,20 @@ import { mount } from '@vue/test-utils'
 import { QuantityInputUnit, QuantityUnit } from '@/config/quantity'
 import { DEFAULT_ENERGY_UNIT, EnergyUnit } from '@/config/energy'
 
-vi.mock('@/services/products', () => ({
-  searchSimilarProducts: () => Promise.resolve([]),
-  fetchIngredientNameSuggestions: () => Promise.resolve([]),
-  fetchNutrientNameSuggestions: () => Promise.resolve([]),
-}))
-
-vi.mock('@/services/catalog', () => ({
-  getImageUrl: () => '',
-}))
-
+import { createFakeImageUrlGateway } from '@/__tests__/createFakeImageUrlGateway'
+import { createFakeNameSuggestionGateway } from '@/__tests__/createFakeNameSuggestionGateway'
+import { createFakeProductEditingGateway } from '@/__tests__/createFakeProductEditingGateway'
+import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
+import { nameSuggestionGatewayKey } from '@/services/NameSuggestionGateway'
+import { productEditingGatewayKey } from '@/services/ProductEditingGateway'
 import ProductForm from '../ProductForm.vue'
 import type { ProductFormValues } from '@/types/productForm'
+
+const provide = {
+  [imageUrlGatewayKey]: createFakeImageUrlGateway(),
+  [nameSuggestionGatewayKey]: createFakeNameSuggestionGateway(),
+  [productEditingGatewayKey]: createFakeProductEditingGateway(),
+}
 
 const SCANNED_SOURCE_URLS = ['https://b.de/y', 'https://c.de/z']
 
@@ -46,7 +48,7 @@ describe('ProductForm', () => {
         props: {
           initial: { name: 'A', category: 'drink', sourceUrls, ...EQUAL_QUANTITY },
         },
-        global: { stubs: { ImageUpload: true, RouterLink: true } },
+        global: { provide, stubs: { ImageUpload: true, RouterLink: true } },
       })
 
     it('submits the trimmed urls after one was removed and one added', async () => {
@@ -75,6 +77,7 @@ describe('ProductForm', () => {
           },
         },
         global: {
+          provide,
           stubs: {
             ImageUpload: true,
             ProductBarcodeScanner: ProductBarcodeScannerWithSourcesStub,
@@ -104,6 +107,7 @@ describe('ProductForm', () => {
   it('given kcal is selected when barcode data fills energy, resets the field to the default unit', async () => {
     const wrapper = mount(ProductForm, {
       global: {
+        provide,
         stubs: {
           ImageUpload: true,
           ProductBarcodeScanner: ProductBarcodeScannerStub,
@@ -132,6 +136,7 @@ describe('ProductForm', () => {
   it('given a barcode was scanned, displays it and submits it with the form', async () => {
     const wrapper = mount(ProductForm, {
       global: {
+        provide,
         stubs: {
           ImageUpload: true,
           ProductBarcodeScanner: ProductBarcodeScannerStub,
@@ -159,6 +164,7 @@ describe('ProductForm', () => {
   it('given a scanned barcode, removes it when the remove button is clicked', async () => {
     const wrapper = mount(ProductForm, {
       global: {
+        provide,
         stubs: {
           ImageUpload: true,
           ProductBarcodeScanner: ProductBarcodeScannerStub,
@@ -182,7 +188,10 @@ describe('ProductForm', () => {
 
   it('given a whitespace-only brand, rejects submission and displays a field-level error', async () => {
     const wrapper = mount(ProductForm, {
-      global: { stubs: { ImageUpload: true, ProductBarcodeScanner: true, RouterLink: true } },
+      global: {
+        provide,
+        stubs: { ImageUpload: true, ProductBarcodeScanner: true, RouterLink: true },
+      },
     })
     await wrapper.get('#pf-name').setValue('Hafer Drink')
     await wrapper.get('#pf-category').setValue('drink')
@@ -198,7 +207,10 @@ describe('ProductForm', () => {
   describe('given a quantity entered with a large unit', () => {
     const submitWithQuantity = async (input: string, unit: string) => {
       const wrapper = mount(ProductForm, {
-        global: { stubs: { ImageUpload: true, ProductBarcodeScanner: true, RouterLink: true } },
+        global: {
+          provide,
+          stubs: { ImageUpload: true, ProductBarcodeScanner: true, RouterLink: true },
+        },
       })
       await wrapper.get('#pf-name').setValue('Hafer Drink')
       await wrapper.get('#pf-category').setValue('drink')
@@ -275,7 +287,7 @@ describe('ProductForm', () => {
       }
       const wrapper = mount(ProductForm, {
         props: { comparison, initial: { name: 'A', category: 'drink', brand: 'Alpro' } },
-        global: { stubs: { ImageUpload: true, RouterLink: true } },
+        global: { provide, stubs: { ImageUpload: true, RouterLink: true } },
       })
 
       await wrapper.get('[aria-label="Menge, User A: 1 l akzeptieren"]').trigger('click')
@@ -314,7 +326,7 @@ describe('ProductForm', () => {
     it('copies the accepted values into the editable fields', async () => {
       const wrapper = mount(ProductForm, {
         props: { comparison, initial: EQUAL_QUANTITY },
-        global: { stubs: { ImageUpload: true, RouterLink: true } },
+        global: { provide, stubs: { ImageUpload: true, RouterLink: true } },
       })
 
       await wrapper.get('[aria-label="Name, User B: Name B akzeptieren"]').trigger('click')
@@ -337,7 +349,7 @@ describe('ProductForm', () => {
       }
       const wrapper = mount(ProductForm, {
         props: { comparison: ingredientComparison, initial: EQUAL_QUANTITY },
-        global: { stubs: { ImageUpload: true, RouterLink: true } },
+        global: { provide, stubs: { ImageUpload: true, RouterLink: true } },
       })
 
       await wrapper.get('[aria-label="Zutaten, User A: Hafer 10 % akzeptieren"]').trigger('click')
@@ -355,7 +367,7 @@ describe('ProductForm', () => {
       }
       const wrapper = mount(ProductForm, {
         props: { comparison: nutrientComparison, initial: EQUAL_QUANTITY },
-        global: { stubs: { ImageUpload: true, RouterLink: true } },
+        global: { provide, stubs: { ImageUpload: true, RouterLink: true } },
       })
 
       await wrapper

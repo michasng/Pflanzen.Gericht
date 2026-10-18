@@ -1,12 +1,11 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
-
-vi.mock('@/services/catalog', () => ({
-  getImageUrl: () => '',
-}))
-
+import { createFakeImageUrlGateway } from '@/__tests__/createFakeImageUrlGateway'
+import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 import SimilarProductCard from '@/components/SimilarProductCard.vue'
 import type { SimilarProduct } from '@/services/similarProducts'
+
+const provide = { [imageUrlGatewayKey]: createFakeImageUrlGateway() }
 
 const similarProduct: SimilarProduct = {
   agreeCount: 4,
@@ -35,6 +34,7 @@ describe('SimilarProductCard', () => {
     it('shows the agreement as a progress bar without explicit labels', () => {
       const wrapper = mount(SimilarProductCard, {
         props: { product: similarProduct },
+        global: { provide },
       })
 
       const progressBar = wrapper.find('[role="progressbar"]')
@@ -49,6 +49,7 @@ describe('SimilarProductCard', () => {
     it('emits select', async () => {
       const wrapper = mount(SimilarProductCard, {
         props: { product: similarProduct },
+        global: { provide },
       })
 
       await wrapper.trigger('click')

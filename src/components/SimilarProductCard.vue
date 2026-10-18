@@ -4,12 +4,15 @@ import AppLogo from '@/components/AppLogo.vue'
 import Image from '@/components/primitives/ImageComponent.vue'
 import ProgressBar from '@/components/primitives/ProgressBar.vue'
 import { ImageSize } from '@/config/imageSizes'
-import { getImageUrl } from '@/services/catalog'
+import { injectGateway } from '@/composables/injectGateway'
+import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 import type { SimilarProduct } from '@/services/similarProducts'
 
 const props = defineProps<{ product: SimilarProduct }>()
 
 defineEmits<{ select: [] }>()
+
+const { getImageUrl } = injectGateway(imageUrlGatewayKey)
 
 const AGREEMENT_ARIA_LABEL = 'Zustimmung'
 

@@ -15,11 +15,14 @@ import { TAG_GROUPS } from '@/config/reviewTags'
 import { ALLERGENS, allergenToLabel } from '@/config/allergens'
 import { parseEurosToCents, formatEuroCents } from '@/lib/price'
 import { useNameSuggestions } from '@/composables/useNameSuggestions'
-import { fetchPriceReportCityNames } from '@/services/prices'
-import { fetchIngredientNameSuggestions } from '@/services/products'
+import { injectGateway } from '@/composables/injectGateway'
+import { nameSuggestionGatewayKey } from '@/services/NameSuggestionGateway'
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: [] }>()
+
+const { fetchIngredientNameSuggestions, fetchPriceReportCityNames } =
+  injectGateway(nameSuggestionGatewayKey)
 
 const catalogStore = useCatalogStore()
 
