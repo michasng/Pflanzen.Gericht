@@ -1,10 +1,8 @@
 import type { Page } from 'playwright'
 import type { SiteCrawler, CrawlContext } from '../types.js'
 import type { CrawledProduct } from '../../schema/crawledProduct.js'
-import type { Allergen, KnownNutrientName } from '@pflanzen-gericht/contracts'
 import { parseMultipackQuantity } from '../../shared/parsing/parseMultipackQuantity.js'
 import { listMissingRequiredFieldNames } from '../../shared/parsing/listMissingRequiredFieldNames.js'
-import type { ParsedNutrition } from '../../shared/parsing/parsedNutrition.js'
 import { recordIncompleteProduct } from '../../shared/logging/recordIncompleteProduct.js'
 import { recordUnmappedCategory } from '../../shared/logging/recordUnmappedCategory.js'
 import {
@@ -18,6 +16,9 @@ import { replaceUnusualLineTerminators } from './replaceUnusualLineTerminators.j
 import { extractReweProductSlug } from './extractReweProductSlug.js'
 import { inferBrandFromContactName } from './inferBrandFromContactName.js'
 import type { ReweSiteDetails } from './reweSiteDetails.js'
+import type { ReweNutritionFacts } from './reweNutritionFacts.js'
+import { parseNutrientsPer100g } from './parseNutrientsPer100g.js'
+import { parseAllergensFromIngredients } from './parseAllergensFromIngredients.js'
 
 // Only dedicated vegan sections: the global vegan filter also lists coincidentally vegan items like spices.
 const LISTING_URLS = [
@@ -52,16 +53,6 @@ const INGREDIENTS_ATTRIBUTE = 'ingredientStatement'
 
 // REWE embeds the full product record as JSON right in the page - far more
 // reliable than scraping visible DOM text, which uses CSS-module hashed classes.
-interface ReweNutrientInformation {
-  nutrientType: { code: string }
-  quantityContained: { value: number; uom: string }
-}
-
-interface ReweNutritionFacts {
-  servingSize: { value: number; uom: string }
-  nutrientInformation: ReweNutrientInformation[]
-}
-
 interface ReweAttribute {
   name: string
   value: string
@@ -83,32 +74,6 @@ interface RewePropStore {
     pricing: { price: number; regularPrice: number; grammage: string | null }
   }
 }
-
-const NUTRIENT_CODE_MAP: Readonly<Record<string, KnownNutrientName>> = {
-  FAT: 'Fett',
-  FASAT: 'Gesättigte Fettsäuren',
-  CHOAVL: 'Kohlenhydrate',
-  'SUGAR-': 'Zucker',
-  FIBTG: 'Ballaststoffe',
-  'PRO-': 'Eiweiß',
-  SALTEQ: 'Salz',
-}
-const ENERGY_KILOJOULE_CODE = 'ENER-'
-const ENERGY_KILOJOULE_UOM = 'KJO'
-
-// EU labelling law requires allergenic ingredients to be printed in capitals
-// within the ingredient list, so REWE has no separate allergens field.
-const ALLERGEN_CAPS_PATTERNS: readonly (readonly [Allergen, RegExp])[] = [
-  ['gluten', /\b(WEIZEN|GERSTE|HAFER|ROGGEN|DINKEL|GLUTEN)\w*\b/],
-  ['soy', /\bSOJA\w*\b/],
-  // Compound stems (ERDNUSS, HASELNUSS, ...) are listed explicitly so KOKOSNUSS/MUSKATNUSS don't match.
-  ['nuts', /\b(N[ÜU]SS|(ERD|HASEL|WAL|PEKAN|PARA)N[ÜU]SS|MANDEL|CASHEW|PISTAZIE|MACADAMIA)\w*\b/],
-]
-
-const parseAllergensFromIngredients = (ingredientsRawText: string): Allergen[] =>
-  ALLERGEN_CAPS_PATTERNS.filter(([, pattern]) => pattern.test(ingredientsRawText)).map(
-    ([allergen]) => allergen,
-  )
 
 const buildDescription = (productData: RewePropStore['productData'] | null): string | null => {
   const featureBullets = (productData?.featureBenefit ?? []).map((feature) => `- ${feature}`)
@@ -132,26 +97,6 @@ const readPropStore = async (page: Page): Promise<RewePropStore | null> => {
   } catch {
     return null
   }
-}
-
-const parseNutrientsPer100g = (nutritionFacts: ReweNutritionFacts[]): ParsedNutrition => {
-  const per100g = nutritionFacts.find(
-    (facts) => facts.servingSize.value === 100 && facts.servingSize.uom === 'GR',
-  )
-  const nutrientsPer100g: Partial<Record<KnownNutrientName, number>> = {}
-  let energyKilojoules: number | null = null
-  for (const info of per100g?.nutrientInformation ?? []) {
-    if (
-      info.nutrientType.code === ENERGY_KILOJOULE_CODE &&
-      info.quantityContained.uom === ENERGY_KILOJOULE_UOM
-    ) {
-      energyKilojoules = info.quantityContained.value
-      continue
-    }
-    const nutrientName = NUTRIENT_CODE_MAP[info.nutrientType.code]
-    if (nutrientName) nutrientsPer100g[nutrientName] = info.quantityContained.value
-  }
-  return { energyKilojoules, nutrientsPer100g }
 }
 
 // Grammage reads like "400g (1 kg = 8,48 €)"; only the part before the base price is the pack size.
