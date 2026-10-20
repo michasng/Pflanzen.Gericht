@@ -1,9 +1,10 @@
-import { OPEN_FOOD_FACTS_ORGANIC_INGREDIENT_SUFFIX } from '@/config/openFoodFacts'
-import { BASIS_POINTS_PER_PERCENT } from '@/lib/basisPoints'
-import { DEFAULT_INGREDIENT_COMPARATOR, type IngredientLike } from '@/config/ingredients'
+import { ORGANIC_INGREDIENT_SUFFIX } from './organicIngredients.js'
+import type { ParsedIngredient } from './parsedIngredient.js'
 
+const BASIS_POINTS_PER_PERCENT = 100
 const PERCENT_PATTERN = /(\d+(?:[.,]\d+)?)\s*%/
 const ASTERISK_PATTERN = /\*/g
+const WHITESPACE_PATTERN = /\s+/g
 const ASTERISK_CHARACTER = '*'
 const SENTENCE_SEPARATOR = '.'
 const TOP_LEVEL_SEPARATOR = ','
@@ -57,28 +58,27 @@ const extractPercent = (segment: string): { textWithoutPercent: string; percent?
 
 const extractName = (rawName: string): { name: string; hasAsterisk: boolean } => {
   const hasAsterisk = rawName.includes(ASTERISK_CHARACTER)
-  const name = rawName.replace(ASTERISK_PATTERN, '').trim()
+  const name = rawName.replace(ASTERISK_PATTERN, '').replace(WHITESPACE_PATTERN, ' ').trim()
   return { name, hasAsterisk }
 }
 
 const applyOrganicSuffix = (name: string, isOrganic: boolean): string =>
-  isOrganic ? `${name}${OPEN_FOOD_FACTS_ORGANIC_INGREDIENT_SUFFIX}` : name
+  isOrganic ? `${name}${ORGANIC_INGREDIENT_SUFFIX}` : name
 
 const toIngredient = (
   rawName: string,
   isTextOrganic: boolean,
   fractionBasisPoints: number | null,
-): IngredientLike | undefined => {
+): ParsedIngredient | undefined => {
   const { name, hasAsterisk } = extractName(rawName)
   if (!name) return undefined
   return {
     name: applyOrganicSuffix(name, hasAsterisk && isTextOrganic),
     fractionBasisPoints,
-    comparator: DEFAULT_INGREDIENT_COMPARATOR,
   }
 }
 
-const parseSegment = (segment: string, isTextOrganic: boolean): IngredientLike[] => {
+const parseSegment = (segment: string, isTextOrganic: boolean): ParsedIngredient[] => {
   const { textWithoutPercent, percent } = extractPercent(segment)
   const fractionBasisPoints =
     percent === undefined ? null : Math.round(percent * BASIS_POINTS_PER_PERCENT)
@@ -87,7 +87,10 @@ const parseSegment = (segment: string, isTextOrganic: boolean): IngredientLike[]
   return ingredient ? [ingredient] : []
 }
 
-export const parseIngredientsText = (text: string, organicKeywords: string[]): IngredientLike[] => {
+export const parseIngredientsText = (
+  text: string,
+  organicKeywords: string[],
+): ParsedIngredient[] => {
   const { ingredientListText, suffixText } = splitIngredientListAndSuffix(text)
   const isTextOrganic = containsOrganicKeyword(suffixText, organicKeywords)
 

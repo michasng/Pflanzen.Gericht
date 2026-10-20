@@ -1,3 +1,9 @@
+import {
+  ORGANIC_INGREDIENT_SUFFIX,
+  ORGANIC_KEYWORDS_DE,
+  ORGANIC_KEYWORDS_EN,
+  parseIngredientsText,
+} from '@pflanzen-gericht/parsers'
 import { JOULES_PER_KILOJOULE } from '@/config/energy'
 import { DEFAULT_INGREDIENT_COMPARATOR } from '@/config/ingredients'
 import { MICROGRAMS_PER_UNIT, NutrientUnit } from '@/config/nutrients'
@@ -7,16 +13,12 @@ import {
   OPEN_FOOD_FACTS_LANGUAGE_DE,
   OPEN_FOOD_FACTS_LANGUAGE_EN,
   OPEN_FOOD_FACTS_NUTRIENT_FIELD_TO_NAME,
-  OPEN_FOOD_FACTS_ORGANIC_INGREDIENT_SUFFIX,
-  OPEN_FOOD_FACTS_ORGANIC_KEYWORDS_DE,
-  OPEN_FOOD_FACTS_ORGANIC_KEYWORDS_EN,
   OPEN_FOOD_FACTS_ORGANIC_LABEL_TAG,
   OPEN_FOOD_FACTS_PRODUCT_PAGE_BASE_URL,
   isOpenFoodFactsEstimatedNutrimentField,
 } from '@/config/openFoodFacts'
 import type { Allergen } from '@/config/allergens'
 import { BASIS_POINTS_PER_PERCENT } from '@/lib/basisPoints'
-import { parseIngredientsText } from '@/lib/parseIngredientsText'
 import { sortNutrientsByHierarchy } from '@/lib/sortNutrientsByHierarchy'
 import type { ProductFormValues } from '@/types/productForm'
 import type { OpenFoodFactsIngredient, OpenFoodFactsProduct } from '@/types/openFoodFacts'
@@ -93,7 +95,7 @@ const mapStructuredIngredients = (
     )
     .map((ingredient) => ({
       name: ingredient.isOrganic
-        ? `${ingredient.name}${OPEN_FOOD_FACTS_ORGANIC_INGREDIENT_SUFFIX}`
+        ? `${ingredient.name}${ORGANIC_INGREDIENT_SUFFIX}`
         : ingredient.name,
       fractionBasisPoints:
         typeof ingredient.percentEstimate === 'number'
@@ -108,7 +110,9 @@ const mapParsedIngredients = (
   ingredientsText: string,
   organicKeywords: string[],
 ): ProductFormValues['ingredients'] | undefined => {
-  const parsedIngredients = parseIngredientsText(ingredientsText, organicKeywords)
+  const parsedIngredients = parseIngredientsText(ingredientsText, organicKeywords).map(
+    (ingredient) => ({ ...ingredient, comparator: DEFAULT_INGREDIENT_COMPARATOR }),
+  )
   return parsedIngredients.length ? parsedIngredients : undefined
 }
 
@@ -124,10 +128,7 @@ const mapIngredients = (
   }
 
   if (product.ingredients_text_de) {
-    const parsedIngredients = mapParsedIngredients(
-      product.ingredients_text_de,
-      OPEN_FOOD_FACTS_ORGANIC_KEYWORDS_DE,
-    )
+    const parsedIngredients = mapParsedIngredients(product.ingredients_text_de, ORGANIC_KEYWORDS_DE)
     if (parsedIngredients) return parsedIngredients
   }
 
@@ -137,7 +138,7 @@ const mapIngredients = (
   }
 
   if (product.ingredients_text_en) {
-    return mapParsedIngredients(product.ingredients_text_en, OPEN_FOOD_FACTS_ORGANIC_KEYWORDS_EN)
+    return mapParsedIngredients(product.ingredients_text_en, ORGANIC_KEYWORDS_EN)
   }
 
   return undefined

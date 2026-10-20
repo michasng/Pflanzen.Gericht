@@ -4,6 +4,7 @@ import type { CrawledProduct, SiteId } from '../schema/crawledProduct.js'
 import { convertGramsToMicrograms } from '../schema/convertGramsToMicrograms.js'
 import { convertKilojoulesToJoules } from '../schema/convertKilojoulesToJoules.js'
 import type { DiffEntry } from './diffProduct.js'
+import { parseCrawledIngredients } from './parseCrawledIngredients.js'
 import type { FieldDecision } from './promptDecisions.js'
 import type { RequiredProductFields } from './resolveRequiredProductFields.js'
 import { uploadProductImageFromFile } from './uploadImageVariants.js'
@@ -15,14 +16,10 @@ const STORE_NAME_BY_SITE: Record<SiteId, string> = { rewe: 'REWE', knuspr: 'Knus
 
 const buildIngredientRows = (candidate: CrawledProduct, productId: string) =>
   candidate.ingredientsRawText
-    ? [
-        {
-          product_id: productId,
-          name: candidate.ingredientsRawText,
-          comparator: '=',
-          fraction_basis_points: null,
-        },
-      ]
+    ? parseCrawledIngredients(candidate.ingredientsRawText).map((ingredient) => ({
+        ...ingredient,
+        product_id: productId,
+      }))
     : []
 
 const buildNutrientRows = (candidate: CrawledProduct, productId: string) =>

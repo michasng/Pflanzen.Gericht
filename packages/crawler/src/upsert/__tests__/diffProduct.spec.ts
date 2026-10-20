@@ -53,7 +53,8 @@ describe('diffProduct', () => {
   it('given identical candidate and existing product, returns no differences', () => {
     const detail: ExistingProductDetail = {
       ingredients: [
-        { name: 'Wasser, Sojabohnen', comparator: '=', fraction_basis_points: null } as never,
+        { name: 'Wasser', comparator: '=', fraction_basis_points: null } as never,
+        { name: 'Sojabohnen', comparator: '=', fraction_basis_points: null } as never,
       ],
       nutrients: [
         { name: 'Fett', amount_micrograms: 5_000_000 } as never,
@@ -72,5 +73,29 @@ describe('diffProduct', () => {
   it('given a candidate with no matching nutrient rows in the DB, reports the nutrients field', () => {
     const diff = diffProduct(buildCandidate(), buildExisting(), emptyDetail)
     expect(diff.map((entry) => entry.field)).toContain('nutrientsMicrograms')
+  })
+
+  it('given the stored ingredients match the parsed raw text including percentages, does not report ingredients', () => {
+    const candidate = buildCandidate({ ingredientsRawText: 'Wasser, Sojabohnen 14%' })
+    const detail: ExistingProductDetail = {
+      ingredients: [
+        { name: 'Sojabohnen', comparator: '=', fraction_basis_points: 1400 } as never,
+        { name: 'Wasser', comparator: '=', fraction_basis_points: null } as never,
+      ],
+      nutrients: [],
+    }
+    const diff = diffProduct(candidate, buildExisting(), detail)
+    expect(diff.map((entry) => entry.field)).not.toContain('ingredientsSummary')
+  })
+
+  it('given the stored ingredient is the unsplit raw text, reports ingredients', () => {
+    const detail: ExistingProductDetail = {
+      ingredients: [
+        { name: 'Wasser, Sojabohnen', comparator: '=', fraction_basis_points: null } as never,
+      ],
+      nutrients: [],
+    }
+    const diff = diffProduct(buildCandidate(), buildExisting(), detail)
+    expect(diff.map((entry) => entry.field)).toContain('ingredientsSummary')
   })
 })

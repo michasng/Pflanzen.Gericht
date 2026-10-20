@@ -3,6 +3,7 @@ import { convertGramsToMicrograms } from '../schema/convertGramsToMicrograms.js'
 import { convertKilojoulesToJoules } from '../schema/convertKilojoulesToJoules.js'
 import type { ExistingProductSummary } from './loadExistingProductMatches.js'
 import type { ExistingProductDetail } from './loadExistingProductDetail.js'
+import { parseCrawledIngredients, type CrawledIngredientRecord } from './parseCrawledIngredients.js'
 
 export interface DiffEntry {
   field: string
@@ -26,15 +27,18 @@ interface ComparableRecord {
   nutrientsMicrograms: Record<string, number>
 }
 
-// Matches applyImport's convention of writing a single '=' / null-fraction row for raw crawled ingredient text.
-const formatIngredientForComparison = (ingredient: {
-  name: string
-  comparator: string
-  fraction_basis_points: number | null
-}): string =>
+const formatIngredientForComparison = (ingredient: CrawledIngredientRecord): string =>
   ingredient.comparator === '=' && ingredient.fraction_basis_points === null
     ? ingredient.name
     : `${ingredient.name} ${ingredient.comparator}${ingredient.fraction_basis_points ?? ''}`
+
+const summarizeIngredients = (ingredients: CrawledIngredientRecord[]): string | null =>
+  ingredients.length > 0
+    ? ingredients
+        .map((ingredient) => formatIngredientForComparison(ingredient))
+        .sort()
+        .join('; ')
+    : null
 
 const toExistingComparable = (
   existing: ExistingProductSummary,
@@ -51,13 +55,7 @@ const toExistingComparable = (
   isOrganic: existing.is_organic,
   barcode: existing.barcode,
   energyJoules: existing.energy_joules,
-  ingredientsSummary:
-    detail.ingredients.length > 0
-      ? detail.ingredients
-          .map((ingredient) => formatIngredientForComparison(ingredient))
-          .sort()
-          .join('; ')
-      : null,
+  ingredientsSummary: summarizeIngredients(detail.ingredients),
   nutrientsMicrograms: Object.fromEntries(
     detail.nutrients.map((nutrient) => [nutrient.name, nutrient.amount_micrograms]),
   ),
@@ -75,7 +73,9 @@ const toCandidateComparable = (candidate: CrawledProduct): ComparableRecord => (
   isOrganic: candidate.isOrganic,
   barcode: candidate.barcode,
   energyJoules: convertKilojoulesToJoules(candidate.energyKilojoules),
-  ingredientsSummary: candidate.ingredientsRawText,
+  ingredientsSummary: candidate.ingredientsRawText
+    ? summarizeIngredients(parseCrawledIngredients(candidate.ingredientsRawText))
+    : null,
   nutrientsMicrograms: Object.fromEntries(
     Object.entries(candidate.nutrientsPer100g).map(([name, grams]) => [
       name,
