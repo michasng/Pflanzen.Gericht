@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "crawl": "tsx src/cli/crawl.ts",
-    "upsert": "tsx src/upsert/index.ts",
+    "import:products": "tsx src/import/index.ts",
     "rewe:remap-categories": "tsx src/cli/remapReweCategories.ts",
     "remap-bases": "tsx src/cli/remapBases.ts",
     "test:unit": "vitest run",

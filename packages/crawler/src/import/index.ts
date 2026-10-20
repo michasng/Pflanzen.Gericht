@@ -38,7 +38,7 @@ const { env: envTarget, updatePrices } = program.opts<{
   updatePrices: boolean
 }>()
 
-const logger = createLogger('upsert')
+const logger = createLogger('import')
 const env = loadCrawlerEnv(envTarget)
 const supabase = createSupabaseAdminClient(env)
 

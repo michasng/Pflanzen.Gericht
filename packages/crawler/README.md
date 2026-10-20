@@ -1,7 +1,7 @@
 # @pflanzen-gericht/crawler
 
 Standalone tooling to crawl vegan products from REWE, Knuspr, and Wolt, and to
-upsert the results into the Supabase database.
+import the results into the Supabase database.
 
 ## Project Setup
 
@@ -12,7 +12,7 @@ pnpm playwright:install
 
 ### Environment
 
-Two git-ignored env files control which Supabase instance the `upsert` CLI writes to:
+Two git-ignored env files control which Supabase instance the `import:products` CLI writes to:
 
 | File                    | Target          |
 | ----------------------- | --------------- |
@@ -46,14 +46,14 @@ pnpm crawl --site rewe --continue # skip already crawled products
 pnpm crawl --urls https://www.rewe.de/shop/p/better-nature-tempeh-geraeuchert-vegan-220g/9006709 https://www.rewe.de/shop/p/zueger-bio-cottage-drops-vegan-200g/9012174
 ```
 
-## Upserting
+## Importing
 
 After crawling, review `output/<site>/*.json`. Then run:
 
 ```sh
-pnpm upsert              # against .env.local
-pnpm upsert --env production
-pnpm upsert --update-prices  # update prices of existing products
+pnpm import:products                  # against .env.local
+pnpm import:products --env production
+pnpm import:products --update-prices  # update prices of existing products
 ```
 
 ## Run Unit Tests with [Vitest](https://vitest.dev/)
