@@ -3,6 +3,7 @@ import { convertGramsToMicrograms } from '../schema/convertGramsToMicrograms.js'
 import { convertKilojoulesToJoules } from '../schema/convertKilojoulesToJoules.js'
 import type { ExistingProductSummary } from './loadExistingProductMatches.js'
 import type { ExistingProductDetail } from './loadExistingProductDetail.js'
+import { isEmptyComparableValue } from './isEmptyComparableValue.js'
 import { parseCrawledIngredients, type CrawledIngredientRecord } from './parseCrawledIngredients.js'
 
 export interface DiffEntry {
@@ -93,6 +94,7 @@ export const diffProduct = (
   const candidateRecord = toCandidateComparable(candidate)
 
   return (Object.keys(existingRecord) as (keyof ComparableRecord)[])
+    .filter((field) => !isEmptyComparableValue(candidateRecord[field]))
     .filter(
       (field) => JSON.stringify(existingRecord[field]) !== JSON.stringify(candidateRecord[field]),
     )

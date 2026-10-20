@@ -88,6 +88,27 @@ describe('diffProduct', () => {
     expect(diff.map((entry) => entry.field)).not.toContain('ingredientsSummary')
   })
 
+  it('given the crawled product lacks values the existing product has, reports no differences', () => {
+    const candidate = buildCandidate({
+      brand: null,
+      quantityUnit: null,
+      quantityValue: null,
+      description: null,
+      category: null,
+      base: null,
+      allergens: [],
+      energyKilojoules: null,
+      nutrientsPer100g: {},
+      ingredientsRawText: null,
+    })
+    const existing = buildExisting({ barcode: '4000000000000' })
+    const detail: ExistingProductDetail = {
+      ingredients: [{ name: 'Wasser', comparator: '=', fraction_basis_points: null } as never],
+      nutrients: [{ name: 'Fett', amount_micrograms: 5_000_000 } as never],
+    }
+    expect(diffProduct(candidate, existing, detail)).toEqual([])
+  })
+
   it('given the stored ingredient is the unsplit raw text, reports ingredients', () => {
     const detail: ExistingProductDetail = {
       ingredients: [
