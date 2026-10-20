@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { Command } from 'commander'
 import type { Database } from '../../../../src/types/database.js'
-import type { CrawledProduct, SiteId } from '../schema/crawledProduct.js'
+import type { SiteId } from '../schema/crawledProduct.js'
 import { createLogger } from '../shared/logging/logger.js'
 import { findProductImagePath } from '../shared/output/outputPaths.js'
 import {
@@ -18,7 +18,6 @@ import { loadExistingProductDetail } from './loadExistingProductDetail.js'
 import { loadExistingProductMatches } from './loadExistingProductMatches.js'
 import { resolveRequiredProductFields } from './resolveRequiredProductFields.js'
 import {
-  askCategoryForUnresolved,
   askCityName,
   askFieldGroupDecisions,
   askImageDecision,
@@ -53,12 +52,6 @@ if (connectionProblem) {
   process.exit(1)
 }
 
-const resolveUnresolvedCategory = async (candidate: CrawledProduct): Promise<CrawledProduct> => {
-  if (candidate.category) return candidate
-  const category = await askCategoryForUnresolved(candidate.name)
-  return { ...candidate, category }
-}
-
 const getExistingImageUrl = async (
   supabase: SupabaseClient<Database>,
   productId: string,
@@ -80,13 +73,7 @@ logger.info(`Loaded ${crawledProducts.length} crawled product(s) across ${SITE_O
 
 const cityName = await askCityName()
 
-for (const crawledProduct of crawledProducts) {
-  const product = await resolveUnresolvedCategory(crawledProduct)
-  if (!product.category) {
-    logger.error(`Skipping "${product.name}" - no category was chosen.`)
-    continue
-  }
-
+for (const product of crawledProducts) {
   // Looked up per product, so stores sharing an existing product see each other's changes.
   const matches = await loadExistingProductMatches(supabase, product.sourceUrl)
   if (matches.length > 1) {
@@ -105,7 +92,7 @@ for (const crawledProduct of crawledProducts) {
   if (!existingMatch) {
     const requiredFields = resolveRequiredProductFields(product)
     if (!requiredFields) {
-      logger.error(`Skipping "${product.name}" - brand or quantity is missing.`)
+      logger.error(`Skipping "${product.name}" - category, brand or quantity is missing.`)
       continue
     }
     const productId = await createNewProduct(supabase, product, requiredFields, env.importUserId)

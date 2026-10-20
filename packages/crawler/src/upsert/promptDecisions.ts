@@ -1,5 +1,4 @@
 import prompts from 'prompts'
-import { CATEGORIES, type Category } from '@pflanzen-gericht/contracts'
 import type { DiffEntry } from './diffProduct.js'
 import type { ExistingProductSummary } from './loadExistingProductMatches.js'
 
@@ -37,22 +36,6 @@ export const askWhichExistingProduct = async (
     { onCancel: () => process.exit(SIGINT_EXIT_CODE) },
   )
   return matches.find((match) => match.id === response.productId) ?? null
-}
-
-export const askCategoryForUnresolved = async (productName: string): Promise<Category> => {
-  const response = await prompts(
-    {
-      type: 'select',
-      name: 'category',
-      message: `"${productName}" has no auto-detected category. Choose one:`,
-      choices: CATEGORIES.filter((category) => category !== 'other').map((category) => ({
-        title: category,
-        value: category,
-      })),
-    },
-    { onCancel: () => process.exit(SIGINT_EXIT_CODE) },
-  )
-  return response.category as Category
 }
 
 export type FieldDecision = 'keep' | 'override'
