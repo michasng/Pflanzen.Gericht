@@ -129,7 +129,7 @@ export const fetchProductDetail = async (id: string): Promise<ProductDetail | nu
       supabase
         .from('product')
         .select(
-          '*, images:product_image(id, storage_path, sort_order), ingredients:product_ingredient(id, name, fraction_basis_points, comparator), nutrients:product_nutrient(id, name, amount_micrograms), sources:product_source(id, url, created_at)',
+          '*, images:product_image(id, storage_path, sort_order), ingredients:product_ingredient(id, name, fraction_basis_points, comparator, sort_order), nutrients:product_nutrient(id, name, amount_micrograms), sources:product_source(id, url, created_at)',
         )
         .eq('id', id)
         .single(),

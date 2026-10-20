@@ -31,6 +31,7 @@ const ingredient: ProductIngredient = {
   id: 'ingredient',
   name: 'Soja',
   productId: 'product',
+  sortOrder: 0,
 }
 const nutrient: ProductNutrient = {
   amountMicrograms: 1000,

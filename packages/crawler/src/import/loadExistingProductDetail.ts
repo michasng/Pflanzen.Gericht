@@ -11,7 +11,13 @@ export const loadExistingProductDetail = async (
   productId: string,
 ): Promise<ExistingProductDetail> => {
   const [ingredientsResult, nutrientsResult] = await Promise.all([
-    supabase.from('product_ingredient').select('*').eq('product_id', productId),
+    supabase
+      .from('product_ingredient')
+      .select('*')
+      .eq('product_id', productId)
+      .order('sort_order')
+      .order('created_at')
+      .order('id'),
     supabase.from('product_nutrient').select('*').eq('product_id', productId),
   ])
   if (ingredientsResult.error) throw ingredientsResult.error

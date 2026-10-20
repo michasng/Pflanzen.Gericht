@@ -34,8 +34,8 @@ const haveSameIngredientEntries = (
   nextIngredients: IngredientWrite[],
 ): boolean => {
   if (existingIngredients.length !== nextIngredients.length) return false
-  const existingSignatures = existingIngredients.map(getIngredientSignature).sort()
-  const nextSignatures = nextIngredients.map(getIngredientSignature).sort()
+  const existingSignatures = existingIngredients.map(getIngredientSignature)
+  const nextSignatures = nextIngredients.map(getIngredientSignature)
   return existingSignatures.every((signature, index) => signature === nextSignatures[index])
 }
 
@@ -134,6 +134,9 @@ export const fetchProductIngredients = async (productId: string): Promise<Produc
     .from('product_ingredient')
     .select('*')
     .eq('product_id', productId)
+    .order('sort_order')
+    .order('created_at')
+    .order('id')
   if (error) throw error
   return camelizeKeys(data ?? [])
 }
@@ -146,6 +149,9 @@ export const replaceProductIngredients = async (
     .from('product_ingredient')
     .select('name, fraction_basis_points, comparator')
     .eq('product_id', productId)
+    .order('sort_order')
+    .order('created_at')
+    .order('id')
   if (fetchError) throw fetchError
   if (haveSameIngredientEntries(camelizeKeys(existingIngredients ?? []), ingredients)) return
 
@@ -157,7 +163,11 @@ export const replaceProductIngredients = async (
   if (!ingredients.length) return
   const { error: insertError } = await supabase
     .from('product_ingredient')
-    .insert(ingredients.map((ingredient) => snakeifyKeys({ ...ingredient, productId })))
+    .insert(
+      ingredients.map((ingredient, index) =>
+        snakeifyKeys({ ...ingredient, productId, sortOrder: index }),
+      ),
+    )
   if (insertError) throw insertError
 }
 

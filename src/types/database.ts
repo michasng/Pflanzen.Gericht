@@ -194,6 +194,7 @@ export type Database = {
           id: string
           name: string
           product_id: string
+          sort_order: number
         }
         Insert: {
           comparator?: string
@@ -202,6 +203,7 @@ export type Database = {
           id?: string
           name: string
           product_id: string
+          sort_order?: number
         }
         Update: {
           comparator?: string
@@ -210,6 +212,7 @@ export type Database = {
           id?: string
           name?: string
           product_id?: string
+          sort_order?: number
         }
         Relationships: [
           {

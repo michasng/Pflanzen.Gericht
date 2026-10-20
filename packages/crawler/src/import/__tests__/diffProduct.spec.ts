@@ -79,13 +79,25 @@ describe('diffProduct', () => {
     const candidate = buildCandidate({ ingredientsRawText: 'Wasser, Sojabohnen 14%' })
     const detail: ExistingProductDetail = {
       ingredients: [
-        { name: 'Sojabohnen', comparator: '=', fraction_basis_points: 1400 } as never,
         { name: 'Wasser', comparator: '=', fraction_basis_points: null } as never,
+        { name: 'Sojabohnen', comparator: '=', fraction_basis_points: 1400 } as never,
       ],
       nutrients: [],
     }
     const diff = diffProduct(candidate, buildExisting(), detail)
     expect(diff.map((entry) => entry.field)).not.toContain('ingredientsSummary')
+  })
+
+  it('given the stored ingredients are in a different order than the label, reports ingredients', () => {
+    const detail: ExistingProductDetail = {
+      ingredients: [
+        { name: 'Sojabohnen', comparator: '=', fraction_basis_points: null } as never,
+        { name: 'Wasser', comparator: '=', fraction_basis_points: null } as never,
+      ],
+      nutrients: [],
+    }
+    const diff = diffProduct(buildCandidate(), buildExisting(), detail)
+    expect(diff.map((entry) => entry.field)).toContain('ingredientsSummary')
   })
 
   it('given the crawled product lacks values the existing product has, reports no differences', () => {

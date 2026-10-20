@@ -35,10 +35,7 @@ const formatIngredientForComparison = (ingredient: CrawledIngredientRecord): str
 
 const summarizeIngredients = (ingredients: CrawledIngredientRecord[]): string | null =>
   ingredients.length > 0
-    ? ingredients
-        .map((ingredient) => formatIngredientForComparison(ingredient))
-        .sort()
-        .join('; ')
+    ? ingredients.map((ingredient) => formatIngredientForComparison(ingredient)).join('; ')
     : null
 
 const toExistingComparable = (

@@ -137,21 +137,27 @@ describe('ProductDetailView', () => {
       expect(wrapper.text()).toContain('Barcode: 4000000000000')
     })
 
-    it('lists ingredients ordered by share', async () => {
-      const ingredient = (id: string, name: string, fractionBasisPoints: number | null) => ({
+    it('lists ingredients in label order', async () => {
+      const ingredient = (
+        id: string,
+        name: string,
+        fractionBasisPoints: number | null,
+        sortOrder: number,
+      ) => ({
         id,
         name,
         fractionBasisPoints,
         comparator: 'exactly',
+        sortOrder,
         productId: 'product-1',
         createdAt: '',
       })
       const { wrapper } = await mountWithProduct({
         ...createProductDetail('product-1', 'Hafermilch'),
         ingredients: [
-          ingredient('a', 'Salz', 100),
-          ingredient('b', 'Wasser', 8000),
-          ingredient('c', 'Dinkel', 1000),
+          ingredient('a', 'Salz', 100, 2),
+          ingredient('b', 'Wasser', null, 0),
+          ingredient('c', 'Dinkel', 1000, 1),
         ],
       })
 

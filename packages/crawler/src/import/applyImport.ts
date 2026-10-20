@@ -4,7 +4,7 @@ import type { CrawledProduct, SiteId } from '../schema/crawledProduct.js'
 import { convertGramsToMicrograms } from '../schema/convertGramsToMicrograms.js'
 import { convertKilojoulesToJoules } from '../schema/convertKilojoulesToJoules.js'
 import type { DiffEntry } from './diffProduct.js'
-import { parseCrawledIngredients } from './parseCrawledIngredients.js'
+import { buildIngredientRows } from './buildIngredientRows.js'
 import type { FieldDecision } from './promptDecisions.js'
 import type { RequiredProductFields } from './resolveRequiredProductFields.js'
 import { uploadProductImageFromFile } from './uploadImageVariants.js'
@@ -13,14 +13,6 @@ import { findProductImagePath } from '../shared/output/outputPaths.js'
 type ProductUpdate = Database['public']['Tables']['product']['Update']
 
 const STORE_NAME_BY_SITE: Record<SiteId, string> = { rewe: 'REWE', knuspr: 'Knuspr', wolt: 'Wolt' }
-
-const buildIngredientRows = (candidate: CrawledProduct, productId: string) =>
-  candidate.ingredientsRawText
-    ? parseCrawledIngredients(candidate.ingredientsRawText).map((ingredient) => ({
-        ...ingredient,
-        product_id: productId,
-      }))
-    : []
 
 const buildNutrientRows = (candidate: CrawledProduct, productId: string) =>
   Object.entries(candidate.nutrientsPer100g).map(([name, grams]) => ({
@@ -66,7 +58,7 @@ export const createNewProduct = async (
   if (error) throw error
 
   const productId = data.id as string
-  const ingredientRows = buildIngredientRows(candidate, productId)
+  const ingredientRows = buildIngredientRows(candidate.ingredientsRawText, productId)
   const nutrientRows = buildNutrientRows(candidate, productId)
   if (ingredientRows.length) {
     const { error: ingredientError } = await supabase
@@ -126,7 +118,7 @@ export const applyOverrideDecisions = async (
 
   if (overriddenFields.some((entry) => entry.field === 'ingredientsSummary')) {
     await supabase.from('product_ingredient').delete().eq('product_id', productId)
-    const rows = buildIngredientRows(candidate, productId)
+    const rows = buildIngredientRows(candidate.ingredientsRawText, productId)
     if (rows.length) await supabase.from('product_ingredient').insert(rows)
   }
 
