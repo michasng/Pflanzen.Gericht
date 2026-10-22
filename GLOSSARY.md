@@ -18,6 +18,14 @@ _Avoid_: Plant-based (as a synonym)
 The main ingredient of a Product: what you answer when asked what it is made of. Not necessarily a protein source.
 _Avoid_: Protein source, main ingredient (as a separate term)
 
+**Ingredient**:
+A component of a Product as listed on its packaging, optionally with its share of the Product. Allergy and trace notices ("may contain …") are not Ingredients.
+_Avoid_: Component, content
+
+**Organic Ingredient**:
+An Ingredient the packaging declares as organically farmed, either individually via a footnote marker or collectively for all Ingredients.
+_Avoid_: Bio ingredient, eco ingredient
+
 **Duplicate**:
 A Product that describes the same physical item as another Product, because it was entered twice. Not a matter of opinion.
 _Avoid_: Similar product, double
