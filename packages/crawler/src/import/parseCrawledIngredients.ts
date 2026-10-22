@@ -1,4 +1,4 @@
-import { ORGANIC_KEYWORDS_DE, parseIngredientsText } from '@pflanzen-gericht/parsers'
+import { INGREDIENT_LANGUAGE_DE, parseIngredientsText } from '@pflanzen-gericht/parsers'
 
 const DEFAULT_COMPARATOR = '='
 
@@ -9,7 +9,7 @@ export interface CrawledIngredientRecord {
 }
 
 export const parseCrawledIngredients = (ingredientsRawText: string): CrawledIngredientRecord[] =>
-  parseIngredientsText(ingredientsRawText, ORGANIC_KEYWORDS_DE).map(
+  parseIngredientsText(ingredientsRawText, INGREDIENT_LANGUAGE_DE).map(
     ({ name, fractionBasisPoints }) => ({
       name,
       comparator: DEFAULT_COMPARATOR,

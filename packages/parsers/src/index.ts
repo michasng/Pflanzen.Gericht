@@ -1,3 +1,5 @@
+export * from './ingredientLanguage.js'
+export * from './ingredientLanguages.js'
 export * from './organicIngredients.js'
 export * from './parsedIngredient.js'
 export * from './parseIngredientsText.js'

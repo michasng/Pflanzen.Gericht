@@ -1,100 +1,51 @@
+import { findListEndIndex } from './findListEndIndex.js'
+import { findOrganicDeclaration } from './findOrganicDeclaration.js'
+import type { IngredientCandidate } from './ingredientCandidate.js'
+import type { IngredientLanguage } from './ingredientLanguage.js'
+import { maskBrackets } from './maskBrackets.js'
+import { OrganicDeclaration } from './organicDeclaration.js'
 import { ORGANIC_INGREDIENT_SUFFIX } from './organicIngredients.js'
 import type { ParsedIngredient } from './parsedIngredient.js'
+import { parseIngredientCandidate } from './parseIngredientCandidate.js'
+import { removeLeadingHeading } from './removeLeadingHeading.js'
+import { replaceIngredientsHeadings } from './replaceIngredientsHeadings.js'
+import { splitIngredientList } from './splitIngredientList.js'
 
-const BASIS_POINTS_PER_PERCENT = 100
-const PERCENT_PATTERN = /(\d+(?:[.,]\d+)?)\s*%/
-const ASTERISK_PATTERN = /\*/g
-const WHITESPACE_PATTERN = /\s+/g
-const ASTERISK_CHARACTER = '*'
-const SENTENCE_SEPARATOR = '.'
-const TOP_LEVEL_SEPARATOR = ','
-
-const containsOrganicKeyword = (text: string, organicKeywords: string[]): boolean => {
-  const lowerCaseText = text.toLowerCase()
-  return organicKeywords.some((keyword) => lowerCaseText.includes(keyword.toLowerCase()))
+const isCandidateOrganic = (
+  candidate: IngredientCandidate,
+  organicDeclaration: OrganicDeclaration,
+): boolean => {
+  if (candidate.hasOrganicPrefix) return true
+  if (organicDeclaration === OrganicDeclaration.AllIngredients) return true
+  if (organicDeclaration === OrganicDeclaration.MarkedIngredients)
+    return candidate.hasFootnoteMarker
+  return false
 }
 
-const getSentenceBoundaryIndex = (text: string): number => text.search(/(?<!\d)\.(?!\d)/)
-
-const splitIngredientListAndSuffix = (
-  text: string,
-): { ingredientListText: string; suffixText: string } => {
-  const sentenceBoundaryIndex = getSentenceBoundaryIndex(text)
-  if (sentenceBoundaryIndex < 0) {
-    return { ingredientListText: text, suffixText: '' }
-  }
-
-  return {
-    ingredientListText: text.slice(0, sentenceBoundaryIndex),
-    suffixText: text.slice(sentenceBoundaryIndex + SENTENCE_SEPARATOR.length),
-  }
-}
-
-const splitTopLevel = (text: string, separator: string): string[] => {
-  const segments: string[] = []
-  let depth = 0
-  let currentSegment = ''
-  for (const character of text) {
-    if (character === '(') depth += 1
-    if (character === ')') depth = Math.max(0, depth - 1)
-    if (character === separator && depth === 0) {
-      segments.push(currentSegment)
-      currentSegment = ''
-      continue
-    }
-    currentSegment += character
-  }
-  segments.push(currentSegment)
-  return segments
-}
-
-const extractPercent = (segment: string): { textWithoutPercent: string; percent?: number } => {
-  const match = segment.match(PERCENT_PATTERN)
-  const percentText = match?.[1]
-  if (!percentText) return { textWithoutPercent: segment }
-  const percent = Number.parseFloat(percentText.replace(',', '.'))
-  return { textWithoutPercent: segment.replace(PERCENT_PATTERN, ''), percent }
-}
-
-const extractName = (rawName: string): { name: string; hasAsterisk: boolean } => {
-  const hasAsterisk = rawName.includes(ASTERISK_CHARACTER)
-  const name = rawName.replace(ASTERISK_PATTERN, '').replace(WHITESPACE_PATTERN, ' ').trim()
-  return { name, hasAsterisk }
-}
-
-const applyOrganicSuffix = (name: string, isOrganic: boolean): string =>
-  isOrganic ? `${name}${ORGANIC_INGREDIENT_SUFFIX}` : name
-
-const toIngredient = (
-  rawName: string,
-  isTextOrganic: boolean,
-  fractionBasisPoints: number | null,
-): ParsedIngredient | undefined => {
-  const { name, hasAsterisk } = extractName(rawName)
-  if (!name) return undefined
-  return {
-    name: applyOrganicSuffix(name, hasAsterisk && isTextOrganic),
-    fractionBasisPoints,
-  }
-}
-
-const parseSegment = (segment: string, isTextOrganic: boolean): ParsedIngredient[] => {
-  const { textWithoutPercent, percent } = extractPercent(segment)
-  const fractionBasisPoints =
-    percent === undefined ? null : Math.round(percent * BASIS_POINTS_PER_PERCENT)
-
-  const ingredient = toIngredient(textWithoutPercent, isTextOrganic, fractionBasisPoints)
-  return ingredient ? [ingredient] : []
-}
+const toParsedIngredient = (
+  candidate: IngredientCandidate,
+  organicDeclaration: OrganicDeclaration,
+): ParsedIngredient => ({
+  name: isCandidateOrganic(candidate, organicDeclaration)
+    ? `${candidate.name}${ORGANIC_INGREDIENT_SUFFIX}`
+    : candidate.name,
+  fractionBasisPoints: candidate.fractionBasisPoints,
+})
 
 export const parseIngredientsText = (
   text: string,
-  organicKeywords: string[],
+  language: IngredientLanguage,
 ): ParsedIngredient[] => {
-  const { ingredientListText, suffixText } = splitIngredientListAndSuffix(text)
-  const isTextOrganic = containsOrganicKeyword(suffixText, organicKeywords)
-
-  return splitTopLevel(ingredientListText, TOP_LEVEL_SEPARATOR).flatMap((segment) =>
-    parseSegment(segment, isTextOrganic),
+  const textWithoutHeadings = replaceIngredientsHeadings(text, language.ingredientsHeadingKeyword)
+  const listEndIndex = findListEndIndex(maskBrackets(textWithoutHeadings), language)
+  const ingredientListText = removeLeadingHeading(textWithoutHeadings.slice(0, listEndIndex))
+  const organicDeclaration = findOrganicDeclaration(
+    textWithoutHeadings.slice(listEndIndex),
+    language,
   )
+
+  return splitIngredientList(ingredientListText)
+    .map((segment) => parseIngredientCandidate(segment, language.organicKeywords))
+    .filter((candidate) => candidate !== undefined)
+    .map((candidate) => toParsedIngredient(candidate, organicDeclaration))
 }

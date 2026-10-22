@@ -1,8 +1,9 @@
 import {
+  INGREDIENT_LANGUAGE_DE,
+  INGREDIENT_LANGUAGE_EN,
   ORGANIC_INGREDIENT_SUFFIX,
-  ORGANIC_KEYWORDS_DE,
-  ORGANIC_KEYWORDS_EN,
   parseIngredientsText,
+  type IngredientLanguage,
 } from '@pflanzen-gericht/parsers'
 import { JOULES_PER_KILOJOULE } from '@/config/energy'
 import { DEFAULT_INGREDIENT_COMPARATOR } from '@/config/ingredients'
@@ -108,11 +109,12 @@ const mapStructuredIngredients = (
 
 const mapParsedIngredients = (
   ingredientsText: string,
-  organicKeywords: string[],
+  language: IngredientLanguage,
 ): ProductFormValues['ingredients'] | undefined => {
-  const parsedIngredients = parseIngredientsText(ingredientsText, organicKeywords).map(
-    (ingredient) => ({ ...ingredient, comparator: DEFAULT_INGREDIENT_COMPARATOR }),
-  )
+  const parsedIngredients = parseIngredientsText(ingredientsText, language).map((ingredient) => ({
+    ...ingredient,
+    comparator: DEFAULT_INGREDIENT_COMPARATOR,
+  }))
   return parsedIngredients.length ? parsedIngredients : undefined
 }
 
@@ -128,7 +130,10 @@ const mapIngredients = (
   }
 
   if (product.ingredients_text_de) {
-    const parsedIngredients = mapParsedIngredients(product.ingredients_text_de, ORGANIC_KEYWORDS_DE)
+    const parsedIngredients = mapParsedIngredients(
+      product.ingredients_text_de,
+      INGREDIENT_LANGUAGE_DE,
+    )
     if (parsedIngredients) return parsedIngredients
   }
 
@@ -138,7 +143,7 @@ const mapIngredients = (
   }
 
   if (product.ingredients_text_en) {
-    return mapParsedIngredients(product.ingredients_text_en, ORGANIC_KEYWORDS_EN)
+    return mapParsedIngredients(product.ingredients_text_en, INGREDIENT_LANGUAGE_EN)
   }
 
   return undefined
