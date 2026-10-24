@@ -372,7 +372,6 @@ export type Database = {
           created_at: string
           id: string
           is_current: boolean
-          nutrition: number | null
           overall: number
           product_id: string
           taste: number | null
@@ -387,7 +386,6 @@ export type Database = {
           created_at?: string
           id?: string
           is_current?: boolean
-          nutrition?: number | null
           overall: number
           product_id: string
           taste?: number | null
@@ -402,7 +400,6 @@ export type Database = {
           created_at?: string
           id?: string
           is_current?: boolean
-          nutrition?: number | null
           overall?: number
           product_id?: string
           taste?: number | null
@@ -495,7 +492,6 @@ export type Database = {
           allergens: string[]
           avg_appearance: number
           avg_consistency: number
-          avg_nutrition: number
           avg_overall: number
           avg_taste: number
           avg_value: number

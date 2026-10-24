@@ -13,7 +13,6 @@ const similarProduct: SimilarProduct = {
   allergens: ['soy'],
   avgAppearance: 3.8,
   avgConsistency: 4.0,
-  avgNutrition: 3.6,
   avgOverall: 4.2,
   avgTaste: 4.4,
   avgValue: 4.1,

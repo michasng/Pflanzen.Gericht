@@ -10,7 +10,6 @@ export const createReviewWithDetails = (
   taste: null,
   consistency: null,
   appearance: null,
-  nutrition: null,
   value: null,
   comment: null,
   isCurrent: true,

@@ -76,7 +76,7 @@ The required one-to-five rating that sums up a Review.
 _Avoid_: Rating, stars
 
 **Aspect Score**:
-An optional one-to-five rating of one aspect of a Product (taste, consistency, appearance, nutrition, or value).
+An optional one-to-five rating of one aspect of a Product (taste, consistency, appearance, or value).
 _Avoid_: Score dimension, sub-rating
 
 **Current Review**:

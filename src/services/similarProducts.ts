@@ -16,7 +16,6 @@ export interface SimilarProduct {
   avgTaste: number | null
   avgConsistency: number | null
   avgAppearance: number | null
-  avgNutrition: number | null
   avgValue: number | null
   reviewsCount: number
   storagePath: string | null
@@ -59,7 +58,6 @@ interface SimilarProductRow {
   allergens: string[] | null
   avg_appearance: number | null
   avg_consistency: number | null
-  avg_nutrition: number | null
   avg_overall: number | null
   avg_taste: number | null
   avg_value: number | null
@@ -116,7 +114,6 @@ export const createSimilarProductsService = (dependencies: SimilarProductsDepend
         allergens: row.allergens ?? [],
         avg_appearance: row.avg_appearance ?? null,
         avg_consistency: row.avg_consistency ?? null,
-        avg_nutrition: row.avg_nutrition ?? null,
         avg_overall: row.avg_overall ?? null,
         avg_taste: row.avg_taste ?? null,
         avg_value: row.avg_value ?? null,
@@ -247,7 +244,6 @@ const getDefaultService = async (): Promise<ReturnType<typeof createSimilarProdu
           allergens: row.allergens,
           avg_appearance: row.avg_appearance,
           avg_consistency: row.avg_consistency,
-          avg_nutrition: row.avg_nutrition,
           avg_overall: row.avg_overall,
           avg_taste: row.avg_taste,
           avg_value: row.avg_value,

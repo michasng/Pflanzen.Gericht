@@ -4,7 +4,6 @@ export interface ReviewFormValues {
   taste: number | null
   consistency: number | null
   appearance: number | null
-  nutrition: number | null
   value: number | null
   comment: string | null
   tags: string[]
@@ -24,13 +23,12 @@ import type { ImageCopyGroup } from '@/types/ImageCopyGroup'
 import { injectGateway } from '@/composables/injectGateway'
 import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 
-const CRITERIA_KEYS = ['taste', 'consistency', 'appearance', 'nutrition', 'value'] as const
+const CRITERIA_KEYS = ['taste', 'consistency', 'appearance', 'value'] as const
 type CriteriaKey = (typeof CRITERIA_KEYS)[number]
 const CRITERIA_LABELS: Record<CriteriaKey, string> = {
   taste: 'Geschmack',
   consistency: 'Konsistenz',
   appearance: 'Aussehen',
-  nutrition: 'Nährwerte',
   value: 'Preis-Leistung',
 }
 
@@ -59,7 +57,6 @@ const criteria = reactive<Record<CriteriaKey, number | null>>({
   taste: props.initial?.taste ?? null,
   consistency: props.initial?.consistency ?? null,
   appearance: props.initial?.appearance ?? null,
-  nutrition: props.initial?.nutrition ?? null,
   value: props.initial?.value ?? null,
 })
 
@@ -79,7 +76,6 @@ const handleSubmit = (): void => {
     taste: criteria.taste,
     consistency: criteria.consistency,
     appearance: criteria.appearance,
-    nutrition: criteria.nutrition,
     value: criteria.value,
     comment: comment.value.trim() || null,
     tags: [...selectedTags.value],

@@ -9,7 +9,6 @@ const buildReview = (overrides: Partial<Review>): Review => ({
   createdAt: '2026-01-01T00:00:00Z',
   id: 'review',
   isCurrent: true,
-  nutrition: null,
   overall: 4,
   productId: 'product-a',
   taste: null,

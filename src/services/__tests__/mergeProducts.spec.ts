@@ -43,7 +43,6 @@ const buildReview = (overrides: Partial<ReviewWithDetails>): ReviewWithDetails =
   id: 'review',
   images: [],
   isCurrent: true,
-  nutrition: null,
   overall: 4,
   productId: 'a',
   taste: null,

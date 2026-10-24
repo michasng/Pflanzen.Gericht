@@ -25,7 +25,6 @@ const filledCriteria = computed(() => {
     ['Geschmack', props.review.taste],
     ['Konsistenz', props.review.consistency],
     ['Aussehen', props.review.appearance],
-    ['Nährwerte', props.review.nutrition],
     ['Preis-Leistung', props.review.value],
   ].filter((e): e is [string, number] => e[1] !== null)
   return entries

@@ -11,7 +11,6 @@ const similarProduct: SimilarProduct = {
   allergens: ['soy'],
   avgAppearance: 3.8,
   avgConsistency: 4.0,
-  avgNutrition: 3.6,
   avgOverall: 4.2,
   avgTaste: 4.4,
   avgValue: 4.1,
@@ -105,7 +104,6 @@ describe('SimilarProductDialog', () => {
       expect(wrapper.text()).toContain('Geschmack')
       expect(wrapper.text()).toContain('Konsistenz')
       expect(wrapper.text()).toContain('Aussehen')
-      expect(wrapper.text()).toContain('Nährwerte')
       expect(wrapper.text()).toContain('Preis-Leistung')
     })
   })

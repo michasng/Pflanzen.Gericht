@@ -33,7 +33,6 @@ const createService = () => {
     avg_taste: number | null
     avg_consistency: number | null
     avg_appearance: number | null
-    avg_nutrition: number | null
     avg_value: number | null
     base: string | null
     brand: string | null
@@ -103,7 +102,6 @@ describe('createSimilarProductsService', () => {
         avg_taste: null,
         avg_consistency: null,
         avg_appearance: null,
-        avg_nutrition: null,
         avg_value: null,
         base: null,
         brand: null,
@@ -130,7 +128,6 @@ describe('createSimilarProductsService', () => {
         avgTaste: null,
         avgConsistency: null,
         avgAppearance: null,
-        avgNutrition: null,
         avgValue: null,
         base: null,
         brand: null,

@@ -48,7 +48,6 @@ const criteriaAverages = computed(() => {
     { label: 'Geschmack', value: props.product.avgTaste },
     { label: 'Konsistenz', value: props.product.avgConsistency },
     { label: 'Aussehen', value: props.product.avgAppearance },
-    { label: 'Nährwerte', value: props.product.avgNutrition },
     { label: 'Preis-Leistung', value: props.product.avgValue },
   ].filter((criterion): criterion is { label: string; value: number } => criterion.value !== null)
 })

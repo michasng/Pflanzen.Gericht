@@ -20,7 +20,6 @@ const formValues: ReviewFormValues = {
   taste: null,
   consistency: null,
   appearance: null,
-  nutrition: null,
   value: null,
   comment: null,
   tags: ['süß'],

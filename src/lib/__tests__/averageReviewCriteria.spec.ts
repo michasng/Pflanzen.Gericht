@@ -6,7 +6,6 @@ const createReview = (overrides: Partial<ReviewCriteriaScores> = {}): ReviewCrit
   taste: null,
   consistency: null,
   appearance: null,
-  nutrition: null,
   value: null,
   ...overrides,
 })

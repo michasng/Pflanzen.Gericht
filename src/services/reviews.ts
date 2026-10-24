@@ -19,7 +19,7 @@ export type AdminReviewItem = Review & {
 
 export type ReviewFields = Pick<
   ReviewInsert,
-  'overall' | 'taste' | 'consistency' | 'appearance' | 'nutrition' | 'value' | 'comment'
+  'overall' | 'taste' | 'consistency' | 'appearance' | 'value' | 'comment'
 >
 
 export type ReviewHistory = Pick<ReviewInsert, 'createdAt' | 'updatedAt'>

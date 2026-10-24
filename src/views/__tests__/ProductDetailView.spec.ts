@@ -25,7 +25,6 @@ const createReview = (overrides: Partial<ReviewWithDetails>): ReviewWithDetails 
   taste: null,
   consistency: null,
   appearance: null,
-  nutrition: null,
   value: null,
   comment: null,
   isCurrent: true,

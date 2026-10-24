@@ -3,7 +3,6 @@ export interface ReviewCriteriaScores {
   taste: number | null
   consistency: number | null
   appearance: number | null
-  nutrition: number | null
   value: number | null
 }
 
@@ -18,7 +17,6 @@ const CRITERIA: readonly { label: string; key: ReviewCriterionKey }[] = [
   { label: 'Geschmack', key: 'taste' },
   { label: 'Konsistenz', key: 'consistency' },
   { label: 'Aussehen', key: 'appearance' },
-  { label: 'Nährwerte', key: 'nutrition' },
   { label: 'Preis-Leistung', key: 'value' },
 ]
 

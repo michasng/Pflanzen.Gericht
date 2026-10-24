@@ -115,7 +115,6 @@ const {
           taste: editData.review.taste,
           consistency: editData.review.consistency,
           appearance: editData.review.appearance,
-          nutrition: editData.review.nutrition,
           value: editData.review.value,
           comment: editData.review.comment,
           tags: editData.review.tags,

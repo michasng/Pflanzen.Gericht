@@ -17,7 +17,6 @@ const formValues: ReviewFormValues = {
   taste: 5,
   consistency: null,
   appearance: null,
-  nutrition: null,
   value: null,
   comment: 'Lecker',
   tags: ['cremig'],

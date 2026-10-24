@@ -6,7 +6,6 @@ export const toReviewFields = (review: Review): ReviewFields => ({
   taste: review.taste,
   consistency: review.consistency,
   appearance: review.appearance,
-  nutrition: review.nutrition,
   value: review.value,
   comment: review.comment,
 })
