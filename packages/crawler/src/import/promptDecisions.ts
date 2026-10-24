@@ -77,10 +77,10 @@ export const askImageDecision = async (
     {
       type: 'select',
       name: 'decision',
-      message: 'Keep existing image or override with the crawled one?',
+      message: 'Keep existing images or replace all of them with the crawled one?',
       choices: [
-        { title: 'Keep existing image', value: 'keep' },
-        { title: 'Override with crawled image', value: 'override' },
+        { title: 'Keep existing images', value: 'keep' },
+        { title: 'Replace all with crawled image', value: 'override' },
       ],
     },
     { onCancel: () => process.exit(SIGINT_EXIT_CODE) },

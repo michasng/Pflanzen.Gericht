@@ -5,10 +5,10 @@ import type { SiteId } from '../schema/crawledProduct.js'
 import { createLogger } from '../shared/logging/logger.js'
 import { findProductImagePath } from '../shared/output/outputPaths.js'
 import {
-  applyImageOverride,
   applyOverrideDecisions,
   createNewProduct,
   insertProductSource,
+  replaceProductImages,
   upsertPriceReport,
 } from './applyImport.js'
 import { loadCrawlerEnv } from './config/env.js'
@@ -120,7 +120,7 @@ for (const product of crawledProducts) {
     const existingImageUrl = await getExistingImageUrl(supabase, existingMatch.id)
     const imageDecision = await askImageDecision(existingImageUrl, localImagePath)
     if (imageDecision === 'override')
-      await applyImageOverride(supabase, existingMatch.id, env.importUserId, product)
+      await replaceProductImages(supabase, existingMatch.id, env.importUserId, product)
   }
 
   if (updatePrices)

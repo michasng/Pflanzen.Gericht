@@ -9,6 +9,9 @@ const IMAGE_SIZE_PIXELS = { thumbnail: 160, preview: 480, large: 960 } as const
 type ImageSizeName = keyof typeof IMAGE_SIZE_PIXELS
 const WEBP_QUALITY = 85
 
+export const buildImageVariantPaths = (storagePath: string): string[] =>
+  Object.keys(IMAGE_SIZE_PIXELS).map((size) => `${storagePath}/${size}.webp`)
+
 const generateSquareVariant = (imagePath: string, sizePixels: number): Promise<Buffer> =>
   sharp(imagePath)
     .resize(sizePixels, sizePixels, { fit: 'contain', background: '#ffffff' })

@@ -7,7 +7,7 @@ import type { DiffEntry } from './diffProduct.js'
 import { buildIngredientRows } from './buildIngredientRows.js'
 import type { FieldDecision } from './promptDecisions.js'
 import type { RequiredProductFields } from './resolveRequiredProductFields.js'
-import { uploadProductImageFromFile } from './uploadImageVariants.js'
+import { buildImageVariantPaths, uploadProductImageFromFile } from './uploadImageVariants.js'
 import { findProductImagePath } from '../shared/output/outputPaths.js'
 
 type ProductUpdate = Database['public']['Tables']['product']['Update']
@@ -129,13 +129,37 @@ export const applyOverrideDecisions = async (
   }
 }
 
-export const applyImageOverride = async (
+export const replaceProductImages = async (
   supabase: SupabaseClient<Database>,
   productId: string,
   userId: string,
   candidate: CrawledProduct,
 ): Promise<void> => {
-  await attachImageIfAvailable(supabase, productId, userId, candidate)
+  const imagePath = await findProductImagePath(candidate.site, candidate.slug)
+  if (!imagePath) return
+
+  const { data: previousImages, error: selectError } = await supabase
+    .from('product_image')
+    .select('id, storage_path')
+    .eq('product_id', productId)
+  if (selectError) throw selectError
+
+  await uploadProductImageFromFile(supabase, productId, userId, imagePath, 0)
+  if (!previousImages.length) return
+
+  const { error: deleteError } = await supabase
+    .from('product_image')
+    .delete()
+    .in(
+      'id',
+      previousImages.map((image) => image.id),
+    )
+  if (deleteError) throw deleteError
+
+  const { error: removeError } = await supabase.storage
+    .from('product-images')
+    .remove(previousImages.flatMap((image) => buildImageVariantPaths(image.storage_path)))
+  if (removeError) throw removeError
 }
 
 export const insertProductSource = async (
