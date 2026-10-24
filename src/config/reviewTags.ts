@@ -4,10 +4,27 @@ export const TAG_GROUPS = [
     tags: { sweet: 'Süß', salty: 'Salzig', bitter: 'Bitter', sour: 'Sauer', umami: 'Umami' },
   },
   {
-    label: 'Nachhaltigkeit',
+    label: 'Charakter',
+    tags: { hearty: 'Deftig', spicy: 'Scharf', smoky: 'Rauchig', bland: 'Fad' },
+  },
+  {
+    label: 'Konsistenz',
     tags: {
+      crispy: 'Knusprig',
+      creamy: 'Cremig',
+      juicy: 'Saftig',
+      dry: 'Trocken',
+      greasy: 'Fettig',
+      light: 'Leicht',
+    },
+  },
+  {
+    label: 'Verpackung',
+    tags: {
+      deceptive_packaging: 'Mogelpackung',
       lots_of_plastic: 'Viel Plastik',
       sustainable_packaging: 'Nachhaltige Verpackung',
+      to_go: 'Zum Mitnehmen geeignet',
     },
   },
   {
@@ -15,6 +32,14 @@ export const TAG_GROUPS = [
     tags: {
       similar_to_animal_product: 'Ähnlich zu tierischem Produkt',
       similar_to_brand_product: 'Ähnlich zu Markenprodukt',
+    },
+  },
+  {
+    label: 'Andere',
+    tags: {
+      guilty_pleasure: 'Guilty Pleasure',
+      impresses_omnivores: 'Überzeugt Fleischesser',
+      hard_to_digest: 'Schwer verdaulich',
     },
   },
 ] as const
