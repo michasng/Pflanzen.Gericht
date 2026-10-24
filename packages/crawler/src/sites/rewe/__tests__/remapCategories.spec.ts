@@ -3,7 +3,7 @@ import type { Category } from '@pflanzen-gericht/contracts'
 import { QuantityUnit } from '@pflanzen-gericht/contracts'
 import type { CrawledProduct } from '../../../schema/crawledProduct.js'
 import type { ReweSiteDetails } from '../reweSiteDetails.js'
-import { remapUnmappedCategories } from '../remapUnmappedCategories.js'
+import { remapCategories } from '../remapCategories.js'
 
 const buildProduct = (
   category: Category | null,
@@ -34,10 +34,10 @@ const buildProduct = (
 
 const resolveCategory = (slug: string | null): Category | null => (slug === 'tofu' ? 'other' : null)
 
-describe('remapUnmappedCategories', () => {
+describe('remapCategories', () => {
   describe('given an unmapped product whose slug is now known', () => {
     it('returns it with the category', () => {
-      const result = remapUnmappedCategories([buildProduct(null, 'tofu')], resolveCategory)
+      const result = remapCategories([buildProduct(null, 'tofu')], resolveCategory)
 
       expect(result.remappedProducts.map((product) => product.category)).toEqual(['other'])
     })
@@ -45,7 +45,7 @@ describe('remapUnmappedCategories', () => {
 
   describe('given an unmapped product whose slug is still unknown', () => {
     it('lists the slug once, sorted', () => {
-      const result = remapUnmappedCategories(
+      const result = remapCategories(
         [buildProduct(null, 'b'), buildProduct(null, 'a'), buildProduct(null, 'b')],
         resolveCategory,
       )
@@ -55,11 +55,32 @@ describe('remapUnmappedCategories', () => {
     })
   })
 
-  describe('given a product that already has a category', () => {
-    it('leaves it alone', () => {
-      const result = remapUnmappedCategories([buildProduct('meat', 'tofu')], resolveCategory)
+  describe('given a product whose category differs from the mapped one', () => {
+    it('reports it as a mismatch without remapping it', () => {
+      const product = buildProduct('meat', 'tofu')
 
+      const result = remapCategories([product], resolveCategory)
+
+      expect(result.mismatches).toEqual([{ product, resolvedCategory: 'other' }])
       expect(result.remappedProducts).toEqual([])
+    })
+  })
+
+  describe('given a product whose category matches the mapped one', () => {
+    it('leaves it alone', () => {
+      const result = remapCategories([buildProduct('other', 'tofu')], resolveCategory)
+
+      expect(result.mismatches).toEqual([])
+      expect(result.remappedProducts).toEqual([])
+    })
+  })
+
+  describe('given a categorized product whose slug is unknown', () => {
+    it('leaves it alone', () => {
+      const result = remapCategories([buildProduct('meat', 'unknown')], resolveCategory)
+
+      expect(result.mismatches).toEqual([])
+      expect(result.unmappedCategorySlugs).toEqual([])
     })
   })
 })
