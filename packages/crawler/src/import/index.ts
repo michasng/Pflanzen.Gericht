@@ -32,10 +32,16 @@ const program = new Command()
 program
   .option('--env <target>', 'local | production', 'local')
   .option('--update-prices', 'update price reports of existing products', false)
+  .option('--update-images', 'offer to replace images of existing products', false)
   .parse(process.argv)
-const { env: envTarget, updatePrices } = program.opts<{
+const {
+  env: envTarget,
+  updatePrices,
+  updateImages,
+} = program.opts<{
   env: 'local' | 'production'
   updatePrices: boolean
+  updateImages: boolean
 }>()
 
 const logger = createLogger('import')
@@ -115,7 +121,9 @@ for (const product of crawledProducts) {
     )
     const decisions = await askFieldGroupDecisions(diffEntries)
     await applyOverrideDecisions(supabase, existingMatch.id, product, diffEntries, decisions)
+  }
 
+  if (updateImages) {
     const localImagePath = await findProductImagePath(product.site, product.slug)
     const existingImageUrl = await getExistingImageUrl(supabase, existingMatch.id)
     const imageDecision = await askImageDecision(existingImageUrl, localImagePath)

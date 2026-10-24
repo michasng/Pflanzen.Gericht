@@ -54,7 +54,10 @@ After crawling, review `output/<site>/*.json`. Then run:
 pnpm import:products                  # against .env.local
 pnpm import:products --env production
 pnpm import:products --update-prices  # update prices of existing products
+pnpm import:products --update-images  # ask to replace existing images
 ```
+
+Without `--update-images`, images of existing products are never touched.
 
 ## Run Unit Tests with [Vitest](https://vitest.dev/)
 
