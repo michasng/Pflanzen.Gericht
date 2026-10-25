@@ -7,6 +7,7 @@ import {
   copyStoredImageWithRecord,
   type StoredImageLocation,
 } from '@/services/copyStoredImageWithRecord'
+import type { CoverImageCandidate } from '@/lib/CoverImageCandidate'
 import type { Review, ReviewInsert, ReviewImage, ProductImage } from '@/types'
 import type { Tables } from '@/types/database'
 
@@ -14,7 +15,8 @@ export const ADMIN_REVIEW_PAGE_SIZE = 20
 
 export type AdminReviewItem = Review & {
   profile: { username: string }
-  product: { id: string; name: string }
+  product: { id: string; name: string; images: CoverImageCandidate[] }
+  images: CoverImageCandidate[]
 }
 
 export type ReviewFields = Pick<
@@ -223,7 +225,9 @@ export const deleteReviewImage = async (id: string, storagePath: string): Promis
 export const fetchAllReviewsForAdmin = async (page = 0): Promise<AdminReviewItem[]> => {
   const { data, error } = await supabase
     .from('review')
-    .select('*, profile:user_id(username), product:product_id(id, name)')
+    .select(
+      '*, profile:user_id(username), product:product_id(id, name, images:product_image(storage_path, sort_order)), images:review_image(storage_path, sort_order)',
+    )
     .order('created_at', { ascending: false })
     .range(page * ADMIN_REVIEW_PAGE_SIZE, (page + 1) * ADMIN_REVIEW_PAGE_SIZE - 1)
   if (error) throw error
@@ -231,7 +235,11 @@ export const fetchAllReviewsForAdmin = async (page = 0): Promise<AdminReviewItem
     (data ?? []).map((r) => ({
       ...r,
       profile: r.profile as { username: string },
-      product: r.product as { id: string; name: string },
+      product: r.product as {
+        id: string
+        name: string
+        images: { storage_path: string; sort_order: number }[]
+      },
     })),
   )
 }

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { ProfileGateway } from '@/services/ProfileGateway'
 import ProfilePublicView from '@/views/ProfilePublicView.vue'
 import { createFakeProfileGateway } from '@/__tests__/createFakeProfileGateway'
-import { createProduct } from '@/__tests__/createProduct'
+import { createProductWithImages } from '@/__tests__/createProductWithImages'
 import { createReviewWithMeta } from '@/__tests__/createReviewWithMeta'
 import { EmptyRouteComponent, mountView } from '@/__tests__/mountView'
 
@@ -79,7 +79,7 @@ describe('ProfilePublicView', () => {
           onlyCurrentFlags.push(onlyCurrent)
           return Promise.resolve([createReviewWithMeta(), createReviewWithMeta({ id: 'review-2' })])
         },
-        fetchUserProducts: () => Promise.resolve([createProduct()]),
+        fetchUserProducts: () => Promise.resolve([createProductWithImages()]),
         countCurrentUserReviews: () => Promise.resolve(42),
         countUserProducts: () => Promise.resolve(17),
       })
@@ -137,7 +137,10 @@ describe('ProfilePublicView', () => {
     describe('given the tab is in the URL', () => {
       it('shows the products tab', async () => {
         const { wrapper } = await mountProfilePublicView(
-          { fetchUserProducts: () => Promise.resolve([createProduct({ name: 'Mandelmilch' })]) },
+          {
+            fetchUserProducts: () =>
+              Promise.resolve([createProductWithImages({ name: 'Mandelmilch' })]),
+          },
           '?tab=products',
         )
 
@@ -173,7 +176,7 @@ describe('ProfilePublicView', () => {
       it('shows the products with category and brand', async () => {
         const { wrapper } = await mountProfilePublicView({
           fetchUserProducts: () =>
-            Promise.resolve([createProduct({ name: 'Mandelmilch', category: 'milk' })]),
+            Promise.resolve([createProductWithImages({ name: 'Mandelmilch', category: 'milk' })]),
         })
         await vi.waitFor(() => expect(wrapper.find('[role="tab"]').exists()).toBe(true))
 

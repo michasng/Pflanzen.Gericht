@@ -2,12 +2,16 @@ import { supabase } from '@/lib/supabase'
 import { deleteImageVariants } from '@/lib/imageVariantStorage'
 import { camelizeKeys } from '@/lib/camelizeKeys'
 import { snakeifyKeys } from '@/lib/snakeifyKeys'
+import type { CoverImageCandidate } from '@/lib/CoverImageCandidate'
 import type { Product, Profile, Review } from '@/types'
 
 export type PublicProfile = Pick<Profile, 'id' | 'username' | 'displayName' | 'bio' | 'createdAt'>
 
+export type ProductWithImages = Product & { images: CoverImageCandidate[] }
+
 export type ReviewWithMeta = Review & {
-  product: Pick<Product, 'id' | 'name' | 'category'>
+  product: Pick<Product, 'id' | 'name' | 'category'> & { images: CoverImageCandidate[] }
+  images: CoverImageCandidate[]
   tags: string[]
 }
 
@@ -31,7 +35,9 @@ export const fetchUserReviews = async (
 ): Promise<ReviewWithMeta[]> => {
   let query = supabase
     .from('review')
-    .select('*, product:product_id(id, name, category), tags:review_tag(tag)')
+    .select(
+      '*, product:product_id(id, name, category, images:product_image(storage_path, sort_order)), images:review_image(storage_path, sort_order), tags:review_tag(tag)',
+    )
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .range(...toRange(request))
@@ -41,7 +47,9 @@ export const fetchUserReviews = async (
   return camelizeKeys(
     (data ?? []).map((r) => ({
       ...r,
-      product: r.product as Pick<Product, 'id' | 'name' | 'category'>,
+      product: r.product as Pick<Product, 'id' | 'name' | 'category'> & {
+        images: { storage_path: string; sort_order: number }[]
+      },
       tags: ((r.tags ?? []) as { tag: string }[]).map((t) => t.tag),
     })),
   )
@@ -50,10 +58,10 @@ export const fetchUserReviews = async (
 export const fetchUserProducts = async (
   userId: string,
   request: UserPageRequest,
-): Promise<Product[]> => {
+): Promise<ProductWithImages[]> => {
   const { data, error } = await supabase
     .from('product')
-    .select('*')
+    .select('*, images:product_image(storage_path, sort_order)')
     .eq('created_by', userId)
     .order('created_at', { ascending: false })
     .range(...toRange(request))

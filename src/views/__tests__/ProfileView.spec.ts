@@ -4,7 +4,7 @@ import type { ProfileGateway } from '@/services/ProfileGateway'
 import { useAuthStore } from '@/stores/auth'
 import { createFakeAuthGateway } from '@/__tests__/createFakeAuthGateway'
 import { createFakeProfileGateway } from '@/__tests__/createFakeProfileGateway'
-import { createProduct } from '@/__tests__/createProduct'
+import { createProductWithImages } from '@/__tests__/createProductWithImages'
 import { createProfile } from '@/__tests__/createProfile'
 import { createReviewWithMeta } from '@/__tests__/createReviewWithMeta'
 import { createSession } from '@/__tests__/createSession'
@@ -98,7 +98,7 @@ describe('ProfileView', () => {
           createReviewWithMeta({ id: 'review-2', isCurrent: false }),
         ]),
       fetchUserProducts: () =>
-        Promise.resolve([createProduct({ name: 'Mandelmilch', category: 'milk' })]),
+        Promise.resolve([createProductWithImages({ name: 'Mandelmilch', category: 'milk' })]),
     }
 
     it('shows the total counts', async () => {
@@ -215,13 +215,15 @@ describe('ProfileView', () => {
     it('loads the next page on demand', async () => {
       const requestedPages: number[] = []
       const firstPage = Array.from({ length: 20 }, (_, index) =>
-        createProduct({ id: `product-${index}` }),
+        createProductWithImages({ id: `product-${index}` }),
       )
       const { wrapper } = await mountProfileView({
         profile: {
           fetchUserProducts: (_userId, { page }) => {
             requestedPages.push(page)
-            return Promise.resolve(page === 0 ? firstPage : [createProduct({ id: 'product-last' })])
+            return Promise.resolve(
+              page === 0 ? firstPage : [createProductWithImages({ id: 'product-last' })],
+            )
           },
         },
       })
@@ -286,7 +288,7 @@ describe('ProfileView', () => {
       const deletedIds: string[] = []
       const { wrapper } = await mountProfileView({
         profile: {
-          fetchUserProducts: () => Promise.resolve([createProduct({ id: 'product-9' })]),
+          fetchUserProducts: () => Promise.resolve([createProductWithImages({ id: 'product-9' })]),
           deleteProduct: (id) => {
             deletedIds.push(id)
             return Promise.resolve()
@@ -329,7 +331,8 @@ describe('ProfileView', () => {
       vi.stubGlobal('confirm', () => true)
       const { wrapper } = await mountProfileView({
         profile: {
-          fetchUserProducts: () => Promise.resolve([createProduct({ name: 'Mandelmilch' })]),
+          fetchUserProducts: () =>
+            Promise.resolve([createProductWithImages({ name: 'Mandelmilch' })]),
           deleteProduct: () => Promise.reject(new Error('denied')),
         },
       })

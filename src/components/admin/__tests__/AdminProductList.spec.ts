@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import AdminProductList from '@/components/admin/AdminProductList.vue'
 import { createProductListItem } from '@/__tests__/createProductListItem'
+import { createFakeImageUrlGateway } from '@/__tests__/createFakeImageUrlGateway'
+import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 
 const mountList = (productIds: string[], searching = false): VueWrapper =>
   mount(AdminProductList, {
@@ -12,7 +14,10 @@ const mountList = (productIds: string[], searching = false): VueWrapper =>
       loadingMore: false,
       deletingId: null,
     },
-    global: { stubs: { RouterLink: true } },
+    global: {
+      stubs: { RouterLink: true },
+      provide: { [imageUrlGatewayKey]: createFakeImageUrlGateway() },
+    },
   })
 
 describe('AdminProductList', () => {

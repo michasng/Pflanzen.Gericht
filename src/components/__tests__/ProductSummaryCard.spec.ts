@@ -1,13 +1,22 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import ProductSummaryCard from '@/components/ProductSummaryCard.vue'
-import { createProduct } from '@/__tests__/createProduct'
+import { createFakeImageUrlGateway } from '@/__tests__/createFakeImageUrlGateway'
+import { createProductWithImages } from '@/__tests__/createProductWithImages'
+import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
+import type { ProductWithImages } from '@/services/profile'
 
-const mountCard = (props: { reviewsCount?: number } = {}, slots: Record<string, string> = {}) =>
+const mountCard = (
+  props: { reviewsCount?: number; product?: ProductWithImages } = {},
+  slots: Record<string, string> = {},
+) =>
   mount(ProductSummaryCard, {
-    props: { product: createProduct({ name: 'Mandelmilch' }), ...props },
+    props: { product: createProductWithImages({ name: 'Mandelmilch' }), ...props },
     slots,
-    global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } },
+    global: {
+      stubs: { RouterLink: { template: '<a><slot /></a>' } },
+      provide: { [imageUrlGatewayKey]: createFakeImageUrlGateway() },
+    },
   })
 
 describe('ProductSummaryCard', () => {
@@ -17,6 +26,30 @@ describe('ProductSummaryCard', () => {
 
       expect(wrapper.text()).toContain('Mandelmilch')
       expect(wrapper.find('.border-t').exists()).toBe(false)
+    })
+  })
+
+  describe('given product images', () => {
+    it('shows the first image by sort order with the product name as alt text', () => {
+      const wrapper = mountCard({
+        product: createProductWithImages({
+          name: 'Mandelmilch',
+          images: [
+            { storagePath: 'second', sortOrder: 1 },
+            { storagePath: 'first', sortOrder: 0 },
+          ],
+        }),
+      })
+
+      const image = wrapper.get('img')
+      expect(image.attributes('src')).toContain('/first/')
+      expect(image.attributes('alt')).toBe('Mandelmilch')
+    })
+  })
+
+  describe('given no product images', () => {
+    it('shows no image', () => {
+      expect(mountCard().find('img').exists()).toBe(false)
     })
   })
 
