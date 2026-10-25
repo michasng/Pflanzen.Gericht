@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { CatalogGateway } from '@/services/CatalogGateway'
+import type { ListGateway } from '@/services/ListGateway'
 import { createFakeCatalogGateway } from '@/__tests__/createFakeCatalogGateway'
 import { createFakeAuthGateway } from '@/__tests__/createFakeAuthGateway'
 import { createFakeListGateway } from '@/__tests__/createFakeListGateway'
@@ -23,6 +24,7 @@ const mountHomeView = async (
   fetchProducts: FetchProducts,
   initialPath = '/',
   viewerId: string | null = null,
+  list: Partial<ListGateway> = {},
 ) => {
   const mounted = await mountView({
     view: HomeView,
@@ -36,8 +38,13 @@ const mountHomeView = async (
     gateways: {
       catalog: createFakeCatalogGateway({ fetchProducts }),
       list: createFakeListGateway({
-        fetchListIdsContainingProduct: (_ownerId, productId) =>
-          Promise.resolve(productId === 'a' ? ['list-1'] : []),
+        fetchListIdsByProductId: (_ownerId, productIds) =>
+          Promise.resolve(
+            Object.fromEntries(
+              productIds.map((productId) => [productId, productId === 'a' ? ['list-1'] : []]),
+            ),
+          ),
+        ...list,
       }),
       auth: createFakeAuthGateway({
         getSession: () => Promise.resolve(viewerId ? createSession(viewerId) : null),
@@ -95,6 +102,32 @@ describe('HomeView', () => {
             .map((icon) => icon.attributes('fill')),
         ).toEqual(['currentColor', 'none']),
       )
+    })
+
+    it('loads the lists once for all products and the memberships per page', async () => {
+      const listRequests: string[] = []
+      const membershipRequests: string[][] = []
+      const firstPageIds = Array.from({ length: CATALOG_PAGE_SIZE }, (_, index) => `p${index}`)
+      const fetchProducts = vi
+        .fn<FetchProducts>()
+        .mockResolvedValueOnce({ items: firstPageIds.map(createProductListItem), total: 21 })
+        .mockResolvedValueOnce({ items: [createProductListItem('last')], total: 21 })
+      const { wrapper } = await mountHomeView(fetchProducts, '/', 'user-1', {
+        fetchAllUserLists: (ownerId) => {
+          listRequests.push(ownerId)
+          return Promise.resolve([])
+        },
+        fetchListIdsByProductId: (_ownerId, productIds) => {
+          membershipRequests.push(productIds)
+          return Promise.resolve({})
+        },
+      })
+
+      await wrapper.get('button[aria-label="Mehr laden"]').trigger('click')
+
+      await vi.waitFor(() => expect(membershipRequests).toHaveLength(2))
+      expect(listRequests).toEqual(['user-1'])
+      expect(membershipRequests).toEqual([firstPageIds, ['last']])
     })
   })
 

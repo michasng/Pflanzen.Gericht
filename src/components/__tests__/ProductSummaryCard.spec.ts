@@ -5,7 +5,7 @@ import { createFakeImageUrlGateway } from '@/__tests__/createFakeImageUrlGateway
 import { createProductWithImages } from '@/__tests__/createProductWithImages'
 import { formatDate } from '@/lib/date'
 import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
-import type { ProductWithImages } from '@/services/profile'
+import type { ProductWithImages } from '@/lib/ProductWithImages'
 
 const mountCard = (
   props: { reviewsCount?: number; product?: ProductWithImages; addedAt?: string } = {},

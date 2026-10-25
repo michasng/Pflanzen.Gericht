@@ -2,12 +2,13 @@ import { supabase } from '@/lib/supabase'
 import { deleteImageVariants } from '@/lib/imageVariantStorage'
 import { camelizeKeys } from '@/lib/camelizeKeys'
 import { snakeifyKeys } from '@/lib/snakeifyKeys'
+import { toPageRange } from '@/lib/toPageRange'
 import type { CoverImageCandidate } from '@/lib/CoverImageCandidate'
+import type { PageRequest } from '@/lib/PageRequest'
+import type { ProductWithImages } from '@/lib/ProductWithImages'
 import type { Product, Profile, Review } from '@/types'
 
 export type PublicProfile = Pick<Profile, 'id' | 'username' | 'displayName' | 'bio' | 'createdAt'>
-
-export type ProductWithImages = Product & { images: CoverImageCandidate[] }
 
 export type ReviewWithMeta = Review & {
   product: Pick<Product, 'id' | 'name' | 'category'> & { images: CoverImageCandidate[] }
@@ -15,23 +16,13 @@ export type ReviewWithMeta = Review & {
   tags: string[]
 }
 
-export interface UserPageRequest {
-  page: number
-  pageSize: number
-}
-
-export interface UserReviewsPageRequest extends UserPageRequest {
+export interface UserReviewsPageRequest extends PageRequest {
   onlyCurrent: boolean
 }
 
-export interface UserListsPageRequest extends UserPageRequest {
+export interface UserListsPageRequest extends PageRequest {
   onlyPublic: boolean
 }
-
-const toRange = ({ page, pageSize }: UserPageRequest): [number, number] => [
-  page * pageSize,
-  (page + 1) * pageSize - 1,
-]
 
 export const fetchUserReviews = async (
   userId: string,
@@ -44,7 +35,7 @@ export const fetchUserReviews = async (
     )
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
-    .range(...toRange(request))
+    .range(...toPageRange(request))
   if (request.onlyCurrent) query = query.eq('is_current', true)
   const { data, error } = await query
   if (error) throw error
@@ -61,14 +52,14 @@ export const fetchUserReviews = async (
 
 export const fetchUserProducts = async (
   userId: string,
-  request: UserPageRequest,
+  request: PageRequest,
 ): Promise<ProductWithImages[]> => {
   const { data, error } = await supabase
     .from('product')
     .select('*, images:product_image(storage_path, sort_order)')
     .eq('created_by', userId)
     .order('created_at', { ascending: false })
-    .range(...toRange(request))
+    .range(...toPageRange(request))
   if (error) throw error
   return camelizeKeys(data ?? [])
 }

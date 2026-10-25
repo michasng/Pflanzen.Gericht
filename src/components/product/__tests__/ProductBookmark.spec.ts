@@ -6,9 +6,11 @@ import { createListSummary } from '@/__tests__/createListSummary'
 import { EmptyRouteComponent } from '@/__tests__/mountView'
 import BookmarkIcon from '@/components/BookmarkIcon.vue'
 import ProductBookmark from '@/components/product/ProductBookmark.vue'
+import { productBookmarksKey } from '@/composables/productBookmarksKey'
+import { useProductBookmarks } from '@/composables/useProductBookmarks'
 import { ListVisibility } from '@/config/ListVisibility'
 import { ListNameClashError } from '@/lib/ListNameClashError'
-import { listGatewayKey, type ListGateway } from '@/services/ListGateway'
+import type { ListGateway } from '@/services/ListGateway'
 
 const USER_ID = 'user-1'
 const PRODUCT_ID = 'product-1'
@@ -33,17 +35,22 @@ const mountBookmark = (gateway: Partial<ListGateway> = {}): VueWrapper => {
     history: createMemoryHistory(),
     routes: [{ path: '/', component: EmptyRouteComponent }],
   })
-  const provide: Record<symbol, unknown> = {
-    [listGatewayKey]: createFakeListGateway({
+  const bookmarks = useProductBookmarks({
+    gateway: createFakeListGateway({
       fetchAllUserLists: () => Promise.resolve([FAVORITES, TRY_LATER]),
       ...gateway,
     }),
+    ownerId: () => USER_ID,
+  })
+  const provide: Record<symbol, unknown> = {
+    [productBookmarksKey]: bookmarks,
   }
   mountedWrapper = mount(ProductBookmark, {
-    props: { ownerId: USER_ID, productId: PRODUCT_ID },
+    props: { productId: PRODUCT_ID },
     attachTo: document.body,
     global: { plugins: [router], provide },
   })
+  void bookmarks.load([PRODUCT_ID])
   return mountedWrapper
 }
 
@@ -104,7 +111,9 @@ describe('ProductBookmark', () => {
   })
 
   describe('given the product is on a list', () => {
-    const gateway = { fetchListIdsContainingProduct: () => Promise.resolve([FAVORITES.id]) }
+    const gateway = {
+      fetchListIdsByProductId: () => Promise.resolve({ [PRODUCT_ID]: [FAVORITES.id] }),
+    }
 
     it('shows a filled icon and a checkmark on that list only', async () => {
       const wrapper = mountBookmark(gateway)
@@ -183,7 +192,7 @@ describe('ProductBookmark', () => {
       let storedMemberships: string[] = []
       const wrapper = mountBookmark({
         fetchAllUserLists: () => Promise.resolve(storedLists),
-        fetchListIdsContainingProduct: () => Promise.resolve(storedMemberships),
+        fetchListIdsByProductId: () => Promise.resolve({ [PRODUCT_ID]: storedMemberships }),
         createList: (ownerId, input) => {
           calls.push(['create', ownerId, input])
           storedLists = [FAVORITES, created, TRY_LATER]

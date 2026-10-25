@@ -1,13 +1,13 @@
 import type { InjectionKey } from 'vue'
 import type {
-  ProductWithImages,
   PublicProfile,
   ReviewWithMeta,
   UserListsPageRequest,
-  UserPageRequest,
   UserReviewsPageRequest,
 } from '@/services/profile'
 import type { ListSummary } from '@/lib/ListSummary'
+import type { PageRequest } from '@/lib/PageRequest'
+import type { ProductWithImages } from '@/lib/ProductWithImages'
 
 export const profileGatewayKey: InjectionKey<ProfileGateway> = Symbol('profileGateway')
 
@@ -19,7 +19,7 @@ export interface ProfileUpdates {
 export interface ProfileGateway {
   fetchPublicProfile: (userId: string) => Promise<PublicProfile | null>
   fetchUserReviews: (userId: string, request: UserReviewsPageRequest) => Promise<ReviewWithMeta[]>
-  fetchUserProducts: (userId: string, request: UserPageRequest) => Promise<ProductWithImages[]>
+  fetchUserProducts: (userId: string, request: PageRequest) => Promise<ProductWithImages[]>
   fetchUserLists: (userId: string, request: UserListsPageRequest) => Promise<ListSummary[]>
   countCurrentUserReviews: (userId: string) => Promise<number>
   countUserProducts: (userId: string) => Promise<number>

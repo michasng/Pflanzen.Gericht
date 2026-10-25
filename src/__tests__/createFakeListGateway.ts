@@ -7,7 +7,7 @@ export const createFakeListGateway = (overrides: Partial<ListGateway> = {}): Lis
   addProductToList: () => Promise.resolve(),
   removeProductFromList: () => Promise.resolve(),
   fetchAllUserLists: () => Promise.resolve([]),
-  fetchListIdsContainingProduct: () => Promise.resolve([]),
+  fetchListIdsByProductId: () => Promise.resolve({}),
   createList: () => Promise.resolve('new-list'),
   updateList: () => Promise.resolve(),
   deleteList: () => Promise.resolve(),

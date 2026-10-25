@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAsyncData } from '@/composables/useAsyncData'
 import { injectGateway } from '@/composables/injectGateway'
+import { provideProductBookmarks } from '@/composables/provideProductBookmarks'
 import { productDetailGatewayKey } from '@/services/ProductDetailGateway'
 import { toErrorMessage } from '@/lib/error'
 import AlertMessage from '@/components/AlertMessage.vue'
@@ -39,6 +40,7 @@ const {
 )
 
 const currentUserId = computed(() => authStore.user?.id ?? null)
+provideProductBookmarks(() => (product.value ? [product.value.id] : []))
 const canManageProduct = computed(
   () =>
     authStore.isLoggedIn && (product.value?.createdBy === currentUserId.value || authStore.isAdmin),

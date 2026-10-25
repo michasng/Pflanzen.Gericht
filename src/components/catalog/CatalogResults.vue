@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useCatalogStore } from '@/stores/catalog'
 import { useAuthStore } from '@/stores/auth'
+import { provideProductBookmarks } from '@/composables/provideProductBookmarks'
 import ProductCard from '@/components/ProductCard.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import Button from '@/components/primitives/ButtonComponent.vue'
@@ -11,6 +12,8 @@ import { ButtonSize } from '@/components/primitives/ButtonSize'
 
 const catalogStore = useCatalogStore()
 const authStore = useAuthStore()
+
+provideProductBookmarks(() => catalogStore.products.map((product) => product.id))
 
 const isFiltered = computed(
   () => !!catalogStore.search || !!catalogStore.category || catalogStore.activeFilterCount > 0,

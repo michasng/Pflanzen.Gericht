@@ -4,7 +4,8 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { createFakeListGateway } from '@/__tests__/createFakeListGateway'
 import { EmptyRouteComponent } from '@/__tests__/mountView'
 import ProductBookmarkControl from '@/components/product/ProductBookmarkControl.vue'
-import { listGatewayKey } from '@/services/ListGateway'
+import { productBookmarksKey } from '@/composables/productBookmarksKey'
+import { useProductBookmarks } from '@/composables/useProductBookmarks'
 
 const PRODUCT_PATH = '/product/product-1'
 const BOOKMARK_LABEL = 'Listen verwalten'
@@ -18,7 +19,12 @@ const mountControl = async (currentUserId: string | null) => {
     ],
   })
   await router.push(PRODUCT_PATH)
-  const provide: Record<symbol, unknown> = { [listGatewayKey]: createFakeListGateway() }
+  const provide: Record<symbol, unknown> = {
+    [productBookmarksKey]: useProductBookmarks({
+      gateway: createFakeListGateway(),
+      ownerId: () => currentUserId,
+    }),
+  }
   const wrapper = mount(ProductBookmarkControl, {
     props: { productId: 'product-1', currentUserId },
     global: { plugins: [router], provide },

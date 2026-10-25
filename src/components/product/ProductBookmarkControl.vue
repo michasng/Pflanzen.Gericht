@@ -14,7 +14,7 @@ const route = useRoute()
 </script>
 
 <template>
-  <ProductBookmark v-if="currentUserId" :product-id="productId" :owner-id="currentUserId" />
+  <ProductBookmark v-if="currentUserId" :product-id="productId" />
   <ButtonLink
     v-else
     :to="{ name: 'login', query: { redirect: route.fullPath } }"

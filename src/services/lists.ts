@@ -1,18 +1,15 @@
 import { supabase } from '@/lib/supabase'
+import { DATABASE_LIST_VISIBILITY } from '@/config/databaseListVisibility'
 import { ListVisibility } from '@/config/ListVisibility'
 import { camelizeKeys } from '@/lib/camelizeKeys'
 import { toListSummary } from '@/lib/toListSummary'
 import { toListWriteError } from '@/lib/toListWriteError'
+import { toPageRange } from '@/lib/toPageRange'
 import type { ListProduct } from '@/lib/ListProduct'
 import type { ListSummary } from '@/lib/ListSummary'
+import type { PageRequest } from '@/lib/PageRequest'
 import type { ListInput } from '@/services/ListGateway'
-import type { UserListsPageRequest, UserPageRequest } from '@/services/profile'
-import type { TablesInsert } from '@/types/database'
-
-const DATABASE_VISIBILITY: Record<ListVisibility, TablesInsert<'list'>['visibility']> = {
-  [ListVisibility.Public]: 'public',
-  [ListVisibility.Private]: 'private',
-}
+import type { UserListsPageRequest } from '@/services/profile'
 
 export const fetchList = async (listId: string): Promise<ListSummary | null> => {
   const { data, error } = await supabase
@@ -26,21 +23,23 @@ export const fetchList = async (listId: string): Promise<ListSummary | null> => 
 
 export const fetchUserLists = async (
   ownerId: string,
-  { page, pageSize, onlyPublic }: UserListsPageRequest,
+  request: UserListsPageRequest,
 ): Promise<ListSummary[]> => {
   let query = supabase.from('list_summary').select('*').eq('owner_id', ownerId)
-  if (onlyPublic) query = query.eq('visibility', DATABASE_VISIBILITY[ListVisibility.Public])
+  if (request.onlyPublic) {
+    query = query.eq('visibility', DATABASE_LIST_VISIBILITY[ListVisibility.Public])
+  }
   const { data, error } = await query
     .order('sort_name')
     .order('id')
-    .range(page * pageSize, (page + 1) * pageSize - 1)
+    .range(...toPageRange(request))
   if (error) throw error
   return camelizeKeys(data ?? []).map(toListSummary)
 }
 
 export const fetchListProducts = async (
   listId: string,
-  { page, pageSize }: UserPageRequest,
+  request: PageRequest,
 ): Promise<ListProduct[]> => {
   const { data, error } = await supabase
     .from('list_entry')
@@ -48,7 +47,7 @@ export const fetchListProducts = async (
     .eq('list_id', listId)
     .order('added_at', { ascending: false })
     .order('product_id')
-    .range(page * pageSize, (page + 1) * pageSize - 1)
+    .range(...toPageRange(request))
   if (error) throw error
   return (data ?? []).map(({ added_at, product }) => ({
     ...camelizeKeys(product),
@@ -91,7 +90,9 @@ export const countUserLists = async (ownerId: string, onlyPublic: boolean): Prom
     .from('list')
     .select('id', { count: 'exact', head: true })
     .eq('owner_id', ownerId)
-  if (onlyPublic) query = query.eq('visibility', DATABASE_VISIBILITY[ListVisibility.Public])
+  if (onlyPublic) {
+    query = query.eq('visibility', DATABASE_LIST_VISIBILITY[ListVisibility.Public])
+  }
   const { count, error } = await query
   if (error) throw error
   return count ?? 0
@@ -103,7 +104,7 @@ export const createList = async (ownerId: string, input: ListInput): Promise<str
     .insert({
       owner_id: ownerId,
       name: input.name,
-      visibility: DATABASE_VISIBILITY[input.visibility],
+      visibility: DATABASE_LIST_VISIBILITY[input.visibility],
     })
     .select('id')
     .single()
@@ -122,23 +123,28 @@ export const fetchAllUserLists = async (ownerId: string): Promise<ListSummary[]>
   return camelizeKeys(data ?? []).map(toListSummary)
 }
 
-export const fetchListIdsContainingProduct = async (
+export const fetchListIdsByProductId = async (
   ownerId: string,
-  productId: string,
-): Promise<string[]> => {
+  productIds: string[],
+): Promise<Record<string, string[]>> => {
+  const listIdsByProductId: Record<string, string[]> = Object.fromEntries(
+    productIds.map((productId) => [productId, []]),
+  )
+  if (productIds.length === 0) return listIdsByProductId
   const { data, error } = await supabase
     .from('list_entry')
-    .select('list_id, list:list_id!inner(owner_id)')
-    .eq('product_id', productId)
+    .select('list_id, product_id, list:list_id!inner(owner_id)')
+    .in('product_id', productIds)
     .eq('list.owner_id', ownerId)
   if (error) throw error
-  return (data ?? []).map((entry) => entry.list_id)
+  for (const entry of data ?? []) listIdsByProductId[entry.product_id]?.push(entry.list_id)
+  return listIdsByProductId
 }
 
 export const updateList = async (listId: string, input: ListInput): Promise<void> => {
   const { error } = await supabase
     .from('list')
-    .update({ name: input.name, visibility: DATABASE_VISIBILITY[input.visibility] })
+    .update({ name: input.name, visibility: DATABASE_LIST_VISIBILITY[input.visibility] })
     .eq('id', listId)
   if (error) throw toListWriteError(error)
 }

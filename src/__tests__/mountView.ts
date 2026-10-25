@@ -25,6 +25,7 @@ import {
 } from '@/services/SimilarProductsGateway'
 import { createFakeAuthGateway } from '@/__tests__/createFakeAuthGateway'
 import { createFakeImageUrlGateway } from '@/__tests__/createFakeImageUrlGateway'
+import { createFakeListGateway } from '@/__tests__/createFakeListGateway'
 import { createFakeNameSuggestionGateway } from '@/__tests__/createFakeNameSuggestionGateway'
 import { createFakeOpenFoodFactsGateway } from '@/__tests__/createFakeOpenFoodFactsGateway'
 
@@ -71,12 +72,12 @@ export const mountView = async ({
   const provide: Record<symbol, unknown> = {
     [authGatewayKey]: gateways.auth ?? createFakeAuthGateway(),
     [imageUrlGatewayKey]: gateways.imageUrl ?? createFakeImageUrlGateway(),
+    [listGatewayKey]: gateways.list ?? createFakeListGateway(),
     [nameSuggestionGatewayKey]: gateways.nameSuggestion ?? createFakeNameSuggestionGateway(),
     [openFoodFactsGatewayKey]: gateways.openFoodFacts ?? createFakeOpenFoodFactsGateway(),
   }
   if (gateways.admin) provide[adminGatewayKey] = gateways.admin
   if (gateways.catalog) provide[catalogGatewayKey] = gateways.catalog
-  if (gateways.list) provide[listGatewayKey] = gateways.list
   if (gateways.productDetail) provide[productDetailGatewayKey] = gateways.productDetail
   if (gateways.productEditing) provide[productEditingGatewayKey] = gateways.productEditing
   if (gateways.profile) provide[profileGatewayKey] = gateways.profile
