@@ -13,6 +13,7 @@ import SectionHeading from '@/components/SectionHeading.vue'
 import SimilarProductsSection from '@/components/SimilarProductsSection.vue'
 import PriceReportsSection from '@/components/product/PriceReportsSection.vue'
 import ProductActions from '@/components/product/ProductActions.vue'
+import ProductBookmarkControl from '@/components/product/ProductBookmarkControl.vue'
 import ProductFooter from '@/components/product/ProductFooter.vue'
 import ProductHeading from '@/components/product/ProductHeading.vue'
 import ProductImageGallery from '@/components/product/ProductImageGallery.vue'
@@ -81,7 +82,11 @@ const deleteReview = async (reviewId: string): Promise<void> => {
     <div v-else-if="product" class="flex flex-col gap-4">
       <header class="flex flex-col gap-4">
         <ProductImageGallery :images="product.images" :product-name="product.name" />
-        <ProductHeading :product="product" />
+        <ProductHeading :product="product">
+          <template #actions>
+            <ProductBookmarkControl :product-id="product.id" :current-user-id="currentUserId" />
+          </template>
+        </ProductHeading>
       </header>
       <ProductRatingSummary
         :average-overall="product.avgOverall"

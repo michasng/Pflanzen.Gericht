@@ -97,13 +97,42 @@ export const countUserLists = async (ownerId: string, onlyPublic: boolean): Prom
   return count ?? 0
 }
 
-export const createList = async (ownerId: string, input: ListInput): Promise<void> => {
-  const { error } = await supabase.from('list').insert({
-    owner_id: ownerId,
-    name: input.name,
-    visibility: DATABASE_VISIBILITY[input.visibility],
-  })
+export const createList = async (ownerId: string, input: ListInput): Promise<string> => {
+  const { data, error } = await supabase
+    .from('list')
+    .insert({
+      owner_id: ownerId,
+      name: input.name,
+      visibility: DATABASE_VISIBILITY[input.visibility],
+    })
+    .select('id')
+    .single()
   if (error) throw toListWriteError(error)
+  return data.id
+}
+
+export const fetchAllUserLists = async (ownerId: string): Promise<ListSummary[]> => {
+  const { data, error } = await supabase
+    .from('list_summary')
+    .select('*')
+    .eq('owner_id', ownerId)
+    .order('sort_name')
+    .order('id')
+  if (error) throw error
+  return camelizeKeys(data ?? []).map(toListSummary)
+}
+
+export const fetchListIdsContainingProduct = async (
+  ownerId: string,
+  productId: string,
+): Promise<string[]> => {
+  const { data, error } = await supabase
+    .from('list_entry')
+    .select('list_id, list:list_id!inner(owner_id)')
+    .eq('product_id', productId)
+    .eq('list.owner_id', ownerId)
+  if (error) throw error
+  return (data ?? []).map((entry) => entry.list_id)
 }
 
 export const updateList = async (listId: string, input: ListInput): Promise<void> => {

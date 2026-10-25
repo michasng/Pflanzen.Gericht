@@ -265,7 +265,7 @@ describe('ProfileView', () => {
         list: {
           createList: (ownerId, input) => {
             created.push([ownerId, input])
-            return Promise.resolve()
+            return Promise.resolve('new-list')
           },
         },
       })

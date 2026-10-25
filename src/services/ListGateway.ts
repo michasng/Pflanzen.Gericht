@@ -18,7 +18,11 @@ export interface ListGateway {
   fetchProductIdsOnList: (listId: string, productIds: string[]) => Promise<string[]>
   addProductToList: (listId: string, productId: string) => Promise<void>
   removeProductFromList: (listId: string, productId: string) => Promise<void>
-  createList: (ownerId: string, input: ListInput) => Promise<void>
+  /** Sorted alphabetically using German rules, ignoring case */
+  fetchAllUserLists: (ownerId: string) => Promise<ListSummary[]>
+  fetchListIdsContainingProduct: (ownerId: string, productId: string) => Promise<string[]>
+  /** Resolves with the id of the new List */
+  createList: (ownerId: string, input: ListInput) => Promise<string>
   updateList: (listId: string, input: ListInput) => Promise<void>
   deleteList: (listId: string) => Promise<void>
 }

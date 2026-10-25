@@ -1,7 +1,11 @@
+<script setup lang="ts">
+withDefaults(defineProps<{ filled?: boolean }>(), { filled: false })
+</script>
+
 <template>
   <svg
     class="h-6 w-6"
-    fill="none"
+    :fill="filled ? 'currentColor' : 'none'"
     stroke="currentColor"
     stroke-width="2"
     viewBox="0 0 24 24"

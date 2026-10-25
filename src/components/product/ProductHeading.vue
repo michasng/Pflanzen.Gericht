@@ -44,15 +44,18 @@ defineProps<{
         {{ allergenToLabel(allergen) }}
       </Chip>
     </div>
-    <h1 class="text-2xl font-bold text-gray-900 mb-1">
-      {{ product.name }},
-      {{
-        formatQuantity({
-          unit: toQuantityUnit(product.quantityUnit),
-          value: product.quantityValue,
-        })
-      }}
-    </h1>
+    <div class="flex items-start justify-between gap-2 mb-1">
+      <h1 class="text-2xl font-bold text-gray-900">
+        {{ product.name }},
+        {{
+          formatQuantity({
+            unit: toQuantityUnit(product.quantityUnit),
+            value: product.quantityValue,
+          })
+        }}
+      </h1>
+      <slot name="actions" />
+    </div>
     <p class="text-sm text-gray-500">von {{ product.brand }}</p>
     <p v-if="product.description" class="mt-3 text-sm text-gray-600">{{ product.description }}</p>
   </div>

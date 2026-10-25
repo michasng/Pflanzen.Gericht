@@ -9,6 +9,7 @@ import PriceReportForm from '@/components/PriceReportForm.vue'
 import ReviewCard from '@/components/ReviewCard.vue'
 import { createDeferred } from '@/__tests__/createDeferred'
 import { createFakeAuthGateway } from '@/__tests__/createFakeAuthGateway'
+import { createFakeListGateway } from '@/__tests__/createFakeListGateway'
 import { createFakeProductDetailGateway } from '@/__tests__/createFakeProductDetailGateway'
 import { createPriceReport } from '@/__tests__/createPriceReport'
 import { createProductDetail } from '@/__tests__/createProductDetail'
@@ -58,6 +59,7 @@ const mountProductDetailView = async ({
     initialPath: '/product/product-1',
     gateways: {
       productDetail,
+      list: createFakeListGateway(),
       auth: createFakeAuthGateway({
         getSession: () => Promise.resolve(signedInUserId ? createSession(signedInUserId) : null),
       }),
