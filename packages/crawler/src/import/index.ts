@@ -1,30 +1,28 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
 import { Command } from 'commander'
-import type { Database } from '../../../../src/types/database.js'
 import type { SiteId } from '../schema/crawledProduct.js'
 import { createLogger } from '../shared/logging/logger.js'
-import { findProductImagePath } from '../shared/output/outputPaths.js'
 import {
   applyOverrideDecisions,
   createNewProduct,
   insertProductSource,
-  replaceProductImages,
   upsertPriceReport,
 } from './applyImport.js'
 import { loadCrawlerEnv } from './config/env.js'
-import { diffProduct } from './diffProduct.js'
+import { diffProduct, type DiffEntry } from './diffProduct.js'
 import { loadCrawledOutputs } from '../shared/output/loadCrawledOutputs.js'
 import { loadExistingProductDetail } from './loadExistingProductDetail.js'
 import { loadExistingProductMatches } from './loadExistingProductMatches.js'
+import { printDiffEntry } from './printDiffEntry.js'
 import { resolveRequiredProductFields } from './resolveRequiredProductFields.js'
 import {
   askCityName,
   askFieldGroupDecisions,
-  askImageDecision,
   askWhichExistingProduct,
+  type FieldDecision,
 } from './promptDecisions.js'
 import { createSupabaseAdminClient } from './supabaseAdminClient.js'
 import { tryProbe } from './tryProbe.js'
+import { updateProductImages } from './updateProductImages.js'
 
 const SITE_ORDER: readonly SiteId[] = ['rewe', 'knuspr', 'wolt']
 
@@ -33,16 +31,27 @@ program
   .option('--env <target>', 'local | production', 'local')
   .option('--update-prices', 'update price reports of existing products', false)
   .option('--update-images', 'offer to replace images of existing products', false)
+  .option('--override-all', 'override every changed field and image without asking', false)
   .parse(process.argv)
 const {
   env: envTarget,
-  updatePrices,
-  updateImages,
+  updatePrices: shouldUpdatePrices,
+  updateImages: shouldUpdateImages,
+  overrideAll: shouldOverrideAll,
 } = program.opts<{
   env: 'local' | 'production'
   updatePrices: boolean
   updateImages: boolean
+  overrideAll: boolean
 }>()
+
+const decideFields = async (diffEntries: DiffEntry[]): Promise<Map<string, FieldDecision>> => {
+  if (shouldOverrideAll) {
+    for (const diffEntry of diffEntries) printDiffEntry(diffEntry)
+    return new Map(diffEntries.map((entry) => [entry.field, 'override']))
+  }
+  return askFieldGroupDecisions(diffEntries)
+}
 
 const logger = createLogger('import')
 const env = loadCrawlerEnv(envTarget)
@@ -56,22 +65,6 @@ if (connectionProblem) {
     `Cannot reach the ${envTarget} database at ${env.supabaseUrl}. Is it running? ${connectionProblem}`,
   )
   process.exit(1)
-}
-
-const getExistingImageUrl = async (
-  supabase: SupabaseClient<Database>,
-  productId: string,
-): Promise<string | null> => {
-  const { data } = await supabase
-    .from('product_image')
-    .select('storage_path')
-    .eq('product_id', productId)
-    .order('sort_order')
-    .limit(1)
-    .maybeSingle()
-  if (!data) return null
-  return supabase.storage.from('product-images').getPublicUrl(`${data.storage_path}/preview.webp`)
-    .data.publicUrl
 }
 
 const crawledProducts = await loadCrawledOutputs(SITE_ORDER)
@@ -119,19 +112,20 @@ for (const product of crawledProducts) {
     logger.info(
       `"${product.name}" (${product.site}) differs from existing product ${existingMatch.id}:`,
     )
-    const decisions = await askFieldGroupDecisions(diffEntries)
+    const decisions = await decideFields(diffEntries)
     await applyOverrideDecisions(supabase, existingMatch.id, product, diffEntries, decisions)
   }
 
-  if (updateImages) {
-    const localImagePath = await findProductImagePath(product.site, product.slug)
-    const existingImageUrl = await getExistingImageUrl(supabase, existingMatch.id)
-    const imageDecision = await askImageDecision(existingImageUrl, localImagePath)
-    if (imageDecision === 'override')
-      await replaceProductImages(supabase, existingMatch.id, env.importUserId, product)
-  }
+  if (shouldUpdateImages)
+    await updateProductImages(
+      supabase,
+      existingMatch.id,
+      env.importUserId,
+      product,
+      shouldOverrideAll,
+    )
 
-  if (updatePrices)
+  if (shouldUpdatePrices)
     await upsertPriceReport(supabase, existingMatch.id, env.importUserId, cityName, product)
 }
 

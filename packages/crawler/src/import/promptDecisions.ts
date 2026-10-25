@@ -1,6 +1,7 @@
 import prompts from 'prompts'
 import type { DiffEntry } from './diffProduct.js'
 import type { ExistingProductSummary } from './loadExistingProductMatches.js'
+import { printDiffEntry } from './printDiffEntry.js'
 
 const SIGINT_EXIT_CODE = 130
 
@@ -45,9 +46,7 @@ export const askFieldGroupDecisions = async (
 ): Promise<Map<string, FieldDecision>> => {
   const decisions = new Map<string, FieldDecision>()
   for (const entry of diffEntries) {
-    console.log(`\nField: ${entry.field}`)
-    console.log(`  existing:  ${JSON.stringify(entry.existingValue)}`)
-    console.log(`  crawled:   ${JSON.stringify(entry.candidateValue)}`)
+    printDiffEntry(entry)
     const response = await prompts(
       {
         type: 'select',
@@ -67,9 +66,8 @@ export const askFieldGroupDecisions = async (
 
 export const askImageDecision = async (
   existingImageUrl: string | null,
-  localImagePath: string | null,
+  localImagePath: string,
 ): Promise<FieldDecision> => {
-  if (!localImagePath) return 'keep'
   console.log(`\nImage comparison:`)
   console.log(`  existing (DB): ${existingImageUrl ?? '(none)'}`)
   console.log(`  crawled (local): ${localImagePath}`)

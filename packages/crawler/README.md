@@ -55,6 +55,7 @@ pnpm import:products                  # against .env.local
 pnpm import:products --env production
 pnpm import:products --update-prices  # update prices of existing products
 pnpm import:products --update-images  # ask to replace existing images
+pnpm import:products --override-all   # override all changed fields (and images with --update-images) without asking
 ```
 
 Without `--update-images`, images of existing products are never touched.
