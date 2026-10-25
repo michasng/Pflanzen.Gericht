@@ -41,12 +41,25 @@ A registered person who contributes Products, Reviews, Price Reports, and Simila
 _Avoid_: Member, account, profile (as the person)
 
 **Owner**:
-The User who entered a Product and may therefore edit it.
+The User who entered a Product or created a List and may therefore edit it.
 _Avoid_: Creator, author
 
 **Admin**:
 A User with authority to edit any contribution and to Merge Duplicates.
 _Avoid_: Moderator
+
+### Lists
+
+**List**:
+A named selection of Products a User keeps on their profile. Each Product appears on a List at most once, and each of an Owner's Lists has a distinct name.
+_Avoid_: Collection, board, playlist, bookmark
+
+**Public List**:
+A List that anyone can see.
+
+**Private List**:
+A List that only its Owner can see, not even Admins.
+_Avoid_: Hidden list, secret list
 
 ### Prices
 
