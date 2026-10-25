@@ -13,14 +13,17 @@ const props = defineProps<{
     images: CoverImageCandidate[]
   }
   reviewsCount?: number
+  addedAt?: string
 }>()
 
 const METADATA_SEPARATOR = ' · '
 
 const metadata = computed(() => {
-  const createdAt = formatDate(props.product.createdAt)
-  if (props.reviewsCount === undefined) return createdAt
-  return `${props.reviewsCount} Bewertungen${METADATA_SEPARATOR}${createdAt}`
+  const date = props.addedAt
+    ? `hinzugefügt am ${formatDate(props.addedAt)}`
+    : formatDate(props.product.createdAt)
+  if (props.reviewsCount === undefined) return date
+  return `${props.reviewsCount} Bewertungen${METADATA_SEPARATOR}${date}`
 })
 
 const coverImage = computed(() => resolveProductCoverImage(props.product.images))

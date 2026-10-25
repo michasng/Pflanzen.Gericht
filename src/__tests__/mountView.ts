@@ -19,6 +19,10 @@ import {
 } from '@/services/ProductEditingGateway'
 import { profileGatewayKey, type ProfileGateway } from '@/services/ProfileGateway'
 import { reviewEditingGatewayKey, type ReviewEditingGateway } from '@/services/ReviewEditingGateway'
+import {
+  similarProductsGatewayKey,
+  type SimilarProductsGateway,
+} from '@/services/SimilarProductsGateway'
 import { createFakeAuthGateway } from '@/__tests__/createFakeAuthGateway'
 import { createFakeImageUrlGateway } from '@/__tests__/createFakeImageUrlGateway'
 import { createFakeNameSuggestionGateway } from '@/__tests__/createFakeNameSuggestionGateway'
@@ -38,6 +42,7 @@ interface FakeGateways {
   productEditing?: ProductEditingGateway
   profile?: ProfileGateway
   reviewEditing?: ReviewEditingGateway
+  similarProducts?: SimilarProductsGateway
 }
 
 interface MountViewOptions {
@@ -76,6 +81,7 @@ export const mountView = async ({
   if (gateways.productEditing) provide[productEditingGatewayKey] = gateways.productEditing
   if (gateways.profile) provide[profileGatewayKey] = gateways.profile
   if (gateways.reviewEditing) provide[reviewEditingGatewayKey] = gateways.reviewEditing
+  if (gateways.similarProducts) provide[similarProductsGatewayKey] = gateways.similarProducts
 
   const wrapper = mount(view, { global: { plugins: [createPinia(), router], provide, stubs } })
   return { wrapper, router }

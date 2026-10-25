@@ -12,6 +12,7 @@ import LoadingText from '@/components/LoadingText.vue'
 import NotFoundMessage from '@/components/NotFoundMessage.vue'
 import ListForm from '@/components/list/ListForm.vue'
 import ListHeader from '@/components/list/ListHeader.vue'
+import ListProductsSection from '@/components/list/ListProductsSection.vue'
 import Button from '@/components/primitives/ButtonComponent.vue'
 import { ButtonSize } from '@/components/primitives/ButtonSize'
 import { ButtonTone } from '@/components/primitives/ButtonTone'
@@ -120,6 +121,8 @@ const deleteList = async (): Promise<void> => {
         </div>
         <AlertMessage :message="actionError" />
       </template>
+
+      <ListProductsSection :key="listPage.list.id" :listId="listPage.list.id" :isOwner="isOwner" />
     </template>
   </div>
 </template>

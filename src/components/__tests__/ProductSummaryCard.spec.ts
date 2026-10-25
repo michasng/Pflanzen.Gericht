@@ -3,11 +3,12 @@ import { mount } from '@vue/test-utils'
 import ProductSummaryCard from '@/components/ProductSummaryCard.vue'
 import { createFakeImageUrlGateway } from '@/__tests__/createFakeImageUrlGateway'
 import { createProductWithImages } from '@/__tests__/createProductWithImages'
+import { formatDate } from '@/lib/date'
 import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 import type { ProductWithImages } from '@/services/profile'
 
 const mountCard = (
-  props: { reviewsCount?: number; product?: ProductWithImages } = {},
+  props: { reviewsCount?: number; product?: ProductWithImages; addedAt?: string } = {},
   slots: Record<string, string> = {},
 ) =>
   mount(ProductSummaryCard, {
@@ -58,6 +59,15 @@ describe('ProductSummaryCard', () => {
       const wrapper = mountCard({ reviewsCount: 3 })
 
       expect(wrapper.text()).toMatch(/3 Bewertungen · /)
+    })
+  })
+
+  describe('given an added date', () => {
+    it('shows it in place of the creation date', () => {
+      const wrapper = mountCard({ addedAt: '2026-10-05T12:00:00.000Z' })
+
+      expect(wrapper.text()).toContain(`hinzugefügt am ${formatDate('2026-10-05T12:00:00.000Z')}`)
+      expect(wrapper.text()).not.toContain(formatDate('2026-09-11T00:00:00.000Z'))
     })
   })
 
