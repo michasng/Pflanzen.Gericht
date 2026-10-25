@@ -18,4 +18,5 @@ export interface ProductDetailGateway {
   ) => Promise<PriceReportWithProfile>
   deletePriceReport: (priceReportId: string) => Promise<void>
   deleteProduct: (productId: string) => Promise<void>
+  deleteReview: (reviewId: string) => Promise<void>
 }

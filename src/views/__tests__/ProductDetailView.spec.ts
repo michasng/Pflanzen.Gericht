@@ -6,6 +6,7 @@ import type { ProductDetailGateway } from '@/services/ProductDetailGateway'
 import { useAuthStore } from '@/stores/auth'
 import ProductDetailView from '@/views/ProductDetailView.vue'
 import PriceReportForm from '@/components/PriceReportForm.vue'
+import ReviewCard from '@/components/ReviewCard.vue'
 import { createDeferred } from '@/__tests__/createDeferred'
 import { createFakeAuthGateway } from '@/__tests__/createFakeAuthGateway'
 import { createFakeProductDetailGateway } from '@/__tests__/createFakeProductDetailGateway'
@@ -210,6 +211,58 @@ describe('ProductDetailView', () => {
       expect(wrapper.text()).toContain('4.0')
       expect(wrapper.text()).toContain('Preis-Leistung')
       expect(wrapper.text()).not.toContain('Konsistenz')
+    })
+  })
+
+  describe('given a review that can be deleted', () => {
+    const mountWithReview = (deleteReview: ProductDetailGateway['deleteReview']) =>
+      mountWithProduct(
+        {
+          ...createProductDetail('product-1', 'Hafermilch'),
+          reviewsCount: 1,
+          reviews: [createReview({ id: 'review-9', userId: OWNER_ID })],
+        },
+        { signedInUserId: OWNER_ID, gateway: { deleteReview } },
+      )
+
+    const emitDelete = async (wrapper: VueWrapper): Promise<void> => {
+      await vi.waitFor(() => expect(wrapper.findComponent(ReviewCard).exists()).toBe(true))
+      wrapper.getComponent(ReviewCard).vm.$emit('delete')
+    }
+
+    it('when deleting after confirming then deletes the review', async () => {
+      vi.stubGlobal('confirm', () => true)
+      const deletedIds: string[] = []
+      const { wrapper } = await mountWithReview((id) => {
+        deletedIds.push(id)
+        return Promise.resolve()
+      })
+
+      await emitDelete(wrapper)
+
+      await vi.waitFor(() => expect(deletedIds).toEqual(['review-9']))
+    })
+
+    it('when deleting without confirming then keeps the review', async () => {
+      vi.stubGlobal('confirm', () => false)
+      const deletedIds: string[] = []
+      const { wrapper } = await mountWithReview((id) => {
+        deletedIds.push(id)
+        return Promise.resolve()
+      })
+
+      await emitDelete(wrapper)
+
+      expect(deletedIds).toEqual([])
+    })
+
+    it('when deleting fails then shows the error', async () => {
+      vi.stubGlobal('confirm', () => true)
+      const { wrapper } = await mountWithReview(() => Promise.reject(new Error('denied')))
+
+      await emitDelete(wrapper)
+
+      await vi.waitFor(() => expect(wrapper.text()).toContain('denied'))
     })
   })
 

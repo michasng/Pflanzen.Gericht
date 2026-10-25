@@ -31,6 +31,7 @@ const {
   loading,
   errorMessage,
   notFound,
+  reload,
 } = useAsyncData(
   (productId: string) => productDetailGateway.fetchProductDetail(productId),
   () => String(route.params.id),
@@ -56,6 +57,19 @@ const deleteProduct = async (productId: string): Promise<void> => {
     deleteErrorMessage.value = toErrorMessage(err)
   }
 }
+
+const deleteReview = async (reviewId: string): Promise<void> => {
+  if (!confirm('Bewertung wirklich löschen?')) return
+
+  deleteErrorMessage.value = null
+  try {
+    await productDetailGateway.deleteReview(reviewId)
+  } catch (err) {
+    deleteErrorMessage.value = toErrorMessage(err)
+    return
+  }
+  await reload()
+}
 </script>
 
 <template>
@@ -80,6 +94,7 @@ const deleteProduct = async (productId: string): Promise<void> => {
           :reviews="product.reviews"
           :current-user-id="currentUserId"
           :is-admin="authStore.isAdmin"
+          @delete="deleteReview"
         />
         <ProductActions
           :product-id="product.id"
