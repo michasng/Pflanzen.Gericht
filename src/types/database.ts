@@ -564,6 +564,7 @@ export type Database = {
           name: string | null
           owner_id: string | null
           product_count: number | null
+          sort_name: string | null
           updated_at: string | null
           visibility: Database['public']['Enums']['list_visibility'] | null
         }
@@ -574,6 +575,7 @@ export type Database = {
           name?: string | null
           owner_id?: string | null
           product_count?: never
+          sort_name?: never
           updated_at?: string | null
           visibility?: Database['public']['Enums']['list_visibility'] | null
         }
@@ -584,6 +586,7 @@ export type Database = {
           name?: string | null
           owner_id?: string | null
           product_count?: never
+          sort_name?: never
           updated_at?: string | null
           visibility?: Database['public']['Enums']['list_visibility'] | null
         }

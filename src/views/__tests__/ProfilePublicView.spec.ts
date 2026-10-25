@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { ProfileGateway } from '@/services/ProfileGateway'
 import ProfilePublicView from '@/views/ProfilePublicView.vue'
 import { createFakeProfileGateway } from '@/__tests__/createFakeProfileGateway'
+import { createListSummary } from '@/__tests__/createListSummary'
 import { createProductWithImages } from '@/__tests__/createProductWithImages'
 import { createReviewWithMeta } from '@/__tests__/createReviewWithMeta'
 import { EmptyRouteComponent, mountView } from '@/__tests__/mountView'
@@ -20,6 +21,7 @@ const mountProfilePublicView = (profile: Partial<ProfileGateway> = {}, search = 
     routes: [
       { path: '/', name: 'home', component: EmptyRouteComponent },
       { path: '/profile/:id', name: 'profile-public', component: EmptyRouteComponent },
+      { path: '/list/:id', name: 'list', component: EmptyRouteComponent },
       { path: '/product/:id', name: 'product-detail', component: EmptyRouteComponent },
     ],
     initialPath: `/profile/user-1${search}`,
@@ -50,6 +52,27 @@ describe('ProfilePublicView', () => {
       })
 
       await vi.waitFor(() => expect(wrapper.get('[role="alert"]').text()).toBe('offline'))
+    })
+  })
+
+  describe('given the profile has public lists', () => {
+    it('shows only public lists without visibility badges', async () => {
+      const onlyPublicFlags: boolean[] = []
+      const { wrapper } = await mountProfilePublicView(
+        {
+          fetchUserLists: (_userId, { onlyPublic }) => {
+            onlyPublicFlags.push(onlyPublic)
+            return Promise.resolve([createListSummary({ name: 'Favoriten' })])
+          },
+          countUserLists: (_userId, onlyPublic) => Promise.resolve(onlyPublic ? 1 : 5),
+        },
+        '?tab=lists',
+      )
+
+      await vi.waitFor(() => expect(wrapper.text()).toContain('Favoriten'))
+      expect(onlyPublicFlags).toEqual([true])
+      expect(wrapper.text()).toMatch(/1\s*Listen/)
+      expect(wrapper.text()).not.toContain('Öffentlich')
     })
   })
 

@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 import type { ProfileGateway } from '@/services/ProfileGateway'
+import type { ListGateway } from '@/services/ListGateway'
+import { ListNameClashError } from '@/lib/ListNameClashError'
+import { createFakeListGateway } from '@/__tests__/createFakeListGateway'
+import { createListSummary } from '@/__tests__/createListSummary'
+import { ListVisibility } from '@/config/ListVisibility'
 import { useAuthStore } from '@/stores/auth'
 import { createFakeAuthGateway } from '@/__tests__/createFakeAuthGateway'
 import { createFakeProfileGateway } from '@/__tests__/createFakeProfileGateway'
@@ -20,6 +25,7 @@ const createSessionWithEmail = () => {
 
 interface MountOptions {
   profile?: Partial<ProfileGateway>
+  list?: Partial<ListGateway>
   displayName?: string | null
   bio?: string | null
 }
@@ -36,12 +42,18 @@ const SignedInHost = defineComponent({
   },
 })
 
-const mountProfileView = async ({ profile = {}, displayName = null, bio = null }: MountOptions) => {
+const mountProfileView = async ({
+  profile = {},
+  list = {},
+  displayName = null,
+  bio = null,
+}: MountOptions) => {
   const mounted = await mountView({
     view: SignedInHost,
     routes: [
       { path: '/', name: 'home', component: EmptyRouteComponent },
       { path: '/profile', name: 'profile', component: EmptyRouteComponent },
+      { path: '/list/:id', name: 'list', component: EmptyRouteComponent },
       { path: '/product/:id', name: 'product-detail', component: EmptyRouteComponent },
       { path: '/product/:id/edit', name: 'product-edit', component: EmptyRouteComponent },
       { path: '/product/:id/review', name: 'review-new', component: EmptyRouteComponent },
@@ -50,6 +62,7 @@ const mountProfileView = async ({ profile = {}, displayName = null, bio = null }
     initialPath: '/profile',
     gateways: {
       profile: createFakeProfileGateway(profile),
+      list: createFakeListGateway(list),
       auth: createFakeAuthGateway({
         getSession: () => Promise.resolve(createSessionWithEmail()),
         fetchProfile: () => Promise.resolve(createProfile({ displayName, bio })),
@@ -156,6 +169,115 @@ describe('ProfileView', () => {
 
       await vi.waitFor(() => expect(wrapper.text()).toContain('Mandelmilch'))
       expect(wrapper.text()).toMatch(/Milch-Alternative\s*·\s*Alpro/)
+    })
+  })
+
+  describe('given the user has lists', () => {
+    const profile: Partial<ProfileGateway> = {
+      fetchUserLists: () =>
+        Promise.resolve([
+          createListSummary({
+            id: 'list-1',
+            name: 'Favoriten',
+            visibility: ListVisibility.Private,
+          }),
+          createListSummary({ id: 'list-2', name: 'Probieren', productCount: 1 }),
+        ]),
+      countUserLists: () => Promise.resolve(2),
+    }
+
+    const openListsTab = async (options: MountOptions) => {
+      const mounted = await mountProfileView(options)
+      await mounted.wrapper.get('[role="tab"][aria-label="Meine Listen"]').trigger('click')
+      return mounted
+    }
+
+    it('shows the count and every list with visibility badge and product count', async () => {
+      const { wrapper } = await openListsTab({ profile })
+
+      await vi.waitFor(() => expect(wrapper.text()).toContain('Favoriten'))
+      expect(wrapper.text()).toMatch(/2\s*Listen/)
+      expect(wrapper.text()).toContain('Privat')
+      expect(wrapper.text()).toContain('Öffentlich')
+      expect(wrapper.text()).toContain('1 Produkt')
+      expect(wrapper.text()).toContain('2 Produkte')
+    })
+
+    it('links each list to its page', async () => {
+      const { wrapper } = await openListsTab({ profile })
+
+      await vi.waitFor(() => expect(wrapper.text()).toContain('Favoriten'))
+      expect(wrapper.get('a[href="/list/list-1"]').text()).toBe('Favoriten')
+    })
+
+    it('loads all of the own lists', async () => {
+      const onlyPublicFlags: boolean[] = []
+      await openListsTab({
+        profile: {
+          fetchUserLists: (_userId, { onlyPublic }) => {
+            onlyPublicFlags.push(onlyPublic)
+            return Promise.resolve([])
+          },
+        },
+      })
+
+      await vi.waitFor(() => expect(onlyPublicFlags).toEqual([false]))
+    })
+  })
+
+  describe('when creating a list', () => {
+    const openNewListForm = async (options: MountOptions) => {
+      const mounted = await mountProfileView(options)
+      await mounted.wrapper.get('[role="tab"][aria-label="Meine Listen"]').trigger('click')
+      await vi.waitFor(() =>
+        expect(mounted.wrapper.find('[aria-label="Neue Liste"]').exists()).toBe(true),
+      )
+      await mounted.wrapper.get('[aria-label="Neue Liste"]').trigger('click')
+      return mounted
+    }
+
+    it('asks for a visibility when none was chosen', async () => {
+      const { wrapper } = await openNewListForm({})
+      await wrapper.get('#new-list-name').setValue('Favoriten')
+
+      await wrapper.get('form').trigger('submit')
+
+      await vi.waitFor(() => expect(wrapper.text()).toContain('Bitte Sichtbarkeit wählen'))
+    })
+
+    it('shows the name clash', async () => {
+      const { wrapper } = await openNewListForm({
+        list: { createList: () => Promise.reject(new ListNameClashError()) },
+      })
+      await wrapper.get('#new-list-name').setValue('favoriten')
+      await wrapper.get('input[type="radio"][value="public"]').setValue()
+
+      await wrapper.get('form').trigger('submit')
+
+      await vi.waitFor(() =>
+        expect(wrapper.text()).toContain('Du hast bereits eine Liste mit diesem Namen.'),
+      )
+    })
+
+    it('saves the list for the user and closes the form', async () => {
+      const created: unknown[] = []
+      const { wrapper } = await openNewListForm({
+        list: {
+          createList: (ownerId, input) => {
+            created.push([ownerId, input])
+            return Promise.resolve()
+          },
+        },
+      })
+      await wrapper.get('#new-list-name').setValue('Probieren')
+      await wrapper.get('input[type="radio"][value="private"]').setValue()
+
+      await wrapper.get('form').trigger('submit')
+
+      await vi.waitFor(() => expect(wrapper.find('form').exists()).toBe(false))
+      expect(created).toEqual([
+        [USER_ID, { name: 'Probieren', visibility: ListVisibility.Private }],
+      ])
     })
   })
 

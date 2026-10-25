@@ -7,6 +7,7 @@ import { usePaginatedList } from '@/composables/usePaginatedList'
 import { useProfileCounts } from '@/composables/useProfileCounts'
 import { useProfileTab } from '@/composables/useProfileTab'
 import { injectGateway } from '@/composables/injectGateway'
+import { listGatewayKey, type ListInput } from '@/services/ListGateway'
 import { profileGatewayKey, type ProfileUpdates } from '@/services/ProfileGateway'
 import ProductSummaryCard from '@/components/ProductSummaryCard.vue'
 import ReviewSummaryCard from '@/components/ReviewSummaryCard.vue'
@@ -14,6 +15,8 @@ import AlertMessage from '@/components/AlertMessage.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import LoadMoreButton from '@/components/LoadMoreButton.vue'
 import LoadingText from '@/components/LoadingText.vue'
+import ListForm from '@/components/list/ListForm.vue'
+import ListSummaryList from '@/components/list/ListSummaryList.vue'
 import ProfileEditForm from '@/components/profile/ProfileEditForm.vue'
 import ProfileHeader from '@/components/profile/ProfileHeader.vue'
 import ProfileStats from '@/components/profile/ProfileStats.vue'
@@ -29,22 +32,26 @@ import Chip from '@/components/primitives/ChipComponent.vue'
 import { ChipSize } from '@/components/primitives/ChipSize'
 import { ChipTone } from '@/components/primitives/ChipTone'
 
+const PROFILE_LIST_PAGE_SIZE = 20
+const PROFILE_REVIEW_PAGE_SIZE = 20
+const PROFILE_PRODUCT_PAGE_SIZE = 20
+
 const TABS: TabBarItem<ProfileTab>[] = [
   { value: ProfileTab.Reviews, label: 'Meine Bewertungen', ariaLabel: 'Meine Bewertungen' },
   { value: ProfileTab.Products, label: 'Meine Produkte', ariaLabel: 'Meine Produkte' },
+  { value: ProfileTab.Lists, label: 'Meine Listen', ariaLabel: 'Meine Listen' },
 ]
-
-const PROFILE_REVIEW_PAGE_SIZE = 20
-const PROFILE_PRODUCT_PAGE_SIZE = 20
 
 const router = useRouter()
 const authStore = useAuthStore()
 const profileGateway = injectGateway(profileGatewayKey)
+const listGateway = injectGateway(listGatewayKey)
 
 const activeTab = useProfileTab()
 const userId = computed(() => authStore.user?.id)
 
 const isEditing = ref(false)
+const isCreatingList = ref(false)
 const saving = ref(false)
 const saveError = ref<string | null>(null)
 
@@ -57,9 +64,10 @@ const reportDeleteError = (message: string): void => {
 const {
   reviewsCount,
   productsCount,
+  listsCount,
   errorMessage: countsError,
   loadCounts,
-} = useProfileCounts(profileGateway)
+} = useProfileCounts(profileGateway, { onlyPublicLists: false })
 
 const {
   items: reviews,
@@ -108,22 +116,63 @@ const {
   reportError: reportDeleteError,
 })
 
-const loading = computed(() => loadingReviews.value || loadingProducts.value)
+// Lists are deleted on their own page, but the paginated list requires a deletion contract.
+const deleteNothing = (): Promise<void> => Promise.resolve()
+
+const {
+  items: lists,
+  loading: loadingLists,
+  loadError: listsLoadError,
+  hasMore: listsHaveMore,
+  loadingMore: loadingMoreLists,
+  loadFirstPage: loadFirstListPage,
+  loadMore: loadMoreLists,
+} = usePaginatedList({
+  fetchPage: async (page) =>
+    userId.value
+      ? profileGateway.fetchUserLists(userId.value, {
+          page,
+          pageSize: PROFILE_LIST_PAGE_SIZE,
+          onlyPublic: false,
+        })
+      : [],
+  pageSize: PROFILE_LIST_PAGE_SIZE,
+  deleteItem: deleteNothing,
+  reportError: reportDeleteError,
+})
+
+const loading = computed(() => loadingReviews.value || loadingProducts.value || loadingLists.value)
 const loadError = computed(
-  () => reviewsLoadError.value ?? productsLoadError.value ?? countsError.value,
+  () =>
+    reviewsLoadError.value ?? productsLoadError.value ?? listsLoadError.value ?? countsError.value,
 )
 
 watch(
   userId,
   (id) => {
     if (!id) return
-    void Promise.all([loadFirstReviewPage(), loadFirstProductPage(), loadCounts(id)])
+    void Promise.all([
+      loadFirstReviewPage(),
+      loadFirstProductPage(),
+      loadFirstListPage(),
+      loadCounts(id),
+    ])
   },
   { immediate: true },
 )
 
 const refreshCounts = async (): Promise<void> => {
   if (userId.value) await loadCounts(userId.value)
+}
+
+const createList = async (input: ListInput): Promise<void> => {
+  if (!userId.value) return
+  await listGateway.createList(userId.value, input)
+}
+
+const finishCreatingList = async (): Promise<void> => {
+  isCreatingList.value = false
+  await Promise.all([loadFirstListPage(), refreshCounts()])
 }
 
 const startEdit = (): void => {
@@ -179,6 +228,11 @@ const handleLoadMoreProducts = async (): Promise<void> => {
   deleteError.value = null
   await loadMoreProducts()
 }
+
+const handleLoadMoreLists = async (): Promise<void> => {
+  deleteError.value = null
+  await loadMoreLists()
+}
 </script>
 
 <template>
@@ -225,7 +279,11 @@ const handleLoadMoreProducts = async (): Promise<void> => {
       </Button>
     </div>
 
-    <ProfileStats :reviewsCount="reviewsCount" :productsCount="productsCount" />
+    <ProfileStats
+      :reviewsCount="reviewsCount"
+      :productsCount="productsCount"
+      :listsCount="listsCount"
+    />
 
     <TabBar v-model="activeTab" :tabs="TABS" class="-mx-4 px-4" />
 
@@ -283,6 +341,34 @@ const handleLoadMoreProducts = async (): Promise<void> => {
           @click="handleLoadMoreReviews"
         />
       </div>
+    </template>
+
+    <template v-else-if="activeTab === ProfileTab.Lists">
+      <AlertMessage :message="deleteError" />
+      <ListForm
+        v-if="isCreatingList"
+        idPrefix="new-list"
+        :save="createList"
+        @saved="finishCreatingList"
+        @cancel="isCreatingList = false"
+      />
+      <Button
+        v-else
+        ariaLabel="Neue Liste"
+        :variant="ButtonVariant.Outlined"
+        full-width
+        @click="isCreatingList = true"
+      >
+        Neue Liste
+      </Button>
+      <ListSummaryList
+        :lists="lists"
+        showVisibility
+        :hasMore="listsHaveMore"
+        :loadingMore="loadingMoreLists"
+        emptyTitle="Noch keine Listen angelegt."
+        @loadMore="handleLoadMoreLists"
+      />
     </template>
 
     <template v-else>

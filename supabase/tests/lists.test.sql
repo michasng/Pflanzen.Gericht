@@ -1,6 +1,6 @@
 BEGIN;
 
-SELECT plan(17);
+SELECT plan(18);
 
 INSERT INTO auth.users (id, email)
 VALUES
@@ -48,6 +48,11 @@ SELECT set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-000000
 SET LOCAL ROLE authenticated;
 SELECT is((SELECT count(*) FROM public.list), 3::bigint, 'the owner sees all of their lists');
 SELECT is((SELECT count(*) FROM public.list_entry), 5::bigint, 'the owner sees all of their entries');
+SELECT results_eq(
+  $$SELECT name FROM public.list_summary ORDER BY sort_name$$,
+  $$VALUES ('Beide'), ('Favoriten'), ('Geheim')$$,
+  'lists sort alphabetically'
+);
 
 SELECT set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-000000000022", "role": "authenticated"}', true);
 SELECT is((SELECT count(*) FROM public.list), 1::bigint, 'another user sees only the public list');

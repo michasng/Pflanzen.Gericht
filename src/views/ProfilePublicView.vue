@@ -15,18 +15,21 @@ import LoadMoreButton from '@/components/LoadMoreButton.vue'
 import LoadingText from '@/components/LoadingText.vue'
 import NotFoundMessage from '@/components/NotFoundMessage.vue'
 import ProfileHeader from '@/components/profile/ProfileHeader.vue'
+import ListSummaryList from '@/components/list/ListSummaryList.vue'
 import ProfileStats from '@/components/profile/ProfileStats.vue'
 import { ProfileTab } from '@/components/profile/ProfileTab'
 import TabBar from '@/components/primitives/TabBar.vue'
 import type { TabBarItem } from '@/components/primitives/TabBarItem'
 import { formatDate } from '@/lib/date'
 
+const PROFILE_LIST_PAGE_SIZE = 20
 const PROFILE_REVIEW_PAGE_SIZE = 20
 const PROFILE_PRODUCT_PAGE_SIZE = 20
 
 const TABS: TabBarItem<ProfileTab>[] = [
   { value: ProfileTab.Reviews, label: 'Bewertungen', ariaLabel: 'Bewertungen' },
   { value: ProfileTab.Products, label: 'Produkte', ariaLabel: 'Produkte' },
+  { value: ProfileTab.Lists, label: 'Listen', ariaLabel: 'Listen' },
 ]
 
 const route = useRoute()
@@ -38,9 +41,10 @@ const userId = computed(() => String(route.params.id))
 const {
   reviewsCount,
   productsCount,
+  listsCount,
   errorMessage: countsError,
   loadCounts,
-} = useProfileCounts(profileGateway)
+} = useProfileCounts(profileGateway, { onlyPublicLists: true })
 
 const loadMoreError = ref<string | null>(null)
 const reportLoadMoreError = (message: string): void => {
@@ -88,6 +92,25 @@ const {
 })
 
 const {
+  items: lists,
+  loadError: listsLoadError,
+  hasMore: listsHaveMore,
+  loadingMore: loadingMoreLists,
+  loadFirstPage: loadFirstListPage,
+  loadMore: loadMoreLists,
+} = usePaginatedList({
+  fetchPage: (page) =>
+    profileGateway.fetchUserLists(userId.value, {
+      page,
+      pageSize: PROFILE_LIST_PAGE_SIZE,
+      onlyPublic: true,
+    }),
+  pageSize: PROFILE_LIST_PAGE_SIZE,
+  deleteItem: deleteNothing,
+  reportError: reportLoadMoreError,
+})
+
+const {
   data: profile,
   loading,
   errorMessage,
@@ -97,8 +120,14 @@ const {
     const publicProfile = await profileGateway.fetchPublicProfile(id)
     if (!publicProfile) return null
 
-    await Promise.all([loadFirstReviewPage(), loadFirstProductPage(), loadCounts(id)])
-    const contentError = reviewsLoadError.value ?? productsLoadError.value ?? countsError.value
+    await Promise.all([
+      loadFirstReviewPage(),
+      loadFirstProductPage(),
+      loadFirstListPage(),
+      loadCounts(id),
+    ])
+    const contentError =
+      reviewsLoadError.value ?? productsLoadError.value ?? listsLoadError.value ?? countsError.value
     if (contentError) throw new Error(contentError)
     return publicProfile
   },
@@ -113,6 +142,11 @@ const handleLoadMoreReviews = async (): Promise<void> => {
 const handleLoadMoreProducts = async (): Promise<void> => {
   loadMoreError.value = null
   await loadMoreProducts()
+}
+
+const handleLoadMoreLists = async (): Promise<void> => {
+  loadMoreError.value = null
+  await loadMoreLists()
 }
 </script>
 
@@ -129,7 +163,11 @@ const handleLoadMoreProducts = async (): Promise<void> => {
 
       <p v-if="profile.bio" class="text-sm text-gray-600">{{ profile.bio }}</p>
 
-      <ProfileStats :reviewsCount="reviewsCount" :productsCount="productsCount" />
+      <ProfileStats
+        :reviewsCount="reviewsCount"
+        :productsCount="productsCount"
+        :listsCount="listsCount"
+      />
 
       <TabBar v-model="activeTab" :tabs="TABS" class="-mx-4 px-4" />
 
@@ -149,6 +187,17 @@ const handleLoadMoreProducts = async (): Promise<void> => {
             @click="handleLoadMoreReviews"
           />
         </div>
+      </template>
+
+      <template v-else-if="activeTab === ProfileTab.Lists">
+        <ListSummaryList
+          :lists="lists"
+          :showVisibility="false"
+          :hasMore="listsHaveMore"
+          :loadingMore="loadingMoreLists"
+          emptyTitle="Noch keine öffentlichen Listen."
+          @loadMore="handleLoadMoreLists"
+        />
       </template>
 
       <template v-else>

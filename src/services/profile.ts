@@ -24,6 +24,10 @@ export interface UserReviewsPageRequest extends UserPageRequest {
   onlyCurrent: boolean
 }
 
+export interface UserListsPageRequest extends UserPageRequest {
+  onlyPublic: boolean
+}
+
 const toRange = ({ page, pageSize }: UserPageRequest): [number, number] => [
   page * pageSize,
   (page + 1) * pageSize - 1,

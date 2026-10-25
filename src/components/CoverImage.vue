@@ -26,5 +26,8 @@ const url = computed(() =>
 <template>
   <div class="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-gray-100">
     <Image v-if="url" :src="url" :alt="alt" loading="lazy" />
+    <span v-else class="flex h-full w-full items-center justify-center text-gray-400">
+      <slot />
+    </span>
   </div>
 </template>

@@ -6,6 +6,7 @@ import { adminGatewayKey, type AdminGateway } from '@/services/AdminGateway'
 import { authGatewayKey, type AuthGateway } from '@/services/AuthGateway'
 import { catalogGatewayKey, type CatalogGateway } from '@/services/CatalogGateway'
 import { imageUrlGatewayKey, type ImageUrlGateway } from '@/services/ImageUrlGateway'
+import { listGatewayKey, type ListGateway } from '@/services/ListGateway'
 import {
   nameSuggestionGatewayKey,
   type NameSuggestionGateway,
@@ -30,6 +31,7 @@ interface FakeGateways {
   auth?: AuthGateway
   catalog?: CatalogGateway
   imageUrl?: ImageUrlGateway
+  list?: ListGateway
   nameSuggestion?: NameSuggestionGateway
   openFoodFacts?: OpenFoodFactsGateway
   productDetail?: ProductDetailGateway
@@ -69,6 +71,7 @@ export const mountView = async ({
   }
   if (gateways.admin) provide[adminGatewayKey] = gateways.admin
   if (gateways.catalog) provide[catalogGatewayKey] = gateways.catalog
+  if (gateways.list) provide[listGatewayKey] = gateways.list
   if (gateways.productDetail) provide[productDetailGatewayKey] = gateways.productDetail
   if (gateways.productEditing) provide[productEditingGatewayKey] = gateways.productEditing
   if (gateways.profile) provide[profileGatewayKey] = gateways.profile
