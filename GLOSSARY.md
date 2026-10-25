@@ -65,6 +65,10 @@ _Avoid_: Discount, offer price
 The price a shopper actually pays: the Sale Price if there is one, otherwise the Regular Price.
 _Avoid_: Paid price, current price, final price
 
+**Lowest Price**:
+The lowest Effective Price across all Price Reports for a Product.
+_Avoid_: Minimum price, best price, cheapest price
+
 ### Opinions
 
 **Review**:
@@ -80,7 +84,11 @@ An optional one-to-five rating of one aspect of a Product (taste, consistency, a
 _Avoid_: Score dimension, sub-rating
 
 **Current Review**:
-A user's latest Review of a Product; only Current Reviews count toward the Product's ratings.
+A user's latest Review of a Product; only Current Reviews count toward the Product's Average Scores.
+
+**Average Score**:
+The mean of an Overall Score or Aspect Score across all Current Reviews of a Product (e.g. the Product's Average Taste Score).
+_Avoid_: Rating, aggregate score, average rating
 
 **Superseded Review**:
 A Review that has been replaced by a newer Review from the same user for the same Product.
