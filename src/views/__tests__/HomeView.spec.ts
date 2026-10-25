@@ -1,11 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { CatalogGateway } from '@/services/CatalogGateway'
 import { createFakeCatalogGateway } from '@/__tests__/createFakeCatalogGateway'
+import { createFakeAuthGateway } from '@/__tests__/createFakeAuthGateway'
+import { createFakeListGateway } from '@/__tests__/createFakeListGateway'
+import { createProfile } from '@/__tests__/createProfile'
+import { createSession } from '@/__tests__/createSession'
 import { createProductListItem } from '@/__tests__/createProductListItem'
 import { EmptyRouteComponent, mountView } from '@/__tests__/mountView'
 import { CATALOG_PAGE_SIZE } from '@/config/catalogPageSize'
 import { SEARCH_DEBOUNCE_MILLISECONDS } from '@/config/catalogSearch'
 import HomeView from '@/views/HomeView.vue'
+import { useAuthStore } from '@/stores/auth'
 
 type FetchProducts = CatalogGateway['fetchProducts']
 
@@ -14,18 +19,34 @@ const createFetchProducts = (productIds: string[] = []) =>
     .fn<FetchProducts>()
     .mockResolvedValue({ items: productIds.map(createProductListItem), total: productIds.length })
 
-const mountHomeView = async (fetchProducts: FetchProducts, initialPath = '/') => {
+const mountHomeView = async (
+  fetchProducts: FetchProducts,
+  initialPath = '/',
+  viewerId: string | null = null,
+) => {
   const mounted = await mountView({
     view: HomeView,
     routes: [
       { path: '/', name: 'home', component: EmptyRouteComponent },
+      { path: '/login', name: 'login', component: EmptyRouteComponent },
       { path: '/product/new', name: 'product-new', component: EmptyRouteComponent },
       { path: '/product/:id', name: 'product-detail', component: EmptyRouteComponent },
     ],
     initialPath,
-    gateways: { catalog: createFakeCatalogGateway({ fetchProducts }) },
+    gateways: {
+      catalog: createFakeCatalogGateway({ fetchProducts }),
+      list: createFakeListGateway({
+        fetchListIdsContainingProduct: (_ownerId, productId) =>
+          Promise.resolve(productId === 'a' ? ['list-1'] : []),
+      }),
+      auth: createFakeAuthGateway({
+        getSession: () => Promise.resolve(viewerId ? createSession(viewerId) : null),
+        fetchProfile: () => Promise.resolve(createProfile({})),
+      }),
+    },
     stubs: { CatalogFilterSheet: true },
   })
+  await useAuthStore().init()
   await vi.waitFor(() => expect(mounted.wrapper.text()).not.toContain('Wird geladen'))
   return mounted
 }
@@ -52,6 +73,28 @@ describe('HomeView', () => {
 
       expect(wrapper.text()).toContain('1 Produkt')
       expect(wrapper.text()).not.toContain('1 Produkte')
+    })
+  })
+
+  describe('given a logged-out visitor', () => {
+    it('links each product bookmark to login', async () => {
+      const { wrapper } = await mountHomeView(createFetchProducts(['a', 'b']))
+
+      expect(wrapper.findAll('a[aria-label="Listen verwalten"]')).toHaveLength(2)
+    })
+  })
+
+  describe('given a logged-in user', () => {
+    it('fills the bookmark only for products on one of their lists', async () => {
+      const { wrapper } = await mountHomeView(createFetchProducts(['a', 'b']), '/', 'user-1')
+
+      await vi.waitFor(() =>
+        expect(
+          wrapper
+            .findAll('button[aria-label="Listen verwalten"] svg')
+            .map((icon) => icon.attributes('fill')),
+        ).toEqual(['currentColor', 'none']),
+      )
     })
   })
 
