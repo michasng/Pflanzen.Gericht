@@ -10,6 +10,7 @@ import {
   updateProduct,
 } from '@/services/products'
 import { copyReviewImageToReview, createReview, fetchProductReviews } from '@/services/reviews'
+import { moveListEntries } from '@/services/moveListEntries'
 import { voteSimilarity } from '@/services/similarProducts'
 import type { ProductMergeGateway } from '@/services/ProductMergeGateway'
 
@@ -28,4 +29,5 @@ export const supabaseProductMergeGateway: ProductMergeGateway = {
   upsertPriceReport,
   fetchSimilarityVotes: fetchProductSimilarityVotes,
   voteSimilarity,
+  moveListEntries,
 }

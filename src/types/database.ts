@@ -23,6 +23,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      list: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          updated_at: string
+          visibility: Database['public']['Enums']['list_visibility']
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          updated_at?: string
+          visibility: Database['public']['Enums']['list_visibility']
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string
+          visibility?: Database['public']['Enums']['list_visibility']
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'list_owner_id_fkey'
+            columns: ['owner_id']
+            isOneToOne: false
+            referencedRelation: 'profile'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      list_entry: {
+        Row: {
+          added_at: string
+          list_id: string
+          product_id: string
+        }
+        Insert: {
+          added_at?: string
+          list_id: string
+          product_id: string
+        }
+        Update: {
+          added_at?: string
+          list_id?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'list_entry_list_id_fkey'
+            columns: ['list_id']
+            isOneToOne: false
+            referencedRelation: 'list'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'list_entry_list_id_fkey'
+            columns: ['list_id']
+            isOneToOne: false
+            referencedRelation: 'list_summary'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'list_entry_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'product'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       price_report: {
         Row: {
           city_name: string
@@ -481,7 +556,47 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      list_summary: {
+        Row: {
+          cover_storage_path: string | null
+          created_at: string | null
+          id: string | null
+          name: string | null
+          owner_id: string | null
+          product_count: number | null
+          updated_at: string | null
+          visibility: Database['public']['Enums']['list_visibility'] | null
+        }
+        Insert: {
+          cover_storage_path?: never
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+          owner_id?: string | null
+          product_count?: never
+          updated_at?: string | null
+          visibility?: Database['public']['Enums']['list_visibility'] | null
+        }
+        Update: {
+          cover_storage_path?: never
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+          owner_id?: string | null
+          product_count?: never
+          updated_at?: string | null
+          visibility?: Database['public']['Enums']['list_visibility'] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'list_owner_id_fkey'
+            columns: ['owner_id']
+            isOneToOne: false
+            referencedRelation: 'profile'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Functions: {
       fetch_similar_products: {
@@ -508,6 +623,10 @@ export type Database = {
         }[]
       }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      move_list_entries: {
+        Args: { duplicate_product_ids: string[]; merged_product_id: string }
+        Returns: undefined
+      }
       recompute_product_tags: { Args: { p_product_id: string }; Returns: undefined }
       search_products: {
         Args: {
@@ -553,7 +672,7 @@ export type Database = {
       show_trgm: { Args: { '': string }; Returns: string[] }
     }
     Enums: {
-      [_ in never]: never
+      list_visibility: 'public' | 'private'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -671,6 +790,8 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      list_visibility: ['public', 'private'],
+    },
   },
 } as const

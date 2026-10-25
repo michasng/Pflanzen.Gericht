@@ -66,5 +66,6 @@ export interface ProductMergeGateway {
     userId: string,
     history?: SimilarityVoteHistory,
   ) => Promise<void>
+  moveListEntries: (duplicateProductIds: string[], mergedProductId: string) => Promise<void>
   deleteProduct: (productId: string) => Promise<void>
 }
