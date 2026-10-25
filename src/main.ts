@@ -47,9 +47,11 @@ app.provide(reviewEditingGatewayKey, supabaseReviewEditingGateway)
 app.provide(similarProductsGatewayKey, supabaseSimilarProductsGateway)
 
 app.use(pinia)
-app.use(router)
 
 const authStore = useAuthStore()
 await authStore.init()
+
+// The router's initial navigation runs its auth guard, so the session must be restored first.
+app.use(router)
 
 app.mount('#app')
