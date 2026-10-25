@@ -34,7 +34,7 @@ export const useProductBookmarks = ({ gateway, ownerId }: ProductBookmarksOption
     if (productIdsToLoad.length === 0) return
     const shouldLoadLists = !listsRequested
 
-    productIdsToLoad.forEach((productId) => requestedProductIds.add(productId))
+    for (const productId of productIdsToLoad) requestedProductIds.add(productId)
     listsRequested = true
     loading.value = true
     loadError.value = null
@@ -46,7 +46,7 @@ export const useProductBookmarks = ({ gateway, ownerId }: ProductBookmarksOption
       if (userLists) lists.value = userLists
       listIdsByProductId.value = { ...listIdsByProductId.value, ...listIdsByLoadedProductId }
     } catch (err) {
-      productIdsToLoad.forEach((productId) => requestedProductIds.delete(productId))
+      for (const productId of productIdsToLoad) requestedProductIds.delete(productId)
       if (shouldLoadLists) listsRequested = false
       loadError.value = toErrorMessage(err)
     } finally {

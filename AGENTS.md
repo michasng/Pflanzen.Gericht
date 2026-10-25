@@ -35,6 +35,8 @@ Write out their names when discussing their trade-offs.
 - Consider optional vs. nullable parameters
 - Prefer enums over union types
 - Prefer `interface` over `type`
+- Use functional syntax without side-effects for concise notation (e.g. `map`)
+- Avoid `forEach`; use explicit loops instead
 - No magic numbers or strings; extract them to named constants or enums
 - No dead code, commented-out blocks, or leftover `TODO`s
 - Vue 3 `<script setup>` with the Composition API and typed props/emits

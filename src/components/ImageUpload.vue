@@ -131,7 +131,7 @@ const onDrop = (event: DragEvent): void => {
 }
 
 onUnmounted(() => {
-  previews.value.forEach((p) => URL.revokeObjectURL(p.url))
+  for (const preview of previews.value) URL.revokeObjectURL(preview.url)
 })
 </script>
 
