@@ -144,4 +144,27 @@ describe('useCatalogUrlSync', () => {
       await vi.waitFor(() => expect(router.currentRoute.value.query).toEqual({}))
     })
   })
+
+  describe('when navigating to the same page without filters', () => {
+    it('clears the filters in the store', async () => {
+      const { store, router } = await mountUrlSync('/?q=tofu&tags=sweet&organic=1')
+
+      await router.push('/')
+
+      await vi.waitFor(() => expect(store.search).toBe(''))
+      expect(store.tags).toEqual([])
+      expect(store.organic).toBe(false)
+    })
+  })
+
+  describe('when navigating back to a filtered URL', () => {
+    it('restores the filters from the query', async () => {
+      const { store, router } = await mountUrlSync()
+
+      await router.push('/?category=meat&minRating=4')
+
+      await vi.waitFor(() => expect(store.category).toBe('meat'))
+      expect(store.minRating).toBe(4)
+    })
+  })
 })

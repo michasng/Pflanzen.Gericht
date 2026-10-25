@@ -46,32 +46,46 @@ export const useCatalogUrlSync = (): void => {
     )
   }
 
+  const buildQueryFromStore = () =>
+    Object.fromEntries(
+      Object.entries({
+        q: store.search,
+        category: store.category,
+        base: store.base,
+        sort: store.sort === DEFAULT_SORT_OPTION ? undefined : store.sort,
+        store: store.store,
+        city: store.city,
+        minRating: store.minRating,
+        tags: store.tags.length ? store.tags : undefined,
+        includeIngredients: store.includeIngredients.length ? store.includeIngredients : undefined,
+        excludeIngredients: store.excludeIngredients.length ? store.excludeIngredients : undefined,
+        excludeAllergens: store.excludeAllergens.length ? store.excludeAllergens : undefined,
+        organic: store.organic ? '1' : undefined,
+        minPrice: store.minPriceCents != null ? store.minPriceCents : undefined,
+        maxPrice: store.maxPriceCents != null ? store.maxPriceCents : undefined,
+      }).filter(([, v]) => v != null && v !== ''),
+    )
+
+  const syncedPath = route.path
+
+  const isQueryInSyncWithStore = (): boolean =>
+    router.resolve({ query: buildQueryFromStore() }).fullPath === route.fullPath
+
   onMounted(() => {
     hydrateFromQuery()
     store.load(true)
   })
 
   watch(
-    () => ({
-      q: store.search,
-      category: store.category,
-      base: store.base,
-      sort: store.sort === DEFAULT_SORT_OPTION ? undefined : store.sort,
-      store: store.store,
-      city: store.city,
-      minRating: store.minRating,
-      tags: store.tags.length ? store.tags : undefined,
-      includeIngredients: store.includeIngredients.length ? store.includeIngredients : undefined,
-      excludeIngredients: store.excludeIngredients.length ? store.excludeIngredients : undefined,
-      excludeAllergens: store.excludeAllergens.length ? store.excludeAllergens : undefined,
-      organic: store.organic ? '1' : undefined,
-      minPrice: store.minPriceCents != null ? store.minPriceCents : undefined,
-      maxPrice: store.maxPriceCents != null ? store.maxPriceCents : undefined,
-    }),
-    (query) => {
-      router.replace({
-        query: Object.fromEntries(Object.entries(query).filter(([, v]) => v != null && v !== '')),
-      })
+    () => route.query,
+    () => {
+      if (route.path !== syncedPath) return
+      if (isQueryInSyncWithStore()) return
+      hydrateFromQuery()
     },
   )
+
+  watch(buildQueryFromStore, (query) => {
+    router.replace({ query })
+  })
 }
