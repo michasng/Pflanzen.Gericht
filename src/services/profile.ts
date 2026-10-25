@@ -11,16 +11,31 @@ export type ReviewWithMeta = Review & {
   tags: string[]
 }
 
+export interface UserPageRequest {
+  page: number
+  pageSize: number
+}
+
+export interface UserReviewsPageRequest extends UserPageRequest {
+  onlyCurrent: boolean
+}
+
+const toRange = ({ page, pageSize }: UserPageRequest): [number, number] => [
+  page * pageSize,
+  (page + 1) * pageSize - 1,
+]
+
 export const fetchUserReviews = async (
   userId: string,
-  onlyCurrent = false,
+  request: UserReviewsPageRequest,
 ): Promise<ReviewWithMeta[]> => {
   let query = supabase
     .from('review')
     .select('*, product:product_id(id, name, category), tags:review_tag(tag)')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
-  if (onlyCurrent) query = query.eq('is_current', true)
+    .range(...toRange(request))
+  if (request.onlyCurrent) query = query.eq('is_current', true)
   const { data, error } = await query
   if (error) throw error
   return camelizeKeys(
@@ -32,14 +47,37 @@ export const fetchUserReviews = async (
   )
 }
 
-export const fetchUserProducts = async (userId: string): Promise<Product[]> => {
+export const fetchUserProducts = async (
+  userId: string,
+  request: UserPageRequest,
+): Promise<Product[]> => {
   const { data, error } = await supabase
     .from('product')
     .select('*')
     .eq('created_by', userId)
     .order('created_at', { ascending: false })
+    .range(...toRange(request))
   if (error) throw error
   return camelizeKeys(data ?? [])
+}
+
+export const countCurrentUserReviews = async (userId: string): Promise<number> => {
+  const { count, error } = await supabase
+    .from('review')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('is_current', true)
+  if (error) throw error
+  return count ?? 0
+}
+
+export const countUserProducts = async (userId: string): Promise<number> => {
+  const { count, error } = await supabase
+    .from('product')
+    .select('id', { count: 'exact', head: true })
+    .eq('created_by', userId)
+  if (error) throw error
+  return count ?? 0
 }
 
 export const updateProfile = async (

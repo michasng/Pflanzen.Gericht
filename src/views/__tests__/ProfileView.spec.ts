@@ -101,12 +101,42 @@ describe('ProfileView', () => {
         Promise.resolve([createProduct({ name: 'Mandelmilch', category: 'milk' })]),
     }
 
-    it('counts only current reviews', async () => {
-      const { wrapper } = await mountProfileView({ profile })
+    it('shows the total counts', async () => {
+      const { wrapper } = await mountProfileView({
+        profile: {
+          ...profile,
+          countCurrentUserReviews: () => Promise.resolve(42),
+          countUserProducts: () => Promise.resolve(17),
+        },
+      })
 
       await vi.waitFor(() => expect(wrapper.text()).toContain('Hafermilch'))
-      expect(wrapper.text()).toMatch(/1\s*Bewertungen/)
-      expect(wrapper.text()).toMatch(/1\s*Produkte/)
+      expect(wrapper.text()).toMatch(/42\s*Bewertungen/)
+      expect(wrapper.text()).toMatch(/17\s*Produkte/)
+    })
+
+    it('loads superseded reviews too', async () => {
+      const onlyCurrentFlags: boolean[] = []
+      const { wrapper } = await mountProfileView({
+        profile: {
+          fetchUserReviews: (_userId, { onlyCurrent }) => {
+            onlyCurrentFlags.push(onlyCurrent)
+            return Promise.resolve([])
+          },
+        },
+      })
+
+      await vi.waitFor(() => expect(wrapper.text()).toContain('Noch keine Bewertungen'))
+      expect(onlyCurrentFlags).toEqual([false])
+    })
+
+    it('keeps the selected tab in the URL', async () => {
+      const { wrapper, router } = await mountProfileView({ profile })
+      await vi.waitFor(() => expect(wrapper.text()).toContain('Hafermilch'))
+
+      await wrapper.get('[role="tab"][aria-label="Meine Produkte"]').trigger('click')
+
+      await vi.waitFor(() => expect(router.currentRoute.value.query.tab).toBe('products'))
     })
 
     it('marks reviews as current or outdated and offers editing only for current ones', async () => {
@@ -124,7 +154,7 @@ describe('ProfileView', () => {
 
       await wrapper.get('[role="tab"][aria-label="Meine Produkte"]').trigger('click')
 
-      expect(wrapper.text()).toContain('Mandelmilch')
+      await vi.waitFor(() => expect(wrapper.text()).toContain('Mandelmilch'))
       expect(wrapper.text()).toMatch(/Milch-Alternative\s*·\s*Alpro/)
     })
   })
@@ -135,7 +165,7 @@ describe('ProfileView', () => {
 
       await vi.waitFor(() => expect(wrapper.text()).toContain('Noch keine Bewertungen abgegeben.'))
       await wrapper.get('[role="tab"][aria-label="Meine Produkte"]').trigger('click')
-      expect(wrapper.text()).toContain('Noch keine Produkte hinzugefügt.')
+      await vi.waitFor(() => expect(wrapper.text()).toContain('Noch keine Produkte hinzugefügt.'))
     })
   })
 
@@ -181,7 +211,53 @@ describe('ProfileView', () => {
     })
   })
 
+  describe('given more products than fit on a page', () => {
+    it('loads the next page on demand', async () => {
+      const requestedPages: number[] = []
+      const firstPage = Array.from({ length: 20 }, (_, index) =>
+        createProduct({ id: `product-${index}` }),
+      )
+      const { wrapper } = await mountProfileView({
+        profile: {
+          fetchUserProducts: (_userId, { page }) => {
+            requestedPages.push(page)
+            return Promise.resolve(page === 0 ? firstPage : [createProduct({ id: 'product-last' })])
+          },
+        },
+      })
+      await wrapper.get('[role="tab"][aria-label="Meine Produkte"]').trigger('click')
+      await vi.waitFor(() =>
+        expect(wrapper.find('[aria-label="Mehr Produkte laden"]').exists()).toBe(true),
+      )
+
+      await wrapper.get('[aria-label="Mehr Produkte laden"]').trigger('click')
+
+      await vi.waitFor(() => expect(wrapper.findAll('li')).toHaveLength(21))
+      expect(requestedPages).toEqual([0, 1])
+    })
+  })
+
   describe('when deleting a review after confirming', () => {
+    it('refreshes the counts', async () => {
+      vi.stubGlobal('confirm', () => true)
+      let reviewCount = 1
+      const { wrapper } = await mountProfileView({
+        profile: {
+          fetchUserReviews: () => Promise.resolve([createReviewWithMeta({ id: 'review-1' })]),
+          countCurrentUserReviews: () => Promise.resolve(reviewCount),
+          deleteReview: () => {
+            reviewCount = 0
+            return Promise.resolve()
+          },
+        },
+      })
+      await vi.waitFor(() => expect(wrapper.text()).toMatch(/1\s*Bewertungen/))
+
+      await wrapper.get('[aria-label="Bewertung löschen"]').trigger('click')
+
+      await vi.waitFor(() => expect(wrapper.text()).toMatch(/0\s*Bewertungen/))
+    })
+
     it('deletes it and removes it from the list', async () => {
       vi.stubGlobal('confirm', () => true)
       const deletedIds: string[] = []
@@ -219,6 +295,9 @@ describe('ProfileView', () => {
       })
       await vi.waitFor(() => expect(wrapper.find('[role="tab"]').exists()).toBe(true))
       await wrapper.get('[role="tab"][aria-label="Meine Produkte"]').trigger('click')
+      await vi.waitFor(() =>
+        expect(wrapper.find('[aria-label="Produkt löschen"]').exists()).toBe(true),
+      )
 
       await wrapper.get('[aria-label="Produkt löschen"]').trigger('click')
 
@@ -255,6 +334,9 @@ describe('ProfileView', () => {
         },
       })
       await wrapper.get('[role="tab"][aria-label="Meine Produkte"]').trigger('click')
+      await vi.waitFor(() =>
+        expect(wrapper.find('[aria-label="Produkt löschen"]').exists()).toBe(true),
+      )
 
       await wrapper.get('[aria-label="Produkt löschen"]').trigger('click')
 

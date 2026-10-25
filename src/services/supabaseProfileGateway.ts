@@ -1,4 +1,6 @@
 import {
+  countCurrentUserReviews,
+  countUserProducts,
   deleteReview,
   fetchPublicProfile,
   fetchUserProducts,
@@ -12,6 +14,8 @@ export const supabaseProfileGateway: ProfileGateway = {
   fetchPublicProfile,
   fetchUserReviews,
   fetchUserProducts,
+  countCurrentUserReviews,
+  countUserProducts,
   updateProfile,
   deleteReview,
   deleteProduct,
