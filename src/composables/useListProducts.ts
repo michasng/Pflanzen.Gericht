@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { useDeletableList } from '@/composables/useDeletableList'
 import { usePaginatedList } from '@/composables/usePaginatedList'
 import type { ListProduct } from '@/lib/ListProduct'
 import type { ProductSearchSuggestion } from '@/lib/ProductSearchSuggestion'
@@ -28,13 +29,18 @@ export const useListProducts = ({
     loadError,
     hasMore,
     loadingMore,
-    deletingId: removingId,
     loadFirstPage,
     loadMore,
-    remove: removeFromList,
   } = usePaginatedList<ListProduct>({
     fetchPage: (page) => gateway.fetchListProducts(listId, { page, pageSize }),
     pageSize,
+    reportError: (message) => {
+      actionError.value = message
+    },
+  })
+
+  const { deletingId: removingId, remove: removeFromList } = useDeletableList({
+    items: products,
     deleteItem: (productId) => gateway.removeProductFromList(listId, productId),
     reportError: (message) => {
       actionError.value = message

@@ -42,10 +42,7 @@ export const fetchUserReviews = async (
   return camelizeKeys(
     (data ?? []).map((r) => ({
       ...r,
-      product: r.product as Pick<Product, 'id' | 'name' | 'category'> & {
-        images: { storage_path: string; sort_order: number }[]
-      },
-      tags: ((r.tags ?? []) as { tag: string }[]).map((t) => t.tag),
+      tags: r.tags.map((t) => t.tag),
     })),
   )
 }

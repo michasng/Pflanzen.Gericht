@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAsyncData } from '@/composables/useAsyncData'
-import { usePaginatedList } from '@/composables/usePaginatedList'
+import { useProfileContent } from '@/composables/useProfileContent'
 import { useProfileCounts } from '@/composables/useProfileCounts'
 import { useProfileTab } from '@/composables/useProfileTab'
 import { injectGateway } from '@/composables/injectGateway'
+import { ProfileAudience } from '@/config/ProfileAudience'
 import { profileGatewayKey } from '@/services/ProfileGateway'
 import ProductSummaryCard from '@/components/ProductSummaryCard.vue'
 import ReviewSummaryCard from '@/components/ReviewSummaryCard.vue'
@@ -21,10 +22,6 @@ import { ProfileTab } from '@/components/profile/ProfileTab'
 import TabBar from '@/components/primitives/TabBar.vue'
 import type { TabBarItem } from '@/components/primitives/TabBarItem'
 import { formatDate } from '@/lib/date'
-
-const PROFILE_LIST_PAGE_SIZE = 20
-const PROFILE_REVIEW_PAGE_SIZE = 20
-const PROFILE_PRODUCT_PAGE_SIZE = 20
 
 const TABS: TabBarItem<ProfileTab>[] = [
   { value: ProfileTab.Reviews, label: 'Bewertungen', ariaLabel: 'Bewertungen' },
@@ -46,68 +43,17 @@ const {
   loadCounts,
 } = useProfileCounts(profileGateway, { onlyPublicLists: true })
 
-const loadMoreError = ref<string | null>(null)
-const reportLoadMoreError = (message: string): void => {
-  loadMoreError.value = message
-}
-
-// Visitors cannot delete anything, but the paginated list requires a deletion contract.
-const deleteNothing = (): Promise<void> => Promise.resolve()
-
 const {
-  items: reviews,
-  loadError: reviewsLoadError,
-  hasMore: reviewsHaveMore,
-  loadingMore: loadingMoreReviews,
-  loadFirstPage: loadFirstReviewPage,
-  loadMore: loadMoreReviews,
-} = usePaginatedList({
-  fetchPage: (page) =>
-    profileGateway.fetchUserReviews(userId.value, {
-      page,
-      pageSize: PROFILE_REVIEW_PAGE_SIZE,
-      onlyCurrent: true,
-    }),
-  pageSize: PROFILE_REVIEW_PAGE_SIZE,
-  deleteItem: deleteNothing,
-  reportError: reportLoadMoreError,
-})
-
-const {
-  items: products,
-  loadError: productsLoadError,
-  hasMore: productsHaveMore,
-  loadingMore: loadingMoreProducts,
-  loadFirstPage: loadFirstProductPage,
-  loadMore: loadMoreProducts,
-} = usePaginatedList({
-  fetchPage: (page) =>
-    profileGateway.fetchUserProducts(userId.value, {
-      page,
-      pageSize: PROFILE_PRODUCT_PAGE_SIZE,
-    }),
-  pageSize: PROFILE_PRODUCT_PAGE_SIZE,
-  deleteItem: deleteNothing,
-  reportError: reportLoadMoreError,
-})
-
-const {
-  items: lists,
-  loadError: listsLoadError,
-  hasMore: listsHaveMore,
-  loadingMore: loadingMoreLists,
-  loadFirstPage: loadFirstListPage,
-  loadMore: loadMoreLists,
-} = usePaginatedList({
-  fetchPage: (page) =>
-    profileGateway.fetchUserLists(userId.value, {
-      page,
-      pageSize: PROFILE_LIST_PAGE_SIZE,
-      onlyPublic: true,
-    }),
-  pageSize: PROFILE_LIST_PAGE_SIZE,
-  deleteItem: deleteNothing,
-  reportError: reportLoadMoreError,
+  reviews,
+  products,
+  lists,
+  loadError: contentLoadError,
+  actionError,
+  loadFirstPages,
+} = useProfileContent({
+  gateway: profileGateway,
+  userId: () => userId.value,
+  audience: ProfileAudience.Visitor,
 })
 
 const {
@@ -120,34 +66,13 @@ const {
     const publicProfile = await profileGateway.fetchPublicProfile(id)
     if (!publicProfile) return null
 
-    await Promise.all([
-      loadFirstReviewPage(),
-      loadFirstProductPage(),
-      loadFirstListPage(),
-      loadCounts(id),
-    ])
-    const contentError =
-      reviewsLoadError.value ?? productsLoadError.value ?? listsLoadError.value ?? countsError.value
+    await Promise.all([loadFirstPages(), loadCounts(id)])
+    const contentError = contentLoadError.value ?? countsError.value
     if (contentError) throw new Error(contentError)
     return publicProfile
   },
   () => userId.value,
 )
-
-const handleLoadMoreReviews = async (): Promise<void> => {
-  loadMoreError.value = null
-  await loadMoreReviews()
-}
-
-const handleLoadMoreProducts = async (): Promise<void> => {
-  loadMoreError.value = null
-  await loadMoreProducts()
-}
-
-const handleLoadMoreLists = async (): Promise<void> => {
-  loadMoreError.value = null
-  await loadMoreLists()
-}
 </script>
 
 <template>
@@ -171,47 +96,55 @@ const handleLoadMoreLists = async (): Promise<void> => {
 
       <TabBar v-model="activeTab" :tabs="TABS" class="-mx-4 px-4" />
 
-      <AlertMessage :message="loadMoreError" />
+      <AlertMessage :message="actionError" />
 
       <template v-if="activeTab === ProfileTab.Reviews">
-        <EmptyState v-if="reviews.length === 0" compact title="Noch keine Bewertungen." />
+        <EmptyState
+          v-if="reviews.items.value.length === 0"
+          compact
+          title="Noch keine Bewertungen."
+        />
         <ul v-else class="space-y-3">
-          <li v-for="review in reviews" :key="review.id">
+          <li v-for="review in reviews.items.value" :key="review.id">
             <ReviewSummaryCard :review="review" />
           </li>
         </ul>
-        <div v-if="reviewsHaveMore" class="text-center">
+        <div v-if="reviews.hasMore.value" class="text-center">
           <LoadMoreButton
             ariaLabel="Mehr Bewertungen laden"
-            :loading="loadingMoreReviews"
-            @click="handleLoadMoreReviews"
+            :loading="reviews.loadingMore.value"
+            @click="reviews.loadMore"
           />
         </div>
       </template>
 
       <template v-else-if="activeTab === ProfileTab.Lists">
         <ListSummaryList
-          :lists="lists"
+          :lists="lists.items.value"
           :showVisibility="false"
-          :hasMore="listsHaveMore"
-          :loadingMore="loadingMoreLists"
+          :hasMore="lists.hasMore.value"
+          :loadingMore="lists.loadingMore.value"
           emptyTitle="Noch keine öffentlichen Listen."
-          @loadMore="handleLoadMoreLists"
+          @loadMore="lists.loadMore"
         />
       </template>
 
       <template v-else>
-        <EmptyState v-if="products.length === 0" compact title="Noch keine Produkte hinzugefügt." />
+        <EmptyState
+          v-if="products.items.value.length === 0"
+          compact
+          title="Noch keine Produkte hinzugefügt."
+        />
         <ul v-else class="space-y-2">
-          <li v-for="product in products" :key="product.id">
+          <li v-for="product in products.items.value" :key="product.id">
             <ProductSummaryCard :product="product" />
           </li>
         </ul>
-        <div v-if="productsHaveMore" class="text-center">
+        <div v-if="products.hasMore.value" class="text-center">
           <LoadMoreButton
             ariaLabel="Mehr Produkte laden"
-            :loading="loadingMoreProducts"
-            @click="handleLoadMoreProducts"
+            :loading="products.loadingMore.value"
+            @click="products.loadMore"
           />
         </div>
       </template>

@@ -11,9 +11,8 @@ const createItems = (...ids: string[]): FakeItem[] => ids.map((id) => ({ id }))
 
 const createList = ({
   fetchPage = vi.fn<(page: number) => Promise<FakeItem[]>>(),
-  deleteItem = vi.fn<(id: string) => Promise<void>>(),
   reportError = vi.fn<(message: string) => void>(),
-} = {}) => usePaginatedList({ fetchPage, pageSize: PAGE_SIZE, deleteItem, reportError })
+} = {}) => usePaginatedList({ fetchPage, pageSize: PAGE_SIZE, reportError })
 
 describe('usePaginatedList', () => {
   describe('when loading the first page', () => {
@@ -151,46 +150,6 @@ describe('usePaginatedList', () => {
 
       expect(items.value).toEqual(createItems('x'))
       expect(loadingMore.value).toBe(false)
-    })
-  })
-
-  describe('when removing an item', () => {
-    it('deletes the item and drops it from the list', async () => {
-      const fetchPage = vi.fn<(page: number) => Promise<FakeItem[]>>()
-      fetchPage.mockResolvedValue(createItems('a', 'b'))
-      const deleteItem = vi.fn<(id: string) => Promise<void>>().mockResolvedValue(undefined)
-      const { items, deletingId, loadFirstPage, remove } = createList({ fetchPage, deleteItem })
-      await loadFirstPage()
-
-      const pending = remove('a')
-
-      expect(deletingId.value).toBe('a')
-      await pending
-      expect(deleteItem).toHaveBeenCalledExactlyOnceWith('a')
-      expect(items.value).toEqual(createItems('b'))
-      expect(deletingId.value).toBeNull()
-    })
-  })
-
-  describe('given removing an item fails', () => {
-    it('reports the error and keeps the item', async () => {
-      const fetchPage = vi.fn<(page: number) => Promise<FakeItem[]>>()
-      fetchPage.mockResolvedValue(createItems('a'))
-      const deleteItem = vi.fn<(id: string) => Promise<void>>()
-      deleteItem.mockRejectedValue(new Error('forbidden'))
-      const reportError = vi.fn<(message: string) => void>()
-      const { items, deletingId, loadFirstPage, remove } = createList({
-        fetchPage,
-        deleteItem,
-        reportError,
-      })
-      await loadFirstPage()
-
-      await remove('a')
-
-      expect(reportError).toHaveBeenCalledExactlyOnceWith('forbidden')
-      expect(items.value).toEqual(createItems('a'))
-      expect(deletingId.value).toBeNull()
     })
   })
 })
