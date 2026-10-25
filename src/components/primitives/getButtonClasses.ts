@@ -10,7 +10,15 @@ interface ButtonStyle {
 }
 
 const BASE_CLASSES =
-  'inline-flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 disabled:pointer-events-none'
+  'inline-flex items-center gap-1.5 transition-colors disabled:opacity-50 disabled:pointer-events-none'
+
+const JUSTIFY_CLASSES: Record<ButtonVariant, string> = {
+  [ButtonVariant.Filled]: 'justify-center',
+  [ButtonVariant.Outlined]: 'justify-center',
+  [ButtonVariant.Text]: 'justify-center',
+  [ButtonVariant.Icon]: 'justify-center',
+  [ButtonVariant.Row]: 'justify-start text-left',
+}
 
 const SIZE_CLASSES: Record<ButtonVariant, Partial<Record<ButtonSize, string>>> = {
   [ButtonVariant.Filled]: {
@@ -30,6 +38,9 @@ const SIZE_CLASSES: Record<ButtonVariant, Partial<Record<ButtonSize, string>>> =
   },
   [ButtonVariant.Icon]: {
     [ButtonSize.Default]: 'p-2 rounded-full text-sm font-medium',
+  },
+  [ButtonVariant.Row]: {
+    [ButtonSize.Default]: 'w-full px-3 py-2 text-sm',
   },
 }
 
@@ -51,10 +62,14 @@ const TONE_CLASSES: Record<ButtonVariant, Partial<Record<ButtonTone, string>>> =
   [ButtonVariant.Icon]: {
     [ButtonTone.Default]: 'text-gray-500 hover:bg-gray-100',
   },
+  [ButtonVariant.Row]: {
+    [ButtonTone.Default]: 'text-gray-800 hover:bg-gray-50',
+  },
 }
 
 export const getButtonClasses = ({ variant, size, tone, fullWidth }: ButtonStyle): string[] => [
   BASE_CLASSES,
+  JUSTIFY_CLASSES[variant],
   SIZE_CLASSES[variant][size] ?? SIZE_CLASSES[variant][ButtonSize.Default] ?? '',
   TONE_CLASSES[variant][tone] ?? TONE_CLASSES[variant][ButtonTone.Default] ?? '',
   fullWidth ? 'w-full flex-1' : '',

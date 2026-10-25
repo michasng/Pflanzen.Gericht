@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useAsyncData } from '@/composables/useAsyncData'
 import { injectGateway } from '@/composables/injectGateway'
 import { toErrorMessage } from '@/lib/error'
+import { toOwnProfileTabLocation } from '@/lib/toOwnProfileTabLocation'
 import { listGatewayKey, type ListInput } from '@/services/ListGateway'
 import { profileGatewayKey } from '@/services/ProfileGateway'
 import AlertMessage from '@/components/AlertMessage.vue'
@@ -13,6 +14,7 @@ import NotFoundMessage from '@/components/NotFoundMessage.vue'
 import ListForm from '@/components/list/ListForm.vue'
 import ListHeader from '@/components/list/ListHeader.vue'
 import ListProductsSection from '@/components/list/ListProductsSection.vue'
+import { ProfileTab } from '@/components/profile/ProfileTab'
 import Button from '@/components/primitives/ButtonComponent.vue'
 import { ButtonSize } from '@/components/primitives/ButtonSize'
 import { ButtonTone } from '@/components/primitives/ButtonTone'
@@ -48,7 +50,7 @@ const ownerName = computed(
   () => listPage.value?.owner.displayName || listPage.value?.owner.username,
 )
 const ownerRoute = computed<RouteLocationRaw>(() => {
-  if (isOwner.value) return { name: 'profile', query: { tab: 'lists' } }
+  if (isOwner.value) return toOwnProfileTabLocation(ProfileTab.Lists)
   return { name: 'profile-public', params: { id: listPage.value?.list.ownerId ?? '' } }
 })
 
@@ -69,7 +71,7 @@ const deleteList = async (): Promise<void> => {
   actionError.value = null
   try {
     await listGateway.deleteList(listPage.value.list.id)
-    await router.push({ name: 'profile', query: { tab: 'lists' } })
+    await router.push(toOwnProfileTabLocation(ProfileTab.Lists))
   } catch (err) {
     actionError.value = toErrorMessage(err)
   }

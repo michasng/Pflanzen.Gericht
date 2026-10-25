@@ -5,6 +5,7 @@ import LoadingText from '@/components/LoadingText.vue'
 import ListForm from '@/components/list/ListForm.vue'
 import Button from '@/components/primitives/ButtonComponent.vue'
 import { ButtonVariant } from '@/components/primitives/ButtonVariant'
+import ToggleOption from '@/components/primitives/ToggleOption.vue'
 import type { ListSummary } from '@/lib/ListSummary'
 import type { ListInput } from '@/services/ListGateway'
 
@@ -60,27 +61,14 @@ onMounted(() => dialog.value?.focus())
           <AlertMessage :message="loadError" />
           <ul v-if="!loading && !loadError" class="space-y-2">
             <li v-for="list in lists" :key="list.id">
-              <button
-                type="button"
+              <ToggleOption
                 data-list-option
-                class="flex w-full items-center justify-between gap-2 rounded-xl border border-gray-200 px-3 py-2 text-left text-sm text-gray-900 hover:border-primary-300 disabled:opacity-50"
-                :aria-pressed="listIdsWithProduct.includes(list.id)"
+                :pressed="listIdsWithProduct.includes(list.id)"
                 :disabled="togglingListId === list.id"
                 @click="$emit('toggle', list.id)"
               >
-                <span class="truncate">{{ list.name }}</span>
-                <svg
-                  v-if="listIdsWithProduct.includes(list.id)"
-                  class="h-5 w-5 shrink-0 text-primary-600"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              </button>
+                {{ list.name }}
+              </ToggleOption>
             </li>
           </ul>
           <AlertMessage :message="actionError" />

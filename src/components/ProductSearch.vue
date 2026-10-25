@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, useId, watch } from 'vue'
 import AppLogo from '@/components/AppLogo.vue'
+import Button from '@/components/primitives/ButtonComponent.vue'
+import { ButtonVariant } from '@/components/primitives/ButtonVariant'
+import Image from '@/components/primitives/ImageComponent.vue'
+import TextInput from '@/components/primitives/TextInput.vue'
+import { ImageBucket } from '@/config/imageBucket'
 import { ImageSize } from '@/config/imageSizes'
 import { injectGateway } from '@/composables/injectGateway'
 import { toErrorMessage } from '@/lib/error'
@@ -26,6 +31,7 @@ const selecting = ref(false)
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
 const suggestionListId = useId()
+const searchInputId = useId()
 
 const hasVisibleSuggestions = computed(
   () => isSuggestionListOpen.value && term.value.trim().length > 0 && suggestions.value.length > 0,
@@ -73,7 +79,7 @@ const highlightPreviousSuggestion = (): void => {
 
 const suggestionImageUrl = (suggestion: ProductSearchSuggestion): string | null =>
   suggestion.storagePath
-    ? getImageUrl('product-images', suggestion.storagePath, ImageSize.Thumbnail)
+    ? getImageUrl(ImageBucket.Product, suggestion.storagePath, ImageSize.Thumbnail)
     : null
 
 const selectSuggestion = async (suggestion: ProductSearchSuggestion): Promise<void> => {
@@ -140,7 +146,8 @@ onUnmounted(clearSearchTimeout)
 <template>
   <div class="space-y-2">
     <div class="relative">
-      <input
+      <TextInput
+        :id="searchInputId"
         v-model="term"
         type="text"
         role="combobox"
@@ -149,7 +156,6 @@ onUnmounted(clearSearchTimeout)
         :aria-controls="hasVisibleSuggestions ? suggestionListId : undefined"
         :aria-activedescendant="activeDescendantId"
         placeholder="Produkt suchen"
-        class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
         @focus="openSuggestionList"
         @input="openSuggestionList"
         @blur="closeSuggestionList"
@@ -171,21 +177,19 @@ onUnmounted(clearSearchTimeout)
           role="option"
           :aria-selected="index === highlightedSuggestionIndex"
           :aria-disabled="suggestion.unavailableReason ? true : undefined"
+          :class="index === highlightedSuggestionIndex ? 'bg-gray-50' : ''"
         >
-          <button
-            type="button"
-            :aria-label="suggestion.name"
+          <Button
+            :ariaLabel="suggestion.name"
+            :variant="ButtonVariant.Row"
             :disabled="selecting || Boolean(suggestion.unavailableReason)"
-            class="flex w-full items-center justify-start gap-3 px-3 py-2 text-left text-sm text-gray-800 transition-colors hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
-            :class="index === highlightedSuggestionIndex ? 'bg-gray-50' : ''"
             @mousedown.prevent="selectSuggestion(suggestion)"
           >
             <div class="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-50">
-              <img
+              <Image
                 v-if="suggestionImageUrl(suggestion)"
-                :src="suggestionImageUrl(suggestion) ?? undefined"
+                :src="suggestionImageUrl(suggestion) ?? ''"
                 :alt="suggestion.name"
-                class="h-full w-full object-cover"
               />
               <div v-else class="flex h-full w-full items-center justify-center">
                 <AppLogo class="h-5 w-5 text-gray-200" />
@@ -200,7 +204,7 @@ onUnmounted(clearSearchTimeout)
                 {{ suggestion.unavailableReason }}
               </p>
             </div>
-          </button>
+          </Button>
         </li>
       </ul>
     </div>

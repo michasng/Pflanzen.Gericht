@@ -1,6 +1,7 @@
 import { ImageBucket } from '@/config/imageBucket'
 import type { CoverImageCandidate } from '@/lib/CoverImageCandidate'
 import type { CoverImageSource } from '@/lib/CoverImageSource'
+import { findFirstCoverImageCandidate } from '@/lib/findFirstCoverImageCandidate'
 import { resolveProductCoverImage } from '@/lib/resolveProductCoverImage'
 
 interface ReviewCoverCandidates {
@@ -12,7 +13,7 @@ export const resolveReviewCoverImage = ({
   images,
   product,
 }: ReviewCoverCandidates): CoverImageSource | null => {
-  const [first] = [...images].sort((a, b) => a.sortOrder - b.sortOrder)
+  const first = findFirstCoverImageCandidate(images)
   if (first) return { bucket: ImageBucket.Review, storagePath: first.storagePath }
   return resolveProductCoverImage(product.images)
 }

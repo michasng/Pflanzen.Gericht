@@ -11,7 +11,6 @@ const props = defineProps<{
   alt: string
 }>()
 
-// Thumbnail (160px) stays sharp at 2x for the 64px square.
 const COVER_IMAGE_VARIANT = ImageSize.Thumbnail
 
 const { getImageUrl } = injectGateway(imageUrlGatewayKey)

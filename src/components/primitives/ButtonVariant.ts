@@ -3,4 +3,5 @@ export enum ButtonVariant {
   Outlined = 'outlined',
   Text = 'text',
   Icon = 'icon',
+  Row = 'row',
 }

@@ -78,6 +78,14 @@ describe('ButtonComponent', () => {
     expect(wrapper.classes()).toContain('flex-1')
   })
 
+  it('aligns the content of the row variant to the start', () => {
+    const wrapper = mount(ButtonComponent, {
+      props: { variant: ButtonVariant.Row, ariaLabel: DEFAULT_ARIA_LABEL },
+    })
+    expect(wrapper.classes()).toContain('justify-start')
+    expect(wrapper.classes()).not.toContain('justify-center')
+  })
+
   it('does not stretch by default', () => {
     const wrapper = mount(ButtonComponent, { props: { ariaLabel: DEFAULT_ARIA_LABEL } })
     expect(wrapper.classes()).not.toContain('w-full')
