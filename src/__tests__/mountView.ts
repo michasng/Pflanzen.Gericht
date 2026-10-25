@@ -6,6 +6,7 @@ import { adminGatewayKey, type AdminGateway } from '@/services/AdminGateway'
 import { authGatewayKey, type AuthGateway } from '@/services/AuthGateway'
 import { catalogGatewayKey, type CatalogGateway } from '@/services/CatalogGateway'
 import { imageUrlGatewayKey, type ImageUrlGateway } from '@/services/ImageUrlGateway'
+import { listGatewayKey, type ListGateway } from '@/services/ListGateway'
 import {
   nameSuggestionGatewayKey,
   type NameSuggestionGateway,
@@ -18,8 +19,13 @@ import {
 } from '@/services/ProductEditingGateway'
 import { profileGatewayKey, type ProfileGateway } from '@/services/ProfileGateway'
 import { reviewEditingGatewayKey, type ReviewEditingGateway } from '@/services/ReviewEditingGateway'
+import {
+  similarProductsGatewayKey,
+  type SimilarProductsGateway,
+} from '@/services/SimilarProductsGateway'
 import { createFakeAuthGateway } from '@/__tests__/createFakeAuthGateway'
 import { createFakeImageUrlGateway } from '@/__tests__/createFakeImageUrlGateway'
+import { createFakeListGateway } from '@/__tests__/createFakeListGateway'
 import { createFakeNameSuggestionGateway } from '@/__tests__/createFakeNameSuggestionGateway'
 import { createFakeOpenFoodFactsGateway } from '@/__tests__/createFakeOpenFoodFactsGateway'
 
@@ -30,12 +36,14 @@ interface FakeGateways {
   auth?: AuthGateway
   catalog?: CatalogGateway
   imageUrl?: ImageUrlGateway
+  list?: ListGateway
   nameSuggestion?: NameSuggestionGateway
   openFoodFacts?: OpenFoodFactsGateway
   productDetail?: ProductDetailGateway
   productEditing?: ProductEditingGateway
   profile?: ProfileGateway
   reviewEditing?: ReviewEditingGateway
+  similarProducts?: SimilarProductsGateway
 }
 
 interface MountViewOptions {
@@ -64,6 +72,7 @@ export const mountView = async ({
   const provide: Record<symbol, unknown> = {
     [authGatewayKey]: gateways.auth ?? createFakeAuthGateway(),
     [imageUrlGatewayKey]: gateways.imageUrl ?? createFakeImageUrlGateway(),
+    [listGatewayKey]: gateways.list ?? createFakeListGateway(),
     [nameSuggestionGatewayKey]: gateways.nameSuggestion ?? createFakeNameSuggestionGateway(),
     [openFoodFactsGatewayKey]: gateways.openFoodFacts ?? createFakeOpenFoodFactsGateway(),
   }
@@ -73,6 +82,7 @@ export const mountView = async ({
   if (gateways.productEditing) provide[productEditingGatewayKey] = gateways.productEditing
   if (gateways.profile) provide[profileGatewayKey] = gateways.profile
   if (gateways.reviewEditing) provide[reviewEditingGatewayKey] = gateways.reviewEditing
+  if (gateways.similarProducts) provide[similarProductsGatewayKey] = gateways.similarProducts
 
   const wrapper = mount(view, { global: { plugins: [createPinia(), router], provide, stubs } })
   return { wrapper, router }

@@ -83,7 +83,7 @@ export interface SimilarProductsDependencies {
     data: SimilarProductRow[] | null
     error: unknown | null
   }>
-  searchProductsRpc: (query: { search: string; category: string; limit: number }) => Promise<{
+  searchProductsRpc: (query: { search: string; category?: string; limit: number }) => Promise<{
     data: CandidateProductRow[] | null
     error: unknown | null
   }>
@@ -136,22 +136,22 @@ export const createSimilarProductsService = (dependencies: SimilarProductsDepend
     return coverStoragePathByProductId
   }
 
-  const searchSimilarityCandidates = async (
-    product: SimilarityCandidateSource,
+  const searchCandidates = async (
     search: string,
+    { category, excludedProductId }: { category?: string; excludedProductId?: string },
   ): Promise<SimilarityCandidate[]> => {
     if (!search.trim()) return []
 
     const { data, error } = await dependencies.searchProductsRpc({
       search,
-      category: product.category,
-      // One extra, because the product itself may be among the results
-      limit: MAX_SIMILARITY_CANDIDATES + 1,
+      category,
+      // One extra, because the excluded product may be among the results
+      limit: MAX_SIMILARITY_CANDIDATES + (excludedProductId ? 1 : 0),
     })
     if (error) throw error
 
     const candidates = (data ?? [])
-      .filter((row) => row.id !== product.id)
+      .filter((row) => row.id !== excludedProductId)
       .slice(0, MAX_SIMILARITY_CANDIDATES)
     if (candidates.length === 0) return []
 
@@ -166,6 +166,15 @@ export const createSimilarProductsService = (dependencies: SimilarProductsDepend
       storagePath: coverStoragePathByProductId.get(candidate.id) ?? null,
     }))
   }
+
+  const searchSimilarityCandidates = (
+    product: SimilarityCandidateSource,
+    search: string,
+  ): Promise<SimilarityCandidate[]> =>
+    searchCandidates(search, { category: product.category, excludedProductId: product.id })
+
+  const searchProductCandidates = (search: string): Promise<SimilarityCandidate[]> =>
+    searchCandidates(search, {})
 
   const voteSimilarity = async (
     productId: string,
@@ -221,6 +230,7 @@ export const createSimilarProductsService = (dependencies: SimilarProductsDepend
     adminRemoveSimilarity,
     fetchSimilarProducts,
     removeSimilarityVote,
+    searchProductCandidates,
     searchSimilarityCandidates,
     voteSimilarity,
   }
@@ -299,6 +309,9 @@ export const searchSimilarityCandidates = async (
   search: string,
 ): Promise<SimilarityCandidate[]> =>
   (await getDefaultService()).searchSimilarityCandidates(product, search)
+
+export const searchProductCandidates = async (search: string): Promise<SimilarityCandidate[]> =>
+  (await getDefaultService()).searchProductCandidates(search)
 
 export const voteSimilarity = async (
   productId: string,

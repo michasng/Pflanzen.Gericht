@@ -17,7 +17,7 @@ const SOURCE_PRODUCT = { id: PRODUCT_ID_A, category: CATEGORY }
 
 const createService = () => {
   const rpcCalls: Array<{ productId: string }> = []
-  const searchCalls: Array<{ search: string; category: string; limit: number }> = []
+  const searchCalls: Array<{ search: string; category?: string; limit: number }> = []
   const imageCalls: string[][] = []
   const upsertCalls: Array<{
     options: { onConflict: string }
@@ -160,6 +160,18 @@ describe('createSimilarProductsService', () => {
     expect(searchCalls).toEqual([
       { search: 'Hafer', category: CATEGORY, limit: MAX_SIMILARITY_CANDIDATES + 1 },
     ])
+  })
+
+  it('given search text without a product, when searching candidates, searches all categories without excluding anything', async () => {
+    const { searchCalls, service, setSearchRows } = createService()
+    setSearchRows([{ brand: null, category: CATEGORY, id: PRODUCT_ID_A, name: 'Haferdrink' }])
+
+    const result = await service.searchProductCandidates('Hafer')
+
+    expect(searchCalls).toEqual([
+      { search: 'Hafer', category: undefined, limit: MAX_SIMILARITY_CANDIDATES },
+    ])
+    expect(result.map((candidate) => candidate.id)).toEqual([PRODUCT_ID_A])
   })
 
   it('given matches including the product itself, when searching candidates, returns only other products with their cover image', async () => {

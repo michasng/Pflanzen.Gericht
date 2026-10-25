@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ reviewsCount: number; productsCount: number }>()
+defineProps<{ reviewsCount: number; productsCount: number; listsCount: number }>()
 </script>
 
 <template>
@@ -11,6 +11,10 @@ defineProps<{ reviewsCount: number; productsCount: number }>()
     <div class="text-center">
       <p class="text-xl font-bold text-gray-900">{{ productsCount }}</p>
       <p class="text-xs text-gray-500">Produkte</p>
+    </div>
+    <div class="text-center">
+      <p class="text-xl font-bold text-gray-900">{{ listsCount }}</p>
+      <p class="text-xs text-gray-500">Listen</p>
     </div>
   </div>
 </template>

@@ -171,6 +171,9 @@ const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGatewa
       await record('voteSimilarity')
       votes.push([productId, otherProductId, history?.createdAt])
     },
+    moveListEntries: async (duplicateIds, mergedId) => {
+      await record('moveListEntries', `:${duplicateIds.join(',')}->${mergedId}`)
+    },
     deleteProduct: (id) => record('deleteProduct', `:${id}`),
   }
   return {
@@ -285,6 +288,18 @@ describe('mergeProducts', () => {
     })
   })
 
+  describe('given list entries on the originals', () => {
+    it('moves them to the merged product before deleting the originals', async () => {
+      const fake = buildFakeGateway(emptyData)
+
+      await mergeProducts(fake.gateway, input)
+
+      const moveIndex = fake.calls.indexOf(`moveListEntries:a,b->${MERGED_ID}`)
+      expect(moveIndex).toBeGreaterThan(-1)
+      expect(moveIndex).toBeLessThan(fake.calls.indexOf('deleteProduct:a'))
+    })
+  })
+
   describe('given source urls', () => {
     it('replaces the sources of the merged product', async () => {
       const fake = buildFakeGateway(emptyData)
@@ -318,6 +333,7 @@ describe('mergeProducts', () => {
     'createReview',
     'upsertPriceReport',
     'voteSimilarity',
+    'moveListEntries',
   ] as const)('given %s fails', (failingStep) => {
     it('deletes only the merged product and rethrows', async () => {
       const fake = buildFakeGateway(

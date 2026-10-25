@@ -13,7 +13,8 @@ export const createReviewWithMeta = (overrides: Partial<ReviewWithMeta> = {}): R
   isCurrent: true,
   createdAt: '2026-09-11T00:00:00.000Z',
   updatedAt: '2026-09-11T00:00:00.000Z',
-  product: { id: 'product-1', name: 'Hafermilch', category: 'milk' },
+  product: { id: 'product-1', name: 'Hafermilch', category: 'milk', images: [] },
+  images: [],
   tags: [],
   ...overrides,
 })

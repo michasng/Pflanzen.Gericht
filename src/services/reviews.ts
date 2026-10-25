@@ -3,18 +3,21 @@ import { camelizeKeys } from '@/lib/camelizeKeys'
 import { snakeifyKeys } from '@/lib/snakeifyKeys'
 import { generateSquareImageVariants } from '@/lib/generateSquareImageVariants'
 import { deleteImageVariants, persistImageVariants } from '@/lib/imageVariantStorage'
+import { toPageRange } from '@/lib/toPageRange'
 import {
   copyStoredImageWithRecord,
   type StoredImageLocation,
 } from '@/services/copyStoredImageWithRecord'
+import type { CoverImageCandidate } from '@/lib/CoverImageCandidate'
 import type { Review, ReviewInsert, ReviewImage, ProductImage } from '@/types'
 import type { Tables } from '@/types/database'
 
-export const ADMIN_PAGE_SIZE = 50
+export const ADMIN_REVIEW_PAGE_SIZE = 20
 
 export type AdminReviewItem = Review & {
   profile: { username: string }
-  product: { id: string; name: string }
+  product: { id: string; name: string; images: CoverImageCandidate[] }
+  images: CoverImageCandidate[]
 }
 
 export type ReviewFields = Pick<
@@ -26,15 +29,10 @@ export type ReviewHistory = Pick<ReviewInsert, 'createdAt' | 'updatedAt'>
 
 export type ReviewWithDetails = Review & { tags: string[]; images: ReviewImage[] }
 
-const REVIEW_WITH_DETAILS_SELECT =
-  '*, tags:review_tag(tag), images:review_image(id, storage_path, sort_order)'
+const REVIEW_WITH_DETAILS_SELECT = '*, tags:review_tag(tag), images:review_image(*)'
 
-const toReviewWithDetails = (data: {
-  tags: unknown
-  images: unknown
-}): { tags: string[]; images: Tables<'review_image'>[] } => ({
-  tags: ((data.tags ?? []) as { tag: string }[]).map((t) => t.tag),
-  images: (data.images as Tables<'review_image'>[] | null) ?? [],
+const toReviewWithDetails = (row: { tags: { tag: string }[] }): { tags: string[] } => ({
+  tags: row.tags.map((t) => t.tag),
 })
 
 export const createReview = async (
@@ -223,15 +221,11 @@ export const deleteReviewImage = async (id: string, storagePath: string): Promis
 export const fetchAllReviewsForAdmin = async (page = 0): Promise<AdminReviewItem[]> => {
   const { data, error } = await supabase
     .from('review')
-    .select('*, profile:user_id(username), product:product_id(id, name)')
+    .select(
+      '*, profile:user_id(username), product:product_id(id, name, images:product_image(storage_path, sort_order)), images:review_image(storage_path, sort_order)',
+    )
     .order('created_at', { ascending: false })
-    .range(page * ADMIN_PAGE_SIZE, (page + 1) * ADMIN_PAGE_SIZE - 1)
+    .range(...toPageRange({ page, pageSize: ADMIN_REVIEW_PAGE_SIZE }))
   if (error) throw error
-  return camelizeKeys(
-    (data ?? []).map((r) => ({
-      ...r,
-      profile: r.profile as { username: string },
-      product: r.product as { id: string; name: string },
-    })),
-  )
+  return camelizeKeys(data ?? [])
 }

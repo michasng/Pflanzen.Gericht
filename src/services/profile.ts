@@ -2,44 +2,82 @@ import { supabase } from '@/lib/supabase'
 import { deleteImageVariants } from '@/lib/imageVariantStorage'
 import { camelizeKeys } from '@/lib/camelizeKeys'
 import { snakeifyKeys } from '@/lib/snakeifyKeys'
+import { toPageRange } from '@/lib/toPageRange'
+import type { CoverImageCandidate } from '@/lib/CoverImageCandidate'
+import type { PageRequest } from '@/lib/PageRequest'
+import type { ProductWithImages } from '@/lib/ProductWithImages'
 import type { Product, Profile, Review } from '@/types'
 
 export type PublicProfile = Pick<Profile, 'id' | 'username' | 'displayName' | 'bio' | 'createdAt'>
 
 export type ReviewWithMeta = Review & {
-  product: Pick<Product, 'id' | 'name' | 'category'>
+  product: Pick<Product, 'id' | 'name' | 'category'> & { images: CoverImageCandidate[] }
+  images: CoverImageCandidate[]
   tags: string[]
+}
+
+export interface UserReviewsPageRequest extends PageRequest {
+  onlyCurrent: boolean
+}
+
+export interface UserListsPageRequest extends PageRequest {
+  onlyPublic: boolean
 }
 
 export const fetchUserReviews = async (
   userId: string,
-  onlyCurrent = false,
+  request: UserReviewsPageRequest,
 ): Promise<ReviewWithMeta[]> => {
   let query = supabase
     .from('review')
-    .select('*, product:product_id(id, name, category), tags:review_tag(tag)')
+    .select(
+      '*, product:product_id(id, name, category, images:product_image(storage_path, sort_order)), images:review_image(storage_path, sort_order), tags:review_tag(tag)',
+    )
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
-  if (onlyCurrent) query = query.eq('is_current', true)
+    .range(...toPageRange(request))
+  if (request.onlyCurrent) query = query.eq('is_current', true)
   const { data, error } = await query
   if (error) throw error
   return camelizeKeys(
     (data ?? []).map((r) => ({
       ...r,
-      product: r.product as Pick<Product, 'id' | 'name' | 'category'>,
-      tags: ((r.tags ?? []) as { tag: string }[]).map((t) => t.tag),
+      tags: r.tags.map((t) => t.tag),
     })),
   )
 }
 
-export const fetchUserProducts = async (userId: string): Promise<Product[]> => {
+export const fetchUserProducts = async (
+  userId: string,
+  request: PageRequest,
+): Promise<ProductWithImages[]> => {
   const { data, error } = await supabase
     .from('product')
-    .select('*')
+    .select('*, images:product_image(storage_path, sort_order)')
     .eq('created_by', userId)
     .order('created_at', { ascending: false })
+    .range(...toPageRange(request))
   if (error) throw error
   return camelizeKeys(data ?? [])
+}
+
+export const countCurrentUserReviews = async (userId: string): Promise<number> => {
+  const { count, error } = await supabase
+    .from('review')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('is_current', true)
+  if (error) throw error
+  return count ?? 0
+}
+
+export const countUserProducts = async (userId: string): Promise<number> => {
+  const { count, error } = await supabase
+    .from('product')
+    .select('id', { count: 'exact', head: true })
+    .eq('created_by', userId)
+  if (error) throw error
+  return count ?? 0
 }
 
 export const updateProfile = async (

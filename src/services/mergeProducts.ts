@@ -67,6 +67,8 @@ const fillMergedProduct = async (
       updatedAt: vote.updatedAt,
     })
   }
+
+  await gateway.moveListEntries(productIds, mergedProduct.id)
 }
 
 export const mergeProducts = async (

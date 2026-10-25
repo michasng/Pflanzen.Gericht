@@ -1,18 +1,15 @@
 import { ref, shallowRef } from 'vue'
 import { toErrorMessage } from '@/lib/error'
-import { useDeletableList } from '@/composables/useDeletableList'
 
 interface PaginatedListOptions<T> {
   fetchPage: (page: number) => Promise<T[]>
   pageSize: number
-  deleteItem: (id: string) => Promise<void>
   reportError: (message: string) => void
 }
 
-export const usePaginatedList = <T extends { id: string }>({
+export const usePaginatedList = <T>({
   fetchPage,
   pageSize,
-  deleteItem,
   reportError,
 }: PaginatedListOptions<T>) => {
   const items = shallowRef<T[]>([])
@@ -21,7 +18,6 @@ export const usePaginatedList = <T extends { id: string }>({
   const page = ref(0)
   const hasMore = ref(true)
   const loadingMore = ref(false)
-  const { deletingId, remove } = useDeletableList({ items, deleteItem, reportError })
   let listGeneration = 0
   const isStale = (generation: number): boolean => generation !== listGeneration
 
@@ -68,9 +64,7 @@ export const usePaginatedList = <T extends { id: string }>({
     loadError,
     hasMore,
     loadingMore,
-    deletingId,
     loadFirstPage,
     loadMore,
-    remove,
   }
 }

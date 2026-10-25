@@ -6,6 +6,7 @@ import { adminGatewayKey } from '@/services/AdminGateway'
 import type { ProductListItem } from '@/services/catalog'
 import { orderProductPairByCreation } from '@/lib/orderProductPairByCreation'
 import { usePaginatedList } from '@/composables/usePaginatedList'
+import { useDeletableList } from '@/composables/useDeletableList'
 import AlertMessage from '@/components/AlertMessage.vue'
 import LoadingText from '@/components/LoadingText.vue'
 import TabBar from '@/components/primitives/TabBar.vue'
@@ -33,13 +34,16 @@ const {
   loadError: productsLoadError,
   hasMore: productsHaveMore,
   loadingMore: loadingMoreProducts,
-  deletingId: deletingProductId,
   loadFirstPage: loadFirstProductPage,
   loadMore: loadMoreProducts,
-  remove: removeProduct,
 } = usePaginatedList({
   fetchPage: (page) => adminGateway.fetchProductsPage(page, productSearch.value),
   pageSize: adminGateway.productPageSize,
+  reportError,
+})
+
+const { deletingId: deletingProductId, remove: removeProduct } = useDeletableList({
+  items: products,
   deleteItem: adminGateway.deleteProduct,
   reportError,
 })
@@ -49,13 +53,16 @@ const {
   loadError: reviewsLoadError,
   hasMore: reviewsHaveMore,
   loadingMore: loadingMoreReviews,
-  deletingId: deletingReviewId,
   loadFirstPage: loadFirstReviewPage,
   loadMore: loadMoreReviews,
-  remove: removeReview,
 } = usePaginatedList({
   fetchPage: adminGateway.fetchReviewsPage,
   pageSize: adminGateway.reviewPageSize,
+  reportError,
+})
+
+const { deletingId: deletingReviewId, remove: removeReview } = useDeletableList({
+  items: reviews,
   deleteItem: adminGateway.deleteReview,
   reportError,
 })

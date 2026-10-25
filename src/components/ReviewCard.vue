@@ -4,6 +4,10 @@ import StarDisplay from '@/components/StarDisplay.vue'
 import TagList from '@/components/TagList.vue'
 import ReviewImageGallery from '@/components/ReviewImageGallery.vue'
 import Card from '@/components/primitives/CardComponent.vue'
+import Button from '@/components/primitives/ButtonComponent.vue'
+import { ButtonSize } from '@/components/primitives/ButtonSize'
+import { ButtonTone } from '@/components/primitives/ButtonTone'
+import { ButtonVariant } from '@/components/primitives/ButtonVariant'
 import Chip from '@/components/primitives/ChipComponent.vue'
 import { ChipSize } from '@/components/primitives/ChipSize'
 import { ChipTone } from '@/components/primitives/ChipTone'
@@ -15,6 +19,8 @@ import { formatDate } from '@/lib/date'
 const MAX_CRITERION_VALUE = 5
 
 const props = defineProps<{ review: ReviewWithDetails; editable?: boolean }>()
+
+const emit = defineEmits<{ delete: [] }>()
 
 const displayName = computed(
   () => props.review.profile.displayName || props.review.profile.username,
@@ -78,13 +84,22 @@ const filledCriteria = computed(() => {
       <ReviewImageGallery :images="review.images" />
     </div>
 
-    <div v-if="editable" class="mt-3 pt-2 border-t border-gray-50">
+    <div v-if="editable" class="mt-3 pt-2 border-t border-gray-50 flex items-center gap-3">
       <RouterLink
         :to="{ name: 'review-edit', params: { reviewId: review.id } }"
         class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
       >
         Bearbeiten
       </RouterLink>
+      <Button
+        ariaLabel="Bewertung löschen"
+        :variant="ButtonVariant.Text"
+        :size="ButtonSize.Small"
+        :tone="ButtonTone.Danger"
+        @click="emit('delete')"
+      >
+        Löschen
+      </Button>
     </div>
   </Card>
 </template>

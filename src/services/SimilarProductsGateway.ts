@@ -11,6 +11,7 @@ export const similarProductsGatewayKey: InjectionKey<SimilarProductsGateway> =
 
 export interface SimilarProductsGateway {
   fetchSimilarProducts: (productId: string) => Promise<SimilarProduct[]>
+  searchProductCandidates: (search: string) => Promise<SimilarityCandidate[]>
   searchSimilarityCandidates: (
     product: SimilarityCandidateSource,
     search: string,

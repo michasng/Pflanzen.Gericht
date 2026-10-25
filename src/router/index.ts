@@ -61,6 +61,11 @@ const router = createRouter({
           component: () => import('@/views/ProfilePublicView.vue'),
         },
         {
+          path: 'list/:id',
+          name: 'list',
+          component: () => import('@/views/ListView.vue'),
+        },
+        {
           path: 'admin',
           name: 'admin',
           component: () => import('@/views/AdminView.vue'),

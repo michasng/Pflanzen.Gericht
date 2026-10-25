@@ -8,6 +8,8 @@ const props = defineProps<{
   isAdmin: boolean
 }>()
 
+const emit = defineEmits<{ delete: [reviewId: string] }>()
+
 const isEditable = (review: ReviewWithDetails): boolean =>
   props.currentUserId !== null &&
   (props.isAdmin || (review.userId === props.currentUserId && review.isCurrent))
@@ -20,6 +22,7 @@ const isEditable = (review: ReviewWithDetails): boolean =>
       :key="review.id"
       :review="review"
       :editable="isEditable(review)"
+      @delete="emit('delete', review.id)"
     />
   </div>
 </template>

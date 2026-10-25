@@ -3,18 +3,22 @@ import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { toErrorMessage } from '@/lib/error'
 import { useAuthStore } from '@/stores/auth'
-import { useAsyncData } from '@/composables/useAsyncData'
 import { useDeletableList } from '@/composables/useDeletableList'
+import { useProfileContent } from '@/composables/useProfileContent'
+import { useProfileCounts } from '@/composables/useProfileCounts'
+import { useProfileTab } from '@/composables/useProfileTab'
 import { injectGateway } from '@/composables/injectGateway'
+import { ProfileAudience } from '@/config/ProfileAudience'
+import { listGatewayKey, type ListInput } from '@/services/ListGateway'
 import { profileGatewayKey, type ProfileUpdates } from '@/services/ProfileGateway'
-import type { ReviewWithMeta } from '@/services/profile'
-import type { Product } from '@/types'
 import ProductSummaryCard from '@/components/ProductSummaryCard.vue'
 import ReviewSummaryCard from '@/components/ReviewSummaryCard.vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import LoadMoreButton from '@/components/LoadMoreButton.vue'
 import LoadingText from '@/components/LoadingText.vue'
-import NotFoundMessage from '@/components/NotFoundMessage.vue'
+import ListForm from '@/components/list/ListForm.vue'
+import ListSummaryList from '@/components/list/ListSummaryList.vue'
 import ProfileEditForm from '@/components/profile/ProfileEditForm.vue'
 import ProfileHeader from '@/components/profile/ProfileHeader.vue'
 import ProfileStats from '@/components/profile/ProfileStats.vue'
@@ -33,66 +37,82 @@ import { ChipTone } from '@/components/primitives/ChipTone'
 const TABS: TabBarItem<ProfileTab>[] = [
   { value: ProfileTab.Reviews, label: 'Meine Bewertungen', ariaLabel: 'Meine Bewertungen' },
   { value: ProfileTab.Products, label: 'Meine Produkte', ariaLabel: 'Meine Produkte' },
+  { value: ProfileTab.Lists, label: 'Meine Listen', ariaLabel: 'Meine Listen' },
 ]
 
 const router = useRouter()
 const authStore = useAuthStore()
 const profileGateway = injectGateway(profileGatewayKey)
+const listGateway = injectGateway(listGatewayKey)
 
-const reviews = ref<ReviewWithMeta[]>([])
-const products = ref<Product[]>([])
-const activeTab = ref(ProfileTab.Reviews)
+const activeTab = useProfileTab()
+const userId = computed(() => authStore.user?.id)
 
 const isEditing = ref(false)
+const isCreatingList = ref(false)
 const saving = ref(false)
 const saveError = ref<string | null>(null)
 
-const deleteError = ref<string | null>(null)
+const {
+  reviewsCount,
+  productsCount,
+  listsCount,
+  errorMessage: countsError,
+  loadCounts,
+} = useProfileCounts(profileGateway, { onlyPublicLists: false })
 
 const {
-  data: userContent,
+  reviews,
+  products,
+  lists,
   loading,
-  errorMessage: loadError,
-  notFound,
-} = useAsyncData(
-  async (userId: string | undefined) => {
-    if (!userId) return null
+  loadError: contentLoadError,
+  actionError,
+  reportActionError,
+  clearActionError,
+  loadFirstPages,
+} = useProfileContent({
+  gateway: profileGateway,
+  userId: () => userId.value,
+  audience: ProfileAudience.Owner,
+})
 
-    const [userReviews, userProducts] = await Promise.all([
-      profileGateway.fetchUserReviews(userId),
-      profileGateway.fetchUserProducts(userId),
-    ])
-    return { reviews: userReviews, products: userProducts }
-  },
-  () => authStore.user?.id,
-)
+const { deletingId: deletingReviewId, remove: removeReview } = useDeletableList({
+  items: reviews.items,
+  deleteItem: profileGateway.deleteReview,
+  reportError: reportActionError,
+})
+
+const { deletingId: deletingProductId, remove: removeProduct } = useDeletableList({
+  items: products.items,
+  deleteItem: profileGateway.deleteProduct,
+  reportError: reportActionError,
+})
+
+const loadError = computed(() => contentLoadError.value ?? countsError.value)
 
 watch(
-  userContent,
-  (content) => {
-    reviews.value = content?.reviews ?? []
-    products.value = content?.products ?? []
+  userId,
+  (id) => {
+    if (!id) return
+    void Promise.all([loadFirstPages(), loadCounts(id)])
   },
   { immediate: true },
 )
 
-const reportDeleteError = (message: string): void => {
-  deleteError.value = message
+const refreshCounts = async (): Promise<void> => {
+  if (userId.value) await loadCounts(userId.value)
 }
 
-const { deletingId: deletingReviewId, remove: removeReview } = useDeletableList({
-  items: reviews,
-  deleteItem: profileGateway.deleteReview,
-  reportError: reportDeleteError,
-})
+const createList = async (input: ListInput): Promise<void> => {
+  if (!userId.value) return
+  await listGateway.createList(userId.value, input)
+}
 
-const { deletingId: deletingProductId, remove: removeProduct } = useDeletableList({
-  items: products,
-  deleteItem: profileGateway.deleteProduct,
-  reportError: reportDeleteError,
-})
-
-const currentReviewsCount = computed(() => reviews.value.filter((r) => r.isCurrent).length)
+const finishCreatingList = async (): Promise<void> => {
+  isCreatingList.value = false
+  await Promise.all([lists.loadFirstPage(), refreshCounts()])
+}
 
 const startEdit = (): void => {
   isEditing.value = true
@@ -126,14 +146,16 @@ const handleSignOut = async (): Promise<void> => {
 const handleDeleteProduct = async (id: string): Promise<void> => {
   if (!confirm('Produkt wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.'))
     return
-  deleteError.value = null
+  clearActionError()
   await removeProduct(id)
+  await refreshCounts()
 }
 
 const handleDeleteReview = async (id: string): Promise<void> => {
   if (!confirm('Bewertung wirklich löschen?')) return
-  deleteError.value = null
+  clearActionError()
   await removeReview(id)
+  await refreshCounts()
 }
 </script>
 
@@ -181,19 +203,26 @@ const handleDeleteReview = async (id: string): Promise<void> => {
       </Button>
     </div>
 
-    <ProfileStats :reviewsCount="currentReviewsCount" :productsCount="products.length" />
+    <ProfileStats
+      :reviewsCount="reviewsCount"
+      :productsCount="productsCount"
+      :listsCount="listsCount"
+    />
 
     <TabBar v-model="activeTab" :tabs="TABS" class="-mx-4 px-4" />
 
     <LoadingText v-if="loading" />
-    <NotFoundMessage v-else-if="notFound" message="Profil nicht gefunden." />
     <AlertMessage v-else-if="loadError" :message="loadError" />
 
     <template v-else-if="activeTab === ProfileTab.Reviews">
-      <AlertMessage :message="deleteError" />
-      <EmptyState v-if="reviews.length === 0" compact title="Noch keine Bewertungen abgegeben." />
+      <AlertMessage :message="actionError" />
+      <EmptyState
+        v-if="reviews.items.value.length === 0"
+        compact
+        title="Noch keine Bewertungen abgegeben."
+      />
       <ul v-else class="space-y-3">
-        <li v-for="review in reviews" :key="review.id">
+        <li v-for="review in reviews.items.value" :key="review.id">
           <ReviewSummaryCard :review="review">
             <template #status>
               <Chip
@@ -233,13 +262,52 @@ const handleDeleteReview = async (id: string): Promise<void> => {
           </ReviewSummaryCard>
         </li>
       </ul>
+      <div v-if="reviews.hasMore.value" class="text-center">
+        <LoadMoreButton
+          ariaLabel="Mehr Bewertungen laden"
+          :loading="reviews.loadingMore.value"
+          @click="reviews.loadMore"
+        />
+      </div>
+    </template>
+
+    <template v-else-if="activeTab === ProfileTab.Lists">
+      <AlertMessage :message="actionError" />
+      <ListForm
+        v-if="isCreatingList"
+        idPrefix="new-list"
+        :save="createList"
+        @saved="finishCreatingList"
+        @cancel="isCreatingList = false"
+      />
+      <Button
+        v-else
+        ariaLabel="Neue Liste"
+        :variant="ButtonVariant.Outlined"
+        full-width
+        @click="isCreatingList = true"
+      >
+        Neue Liste
+      </Button>
+      <ListSummaryList
+        :lists="lists.items.value"
+        showVisibility
+        :hasMore="lists.hasMore.value"
+        :loadingMore="lists.loadingMore.value"
+        emptyTitle="Noch keine Listen angelegt."
+        @loadMore="lists.loadMore"
+      />
     </template>
 
     <template v-else>
-      <AlertMessage :message="deleteError" />
-      <EmptyState v-if="products.length === 0" compact title="Noch keine Produkte hinzugefügt." />
+      <AlertMessage :message="actionError" />
+      <EmptyState
+        v-if="products.items.value.length === 0"
+        compact
+        title="Noch keine Produkte hinzugefügt."
+      />
       <ul v-else class="space-y-2">
-        <li v-for="product in products" :key="product.id">
+        <li v-for="product in products.items.value" :key="product.id">
           <ProductSummaryCard :product="product">
             <template #actions>
               <ButtonLink
@@ -263,6 +331,13 @@ const handleDeleteReview = async (id: string): Promise<void> => {
           </ProductSummaryCard>
         </li>
       </ul>
+      <div v-if="products.hasMore.value" class="text-center">
+        <LoadMoreButton
+          ariaLabel="Mehr Produkte laden"
+          :loading="products.loadingMore.value"
+          @click="products.loadMore"
+        />
+      </div>
     </template>
   </div>
 </template>

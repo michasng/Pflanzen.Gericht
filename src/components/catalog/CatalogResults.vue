@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCatalogStore } from '@/stores/catalog'
+import { useAuthStore } from '@/stores/auth'
+import { provideProductBookmarks } from '@/composables/provideProductBookmarks'
 import ProductCard from '@/components/ProductCard.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import Button from '@/components/primitives/ButtonComponent.vue'
@@ -9,6 +11,9 @@ import { ButtonVariant } from '@/components/primitives/ButtonVariant'
 import { ButtonSize } from '@/components/primitives/ButtonSize'
 
 const catalogStore = useCatalogStore()
+const authStore = useAuthStore()
+
+provideProductBookmarks(() => catalogStore.products.map((product) => product.id))
 
 const isFiltered = computed(
   () => !!catalogStore.search || !!catalogStore.category || catalogStore.activeFilterCount > 0,
@@ -74,7 +79,12 @@ const isFiltered = computed(
       class="transition-opacity duration-150"
       :class="{ 'opacity-50 pointer-events-none': catalogStore.loading }"
     >
-      <ProductCard v-for="product in catalogStore.products" :key="product.id" :product="product" />
+      <ProductCard
+        v-for="product in catalogStore.products"
+        :key="product.id"
+        :product="product"
+        :current-user-id="authStore.user?.id ?? null"
+      />
     </Grid>
 
     <div v-if="catalogStore.hasMore" class="mt-6 text-center">
