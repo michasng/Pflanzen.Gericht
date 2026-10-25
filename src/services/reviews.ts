@@ -10,7 +10,7 @@ import {
 import type { Review, ReviewInsert, ReviewImage, ProductImage } from '@/types'
 import type { Tables } from '@/types/database'
 
-export const ADMIN_PAGE_SIZE = 50
+export const ADMIN_REVIEW_PAGE_SIZE = 20
 
 export type AdminReviewItem = Review & {
   profile: { username: string }
@@ -225,7 +225,7 @@ export const fetchAllReviewsForAdmin = async (page = 0): Promise<AdminReviewItem
     .from('review')
     .select('*, profile:user_id(username), product:product_id(id, name)')
     .order('created_at', { ascending: false })
-    .range(page * ADMIN_PAGE_SIZE, (page + 1) * ADMIN_PAGE_SIZE - 1)
+    .range(page * ADMIN_REVIEW_PAGE_SIZE, (page + 1) * ADMIN_REVIEW_PAGE_SIZE - 1)
   if (error) throw error
   return camelizeKeys(
     (data ?? []).map((r) => ({
