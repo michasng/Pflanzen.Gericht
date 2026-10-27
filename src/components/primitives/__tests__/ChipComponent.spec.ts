@@ -45,6 +45,13 @@ describe('ChipComponent', () => {
     expect(wrapper.classes()).toContain('bg-red-50')
   })
 
+  it('applies the subtle style to selected interactive chips when subtleSelection is set', () => {
+    const wrapper = mount(ChipComponent, {
+      props: { interactive: true, selected: true, subtleSelection: true },
+    })
+    expect(wrapper.classes()).toContain('bg-primary-50')
+  })
+
   it('applies compact spacing when set', () => {
     const wrapper = mount(ChipComponent, { props: { size: ChipSize.Compact } })
     expect(wrapper.classes()).toContain('px-2')

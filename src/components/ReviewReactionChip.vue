@@ -32,13 +32,14 @@ const accessibleName = computed(() => {
       :interactive="interactive"
       :selected="chip.isMine"
       :size="ChipSize.Compact"
+      subtle-selection
       :disabled="interactive ? disabled : undefined"
       :aria-label="accessibleName"
       :role="interactive ? undefined : 'group'"
       :tabindex="interactive ? undefined : 0"
       @click="interactive && $emit('toggle')"
     >
-      <span aria-hidden="true">{{ chip.emoji }}</span>
+      <span aria-hidden="true" class="text-lg">{{ chip.emoji }}</span>
       <span v-if="countLabel" aria-hidden="true" class="text-xs">{{ countLabel }}</span>
     </Chip>
   </Tooltip>

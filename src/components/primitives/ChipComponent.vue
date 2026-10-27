@@ -6,6 +6,7 @@ import { ChipTone } from '@/components/primitives/ChipTone'
 const props = withDefaults(
   defineProps<{
     selected?: boolean
+    subtleSelection?: boolean
     interactive?: boolean
     removable?: boolean
     removeLabel?: string
@@ -14,6 +15,7 @@ const props = withDefaults(
   }>(),
   {
     selected: false,
+    subtleSelection: false,
     interactive: false,
     removable: false,
     removeLabel: 'Entfernen',
@@ -25,6 +27,9 @@ const props = withDefaults(
 defineEmits<{ remove: [] }>()
 
 const interactiveToneClass = computed(() => {
+  if (props.selected && props.subtleSelection) {
+    return 'bg-primary-50 text-primary-700 border-primary-300'
+  }
   if (props.selected) return 'bg-primary-600 text-white border-primary-600'
   return 'bg-white text-gray-600 border-gray-200 hover:border-primary-300'
 })
