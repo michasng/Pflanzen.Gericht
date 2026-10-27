@@ -57,6 +57,5 @@ defineProps<{
       <slot name="actions" />
     </div>
     <p class="text-sm text-gray-500">von {{ product.brand }}</p>
-    <p v-if="product.description" class="mt-3 text-sm text-gray-600">{{ product.description }}</p>
   </div>
 </template>

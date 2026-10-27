@@ -111,14 +111,15 @@ const deleteReview = async (reviewId: string): Promise<void> => {
           @delete="deleteProduct(product.id)"
         />
       </section>
+      <SimilarProductsSection :product-id="product.id" :product-category="product.category" />
+      <PriceReportsSection
+        :product-id="product.id"
+        :initial-reports="product.priceReports"
+        :current-user-id="currentUserId"
+      />
       <section class="flex flex-col gap-4">
         <SectionHeading>Produktinfos</SectionHeading>
-        <SimilarProductsSection :product-id="product.id" :product-category="product.category" />
-        <PriceReportsSection
-          :product-id="product.id"
-          :initial-reports="product.priceReports"
-          :current-user-id="currentUserId"
-        />
+        <p v-if="product.description" class="text-sm text-gray-600">{{ product.description }}</p>
         <ProductIngredients :ingredients="product.ingredients" />
         <ProductNutritionTable
           :energy-joules="product.energyJoules"
