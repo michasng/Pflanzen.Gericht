@@ -14,11 +14,18 @@ import { ChipTone } from '@/components/primitives/ChipTone'
 import ProgressBar from '@/components/primitives/ProgressBar.vue'
 import { ProgressBarColor } from '@/components/primitives/ProgressBarColor'
 import type { ReviewWithDetails } from '@/services/catalog'
+import type { ReviewReaction } from '@/types/ReviewReaction'
+import ReviewReactionBar from '@/components/ReviewReactionBar.vue'
 import { formatDate } from '@/lib/date'
 
 const MAX_CRITERION_VALUE = 5
 
-const props = defineProps<{ review: ReviewWithDetails; editable?: boolean }>()
+const props = defineProps<{
+  review: ReviewWithDetails
+  currentUserId: string | null
+  currentUserProfile: ReviewReaction['profile'] | null
+  editable?: boolean
+}>()
 
 const emit = defineEmits<{ delete: [] }>()
 
@@ -84,22 +91,32 @@ const filledCriteria = computed(() => {
       <ReviewImageGallery :images="review.images" />
     </div>
 
-    <div v-if="editable" class="mt-3 pt-2 border-t border-gray-50 flex items-center gap-3">
-      <RouterLink
-        :to="{ name: 'review-edit', params: { reviewId: review.id } }"
-        class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
-      >
-        Bearbeiten
-      </RouterLink>
-      <Button
-        ariaLabel="Bewertung löschen"
-        :variant="ButtonVariant.Text"
-        :size="ButtonSize.Small"
-        :tone="ButtonTone.Danger"
-        @click="emit('delete')"
-      >
-        Löschen
-      </Button>
+    <div class="mt-3 pt-2 border-t border-gray-50 flex items-center gap-3">
+      <template v-if="editable">
+        <RouterLink
+          :to="{ name: 'review-edit', params: { reviewId: review.id } }"
+          class="text-xs text-primary-600 font-medium hover:text-primary-700 transition-colors"
+        >
+          Bearbeiten
+        </RouterLink>
+        <Button
+          ariaLabel="Bewertung löschen"
+          :variant="ButtonVariant.Text"
+          :size="ButtonSize.Small"
+          :tone="ButtonTone.Danger"
+          @click="emit('delete')"
+        >
+          Löschen
+        </Button>
+      </template>
+      <div class="ml-auto">
+        <ReviewReactionBar
+          :review-id="review.id"
+          :initial-reactions="review.reactions"
+          :current-user-id="currentUserId"
+          :current-user-profile="currentUserProfile"
+        />
+      </div>
     </div>
   </Card>
 </template>

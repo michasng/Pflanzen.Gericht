@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import type { ReviewWithDetails } from '@/services/catalog'
+import type { ReviewReaction } from '@/types/ReviewReaction'
 import ReviewCard from '@/components/ReviewCard.vue'
 
 const props = defineProps<{
   reviews: readonly ReviewWithDetails[]
   currentUserId: string | null
+  currentUserProfile: ReviewReaction['profile'] | null
   isAdmin: boolean
 }>()
 
@@ -21,6 +23,8 @@ const isEditable = (review: ReviewWithDetails): boolean =>
       v-for="review in reviews"
       :key="review.id"
       :review="review"
+      :current-user-id="currentUserId"
+      :current-user-profile="currentUserProfile"
       :editable="isEditable(review)"
       @delete="emit('delete', review.id)"
     />

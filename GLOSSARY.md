@@ -107,6 +107,10 @@ _Avoid_: Rating, aggregate score, average rating
 A Review that has been replaced by a newer Review from the same user for the same Product.
 _Avoid_: Old review, archived review
 
+**Reaction**:
+A User's emoji response to a Review. A User may react to the same Review with several different emojis, but with each emoji at most once.
+_Avoid_: Like, vote, emoji (for the response itself)
+
 **Similarity**:
 A user's opinion of how alike two things are. Expressed either as a Similarity Vote between two Products or as a similarity tag on a Review.
 

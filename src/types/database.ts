@@ -531,6 +531,45 @@ export type Database = {
           },
         ]
       }
+      review_reaction: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          review_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          review_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          review_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'review_reaction_review_id_fkey'
+            columns: ['review_id']
+            isOneToOne: false
+            referencedRelation: 'review'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'review_reaction_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profile'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       review_tag: {
         Row: {
           review_id: string

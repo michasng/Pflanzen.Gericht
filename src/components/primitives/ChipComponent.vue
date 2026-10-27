@@ -40,6 +40,7 @@ const staticToneClass = computed(() => {
 
 const INTERACTIVE_SIZE_CLASSES: Partial<Record<ChipSize, string>> = {
   [ChipSize.Default]: 'px-3 py-1.5',
+  [ChipSize.Compact]: 'px-2 py-0.5',
   [ChipSize.Wide]: 'px-4 py-1.5',
 }
 
@@ -62,7 +63,7 @@ const staticSizeClass = computed(
     v-if="interactive"
     type="button"
     :aria-pressed="selected"
-    class="inline-flex shrink-0 items-center gap-1 rounded-full border text-sm font-medium transition-colors"
+    class="inline-flex shrink-0 items-center gap-1 rounded-full border text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60"
     :class="[interactiveToneClass, interactiveSizeClass]"
   >
     <slot />

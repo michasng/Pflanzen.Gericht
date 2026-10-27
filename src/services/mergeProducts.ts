@@ -42,6 +42,14 @@ const fillMergedProduct = async (
     for (const image of review.images) {
       await gateway.copyReviewImage(image, copiedReview.id, review.userId)
     }
+    for (const reaction of review.reactions) {
+      await gateway.createReaction(
+        copiedReview.id,
+        reaction.userId,
+        reaction.emoji,
+        reaction.createdAt,
+      )
+    }
   }
 
   const priceReports = (

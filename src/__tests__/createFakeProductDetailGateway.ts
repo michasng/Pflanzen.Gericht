@@ -8,5 +8,7 @@ export const createFakeProductDetailGateway = (
   deletePriceReport: () => Promise.resolve(),
   deleteProduct: () => Promise.resolve(),
   deleteReview: () => Promise.resolve(),
+  addReaction: () => Promise.reject(new Error('not expected')),
+  removeReaction: () => Promise.resolve(),
   ...overrides,
 })

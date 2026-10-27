@@ -11,6 +11,7 @@ import {
 import type { CoverImageCandidate } from '@/lib/CoverImageCandidate'
 import type { Review, ReviewInsert, ReviewImage, ProductImage } from '@/types'
 import type { Tables } from '@/types/database'
+import type { ReviewReaction } from '@/types/ReviewReaction'
 
 export const ADMIN_REVIEW_PAGE_SIZE = 20
 
@@ -29,7 +30,11 @@ export type ReviewHistory = Pick<ReviewInsert, 'createdAt' | 'updatedAt'>
 
 export type ReviewWithDetails = Review & { tags: string[]; images: ReviewImage[] }
 
+export type ReviewWithReactions = ReviewWithDetails & { reactions: ReviewReaction[] }
+
 const REVIEW_WITH_DETAILS_SELECT = '*, tags:review_tag(tag), images:review_image(*)'
+const REVIEW_WITH_REACTIONS_SELECT =
+  '*, tags:review_tag(tag), images:review_image(*), reactions:review_reaction(emoji, user_id, created_at, profile:user_id(username, display_name))'
 
 const toReviewWithDetails = (row: { tags: { tag: string }[] }): { tags: string[] } => ({
   tags: row.tags.map((t) => t.tag),
@@ -139,13 +144,18 @@ export const copyReviewImageToReview = (
     reviewImage.sortOrder,
   )
 
-export const fetchProductReviews = async (productId: string): Promise<ReviewWithDetails[]> => {
+export const fetchProductReviews = async (productId: string): Promise<ReviewWithReactions[]> => {
   const { data, error } = await supabase
     .from('review')
-    .select(REVIEW_WITH_DETAILS_SELECT)
+    .select(REVIEW_WITH_REACTIONS_SELECT)
     .eq('product_id', productId)
   if (error) throw error
-  return camelizeKeys((data ?? []).map((row) => ({ ...row, ...toReviewWithDetails(row) })))
+  return camelizeKeys(
+    (data ?? []).map((row) => ({
+      ...row,
+      ...toReviewWithDetails(row),
+    })),
+  )
 }
 
 export interface ProductReviewImages {

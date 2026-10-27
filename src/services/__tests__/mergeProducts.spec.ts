@@ -9,7 +9,8 @@ import type {
   ReviewImage,
 } from '@/types'
 import { QuantityUnit } from '@/config/quantity'
-import type { ReviewWithDetails } from '../reviews'
+import type { ReviewWithReactions } from '../reviews'
+import { createReviewReaction } from '@/__tests__/createReviewReaction'
 
 const MERGED_ID = 'merged'
 const MERGED_PRODUCT: Product = {
@@ -35,7 +36,7 @@ const MERGED_PRODUCT: Product = {
   updatedAt: '2026-01-01T00:00:00Z',
 }
 
-const buildReview = (overrides: Partial<ReviewWithDetails>): ReviewWithDetails => ({
+const buildReview = (overrides: Partial<ReviewWithReactions>): ReviewWithReactions => ({
   appearance: null,
   comment: null,
   consistency: null,
@@ -45,6 +46,7 @@ const buildReview = (overrides: Partial<ReviewWithDetails>): ReviewWithDetails =
   isCurrent: true,
   overall: 4,
   productId: 'a',
+  reactions: [],
   taste: null,
   tags: [],
   updatedAt: '2026-01-01T00:00:00Z',
@@ -95,7 +97,7 @@ const buildReviewImage = (id: string): ReviewImage => ({
 })
 
 interface FakeData {
-  reviews: ReviewWithDetails[]
+  reviews: ReviewWithReactions[]
   priceReports: PriceReport[]
   votes: ProductSimilarityVote[]
 }
@@ -109,6 +111,12 @@ const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGatewa
   const updatedFields: string[] = []
   const createdReviews: { createdAt: string | undefined; tags: string[] }[] = []
   const copiedReviewImageIds: string[] = []
+  const createdReactions: {
+    reviewId: string
+    userId: string
+    emoji: string
+    createdAt: string
+  }[] = []
   const upsertedPriceReports: (string | undefined)[][] = []
   const votes: (string | undefined)[][] = []
   const copiedImages: { image: ProductImage; ownerId: string; sortOrder: number }[] = []
@@ -148,6 +156,10 @@ const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGatewa
       await record('copyReviewImage')
       copiedReviewImageIds.push(image.id)
     },
+    createReaction: async (reviewId, userId, emoji, createdAt) => {
+      await record('createReaction')
+      createdReactions.push({ reviewId, userId, emoji, createdAt })
+    },
     fetchPriceReports: async (id) =>
       data.priceReports
         .filter((r) => r.productId === id)
@@ -186,6 +198,7 @@ const buildFakeGateway = (data: FakeData, failingStep?: keyof ProductMergeGatewa
     updatedFields,
     createdReviews,
     copiedReviewImageIds,
+    createdReactions,
     upsertedPriceReports,
     votes,
     copiedImages,
@@ -264,6 +277,37 @@ describe('mergeProducts', () => {
     })
   })
 
+  describe('given reactions on a review', () => {
+    it('recreates them on the copy with the original reactor and timestamp', async () => {
+      const fake = buildFakeGateway({
+        ...emptyData,
+        reviews: [
+          buildReview({
+            productId: 'a',
+            reactions: [
+              createReviewReaction({
+                emoji: '🎉',
+                userId: 'reactor',
+                createdAt: '2026-02-02T00:00:00Z',
+              }),
+            ],
+          }),
+        ],
+      })
+
+      await mergeProducts(fake.gateway, input)
+
+      expect(fake.createdReactions).toEqual([
+        {
+          reviewId: 'copy-1',
+          userId: 'reactor',
+          emoji: '🎉',
+          createdAt: '2026-02-02T00:00:00Z',
+        },
+      ])
+    })
+  })
+
   describe('given the final name could collide with an original', () => {
     it('creates with a temporary name and renames after deleting the originals', async () => {
       const fake = buildFakeGateway(emptyData)
@@ -331,6 +375,7 @@ describe('mergeProducts', () => {
     'replaceSources',
     'copyImage',
     'createReview',
+    'createReaction',
     'upsertPriceReport',
     'voteSimilarity',
     'moveListEntries',
@@ -338,7 +383,7 @@ describe('mergeProducts', () => {
     it('deletes only the merged product and rethrows', async () => {
       const fake = buildFakeGateway(
         {
-          reviews: [buildReview({})],
+          reviews: [buildReview({ reactions: [createReviewReaction()] })],
           priceReports: [buildPriceReport({})],
           votes: [buildVote({})],
         },

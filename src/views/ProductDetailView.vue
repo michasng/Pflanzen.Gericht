@@ -40,6 +40,11 @@ const {
 )
 
 const currentUserId = computed(() => authStore.user?.id ?? null)
+const currentUserProfile = computed(() =>
+  authStore.profile
+    ? { username: authStore.profile.username, displayName: authStore.profile.displayName }
+    : null,
+)
 provideProductBookmarks(() => (product.value ? [product.value.id] : []))
 const canManageProduct = computed(
   () =>
@@ -100,6 +105,7 @@ const deleteReview = async (reviewId: string): Promise<void> => {
         <ProductReviewsSection
           :reviews="product.reviews"
           :current-user-id="currentUserId"
+          :current-user-profile="currentUserProfile"
           :is-admin="authStore.isAdmin"
           @delete="deleteReview"
         />

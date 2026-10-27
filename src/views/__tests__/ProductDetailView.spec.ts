@@ -12,6 +12,8 @@ import { createFakeAuthGateway } from '@/__tests__/createFakeAuthGateway'
 import { createFakeListGateway } from '@/__tests__/createFakeListGateway'
 import { createFakeProductDetailGateway } from '@/__tests__/createFakeProductDetailGateway'
 import { createPriceReport } from '@/__tests__/createPriceReport'
+import { createProfile } from '@/__tests__/createProfile'
+import { createReviewReaction } from '@/__tests__/createReviewReaction'
 import { createProductDetail } from '@/__tests__/createProductDetail'
 import { createSession } from '@/__tests__/createSession'
 import { EmptyRouteComponent, mountView } from '@/__tests__/mountView'
@@ -33,6 +35,7 @@ const createReview = (overrides: Partial<ReviewWithDetails>): ReviewWithDetails 
   createdAt: '2026-09-11T00:00:00.000Z',
   updatedAt: '2026-09-11T00:00:00.000Z',
   profile: { username: 'someone', displayName: null },
+  reactions: [],
   tags: [],
   images: [],
   ...overrides,
@@ -41,17 +44,21 @@ const createReview = (overrides: Partial<ReviewWithDetails>): ReviewWithDetails 
 interface MountOptions {
   productDetail: ProductDetailGateway
   signedInUserId?: string
+  renderReviewCards?: boolean
 }
 
 const mountProductDetailView = async ({
   productDetail,
   signedInUserId,
+  renderReviewCards = false,
 }: MountOptions): Promise<{ wrapper: VueWrapper; router: Router }> => {
   const mounted = await mountView({
     view: ProductDetailView,
     routes: [
       { path: '/', name: 'home', component: EmptyRouteComponent },
       { path: '/login', name: 'login', component: EmptyRouteComponent },
+      { path: '/profile/:id', name: 'profile-public', component: EmptyRouteComponent },
+      { path: '/review/:reviewId/edit', name: 'review-edit', component: EmptyRouteComponent },
       { path: '/product/:id', name: 'product-detail', component: EmptyRouteComponent },
       { path: '/product/:id/edit', name: 'product-edit', component: EmptyRouteComponent },
       { path: '/product/:id/review', name: 'review-new', component: EmptyRouteComponent },
@@ -62,12 +69,13 @@ const mountProductDetailView = async ({
       list: createFakeListGateway(),
       auth: createFakeAuthGateway({
         getSession: () => Promise.resolve(signedInUserId ? createSession(signedInUserId) : null),
+        fetchProfile: (id) => Promise.resolve(createProfile({ id, username: 'tester' })),
       }),
     },
     stubs: {
       AppLogo: true,
       PriceReportForm: true,
-      ReviewCard: true,
+      ReviewCard: !renderReviewCards,
       SimilarProductsSection: true,
       StarDisplay: true,
     },
@@ -78,10 +86,15 @@ const mountProductDetailView = async ({
 
 const mountWithProduct = (
   product: ProductDetail,
-  options: { signedInUserId?: string; gateway?: Partial<ProductDetailGateway> } = {},
+  options: {
+    signedInUserId?: string
+    gateway?: Partial<ProductDetailGateway>
+    renderReviewCards?: boolean
+  } = {},
 ) =>
   mountProductDetailView({
     signedInUserId: options.signedInUserId,
+    renderReviewCards: options.renderReviewCards,
     productDetail: createFakeProductDetailGateway({
       fetchProductDetail: () => Promise.resolve(product),
       ...options.gateway,
@@ -265,6 +278,51 @@ describe('ProductDetailView', () => {
       await emitDelete(wrapper)
 
       await vi.waitFor(() => expect(wrapper.text()).toContain('denied'))
+    })
+  })
+
+  describe('given reactions on a review', () => {
+    const mountWithReactions = (
+      addReaction: ProductDetailGateway['addReaction'],
+      signedInUserId?: string,
+    ) =>
+      mountWithProduct(
+        {
+          ...createProductDetail('product-1', 'Hafermilch'),
+          reviewsCount: 1,
+          reviews: [
+            createReview({
+              id: 'review-9',
+              reactions: [createReviewReaction({ emoji: '🎉', userId: OTHER_USER_ID })],
+            }),
+          ],
+        },
+        { signedInUserId, renderReviewCards: true, gateway: { addReaction } },
+      )
+
+    it('shows the reactions of the fetched review', async () => {
+      const { wrapper } = await mountWithReactions(() => Promise.reject(new Error('unused')))
+
+      await vi.waitFor(() => expect(wrapper.text()).toContain('🎉'))
+    })
+
+    it('when a signed-in user reacts then sends the reaction to the gateway', async () => {
+      const addCalls: unknown[][] = []
+      const { wrapper } = await mountWithReactions((...args) => {
+        addCalls.push(args)
+        return Promise.resolve(createReviewReaction({ emoji: '👍', userId: OWNER_ID }))
+      }, OWNER_ID)
+
+      const quickEmojiButton = await vi.waitFor(() => {
+        const found = wrapper
+          .findAll('button')
+          .find((button) => button.attributes('aria-label')?.startsWith('👍'))
+        expect(found).toBeDefined()
+        return found
+      })
+      await quickEmojiButton?.trigger('click')
+
+      await vi.waitFor(() => expect(addCalls).toEqual([['review-9', OWNER_ID, '👍']]))
     })
   })
 

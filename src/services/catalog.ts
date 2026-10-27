@@ -10,6 +10,7 @@ import type {
   ReviewImage,
 } from '@/types'
 import type { Tables } from '@/types/database'
+import type { ReviewReaction } from '@/types/ReviewReaction'
 import { fetchPriceReports, type PriceReportWithProfile } from '@/services/prices'
 import type { SortOption } from '@/config/sortOptions'
 import { ImageSize } from '@/config/imageSizes'
@@ -44,6 +45,7 @@ export interface ProductPage {
 }
 
 export type ReviewWithDetails = Review & {
+  reactions: ReviewReaction[]
   profile: { username: string; displayName: string | null }
   tags: string[]
   images: ReviewImage[]
@@ -136,11 +138,12 @@ export const fetchProductDetail = async (id: string): Promise<ProductDetail | nu
       supabase
         .from('review')
         .select(
-          '*, profile:user_id(username, display_name), tags:review_tag(tag), images:review_image(id, storage_path, sort_order)',
+          '*, profile:user_id(username, display_name), tags:review_tag(tag), images:review_image(id, storage_path, sort_order), reactions:review_reaction(emoji, user_id, created_at, profile:user_id(username, display_name))',
         )
         .eq('product_id', id)
         .order('is_current', { ascending: false })
-        .order('created_at', { ascending: false }),
+        .order('created_at', { ascending: false })
+        .order('created_at', { referencedTable: 'reactions', ascending: true }),
       fetchPriceReports(id),
     ])
 
@@ -161,6 +164,7 @@ export const fetchProductDetail = async (id: string): Promise<ProductDetail | nu
         profile: r.profile as { username: string; display_name: string | null },
         tags: ((r.tags ?? []) as { tag: string }[]).map((t) => t.tag),
         images: (r.images as Tables<'review_image'>[] | null) ?? [],
+        reactions: r.reactions ?? [],
       })),
     }),
     priceReports,

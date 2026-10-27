@@ -7,7 +7,7 @@ import type {
   ReviewImage,
 } from '@/types'
 import type { PriceReportWithProfile } from '@/services/prices'
-import type { ReviewFields, ReviewHistory, ReviewWithDetails } from '@/services/reviews'
+import type { ReviewFields, ReviewHistory, ReviewWithReactions } from '@/services/reviews'
 import type { SimilarityVoteHistory } from '@/services/similarProducts'
 import type { IngredientWrite, NutrientWrite } from '@/types/productWrites'
 
@@ -38,7 +38,7 @@ export interface ProductMergeGateway {
     ownerId: string,
     sortOrder: number,
   ) => Promise<unknown>
-  fetchReviews: (productId: string) => Promise<ReviewWithDetails[]>
+  fetchReviews: (productId: string) => Promise<ReviewWithReactions[]>
   createReview: (
     productId: string,
     userId: string,
@@ -47,6 +47,12 @@ export interface ProductMergeGateway {
     history?: ReviewHistory,
   ) => Promise<Review>
   copyReviewImage: (reviewImage: ReviewImage, reviewId: string, userId: string) => Promise<unknown>
+  createReaction: (
+    reviewId: string,
+    userId: string,
+    emoji: string,
+    createdAt: string,
+  ) => Promise<void>
   fetchPriceReports: (productId: string) => Promise<PriceReportWithProfile[]>
   upsertPriceReport: (
     productId: string,
