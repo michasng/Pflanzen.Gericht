@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import ReactionEmoji from '@/components/ReactionEmoji.vue'
 import Chip from '@/components/primitives/ChipComponent.vue'
 import { ChipSize } from '@/components/primitives/ChipSize'
 import Tooltip from '@/components/primitives/TooltipComponent.vue'
@@ -47,8 +48,9 @@ const accessibleName = computed(() => {
         class="text-lg"
         :class="animationClass"
         @animationend="clearAnimation"
-        >{{ chip.emoji }}</span
       >
+        <ReactionEmoji :emoji="chip.emoji" />
+      </span>
       <span v-if="countLabel" aria-hidden="true" class="text-xs">{{ countLabel }}</span>
     </Chip>
   </Tooltip>

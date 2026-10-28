@@ -1,8 +1,19 @@
 <script setup lang="ts">
 import { onMounted, useTemplateRef } from 'vue'
+import { CUSTOM_EMOJIS } from '@/config/customEmojis'
+import { selectFirstNativeEmojiCategory } from '@/lib/selectFirstNativeEmojiCategory'
 import dataSourceUrl from 'emoji-picker-element-data/de/cldr/data.json?url'
 
-const SKIN_TONE_HIDING_STYLE = '.skintone-button-wrapper, .skintone-list { display: none; }'
+const CUSTOM_TAB_SELECTOR = '.nav-button[data-group-id="-1"]'
+// The picker always renders the custom tab first. Reorder it visually and keep the indicator in sync.
+const PICKER_STYLE = `
+  .skintone-button-wrapper, .skintone-list { display: none; }
+  ${CUSTOM_TAB_SELECTOR} { order: 1; }
+  .nav:has(${CUSTOM_TAB_SELECTOR}) + .indicator-wrapper .indicator { translate: -100%; }
+  .nav:has(${CUSTOM_TAB_SELECTOR}[aria-selected="true"]) + .indicator-wrapper .indicator {
+    translate: calc((var(--num-groups) - 1) * 100%);
+  }
+`
 
 const LIGHT_THEME_CLASS = 'light'
 
@@ -22,14 +33,17 @@ onMounted(async () => {
     import('emoji-picker-element/i18n/de'),
   ])
   const picker = new Picker({ locale: 'de', dataSource: dataSourceUrl, i18n: german })
+  picker.customEmoji = CUSTOM_EMOJIS.map(({ name, url }) => ({ name, shortcodes: [name], url }))
   picker.classList.add(LIGHT_THEME_CLASS)
   const style = document.createElement('style')
-  style.textContent = SKIN_TONE_HIDING_STYLE
+  style.textContent = PICKER_STYLE
   picker.shadowRoot?.appendChild(style)
+  if (picker.shadowRoot) selectFirstNativeEmojiCategory(picker.shadowRoot)
   picker.addEventListener('emoji-click', (event) => {
-    const { unicode } = event.detail
-    if (!unicode) return
-    emit('pick', unicode)
+    const { unicode, emoji } = event.detail
+    const picked = unicode ?? ('name' in emoji ? emoji.name : undefined)
+    if (!picked) return
+    emit('pick', picked)
     dialog.value?.close()
   })
   pickerHost.value?.replaceChildren(picker)

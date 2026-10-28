@@ -49,6 +49,7 @@ describe('ReviewReactionBar', () => {
         '👍, keine Reaktionen',
         '👎, keine Reaktionen',
         '😂, keine Reaktionen',
+        'Pflanzen.Gericht, keine Reaktionen',
       ])
       expect(wrapper.find('button[aria-label="Emoji auswählen"]').exists()).toBe(true)
     })
