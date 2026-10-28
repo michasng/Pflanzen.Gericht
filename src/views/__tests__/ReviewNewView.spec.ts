@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ReviewEditingGateway } from '@/services/ReviewEditingGateway'
 import { useAuthStore } from '@/stores/auth'
+import { CELEBRATION_QUERY_KEY } from '@/lib/celebrationQueryKey'
 import ReviewNewView from '@/views/ReviewNewView.vue'
 import ReviewForm, { type ReviewFormValues } from '@/components/ReviewForm.vue'
 import { createFakeAuthGateway } from '@/__tests__/createFakeAuthGateway'
@@ -90,6 +91,7 @@ describe('ReviewNewView', () => {
       form.vm.$emit('submit', formValues)
 
       await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('product-detail'))
+      expect(router.currentRoute.value.query).toEqual({ [CELEBRATION_QUERY_KEY]: '1' })
       expect(createdTags).toEqual([['cremig']])
       expect(uploads).toEqual([{ reviewId: 'new-review', sortOrder: 0 }])
     })

@@ -8,6 +8,8 @@ import ProductDetailView from '@/views/ProductDetailView.vue'
 import PriceReportForm from '@/components/PriceReportForm.vue'
 import ReviewCard from '@/components/ReviewCard.vue'
 import SpotlightButtonLink from '@/components/primitives/SpotlightButtonLink.vue'
+import ConfettiBurst from '@/components/ConfettiBurst.vue'
+import { CELEBRATION_QUERY_KEY } from '@/lib/celebrationQueryKey'
 import { createDeferred } from '@/__tests__/createDeferred'
 import { createFakeAuthGateway } from '@/__tests__/createFakeAuthGateway'
 import { createFakeListGateway } from '@/__tests__/createFakeListGateway'
@@ -46,12 +48,14 @@ interface MountOptions {
   productDetail: ProductDetailGateway
   signedInUserId?: string
   renderReviewCards?: boolean
+  initialPath?: string
 }
 
 const mountProductDetailView = async ({
   productDetail,
   signedInUserId,
   renderReviewCards = false,
+  initialPath = '/product/product-1',
 }: MountOptions): Promise<{ wrapper: VueWrapper; router: Router }> => {
   const mounted = await mountView({
     view: ProductDetailView,
@@ -64,7 +68,7 @@ const mountProductDetailView = async ({
       { path: '/product/:id/edit', name: 'product-edit', component: EmptyRouteComponent },
       { path: '/product/:id/review', name: 'review-new', component: EmptyRouteComponent },
     ],
-    initialPath: '/product/product-1',
+    initialPath,
     gateways: {
       productDetail,
       list: createFakeListGateway(),
@@ -91,11 +95,13 @@ const mountWithProduct = (
     signedInUserId?: string
     gateway?: Partial<ProductDetailGateway>
     renderReviewCards?: boolean
+    initialPath?: string
   } = {},
 ) =>
   mountProductDetailView({
     signedInUserId: options.signedInUserId,
     renderReviewCards: options.renderReviewCards,
+    initialPath: options.initialPath,
     productDetail: createFakeProductDetailGateway({
       fetchProductDetail: () => Promise.resolve(product),
       ...options.gateway,
@@ -345,6 +351,18 @@ describe('ProductDetailView', () => {
     })
   })
 
+  describe('given a visitor who just left a review', () => {
+    it('celebrates once and clears the celebration from the address', async () => {
+      const { wrapper, router } = await mountWithProduct(
+        createProductDetail('product-1', 'Hafermilch'),
+        { initialPath: `/product/product-1?${CELEBRATION_QUERY_KEY}=1` },
+      )
+
+      expect(wrapper.findComponent(ConfettiBurst).exists()).toBe(true)
+      await vi.waitFor(() => expect(router.currentRoute.value.query).toEqual({}))
+    })
+  })
+
   describe('given a visitor who is not signed in', () => {
     it('offers to sign in for rating and for entering prices', async () => {
       const { wrapper } = await mountWithProduct(createProductDetail('product-1', 'Hafermilch'))
@@ -378,7 +396,7 @@ describe('ProductDetailView', () => {
         { signedInUserId: OTHER_USER_ID },
       )
 
-      await vi.waitFor(() => expect(wrapper.text()).toContain('Produkt bewerten'))
+      await vi.waitFor(() => expect(wrapper.text()).toContain('Produkt erneut bewerten'))
       expect(wrapper.findComponent(SpotlightButtonLink).exists()).toBe(false)
     })
   })

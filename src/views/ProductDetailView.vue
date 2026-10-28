@@ -8,6 +8,8 @@ import { provideProductBookmarks } from '@/composables/provideProductBookmarks'
 import { productDetailGatewayKey } from '@/services/ProductDetailGateway'
 import { toErrorMessage } from '@/lib/error'
 import AlertMessage from '@/components/AlertMessage.vue'
+import ConfettiBurst from '@/components/ConfettiBurst.vue'
+import { CELEBRATION_QUERY_KEY } from '@/lib/celebrationQueryKey'
 import LoadingText from '@/components/LoadingText.vue'
 import NotFoundMessage from '@/components/NotFoundMessage.vue'
 import SectionHeading from '@/components/SectionHeading.vue'
@@ -27,6 +29,13 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const productDetailGateway = injectGateway(productDetailGatewayKey)
+
+const isCelebrating = route.query[CELEBRATION_QUERY_KEY] !== undefined
+if (isCelebrating) {
+  const remainingQuery = { ...route.query }
+  delete remainingQuery[CELEBRATION_QUERY_KEY]
+  void router.replace({ query: remainingQuery })
+}
 
 const {
   data: product,
@@ -88,6 +97,7 @@ const deleteReview = async (reviewId: string): Promise<void> => {
 
 <template>
   <div class="max-w-2xl mx-auto">
+    <ConfettiBurst v-if="isCelebrating" />
     <LoadingText v-if="loading" />
     <NotFoundMessage v-else-if="notFound" message="Produkt nicht gefunden." />
     <AlertMessage v-else-if="errorMessage" :message="errorMessage" />

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAsyncData } from '@/composables/useAsyncData'
 import { injectGateway } from '@/composables/injectGateway'
+import { CELEBRATION_QUERY_KEY } from '@/lib/celebrationQueryKey'
 import { reviewEditingGatewayKey } from '@/services/ReviewEditingGateway'
 import { useSubmit } from '@/composables/useSubmit'
 import ReviewForm from '@/components/ReviewForm.vue'
@@ -45,7 +46,11 @@ const {
       reviewEditingGateway.uploadReviewImage(review.id, user.id, file, i),
     ),
   )
-  await router.push({ name: 'product-detail', params: { id: product.value.id } })
+  await router.push({
+    name: 'product-detail',
+    params: { id: product.value.id },
+    query: { [CELEBRATION_QUERY_KEY]: '1' },
+  })
 })
 </script>
 

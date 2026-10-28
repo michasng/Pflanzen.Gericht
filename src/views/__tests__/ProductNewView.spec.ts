@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ProductEditingGateway } from '@/services/ProductEditingGateway'
 import { QuantityUnit } from '@/config/quantity'
+import { CELEBRATION_QUERY_KEY } from '@/lib/celebrationQueryKey'
 import { useAuthStore } from '@/stores/auth'
 import ProductNewView from '@/views/ProductNewView.vue'
 import ProductForm from '@/components/ProductForm.vue'
@@ -65,6 +66,7 @@ describe('ProductNewView', () => {
 
       await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('product-detail'))
       expect(router.currentRoute.value.params.id).toBe('new-product')
+      expect(router.currentRoute.value.query).toEqual({ [CELEBRATION_QUERY_KEY]: '1' })
       expect(writtenSources).toEqual([{ productId: 'new-product', urls: ['https://example.com'] }])
     })
   })

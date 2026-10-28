@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { injectGateway } from '@/composables/injectGateway'
+import { CELEBRATION_QUERY_KEY } from '@/lib/celebrationQueryKey'
 import { productEditingGatewayKey } from '@/services/ProductEditingGateway'
 import { useSubmit } from '@/composables/useSubmit'
 import ProductForm from '@/components/ProductForm.vue'
@@ -32,7 +33,11 @@ const {
       productEditingGateway.uploadProductImage(product.id, user.id, file, i),
     ),
   ])
-  await router.push({ name: 'product-detail', params: { id: product.id } })
+  await router.push({
+    name: 'product-detail',
+    params: { id: product.id },
+    query: { [CELEBRATION_QUERY_KEY]: '1' },
+  })
 })
 </script>
 
