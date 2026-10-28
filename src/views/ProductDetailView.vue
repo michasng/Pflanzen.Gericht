@@ -117,7 +117,7 @@ const deleteReview = async (reviewId: string): Promise<void> => {
         :reviews="product.reviews"
       />
       <section class="flex flex-col gap-4">
-        <SectionHeading>Bewertungen</SectionHeading>
+        <SectionHeading v-if="product.reviews.length > 0">Bewertungen</SectionHeading>
         <ProductReviewsSection
           :reviews="product.reviews"
           :current-user-id="currentUserId"
