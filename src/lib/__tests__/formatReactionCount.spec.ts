@@ -4,7 +4,7 @@ import { formatReactionCount } from '../formatReactionCount'
 describe('formatReactionCount', () => {
   it.each([
     [0, ''],
-    [1, ''],
+    [1, '1'],
     [2, '2'],
     [99, '99'],
     [100, '99+'],
