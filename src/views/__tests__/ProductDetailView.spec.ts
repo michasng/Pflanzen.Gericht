@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/auth'
 import ProductDetailView from '@/views/ProductDetailView.vue'
 import PriceReportForm from '@/components/PriceReportForm.vue'
 import ReviewCard from '@/components/ReviewCard.vue'
+import SpotlightButtonLink from '@/components/primitives/SpotlightButtonLink.vue'
 import { createDeferred } from '@/__tests__/createDeferred'
 import { createFakeAuthGateway } from '@/__tests__/createFakeAuthGateway'
 import { createFakeListGateway } from '@/__tests__/createFakeListGateway'
@@ -353,6 +354,32 @@ describe('ProductDetailView', () => {
       expect(wrapper.text()).toContain('zum Eintragen.')
       expect(wrapper.text()).not.toContain('Preis eintragen')
       expect(wrapper.text()).not.toContain('Löschen')
+    })
+  })
+
+  describe('given a signed-in visitor who has not reviewed the product', () => {
+    it('highlights the rating call to action', async () => {
+      const { wrapper } = await mountWithProduct(createProductDetail('product-1', 'Hafermilch'), {
+        signedInUserId: OTHER_USER_ID,
+      })
+
+      await vi.waitFor(() => expect(wrapper.findComponent(SpotlightButtonLink).exists()).toBe(true))
+    })
+  })
+
+  describe('given a signed-in visitor who has reviewed the product', () => {
+    it('offers a regular rating button', async () => {
+      const { wrapper } = await mountWithProduct(
+        {
+          ...createProductDetail('product-1', 'Hafermilch'),
+          reviewsCount: 1,
+          reviews: [createReview({ id: 'review-1', userId: OTHER_USER_ID })],
+        },
+        { signedInUserId: OTHER_USER_ID },
+      )
+
+      await vi.waitFor(() => expect(wrapper.text()).toContain('Produkt bewerten'))
+      expect(wrapper.findComponent(SpotlightButtonLink).exists()).toBe(false)
     })
   })
 

@@ -51,6 +51,12 @@ const canManageProduct = computed(
     authStore.isLoggedIn && (product.value?.createdBy === currentUserId.value || authStore.isAdmin),
 )
 
+const hasReviewedProduct = computed(
+  () =>
+    currentUserId.value !== null &&
+    (product.value?.reviews.some((review) => review.userId === currentUserId.value) ?? false),
+)
+
 const deleteErrorMessage = ref<string | null>(null)
 
 const deleteProduct = async (productId: string): Promise<void> => {
@@ -112,6 +118,7 @@ const deleteReview = async (reviewId: string): Promise<void> => {
         <ProductActions
           :product-id="product.id"
           :is-logged-in="authStore.isLoggedIn"
+          :has-reviewed="hasReviewedProduct"
           :can-manage="canManageProduct"
           :error-message="deleteErrorMessage"
           @delete="deleteProduct(product.id)"

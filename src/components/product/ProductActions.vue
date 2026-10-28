@@ -3,6 +3,7 @@ import { useRoute } from 'vue-router'
 import AlertMessage from '@/components/AlertMessage.vue'
 import Button from '@/components/primitives/ButtonComponent.vue'
 import ButtonLink from '@/components/primitives/ButtonLink.vue'
+import SpotlightButtonLink from '@/components/primitives/SpotlightButtonLink.vue'
 import { ButtonSize } from '@/components/primitives/ButtonSize'
 import { ButtonTone } from '@/components/primitives/ButtonTone'
 import { ButtonVariant } from '@/components/primitives/ButtonVariant'
@@ -10,6 +11,7 @@ import { ButtonVariant } from '@/components/primitives/ButtonVariant'
 defineProps<{
   productId: string
   isLoggedIn: boolean
+  hasReviewed: boolean
   canManage: boolean
   errorMessage: string | null
 }>()
@@ -22,13 +24,19 @@ const route = useRoute()
 <template>
   <div class="flex flex-col gap-2">
     <ButtonLink
-      v-if="isLoggedIn"
+      v-if="isLoggedIn && hasReviewed"
       :to="{ name: 'review-new', params: { id: productId } }"
       :size="ButtonSize.Large"
       full-width
     >
-      Produkt bewerten
+      Produkt erneut bewerten
     </ButtonLink>
+    <SpotlightButtonLink
+      v-else-if="isLoggedIn"
+      :to="{ name: 'review-new', params: { id: productId } }"
+    >
+      Produkt bewerten
+    </SpotlightButtonLink>
     <ButtonLink
       v-else
       :to="{ name: 'login', query: { redirect: route.fullPath } }"
