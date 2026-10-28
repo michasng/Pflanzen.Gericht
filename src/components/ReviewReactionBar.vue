@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import AlertMessage from '@/components/AlertMessage.vue'
 import EmojiPickerDialog from '@/components/EmojiPickerDialog.vue'
 import ReviewReactionChip from '@/components/ReviewReactionChip.vue'
+import AnimatedTransitionGroup from '@/components/primitives/AnimatedTransitionGroup.vue'
 import Button from '@/components/primitives/ButtonComponent.vue'
 import { ButtonSize } from '@/components/primitives/ButtonSize'
 import { ButtonVariant } from '@/components/primitives/ButtonVariant'
@@ -50,7 +51,7 @@ const hiddenCount = computed(() => arrangedChips.value.hiddenChips.length)
 
 <template>
   <div>
-    <div class="flex flex-wrap items-center gap-1.5">
+    <AnimatedTransitionGroup class="flex flex-wrap items-center gap-1.5">
       <ReviewReactionChip
         v-for="chip in shownChips"
         :key="chip.emoji"
@@ -61,6 +62,7 @@ const hiddenCount = computed(() => arrangedChips.value.hiddenChips.length)
       />
       <Button
         v-if="!isExpanded && hiddenCount > 0"
+        key="show-more"
         :variant="ButtonVariant.Text"
         :size="ButtonSize.Small"
         :ariaLabel="`${hiddenCount} weitere Reaktionen anzeigen`"
@@ -70,6 +72,7 @@ const hiddenCount = computed(() => arrangedChips.value.hiddenChips.length)
       </Button>
       <Button
         v-if="isSignedIn"
+        key="pick-emoji"
         :variant="ButtonVariant.Icon"
         ariaLabel="Emoji auswählen"
         @click="isPickerOpen = true"
@@ -86,7 +89,7 @@ const hiddenCount = computed(() => arrangedChips.value.hiddenChips.length)
           <path stroke-linecap="round" d="M8.5 14.5a4.5 4.5 0 007 0M9 9.5h.01M15 9.5h.01" />
         </svg>
       </Button>
-    </div>
+    </AnimatedTransitionGroup>
     <AlertMessage class="mt-2" :message="errorMessage" />
     <EmojiPickerDialog v-if="isPickerOpen" @pick="toggle" @close="isPickerOpen = false" />
   </div>

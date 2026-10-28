@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import Chip from '@/components/primitives/ChipComponent.vue'
 import { ChipSize } from '@/components/primitives/ChipSize'
 import Tooltip from '@/components/primitives/TooltipComponent.vue'
+import { useCountChangeAnimation } from '@/composables/useCountChangeAnimation'
 import { formatReactionCount } from '@/lib/formatReactionCount'
 import { formatReactorsTooltip } from '@/lib/formatReactorsTooltip'
 import type { ReactionChip } from '@/types/ReactionChip'
@@ -14,6 +15,8 @@ const props = defineProps<{
 }>()
 
 defineEmits<{ toggle: [] }>()
+
+const { animationClass, clearAnimation } = useCountChangeAnimation(() => props.chip.count)
 
 const countLabel = computed(() => formatReactionCount(props.chip.count))
 const tooltipText = computed(() => formatReactorsTooltip(props.chip.reactors))
@@ -39,7 +42,13 @@ const accessibleName = computed(() => {
       :tabindex="interactive ? undefined : 0"
       @click="interactive && $emit('toggle')"
     >
-      <span aria-hidden="true" class="text-lg">{{ chip.emoji }}</span>
+      <span
+        aria-hidden="true"
+        class="text-lg"
+        :class="animationClass"
+        @animationend="clearAnimation"
+        >{{ chip.emoji }}</span
+      >
       <span v-if="countLabel" aria-hidden="true" class="text-xs">{{ countLabel }}</span>
     </Chip>
   </Tooltip>
