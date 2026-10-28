@@ -1,12 +1,14 @@
-import { describe, expect, it } from 'vitest'
-import { mount } from '@vue/test-utils'
-import EmojiPickerDialog from '@/components/EmojiPickerDialog.vue'
-import ReviewReactionBar from '@/components/ReviewReactionBar.vue'
 import { createFakeProductDetailGateway } from '@/__tests__/createFakeProductDetailGateway'
 import { createReviewReaction } from '@/__tests__/createReviewReaction'
+import EmojiPickerDialog from '@/components/EmojiPickerDialog.vue'
+import ReviewReactionBar from '@/components/ReviewReactionBar.vue'
+import { QUICK_REACTION_EMOJIS } from '@/config/reactions'
 import { productDetailGatewayKey, type ProductDetailGateway } from '@/services/ProductDetailGateway'
 import type { ReviewReaction } from '@/types/ReviewReaction'
+import { mount } from '@vue/test-utils'
+import { describe, expect, it } from 'vitest'
 
+const [firstQuickEmoji = ''] = QUICK_REACTION_EMOJIS
 const USER_ID = 'me'
 const PROFILE = { username: 'me', displayName: 'Ich' }
 
@@ -45,12 +47,9 @@ describe('ReviewReactionBar', () => {
     it('shows the quick emojis and the picker button', () => {
       const wrapper = mountBar()
 
-      expect(emojiButtons(wrapper).map((button) => button.attributes('aria-label'))).toEqual([
-        '👍, keine Reaktionen',
-        '👎, keine Reaktionen',
-        '😂, keine Reaktionen',
-        'Pflanzen.Gericht, keine Reaktionen',
-      ])
+      expect(emojiButtons(wrapper).map((button) => button.attributes('aria-label'))).toEqual(
+        QUICK_REACTION_EMOJIS.map((emoji) => `${emoji}, keine Reaktionen`),
+      )
       expect(wrapper.find('button[aria-label="Emoji auswählen"]').exists()).toBe(true)
     })
 
@@ -60,16 +59,18 @@ describe('ReviewReactionBar', () => {
         gateway: createFakeProductDetailGateway({
           addReaction: (...args) => {
             addCalls.push(args)
-            return Promise.resolve(createReviewReaction({ emoji: '👍', userId: USER_ID }))
+            return Promise.resolve(
+              createReviewReaction({ emoji: firstQuickEmoji, userId: USER_ID }),
+            )
           },
         }),
       })
 
       await emojiButtons(wrapper)[0]?.trigger('click')
 
-      expect(addCalls).toEqual([['review-1', USER_ID, '👍']])
+      expect(addCalls).toEqual([['review-1', USER_ID, firstQuickEmoji]])
       expect(emojiButtons(wrapper)[0]?.attributes('aria-label')).toBe(
-        '👍, 1 Reaktionen, von dir ausgewählt',
+        `${firstQuickEmoji}, 1 Reaktionen, von dir ausgewählt`,
       )
     })
 
@@ -124,13 +125,14 @@ describe('ReviewReactionBar', () => {
 
   describe('given a visitor who is not signed in', () => {
     it('shows only used emojis without any interaction', () => {
+      const [usedEmoji = '', unusedEmoji = ''] = QUICK_REACTION_EMOJIS
       const wrapper = mountBar({
         signedIn: false,
-        reactions: [createReviewReaction({ emoji: '😂' })],
+        reactions: [createReviewReaction({ emoji: usedEmoji })],
       })
 
-      expect(wrapper.text()).toContain('😂')
-      expect(wrapper.text()).not.toContain('👍')
+      expect(wrapper.text()).toContain(usedEmoji)
+      expect(wrapper.text()).not.toContain(unusedEmoji)
       expect(wrapper.find('button').exists()).toBe(false)
     })
   })
