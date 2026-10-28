@@ -129,6 +129,7 @@ const deleteReview = async (reviewId: string): Promise<void> => {
           :product-id="product.id"
           :is-logged-in="authStore.isLoggedIn"
           :has-reviewed="hasReviewedProduct"
+          :has-any-reviews="product.reviews.length > 0"
           :can-manage="canManageProduct"
           :error-message="deleteErrorMessage"
           @delete="deleteProduct(product.id)"

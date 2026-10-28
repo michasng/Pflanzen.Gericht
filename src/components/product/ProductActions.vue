@@ -12,6 +12,7 @@ defineProps<{
   productId: string
   isLoggedIn: boolean
   hasReviewed: boolean
+  hasAnyReviews: boolean
   canManage: boolean
   errorMessage: string | null
 }>()
@@ -24,12 +25,12 @@ const route = useRoute()
 <template>
   <div class="flex flex-col gap-2">
     <ButtonLink
-      v-if="isLoggedIn && hasReviewed"
+      v-if="isLoggedIn && hasAnyReviews"
       :to="{ name: 'review-new', params: { id: productId } }"
       :size="ButtonSize.Large"
       full-width
     >
-      Produkt erneut bewerten
+      {{ hasReviewed ? 'Produkt erneut bewerten' : 'Produkt bewerten' }}
     </ButtonLink>
     <SpotlightButtonLink
       v-else-if="isLoggedIn"
