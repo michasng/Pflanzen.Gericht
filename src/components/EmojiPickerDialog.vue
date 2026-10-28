@@ -4,6 +4,8 @@ import dataSourceUrl from 'emoji-picker-element-data/de/cldr/data.json?url'
 
 const SKIN_TONE_HIDING_STYLE = '.skintone-button-wrapper, .skintone-list { display: none; }'
 
+const LIGHT_THEME_CLASS = 'light'
+
 const emit = defineEmits<{ pick: [emoji: string]; close: [] }>()
 
 const dialog = useTemplateRef<HTMLDialogElement>('dialog')
@@ -20,6 +22,7 @@ onMounted(async () => {
     import('emoji-picker-element/i18n/de'),
   ])
   const picker = new Picker({ locale: 'de', dataSource: dataSourceUrl, i18n: german })
+  picker.classList.add(LIGHT_THEME_CLASS)
   const style = document.createElement('style')
   style.textContent = SKIN_TONE_HIDING_STYLE
   picker.shadowRoot?.appendChild(style)
