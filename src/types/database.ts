@@ -704,6 +704,8 @@ export type Database = {
           min_price_euro_cents: number
           name: string
           normalized_name: string
+          quantity_unit: string
+          quantity_value: number
           reviews_count: number
           tags: string[]
           total_count: number

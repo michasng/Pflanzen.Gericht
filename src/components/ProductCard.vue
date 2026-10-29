@@ -10,6 +10,8 @@ import { ImageSize } from '@/config/imageSizes'
 import { injectGateway } from '@/composables/injectGateway'
 import type { ProductListItem } from '@/services/catalog'
 import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
+import { formatQuantity } from '@/lib/formatQuantity'
+import { toQuantityUnit } from '@/lib/toQuantityUnit'
 
 const props = defineProps<{ product: ProductListItem; currentUserId: string | null }>()
 
@@ -21,6 +23,13 @@ const coverUrl = computed(() => {
 })
 
 const categoryLabel = computed(() => categoryToLabel(props.product.category))
+
+const quantityLabel = computed(() =>
+  formatQuantity({
+    unit: toQuantityUnit(props.product.quantityUnit),
+    value: props.product.quantityValue,
+  }),
+)
 </script>
 
 <template>
@@ -41,7 +50,7 @@ const categoryLabel = computed(() => categoryToLabel(props.product.category))
       <div class="p-3 flex flex-col gap-1">
         <span class="text-xs text-primary-600 font-medium">{{ categoryLabel }}</span>
         <h3 class="text-sm font-semibold text-gray-900 line-clamp-2 leading-snug">
-          {{ product.name }}
+          {{ product.name }}, {{ quantityLabel }}
         </h3>
         <p v-if="product.brand" class="text-xs text-gray-400 truncate">{{ product.brand }}</p>
         <div class="flex items-center gap-1.5 mt-0.5">

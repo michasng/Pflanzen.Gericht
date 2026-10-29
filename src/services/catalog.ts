@@ -35,7 +35,7 @@ export interface CatalogFilter {
   organic: boolean
 }
 
-export type ProductListItem = Omit<Product, 'quantityUnit' | 'quantityValue'> & {
+export type ProductListItem = Product & {
   images: ProductImage[]
 }
 

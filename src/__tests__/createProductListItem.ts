@@ -17,6 +17,8 @@ export const createProductListItem = (id: string): ProductListItem => ({
   minPriceEuroCents: null,
   name: `Product ${id}`,
   normalizedName: null,
+  quantityUnit: 'g',
+  quantityValue: 180,
   reviewsCount: 0,
   tags: [],
   updatedAt: '2026-09-11T00:00:00.000Z',
