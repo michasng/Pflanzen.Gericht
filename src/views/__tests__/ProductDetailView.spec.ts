@@ -221,6 +221,7 @@ describe('ProductDetailView', () => {
     it('shows the criterion averages of current reviews only', async () => {
       const { wrapper } = await mountWithProduct({
         ...createProductDetail('product-1', 'Hafermilch'),
+        avgOverall: 3.8,
         reviewsCount: 3,
         reviews: [
           createReview({ id: 'a', taste: 5, value: 2 }),
@@ -230,7 +231,8 @@ describe('ProductDetailView', () => {
       })
 
       await vi.waitFor(() => expect(wrapper.text()).toContain('Geschmack'))
-      expect(wrapper.text()).toContain('4.0')
+      expect(wrapper.text()).toContain('3,8')
+      expect(wrapper.text()).toContain('4,0')
       expect(wrapper.text()).toContain('Preis-Leistung')
       expect(wrapper.text()).not.toContain('Konsistenz')
     })

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { formatRating } from '@/lib/formatRating'
+
 interface ReviewScoreDimension {
   label: string
   value: number
@@ -20,7 +22,7 @@ defineProps<{
         />
       </div>
       <span class="w-6 text-right text-xs font-medium tabular-nums text-gray-600">
-        {{ score.value.toFixed(1) }}
+        {{ formatRating(score.value) }}
       </span>
     </div>
   </div>

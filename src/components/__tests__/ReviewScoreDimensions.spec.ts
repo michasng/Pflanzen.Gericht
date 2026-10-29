@@ -15,9 +15,9 @@ describe('ReviewScoreDimensions', () => {
       })
 
       expect(wrapper.text()).toContain('Geschmack')
-      expect(wrapper.text()).toContain('4.5')
+      expect(wrapper.text()).toContain('4,5')
       expect(wrapper.text()).toContain('Konsistenz')
-      expect(wrapper.text()).toContain('3.5')
+      expect(wrapper.text()).toContain('3,5')
     })
   })
 })

@@ -9,6 +9,7 @@ import { allergenToLabel } from '@/config/allergens'
 import { baseToLabel } from '@/config/bases'
 import { ImageSize } from '@/config/imageSizes'
 import { injectGateway } from '@/composables/injectGateway'
+import { formatRating } from '@/lib/formatRating'
 import { imageUrlGatewayKey } from '@/services/ImageUrlGateway'
 import type { SimilarProduct } from '@/services/similarProducts'
 
@@ -106,7 +107,7 @@ const criteriaAverages = computed(() => {
             <template v-if="product.avgOverall != null && product.reviewsCount > 0">
               <div class="flex items-center gap-3">
                 <span class="text-3xl font-bold text-gray-900 tabular-nums">
-                  {{ product.avgOverall.toFixed(1) }}
+                  {{ formatRating(product.avgOverall) }}
                 </span>
                 <div>
                   <StarDisplay :value="product.avgOverall" />

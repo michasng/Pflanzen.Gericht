@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { averageReviewCriteria, type ReviewCriteriaScores } from '@/lib/averageReviewCriteria'
+import { formatRating } from '@/lib/formatRating'
 import StarDisplay from '@/components/StarDisplay.vue'
 import ReviewScoreDimensions from '@/components/ReviewScoreDimensions.vue'
 import SectionCard from '@/components/SectionCard.vue'
@@ -22,7 +23,7 @@ const criteriaAverages = computed(() => averageReviewCriteria(props.reviews))
     <template v-else>
       <div class="flex items-center gap-4">
         <span class="text-4xl font-bold text-gray-900 tabular-nums">
-          {{ averageOverall?.toFixed(1) }}
+          {{ averageOverall !== null ? formatRating(averageOverall) : '' }}
         </span>
         <div>
           <StarDisplay :value="averageOverall" size="md" />

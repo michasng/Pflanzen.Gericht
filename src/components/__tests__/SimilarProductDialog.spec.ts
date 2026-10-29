@@ -102,6 +102,8 @@ describe('SimilarProductDialog', () => {
       })
 
       expect(wrapper.text()).toContain('Geschmack')
+      expect(wrapper.text()).toContain('4,2')
+      expect(wrapper.text()).toContain('4,4')
       expect(wrapper.text()).toContain('Konsistenz')
       expect(wrapper.text()).toContain('Aussehen')
       expect(wrapper.text()).toContain('Preis-Leistung')
